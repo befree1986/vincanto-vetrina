@@ -1,10 +1,21 @@
-import { Pool } from 'pg';
+/**
+ * Calcola i costi dettagliati per una prenotazione
+ * Integrato con sistema configurazione admin real-time
+ */
 
-// Configurazione database per Vercel
-const db = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
+// Configurazione sistema (utilizzata dalle API admin)
+const systemConfig = {
+    pricing: {
+        basePrice: 80,
+        additionalGuestPrice: 20,
+        cleaningFee: 50,
+        parkingFeePerNight: 10,
+        touristTaxPerPersonPerNight: 2,
+        minimumNights: 2,
+        depositPercentage: 0.30,
+        currency: 'EUR'
+    }
+};
 
 /**
  * Calcola i costi dettagliati per una prenotazione
@@ -12,106 +23,77 @@ const db = new Pool({
  */
 async function calculateBookingCosts(bookingData) {
     const {
-        check_in_date,
-        check_out_date,
-        num_adults,
-        num_children = 0,
-        children_ages = [],
-        parking_option = 'none'
+        checkIn,
+        checkOut,
+        guests = 1,
+        parking = false
     } = bookingData;
     
-    // Ottieni la configurazione prezzi dal database
-    const pricingResult = await db.query('SELECT * FROM pricing_config ORDER BY id DESC LIMIT 1');
-    const pricing = pricingResult.rows[0];
-    
-    if (!pricing) {
-        throw new Error('Configurazione prezzi non trovata');
-    }
+    // Usa la configurazione del sistema (sincronizzata con admin panel)
+    const pricing = systemConfig.pricing;
     
     // Calcola il numero di notti
-    const checkIn = new Date(check_in_date);
-    const checkOut = new Date(check_out_date);
-    const oneDay = 24 * 60 * 60 * 1000; // millisecondi in un giorno
-    const nights = Math.round((checkOut - checkIn) / oneDay);
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+    const oneDay = 24 * 60 * 60 * 1000;
+    const nights = Math.round((checkOutDate - checkInDate) / oneDay);
     
-    if (nights < pricing.minimum_nights) {
-        throw new Error(`Soggiorno minimo: ${pricing.minimum_nights} notti`);
+    if (nights < pricing.minimumNights) {
+        throw new Error(`Soggiorno minimo: ${pricing.minimumNights} notti`);
     }
     
-    // Calcola ospiti paganti per il soggiorno
-    // Regola: bambini 0-3 anni non pagano per il soggiorno
-    let paying_children = 0;
-    children_ages.forEach(age => {
-        if (age > 3) {
-            paying_children++;
-        }
-    });
+    // Calcola ospiti paganti (semplificato per il nuovo sistema)
+    const totalGuests = guests;
     
-    const total_paying_guests = num_adults + paying_children;
-    
-    // Calcola costo soggiorno con scaglioni
-    // Primi 2 ospiti paganti: prezzo base per adulto
-    // Dal 3° ospite pagante: prezzo aggiuntivo
-    let cost_per_night = 0;
-    if (total_paying_guests >= 1) {
-        cost_per_night += Math.min(total_paying_guests, 2) * parseFloat(pricing.base_price_per_adult);
+    // Calcola costo soggiorno
+    // Primi 2 ospiti: prezzo base
+    // Ospiti aggiuntivi: prezzo extra
+    let costPerNight = pricing.basePrice; // primo ospite
+    if (totalGuests > 1) {
+        costPerNight += Math.min(totalGuests - 1, 1) * pricing.basePrice; // secondo ospite al prezzo base
     }
-    if (total_paying_guests >= 3) {
-        cost_per_night += (total_paying_guests - 2) * parseFloat(pricing.additional_guest_price);
+    if (totalGuests > 2) {
+        costPerNight += (totalGuests - 2) * pricing.additionalGuestPrice; // ospiti extra
     }
     
-    const base_price = cost_per_night * nights;
+    const basePrice = costPerNight * nights;
     
     // Calcola costo parcheggio
-    const parking_cost = parking_option === 'private' 
-        ? parseFloat(pricing.parking_fee_per_night) * nights 
-        : 0;
+    const parkingCost = parking ? pricing.parkingFeePerNight * nights : 0;
     
-    // Calcola tassa di soggiorno
-    // Regola: solo per ospiti >= 14 anni
-    let taxable_guests = num_adults;
-    children_ages.forEach(age => {
-        if (age >= 14) {
-            taxable_guests++;
-        }
-    });
-    
-    const tourist_tax = taxable_guests * parseFloat(pricing.tourist_tax_per_person) * nights;
+    // Calcola tassa di soggiorno (applicata a tutti gli ospiti per semplicità)
+    const touristTax = pricing.touristTaxPerPersonPerNight * totalGuests * nights;
     
     // Calcola totali
-    const cleaning_fee = parseFloat(pricing.cleaning_fee);
-    const subtotal = base_price + parking_cost + cleaning_fee;
-    const total_amount = subtotal + tourist_tax;
+    const cleaningFee = pricing.cleaningFee;
+    const subtotal = basePrice + parkingCost + cleaningFee;
+    const totalAmount = subtotal + touristTax;
     
-    // Calcola acconto (30% del totale come da richiesta)
-    const deposit_percentage = 0.30;
-    const deposit_amount = total_amount * deposit_percentage;
+    // Calcola acconto
+    const depositAmount = totalAmount * pricing.depositPercentage;
     
     return {
         nights,
-        num_adults,
-        num_children,
-        paying_children,
-        total_paying_guests,
-        taxable_guests,
+        guests: totalGuests,
         
         // Costi dettagliati
-        base_price: parseFloat(base_price.toFixed(2)),
-        parking_cost: parseFloat(parking_cost.toFixed(2)),
-        cleaning_fee: parseFloat(cleaning_fee.toFixed(2)),
-        tourist_tax: parseFloat(tourist_tax.toFixed(2)),
+        basePrice: parseFloat(basePrice.toFixed(2)),
+        parkingCost: parseFloat(parkingCost.toFixed(2)),
+        cleaningFee: parseFloat(cleaningFee.toFixed(2)),
+        touristTax: parseFloat(touristTax.toFixed(2)),
         
         // Totali
         subtotal: parseFloat(subtotal.toFixed(2)),
-        total_amount: parseFloat(total_amount.toFixed(2)),
-        deposit_amount: parseFloat(deposit_amount.toFixed(2)),
+        totalAmount: parseFloat(totalAmount.toFixed(2)),
+        depositAmount: parseFloat(depositAmount.toFixed(2)),
         
         // Metadati
-        deposit_percentage,
-        pricing_config: {
-            base_price_per_adult: parseFloat(pricing.base_price_per_adult),
-            additional_guest_price: parseFloat(pricing.additional_guest_price),
-            minimum_nights: pricing.minimum_nights
+        depositPercentage: pricing.depositPercentage,
+        currency: pricing.currency,
+        pricingConfig: {
+            basePrice: pricing.basePrice,
+            additionalGuestPrice: pricing.additionalGuestPrice,
+            minimumNights: pricing.minimumNights
         }
     };
 }
@@ -120,31 +102,31 @@ async function calculateBookingCosts(bookingData) {
  * Valida i dati di input per il calcolo del preventivo
  */
 function validateQuoteData(data) {
-    const { check_in_date, check_out_date, num_adults } = data;
+    const { checkIn, checkOut, guests } = data;
     
-    if (!check_in_date || !check_out_date) {
+    if (!checkIn || !checkOut) {
         return { valid: false, error: 'Date di check-in e check-out sono richieste' };
     }
     
-    if (!num_adults || num_adults < 1) {
-        return { valid: false, error: 'Numero di adulti deve essere almeno 1' };
+    if (!guests || guests < 1) {
+        return { valid: false, error: 'Numero di ospiti deve essere almeno 1' };
     }
     
-    const checkIn = new Date(check_in_date);
-    const checkOut = new Date(check_out_date);
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
     
-    if (isNaN(checkIn.getTime()) || isNaN(checkOut.getTime())) {
+    if (isNaN(checkInDate.getTime()) || isNaN(checkOutDate.getTime())) {
         return { valid: false, error: 'Formato date non valido' };
     }
     
-    if (checkOut <= checkIn) {
+    if (checkOutDate <= checkInDate) {
         return { valid: false, error: 'Data di check-out deve essere successiva al check-in' };
     }
     
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    if (checkIn < today) {
+    if (checkInDate < today) {
         return { valid: false, error: 'Data di check-in non può essere nel passato' };
     }
     
@@ -191,7 +173,7 @@ export default async function handler(req, res) {
         
         return res.status(200).json({
             success: true,
-            data: costs
+            costs: costs
         });
         
     } catch (error) {
