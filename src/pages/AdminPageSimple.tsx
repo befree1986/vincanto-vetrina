@@ -1,69 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import './AdminPage.css';
+import * as AdminAPI from '../services/adminApi';
+import { useAdminRealTimeSync } from '../hooks/useRealTimeSync';
 
-interface Calendar {
-  id: string;
-  name: string;
-  platform: string;
-  url: string;
-  active: boolean;
-  lastSync: string;
-}
-
-interface Booking {
-  id: string;
-  guestName: string;
-  checkIn: string;
-  checkOut: string;
-  status: 'pending' | 'confirmed' | 'cancelled';
-  amount: number;
-}
+// Usa i tipi dall'API service
+type Calendar = AdminAPI.Calendar;
+type Booking = AdminAPI.Booking;
 
 const AdminPageSimple: React.FC = () => {
   const [activeTab, setActiveTab] = useState('calendars');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   
   // Stati per gestione calendari
-  const [calendars, setCalendars] = useState<Calendar[]>([
-    {
-      id: '1',
-      name: 'Airbnb - Vincanto',
-      platform: 'Airbnb',
-      url: 'https://calendar.google.com/calendar/ical/example1/basic.ics',
-      active: true,
-      lastSync: '2025-10-23 10:30:00'
-    },
-    {
-      id: '2', 
-      name: 'Booking.com - Vincanto',
-      platform: 'Booking.com',
-      url: 'https://calendar.google.com/calendar/ical/example2/basic.ics',
-      active: false,
-      lastSync: '2025-10-22 15:45:00'
-    }
-  ]);
+  const [calendars, setCalendars] = useState<Calendar[]>([]);
   
   // Stati per gestione prenotazioni
-  const [bookings, setBookings] = useState<Booking[]>([
-    {
-      id: '1',
-      guestName: 'Mario Rossi',
-      checkIn: '2025-11-15',
-      checkOut: '2025-11-18',
-      status: 'confirmed',
-      amount: 450.00
-    },
-    {
-      id: '2',
-      guestName: 'Laura Bianchi',
-      checkIn: '2025-12-01',
-      checkOut: '2025-12-05',
-      status: 'pending',
-      amount: 680.00
-    }
-  ]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   
   // Form per nuovo calendario
   const [newCalendar, setNewCalendar] = useState({
@@ -72,50 +27,149 @@ const AdminPageSimple: React.FC = () => {
     url: ''
   });
 
+  // Stati per configurazione sistema (SuperAdmin)
+  const [systemConfig, setSystemConfig] = useState<AdminAPI.SystemConfig | null>(null);
+  const [configSection, setConfigSection] = useState<string>('pricing');
+
+  // === FUNZIONI API ===
+
+  const loadCalendars = async () => {
+    try {
+      setLoading(true);
+      const calendarsData = await AdminAPI.getCalendars();
+      setCalendars(calendarsData);
+    } catch (error) {
+      console.error('Errore caricamento calendari:', error);
+      setError(AdminAPI.handleApiError(error));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadBookings = async () => {
+    try {
+      const bookingsData = await AdminAPI.getBookings();
+      setBookings(bookingsData);
+    } catch (error) {
+      console.error('Errore caricamento prenotazioni:', error);
+      setError(AdminAPI.handleApiError(error));
+    }
+  };
+
+  const loadSystemConfig = async () => {
+    try {
+      setLoading(true);
+      const config = await AdminAPI.getSystemConfig();
+      setSystemConfig(config);
+    } catch (error) {
+      console.error('Errore caricamento configurazione:', error);
+      setError(AdminAPI.handleApiError(error));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateSystemConfig = async (section: string, data: any) => {
+    try {
+      setLoading(true);
+      const updatedConfig = await AdminAPI.updateSystemConfig(section, data);
+      setSystemConfig(updatedConfig);
+      alert(`Configurazione ${section} aggiornata con successo!`);
+    } catch (error) {
+      console.error('Errore aggiornamento configurazione:', error);
+      setError(AdminAPI.handleApiError(error));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Funzioni per gestione calendari
-  const addCalendar = () => {
+  const addCalendar = async () => {
     if (!newCalendar.name || !newCalendar.url) {
       alert('Nome e URL sono obbligatori');
       return;
     }
     
-    const calendar: Calendar = {
-      id: Date.now().toString(),
-      name: newCalendar.name,
-      platform: newCalendar.platform,
-      url: newCalendar.url,
-      active: true,
-      lastSync: new Date().toLocaleString('it-IT')
-    };
-    
-    setCalendars([...calendars, calendar]);
-    setNewCalendar({ name: '', platform: 'Airbnb', url: '' });
-  };
-  
-  const toggleCalendar = (id: string) => {
-    setCalendars(calendars.map(cal => 
-      cal.id === id ? { ...cal, active: !cal.active } : cal
-    ));
-  };
-  
-  const removeCalendar = (id: string) => {
-    if (confirm('Sei sicuro di voler rimuovere questo calendario?')) {
-      setCalendars(calendars.filter(cal => cal.id !== id));
+    try {
+      setLoading(true);
+      const calendar = await AdminAPI.createCalendar({
+        name: newCalendar.name,
+        platform: newCalendar.platform,
+        url: newCalendar.url,
+        active: true
+      });
+      
+      setCalendars([...calendars, calendar]);
+      setNewCalendar({ name: '', platform: 'Airbnb', url: '' });
+      alert('Calendario aggiunto con successo!');
+    } catch (error) {
+      console.error('Errore aggiunta calendario:', error);
+      setError(AdminAPI.handleApiError(error));
+    } finally {
+      setLoading(false);
     }
   };
   
-  const syncCalendar = (id: string) => {
-    setCalendars(calendars.map(cal =>
-      cal.id === id ? { ...cal, lastSync: new Date().toLocaleString('it-IT') } : cal
-    ));
-    alert('Sincronizzazione completata!');
+  const toggleCalendar = async (id: string) => {
+    try {
+      const calendar = calendars.find(cal => cal.id === id);
+      if (!calendar) return;
+
+      const updatedCalendar = await AdminAPI.updateCalendar(id, {
+        active: !calendar.active
+      });
+
+      setCalendars(calendars.map(cal => 
+        cal.id === id ? updatedCalendar : cal
+      ));
+    } catch (error) {
+      console.error('Errore toggle calendario:', error);
+      setError(AdminAPI.handleApiError(error));
+    }
+  };
+  
+  const removeCalendar = async (id: string) => {
+    if (!confirm('Sei sicuro di voler rimuovere questo calendario?')) return;
+    
+    try {
+      await AdminAPI.deleteCalendar(id);
+      setCalendars(calendars.filter(cal => cal.id !== id));
+      alert('Calendario rimosso con successo!');
+    } catch (error) {
+      console.error('Errore rimozione calendario:', error);
+      setError(AdminAPI.handleApiError(error));
+    }
+  };
+  
+  const syncCalendar = async (id: string) => {
+    try {
+      setLoading(true);
+      const updatedCalendar = await AdminAPI.syncCalendar(id);
+      
+      setCalendars(calendars.map(cal =>
+        cal.id === id ? updatedCalendar : cal
+      ));
+      alert('Sincronizzazione completata!');
+    } catch (error) {
+      console.error('Errore sincronizzazione:', error);
+      setError(AdminAPI.handleApiError(error));
+    } finally {
+      setLoading(false);
+    }
   };
   
   // Funzioni per gestione prenotazioni
-  const updateBookingStatus = (id: string, status: 'pending' | 'confirmed' | 'cancelled') => {
-    setBookings(bookings.map(booking =>
-      booking.id === id ? { ...booking, status } : booking
-    ));
+  const updateBookingStatus = async (id: string, status: 'pending' | 'confirmed' | 'cancelled') => {
+    try {
+      const updatedBooking = await AdminAPI.updateBookingStatus(id, status);
+      setBookings(bookings.map(booking =>
+        booking.id === id ? updatedBooking : booking
+      ));
+      alert(`Stato prenotazione aggiornato a: ${status}`);
+    } catch (error) {
+      console.error('Errore aggiornamento prenotazione:', error);
+      setError(AdminAPI.handleApiError(error));
+    }
   };
 
   // Password semplice per demo - in produzione usare autenticazione robusta
@@ -128,6 +182,23 @@ const AdminPageSimple: React.FC = () => {
       setIsAuthenticated(true);
     }
   }, []);
+
+  // Carica i dati quando l'admin è autenticato
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadCalendars();
+      loadBookings();
+      loadSystemConfig();
+    }
+  }, [isAuthenticated]);
+
+  // Sincronizzazione real-time
+  const { forceSync, isActive } = useAdminRealTimeSync(
+    setCalendars,
+    setBookings,
+    setError,
+    isAuthenticated // Attiva solo quando autenticato
+  );
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,9 +244,24 @@ const AdminPageSimple: React.FC = () => {
     <div className="admin-page">
       <div className="admin-header">
         <h1>Admin Panel - Vincanto</h1>
-        <button onClick={handleLogout} className="logout-button">
-          Logout
-        </button>
+        <div className="header-controls">
+          <div className="sync-status">
+            <span className={`sync-indicator ${isActive ? 'active' : 'inactive'}`}>
+              {isActive ? '🟢' : '🔴'}
+            </span>
+            <span>Real-time: {isActive ? 'Attivo' : 'Inattivo'}</span>
+            <button 
+              onClick={forceSync} 
+              className="sync-button"
+              title="Sincronizza ora"
+            >
+              🔄
+            </button>
+          </div>
+          <button onClick={handleLogout} className="logout-button">
+            Logout
+          </button>
+        </div>
       </div>
 
       <div className="admin-tabs">
@@ -197,9 +283,33 @@ const AdminPageSimple: React.FC = () => {
         >
           Impostazioni
         </button>
+        <button
+          className={activeTab === 'superadmin' ? 'active' : ''}
+          onClick={() => setActiveTab('superadmin')}
+        >
+          SuperAdmin
+        </button>
       </div>
 
       <div className="admin-content">
+        {error && (
+          <div className="error-message">
+            {error}
+            <button 
+              onClick={() => setError('')} 
+              className="close-button"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
+        {loading && (
+          <div className="loading-indicator">
+            🔄 Caricamento...
+          </div>
+        )}
+
         {activeTab === 'calendars' && (
           <div className="admin-section">
             <h2>Gestione Calendari</h2>
@@ -367,6 +477,377 @@ const AdminPageSimple: React.FC = () => {
                 <button className="btn-primary">Gestisci Backup</button>
               </div>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'superadmin' && (
+          <div className="admin-section">
+            <h2>SuperAdmin - Configurazione Sistema</h2>
+            
+            {!systemConfig ? (
+              <div className="loading-indicator">Caricamento configurazione...</div>
+            ) : (
+              <>
+                {/* Menu sezioni configurazione */}
+                <div className="config-menu">
+                  <button 
+                    className={configSection === 'pricing' ? 'active' : ''}
+                    onClick={() => setConfigSection('pricing')}
+                  >
+                    💰 Prezzi
+                  </button>
+                  <button 
+                    className={configSection === 'payments' ? 'active' : ''}
+                    onClick={() => setConfigSection('payments')}
+                  >
+                    💳 Pagamenti
+                  </button>
+                  <button 
+                    className={configSection === 'apis' ? 'active' : ''}
+                    onClick={() => setConfigSection('apis')}
+                  >
+                    🔗 API
+                  </button>
+                  <button 
+                    className={configSection === 'features' ? 'active' : ''}
+                    onClick={() => setConfigSection('features')}
+                  >
+                    ⚙️ Funzioni
+                  </button>
+                </div>
+
+                {/* Sezione Prezzi */}
+                {configSection === 'pricing' && (
+                  <div className="config-section">
+                    <h3>Configurazione Prezzi</h3>
+                    <div className="pricing-form">
+                      <div className="form-group">
+                        <label>Prezzo Base (€/notte)</label>
+                        <input 
+                          type="number" 
+                          value={systemConfig.pricing.basePrice}
+                          onChange={(e) => setSystemConfig({
+                            ...systemConfig,
+                            pricing: { ...systemConfig.pricing, basePrice: Number(e.target.value) }
+                          })}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Prezzo Ospite Aggiuntivo (€/notte)</label>
+                        <input 
+                          type="number" 
+                          value={systemConfig.pricing.additionalGuestPrice}
+                          onChange={(e) => setSystemConfig({
+                            ...systemConfig,
+                            pricing: { ...systemConfig.pricing, additionalGuestPrice: Number(e.target.value) }
+                          })}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Pulizia Finale (€)</label>
+                        <input 
+                          type="number" 
+                          value={systemConfig.pricing.cleaningFee}
+                          onChange={(e) => setSystemConfig({
+                            ...systemConfig,
+                            pricing: { ...systemConfig.pricing, cleaningFee: Number(e.target.value) }
+                          })}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Parcheggio (€/notte)</label>
+                        <input 
+                          type="number" 
+                          value={systemConfig.pricing.parkingFeePerNight}
+                          onChange={(e) => setSystemConfig({
+                            ...systemConfig,
+                            pricing: { ...systemConfig.pricing, parkingFeePerNight: Number(e.target.value) }
+                          })}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Tassa Soggiorno (€/persona/notte)</label>
+                        <input 
+                          type="number" 
+                          value={systemConfig.pricing.touristTaxPerPersonPerNight}
+                          onChange={(e) => setSystemConfig({
+                            ...systemConfig,
+                            pricing: { ...systemConfig.pricing, touristTaxPerPersonPerNight: Number(e.target.value) }
+                          })}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Soggiorno Minimo (notti)</label>
+                        <input 
+                          type="number" 
+                          value={systemConfig.pricing.minimumNights}
+                          onChange={(e) => setSystemConfig({
+                            ...systemConfig,
+                            pricing: { ...systemConfig.pricing, minimumNights: Number(e.target.value) }
+                          })}
+                        />
+                      </div>
+                      <button 
+                        className="btn-primary"
+                        onClick={() => updateSystemConfig('pricing', systemConfig.pricing)}
+                      >
+                        Salva Configurazione Prezzi
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Sezione Pagamenti */}
+                {configSection === 'payments' && (
+                  <div className="config-section">
+                    <h3>Configurazione Pagamenti</h3>
+                    <div className="payments-config">
+                      
+                      {/* Stripe */}
+                      <div className="payment-provider">
+                        <h4>
+                          <input 
+                            type="checkbox" 
+                            checked={systemConfig.payments.stripe.enabled}
+                            onChange={(e) => setSystemConfig({
+                              ...systemConfig,
+                              payments: { 
+                                ...systemConfig.payments,
+                                stripe: { ...systemConfig.payments.stripe, enabled: e.target.checked }
+                              }
+                            })}
+                          />
+                          Stripe
+                        </h4>
+                        {systemConfig.payments.stripe.enabled && (
+                          <div className="provider-config">
+                            <div className="form-group">
+                              <label>Public Key</label>
+                              <input 
+                                type="text" 
+                                value={systemConfig.payments.stripe.publicKey}
+                                onChange={(e) => setSystemConfig({
+                                  ...systemConfig,
+                                  payments: { 
+                                    ...systemConfig.payments,
+                                    stripe: { ...systemConfig.payments.stripe, publicKey: e.target.value }
+                                  }
+                                })}
+                              />
+                            </div>
+                            <div className="form-group">
+                              <label>Secret Key</label>
+                              <input 
+                                type="password" 
+                                value={systemConfig.payments.stripe.secretKey}
+                                onChange={(e) => setSystemConfig({
+                                  ...systemConfig,
+                                  payments: { 
+                                    ...systemConfig.payments,
+                                    stripe: { ...systemConfig.payments.stripe, secretKey: e.target.value }
+                                  }
+                                })}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* PayPal */}
+                      <div className="payment-provider">
+                        <h4>
+                          <input 
+                            type="checkbox" 
+                            checked={systemConfig.payments.paypal.enabled}
+                            onChange={(e) => setSystemConfig({
+                              ...systemConfig,
+                              payments: { 
+                                ...systemConfig.payments,
+                                paypal: { ...systemConfig.payments.paypal, enabled: e.target.checked }
+                              }
+                            })}
+                          />
+                          PayPal
+                        </h4>
+                        {systemConfig.payments.paypal.enabled && (
+                          <div className="provider-config">
+                            <div className="form-group">
+                              <label>Client ID</label>
+                              <input 
+                                type="text" 
+                                value={systemConfig.payments.paypal.clientId}
+                                onChange={(e) => setSystemConfig({
+                                  ...systemConfig,
+                                  payments: { 
+                                    ...systemConfig.payments,
+                                    paypal: { ...systemConfig.payments.paypal, clientId: e.target.value }
+                                  }
+                                })}
+                              />
+                            </div>
+                            <div className="form-group">
+                              <label>Client Secret</label>
+                              <input 
+                                type="password" 
+                                value={systemConfig.payments.paypal.clientSecret}
+                                onChange={(e) => setSystemConfig({
+                                  ...systemConfig,
+                                  payments: { 
+                                    ...systemConfig.payments,
+                                    paypal: { ...systemConfig.payments.paypal, clientSecret: e.target.value }
+                                  }
+                                })}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <button 
+                        className="btn-primary"
+                        onClick={() => updateSystemConfig('payments', systemConfig.payments)}
+                      >
+                        Salva Configurazione Pagamenti
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Sezione API */}
+                {configSection === 'apis' && (
+                  <div className="config-section">
+                    <h3>Configurazione API</h3>
+                    <div className="apis-config">
+                      
+                      {/* Google Calendar */}
+                      <div className="api-provider">
+                        <h4>
+                          <input 
+                            type="checkbox" 
+                            checked={systemConfig.apis.google.enabled}
+                            onChange={(e) => setSystemConfig({
+                              ...systemConfig,
+                              apis: { 
+                                ...systemConfig.apis,
+                                google: { ...systemConfig.apis.google, enabled: e.target.checked }
+                              }
+                            })}
+                          />
+                          Google Calendar
+                        </h4>
+                        {systemConfig.apis.google.enabled && (
+                          <div className="form-group">
+                            <label>API Key</label>
+                            <input 
+                              type="password" 
+                              value={systemConfig.apis.google.calendarApiKey}
+                              onChange={(e) => setSystemConfig({
+                                ...systemConfig,
+                                apis: { 
+                                  ...systemConfig.apis,
+                                  google: { ...systemConfig.apis.google, calendarApiKey: e.target.value }
+                                }
+                              })}
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Email SMTP */}
+                      <div className="api-provider">
+                        <h4>
+                          <input 
+                            type="checkbox" 
+                            checked={systemConfig.apis.email.enabled}
+                            onChange={(e) => setSystemConfig({
+                              ...systemConfig,
+                              apis: { 
+                                ...systemConfig.apis,
+                                email: { ...systemConfig.apis.email, enabled: e.target.checked }
+                              }
+                            })}
+                          />
+                          Email SMTP
+                        </h4>
+                        {systemConfig.apis.email.enabled && (
+                          <div className="provider-config">
+                            <div className="form-group">
+                              <label>SMTP Host</label>
+                              <input 
+                                type="text" 
+                                value={systemConfig.apis.email.smtpHost}
+                                onChange={(e) => setSystemConfig({
+                                  ...systemConfig,
+                                  apis: { 
+                                    ...systemConfig.apis,
+                                    email: { ...systemConfig.apis.email, smtpHost: e.target.value }
+                                  }
+                                })}
+                              />
+                            </div>
+                            <div className="form-group">
+                              <label>SMTP User</label>
+                              <input 
+                                type="text" 
+                                value={systemConfig.apis.email.smtpUser}
+                                onChange={(e) => setSystemConfig({
+                                  ...systemConfig,
+                                  apis: { 
+                                    ...systemConfig.apis,
+                                    email: { ...systemConfig.apis.email, smtpUser: e.target.value }
+                                  }
+                                })}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <button 
+                        className="btn-primary"
+                        onClick={() => updateSystemConfig('apis', systemConfig.apis)}
+                      >
+                        Salva Configurazione API
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Sezione Funzioni */}
+                {configSection === 'features' && (
+                  <div className="config-section">
+                    <h3>Funzioni Sistema</h3>
+                    <div className="features-config">
+                      {Object.entries(systemConfig.features).map(([key, value]) => (
+                        <div key={key} className="feature-toggle">
+                          <label>
+                            <input 
+                              type="checkbox" 
+                              checked={value as boolean}
+                              onChange={(e) => setSystemConfig({
+                                ...systemConfig,
+                                features: { 
+                                  ...systemConfig.features,
+                                  [key]: e.target.checked
+                                }
+                              })}
+                            />
+                            {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                          </label>
+                        </div>
+                      ))}
+                      
+                      <button 
+                        className="btn-primary"
+                        onClick={() => updateSystemConfig('features', systemConfig.features)}
+                      >
+                        Salva Configurazione Funzioni
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         )}
       </div>
