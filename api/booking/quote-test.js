@@ -105,7 +105,8 @@ export default async function handler(req, res) {
         
         return res.status(200).json({
             success: true,
-            data: mockQuote
+            costs: mockQuote,  // Cambiato da 'data' a 'costs' per compatibilità frontend
+            quote_valid_until: new Date(Date.now() + 30 * 60 * 1000).toISOString() // Valido per 30 minuti
         });
         
     } catch (error) {

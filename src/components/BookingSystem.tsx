@@ -80,7 +80,6 @@ const BookingSystem: React.FC = () => {
         setFormData,
         quote,
         isLoadingQuote,
-        requestQuote,
         submitBooking,
         formErrors,
         validateForm,
@@ -90,17 +89,16 @@ const BookingSystem: React.FC = () => {
     const handleDateSelection = async (checkIn: Date | null, checkOut: Date | null) => {
         if (!checkIn || !checkOut) return;
         
+        // Aggiorna le date nel form - il preventivo verrà calcolato automaticamente tramite useEffect
         setFormData({
             check_in_date: checkIn,
             check_out_date: checkOut
         });
         
-        try {
-            await requestQuote();
+        // Aspetta un momento per far sì che l'effect dell'hook calcoli il preventivo
+        setTimeout(() => {
             setCurrentStep('details');
-        } catch (error: any) {
-            setError(error.message);
-        }
+        }, 300);
     };
 
     const handleDetailsSubmit = async () => {
