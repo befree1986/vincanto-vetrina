@@ -6,9 +6,9 @@
 const API_BASE = '/api/admin';
 
 // Test delle API
-async function testAPI(endpoint, method = 'GET', data = null) {
+async function testAPI(endpoint: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET', data?: any) {
     try {
-        const options = {
+        const options: RequestInit = {
             method,
             headers: {
                 'Content-Type': 'application/json',
@@ -79,7 +79,7 @@ async function runTests() {
 
 // Avvia i test quando la pagina è caricata
 if (typeof window !== 'undefined') {
-    window.runAdminTests = runTests;
+    (window as any).runAdminTests = runTests;
     console.log('💡 Usa runAdminTests() nella console per testare le API');
 } else {
     // Se eseguito in Node.js

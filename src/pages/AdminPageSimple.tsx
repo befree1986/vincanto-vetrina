@@ -522,8 +522,9 @@ const AdminPageSimple: React.FC = () => {
                     <h3>Configurazione Prezzi</h3>
                     <div className="pricing-form">
                       <div className="form-group">
-                        <label>Prezzo Base (€/notte)</label>
+                        <label htmlFor="basePrice">Prezzo Base (€/notte)</label>
                         <input 
+                          id="basePrice"
                           type="number" 
                           value={systemConfig.pricing.basePrice}
                           onChange={(e) => setSystemConfig({
@@ -533,8 +534,9 @@ const AdminPageSimple: React.FC = () => {
                         />
                       </div>
                       <div className="form-group">
-                        <label>Prezzo Ospite Aggiuntivo (€/notte)</label>
+                        <label htmlFor="additionalGuestPrice">Prezzo Ospite Aggiuntivo (€/notte)</label>
                         <input 
+                          id="additionalGuestPrice"
                           type="number" 
                           value={systemConfig.pricing.additionalGuestPrice}
                           onChange={(e) => setSystemConfig({
@@ -544,8 +546,9 @@ const AdminPageSimple: React.FC = () => {
                         />
                       </div>
                       <div className="form-group">
-                        <label>Pulizia Finale (€)</label>
+                        <label htmlFor="cleaningFee">Pulizia Finale (€)</label>
                         <input 
+                          id="cleaningFee"
                           type="number" 
                           value={systemConfig.pricing.cleaningFee}
                           onChange={(e) => setSystemConfig({
@@ -555,8 +558,9 @@ const AdminPageSimple: React.FC = () => {
                         />
                       </div>
                       <div className="form-group">
-                        <label>Parcheggio (€/notte)</label>
+                        <label htmlFor="parkingFee">Parcheggio (€/notte)</label>
                         <input 
+                          id="parkingFee"
                           type="number" 
                           value={systemConfig.pricing.parkingFeePerNight}
                           onChange={(e) => setSystemConfig({
@@ -566,8 +570,9 @@ const AdminPageSimple: React.FC = () => {
                         />
                       </div>
                       <div className="form-group">
-                        <label>Tassa Soggiorno (€/persona/notte)</label>
+                        <label htmlFor="touristTax">Tassa Soggiorno (€/persona/notte)</label>
                         <input 
+                          id="touristTax"
                           type="number" 
                           value={systemConfig.pricing.touristTaxPerPersonPerNight}
                           onChange={(e) => setSystemConfig({
@@ -577,8 +582,9 @@ const AdminPageSimple: React.FC = () => {
                         />
                       </div>
                       <div className="form-group">
-                        <label>Soggiorno Minimo (notti)</label>
+                        <label htmlFor="minimumNights">Soggiorno Minimo (notti)</label>
                         <input 
+                          id="minimumNights"
                           type="number" 
                           value={systemConfig.pricing.minimumNights}
                           onChange={(e) => setSystemConfig({
@@ -606,24 +612,28 @@ const AdminPageSimple: React.FC = () => {
                       {/* Stripe */}
                       <div className="payment-provider">
                         <h4>
-                          <input 
-                            type="checkbox" 
-                            checked={systemConfig.payments.stripe.enabled}
-                            onChange={(e) => setSystemConfig({
-                              ...systemConfig,
-                              payments: { 
-                                ...systemConfig.payments,
-                                stripe: { ...systemConfig.payments.stripe, enabled: e.target.checked }
-                              }
-                            })}
-                          />
-                          Stripe
+                          <label>
+                            <input 
+                              id="stripeEnabled"
+                              type="checkbox" 
+                              checked={systemConfig.payments.stripe.enabled}
+                              onChange={(e) => setSystemConfig({
+                                ...systemConfig,
+                                payments: { 
+                                  ...systemConfig.payments,
+                                  stripe: { ...systemConfig.payments.stripe, enabled: e.target.checked }
+                                }
+                              })}
+                            />
+                            Stripe
+                          </label>
                         </h4>
                         {systemConfig.payments.stripe.enabled && (
                           <div className="provider-config">
                             <div className="form-group">
-                              <label>Public Key</label>
+                              <label htmlFor="stripePublicKey">Public Key</label>
                               <input 
+                                id="stripePublicKey"
                                 type="text" 
                                 value={systemConfig.payments.stripe.publicKey}
                                 onChange={(e) => setSystemConfig({
@@ -636,8 +646,9 @@ const AdminPageSimple: React.FC = () => {
                               />
                             </div>
                             <div className="form-group">
-                              <label>Secret Key</label>
+                              <label htmlFor="stripeSecretKey">Secret Key</label>
                               <input 
+                                id="stripeSecretKey"
                                 type="password" 
                                 value={systemConfig.payments.stripe.secretKey}
                                 onChange={(e) => setSystemConfig({
@@ -656,24 +667,28 @@ const AdminPageSimple: React.FC = () => {
                       {/* PayPal */}
                       <div className="payment-provider">
                         <h4>
-                          <input 
-                            type="checkbox" 
-                            checked={systemConfig.payments.paypal.enabled}
-                            onChange={(e) => setSystemConfig({
-                              ...systemConfig,
-                              payments: { 
-                                ...systemConfig.payments,
-                                paypal: { ...systemConfig.payments.paypal, enabled: e.target.checked }
-                              }
-                            })}
-                          />
-                          PayPal
+                          <label>
+                            <input 
+                              id="paypalEnabled"
+                              type="checkbox" 
+                              checked={systemConfig.payments.paypal.enabled}
+                              onChange={(e) => setSystemConfig({
+                                ...systemConfig,
+                                payments: { 
+                                  ...systemConfig.payments,
+                                  paypal: { ...systemConfig.payments.paypal, enabled: e.target.checked }
+                                }
+                              })}
+                            />
+                            PayPal
+                          </label>
                         </h4>
                         {systemConfig.payments.paypal.enabled && (
                           <div className="provider-config">
                             <div className="form-group">
-                              <label>Client ID</label>
+                              <label htmlFor="paypalClientId">Client ID</label>
                               <input 
+                                id="paypalClientId"
                                 type="text" 
                                 value={systemConfig.payments.paypal.clientId}
                                 onChange={(e) => setSystemConfig({
@@ -686,8 +701,9 @@ const AdminPageSimple: React.FC = () => {
                               />
                             </div>
                             <div className="form-group">
-                              <label>Client Secret</label>
+                              <label htmlFor="paypalClientSecret">Client Secret</label>
                               <input 
+                                id="paypalClientSecret"
                                 type="password" 
                                 value={systemConfig.payments.paypal.clientSecret}
                                 onChange={(e) => setSystemConfig({
@@ -722,23 +738,27 @@ const AdminPageSimple: React.FC = () => {
                       {/* Google Calendar */}
                       <div className="api-provider">
                         <h4>
-                          <input 
-                            type="checkbox" 
-                            checked={systemConfig.apis.google.enabled}
-                            onChange={(e) => setSystemConfig({
-                              ...systemConfig,
-                              apis: { 
-                                ...systemConfig.apis,
-                                google: { ...systemConfig.apis.google, enabled: e.target.checked }
-                              }
-                            })}
-                          />
-                          Google Calendar
+                          <label>
+                            <input 
+                              id="googleEnabled"
+                              type="checkbox" 
+                              checked={systemConfig.apis.google.enabled}
+                              onChange={(e) => setSystemConfig({
+                                ...systemConfig,
+                                apis: { 
+                                  ...systemConfig.apis,
+                                  google: { ...systemConfig.apis.google, enabled: e.target.checked }
+                                }
+                              })}
+                            />
+                            Google Calendar
+                          </label>
                         </h4>
                         {systemConfig.apis.google.enabled && (
                           <div className="form-group">
-                            <label>API Key</label>
+                            <label htmlFor="googleApiKey">API Key</label>
                             <input 
+                              id="googleApiKey"
                               type="password" 
                               value={systemConfig.apis.google.calendarApiKey}
                               onChange={(e) => setSystemConfig({
@@ -756,24 +776,28 @@ const AdminPageSimple: React.FC = () => {
                       {/* Email SMTP */}
                       <div className="api-provider">
                         <h4>
-                          <input 
-                            type="checkbox" 
-                            checked={systemConfig.apis.email.enabled}
-                            onChange={(e) => setSystemConfig({
-                              ...systemConfig,
-                              apis: { 
+                          <label>
+                            <input 
+                              id="emailEnabled"
+                              type="checkbox" 
+                              checked={systemConfig.apis.email.enabled}
+                              onChange={(e) => setSystemConfig({
+                                ...systemConfig,
+                                apis: { 
                                 ...systemConfig.apis,
                                 email: { ...systemConfig.apis.email, enabled: e.target.checked }
                               }
                             })}
                           />
                           Email SMTP
+                          </label>
                         </h4>
                         {systemConfig.apis.email.enabled && (
                           <div className="provider-config">
                             <div className="form-group">
-                              <label>SMTP Host</label>
+                              <label htmlFor="smtpHost">SMTP Host</label>
                               <input 
+                                id="smtpHost"
                                 type="text" 
                                 value={systemConfig.apis.email.smtpHost}
                                 onChange={(e) => setSystemConfig({
@@ -786,8 +810,9 @@ const AdminPageSimple: React.FC = () => {
                               />
                             </div>
                             <div className="form-group">
-                              <label>SMTP User</label>
+                              <label htmlFor="smtpUser">SMTP User</label>
                               <input 
+                                id="smtpUser"
                                 type="text" 
                                 value={systemConfig.apis.email.smtpUser}
                                 onChange={(e) => setSystemConfig({

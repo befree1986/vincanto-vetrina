@@ -218,7 +218,7 @@ export interface Booking {
     createdAt: string;
 }
 
-export async function getBookings(filters?: {
+export async function getBookings(_filters?: {
     status?: string;
     startDate?: string;
     endDate?: string;
