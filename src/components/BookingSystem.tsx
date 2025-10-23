@@ -23,37 +23,37 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({ costs, isDeposit }) => 
             <div className="breakdown-items">
                 <div className="breakdown-item">
                     <span>{getSafeTranslation(t, 'booking.accommodationBase', 'Soggiorno base')}</span>
-                    <span>€{costs.base_price.toFixed(2)}</span>
+                    <span>€{costs.basePrice.toFixed(2)}</span>
                 </div>
                 
-                {costs.parking_cost > 0 && (
+                {costs.parkingCost > 0 && (
                     <div className="breakdown-item">
                         <span>{getSafeTranslation(t, 'booking.parking', 'Parcheggio privato')}</span>
-                        <span>€{costs.parking_cost.toFixed(2)}</span>
+                        <span>€{costs.parkingCost.toFixed(2)}</span>
                     </div>
                 )}
                 
                 <div className="breakdown-item">
                     <span>{getSafeTranslation(t, 'booking.cleaning', 'Pulizia finale')}</span>
-                    <span>€{costs.cleaning_fee.toFixed(2)}</span>
+                    <span>€{costs.cleaningFee.toFixed(2)}</span>
                 </div>
                 
                 <div className="breakdown-item">
                     <span>{getSafeTranslation(t, 'booking.touristTax', 'Tassa di soggiorno')}</span>
-                    <span>€{costs.tourist_tax.toFixed(2)}</span>
+                    <span>€{costs.touristTax.toFixed(2)}</span>
                 </div>
                 
                 <div className="breakdown-separator"></div>
                 
                 <div className="breakdown-item total">
                     <span>{getSafeTranslation(t, 'booking.total', 'Totale')}</span>
-                    <span>€{costs.total_amount.toFixed(2)}</span>
+                    <span>€{costs.totalAmount.toFixed(2)}</span>
                 </div>
                 
                 {isDeposit && (
                     <div className="breakdown-item deposit">
                         <span>{getSafeTranslation(t, 'booking.depositRequired', 'Acconto richiesto (30%)')}</span>
-                        <span className="highlight">€{costs.deposit_amount.toFixed(2)}</span>
+                        <span className="highlight">€{costs.depositAmount.toFixed(2)}</span>
                     </div>
                 )}
             </div>
@@ -292,8 +292,8 @@ const BookingSystem: React.FC = () => {
                         {quote && formData.parking_option === 'private' && (
                             <div className="parking-cost-preview">
                                 <div className="cost-calculation">
-                                    <span>Parcheggio per {quote.costs.nights} {quote.costs.nights === 1 ? 'notte' : 'notti'}:</span>
-                                    <span className="cost-amount">€{(20 * quote.costs.nights).toFixed(2)}</span>
+                                    <span>Parcheggio per {quote.nights} {quote.nights === 1 ? 'notte' : 'notti'}:</span>
+                                    <span className="cost-amount">€{quote.parkingCost.toFixed(2)}</span>
                                 </div>
                             </div>
                         )}
@@ -381,7 +381,7 @@ const BookingSystem: React.FC = () => {
                         />
                         <label htmlFor="deposit">
                             Acconto 30% 
-                            {quote && <span className="amount">€{quote.costs.deposit_amount.toFixed(2)}</span>}
+                            {quote && <span className="amount">€{quote.depositAmount.toFixed(2)}</span>}
                         </label>
                     </div>
 
@@ -396,7 +396,7 @@ const BookingSystem: React.FC = () => {
                         />
                         <label htmlFor="full">
                             Saldo Completo
-                            {quote && <span className="amount">€{quote.costs.total_amount.toFixed(2)}</span>}
+                            {quote && <span className="amount">€{quote.totalAmount.toFixed(2)}</span>}
                         </label>
                     </div>
                 </div>

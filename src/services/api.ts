@@ -48,18 +48,22 @@ export interface BookingQuoteRequest {
 }
 
 export interface BookingQuoteResponse {
-    success: boolean;
-    costs: {
-        nights: number;
-        base_price: number;
-        parking_cost: number;
-        cleaning_fee: number;
-        tourist_tax: number;
-        total_amount: number;
-        deposit_amount: number;
-        [key: string]: any;
+    nights: number;
+    guests: number;
+    basePrice: number;
+    parkingCost: number;
+    cleaningFee: number;
+    touristTax: number;
+    subtotal: number;
+    totalAmount: number;
+    depositAmount: number;
+    depositPercentage: number;
+    currency: string;
+    pricingConfig: {
+        basePrice: number;
+        additionalGuestPrice: number;
+        minimumNights: number;
     };
-    quote_valid_until: string;
 }
 
 export interface CreateBookingRequest {
@@ -90,9 +94,18 @@ export interface CreateBookingResponse {
  * Ottieni preventivo per una prenotazione
  */
 export async function getBookingQuote(data: BookingQuoteRequest): Promise<BookingQuoteResponse> {
-    // Usa endpoint di test temporaneamente fino a configurazione database
-    const response = await api.post('/booking/quote-test', data);
-    return response.data;
+    // Trasforma i dati dal formato vecchio al nuovo
+    const requestData = {
+        checkIn: data.check_in_date,
+        checkOut: data.check_out_date,
+        guests: data.num_adults + data.num_children,
+        parking: data.parking_option === 'private'
+    };
+    
+    const response = await api.post('/booking/quote', requestData);
+    
+    // La nuova API restituisce 'costs' invece di 'data'
+    return response.data.costs;
 }
 
 /**
