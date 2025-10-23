@@ -1,0 +1,43 @@
+/* src/components/GuestFeedback.css */
+.elegant-section {
+  padding: 3rem 1.5rem;
+  background-color: #f9f9f9;
+  text-align: center;
+}
+
+.elegant-section h2 {
+  font-size: 1.8rem;
+  margin-bottom: 2rem;
+  color: #333;
+}
+
+.feedback-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.feedback-card {
+  background: white;
+  padding: 1.2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  position: relative;
+}
+
+.source-icon {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 0.5rem;
+}
+
+.feedback-card p {
+  font-style: italic;
+  color: #555;
+  margin: 0.5rem 0;
+}
+
+.feedback-card span {
+  font-size: 0.9rem;
+  color: #777;
+}

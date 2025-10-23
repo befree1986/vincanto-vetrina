@@ -1,0 +1,308 @@
+/* === GALLERY GRID E TITOLI === */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.gallery-section-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+
+
+/* Titolo delle singole sezioni */
+.gallery-section-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--primary-color, #444);
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+/* === GALLERY CARDS E IMMAGINI === */
+.gallery-main-image-card,
+.gallery-main-image-card {
+  width: 100%;
+  max-width: 450px;
+  margin: 0 auto;
+  padding: 0;
+  background-color: transparent;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+
+.img-fluid-main,
+.img-fluid {
+  max-width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-radius: 6px;
+  display: block;
+}
+
+
+.gallery-img {
+  filter: grayscale(100%);
+  opacity: 0;
+  transform: scale(0.95);
+  transition: filter 0.8s ease, opacity 0.8s ease, transform 0.6s ease;
+}
+
+.gallery-img.visible {
+  opacity: 1;
+}
+
+.gallery-main-image-card:hover .gallery-img,
+.gallery-image-card:hover .gallery-img {
+  filter: grayscale(0%);
+  transform: scale(1.05);
+}
+
+.image-caption {
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  background: #f8f9fa;
+  color: #333;
+  text-align: center;
+}
+
+/* === LIGHTBOX === */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(30, 30, 30, 0.92);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.lightbox-content {
+  position: relative;
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  max-width: 95vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.lightbox-img {
+  max-width: 80vw;
+  max-height: 60vh;
+  object-fit: contain;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  background-color: #f8f8f8;
+}
+
+.lightbox-caption {
+  font-size: 1.1rem;
+  color: #333;
+  text-align: center;
+  margin-top: 0.5rem;
+  word-break: break-word;
+  max-width: 70vw;
+}
+
+/* === PULSANTI LIGHTBOX === */
+.lightbox-close {
+  position: absolute;
+  top: 12px;
+  right: 18px;
+  background: none;
+  border: none;
+  font-size: 2.2rem;
+  color: #e67e22;
+  cursor: pointer;
+  z-index: 10001;
+  transition: color 0.2s;
+}
+
+.lightbox-close:hover {
+  color: #b94e0b;
+}
+
+.lightbox-prev,
+.lightbox-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #e67e22;
+  border: none;
+  color: #fff;
+  font-size: 2rem;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 10001;
+  opacity: 0.85;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lightbox-prev:hover,
+.lightbox-next:hover {
+  background: #b94e0b;
+}
+
+.lightbox-prev { left: -60px; }
+.lightbox-next { right: -60px; }
+
+/* === BOOKING / SERVIZI / COSTI === */
+.booking-rules,
+.included-services,
+.extra-costs {
+  max-width: 960px;
+  margin: 3rem auto;
+  padding: 2rem 1.5rem;
+  border-radius: 10px;
+  background-color: #fff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  text-align: center;
+}
+
+.booking-rules {
+  background-color: #fff8e1;
+  border-left: 4px solid #f0ad4e;
+}
+
+.included-services {
+  background-color: #f9f9f9;
+  border-left: 4px solid #ccc;
+}
+
+.extra-costs {
+  background-color: #fff3f3;
+  border-left: 4px solid #e57373;
+}
+
+/* === TITOLI / LISTE === */
+.section-title {
+  font-size: 1.6rem;
+  margin-bottom: 2rem;
+  color: var(--primary-color, #333);
+}
+
+.section-subtitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: var(--primary-color, #444);
+  border-bottom: 1px solid #ddd;
+  display: inline-block;
+  padding-bottom: 0.25rem;
+  margin-top: 2rem;
+}
+
+.section-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 auto;
+  max-width: 700px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  text-align: center;
+  font-size: 1rem;
+  color: #333;
+  line-height: 1.6;
+}
+
+/* === TABELLE TARIFFE === */
+.tariffe-table-container {
+  margin: 2rem auto 2.5rem auto;
+  max-width: 900px;
+  overflow-x: auto;
+}
+
+.tariffe-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.07);
+  border-radius: 10px;
+  border: 1px solid #e9ecef;
+}
+
+.tariffe-table th,
+.tariffe-table td {
+  border: 1px solid #e9ecef;
+  padding: 14px 18px;
+  text-align: left;
+  font-size: 1rem;
+  color: #333;
+}
+
+.tariffe-table th {
+  background-color: var(--blue-light, #000);
+  color: var(--blue-dark, #1f67d4);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.9rem;
+}
+
+.tariffe-table tbody tr:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+.tariffe-table tbody tr:hover {
+  background-color: #eef6ff;
+}
+
+.tariffe-note {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 0.95rem;
+  color: #555;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+}
+
+.tariffe-note a {
+  color: var(--accent-color, #007bff);
+  text-decoration: underline;
+  
+}
+/* === TITOLO + SOTTO LINEA CENTRATA === */
+.section-title,
+.gallery-section-title {
+  position: relative;    /* serve per posizionare il ::after */
+  text-align: center;    /* testo sempre centrato */
+  margin: 2rem auto 1rem;/* margini verticali + orizzontale auto */
+}
+
+.section-title::after,
+.gallery-section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -0.5rem;       /* sposta la linea appena sotto il testo */
+  left: 50%;             /* punto di ancoraggio orizzontale */
+  transform: translateX(-50%);
+  width: 60px;           /* lunghezza della linea */
+  height: 3px;
+  background: var(--terracotta, #e67e22);
+  border-radius: 2px;
+}

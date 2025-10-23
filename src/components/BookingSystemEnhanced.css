@@ -1,0 +1,718 @@
+/* 🎨 BookingSystem Enhanced - Design moderno e responsivo */
+
+.booking-system-enhanced {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* 📍 Indicatore di progresso */
+.booking-progress {
+  margin-bottom: 40px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+}
+
+.progress-steps {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.progress-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 60%;
+  right: -40%;
+  height: 2px;
+  background: #e2e8f0;
+  z-index: 1;
+  transition: background-color 0.3s ease;
+}
+
+.progress-step.active:not(:last-child)::after {
+  background: #059669;
+}
+
+.step-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 2;
+}
+
+.progress-step.active .step-circle {
+  background: #059669;
+  color: white;
+  transform: scale(1.1);
+}
+
+.progress-step.current .step-circle {
+  background: #0ea5e9;
+  color: white;
+  box-shadow: 0 0 20px rgba(14, 165, 233, 0.3);
+  animation: pulse 2s infinite;
+}
+
+.step-icon {
+  font-size: 16px;
+}
+
+.step-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  text-align: center;
+  transition: color 0.3s ease;
+}
+
+.progress-step.active .step-title {
+  color: #059669;
+  font-weight: 600;
+}
+
+.progress-step.current .step-title {
+  color: #0ea5e9;
+  font-weight: 600;
+}
+
+.progress-bar {
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #059669 0%, #10b981 100%);
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+
+/* Classi dinamiche per la larghezza del progresso */
+.progress-fill.step-1 { width: 33.33%; }
+.progress-fill.step-2 { width: 66.66%; }
+.progress-fill.step-3 { width: 100%; }
+
+/* 📝 Contenuto principale */
+.booking-content {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 40px;
+  margin-bottom: 40px;
+}
+
+.booking-step {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.step-header {
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.step-header h3 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.step-header p {
+  font-size: 16px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* 👥 Sezione ospiti */
+.guests-section {
+  margin: 32px 0;
+  padding: 24px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.guests-section h4 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.guests-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.guest-control {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.guest-control label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.number-input {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+}
+
+.number-input:focus-within {
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+.number-input button {
+  background: #f8fafc;
+  border: none;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.number-input button:hover:not(:disabled) {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.number-input button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.number-input input {
+  border: none;
+  background: white;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 500;
+  width: 60px;
+  height: 40px;
+  outline: none;
+}
+
+/* 👶 Età bambini */
+.children-ages {
+  margin-top: 20px;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.children-ages h5 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 16px 0;
+}
+
+.ages-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.age-input {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.age-input label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.age-input select {
+  padding: 8px 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  transition: border-color 0.2s ease;
+}
+
+.age-input select:focus {
+  outline: none;
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+/* 🚗 Servizi aggiuntivi */
+.services-section {
+  margin: 32px 0;
+  padding: 24px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.services-section h4 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.parking-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.radio-option:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.radio-option input[type="radio"] {
+  accent-color: #0ea5e9;
+}
+
+.radio-option input[type="radio"]:checked + .radio-label {
+  color: #0ea5e9;
+  font-weight: 600;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #374151;
+  transition: color 0.2s ease;
+}
+
+/* 💰 Sidebar preventivo */
+.booking-sidebar {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  height: fit-content;
+  position: sticky;
+  top: 20px;
+}
+
+.price-breakdown.enhanced {
+  width: 100%;
+}
+
+.breakdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.breakdown-header h4 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nights-badge {
+  background: #0ea5e9;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.breakdown-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.breakdown-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.item-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #374151;
+}
+
+.item-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.breakdown-separator {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 8px 0;
+}
+
+.breakdown-total {
+  background: #f8fafc;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.breakdown-item.total {
+  padding: 12px 0;
+  border-bottom: 2px solid #e2e8f0;
+  margin-bottom: 12px;
+}
+
+.total-amount {
+  font-size: 18px;
+  color: #059669;
+}
+
+.payment-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.breakdown-item.deposit .item-value {
+  color: #0ea5e9;
+  font-size: 16px;
+}
+
+.payment-note {
+  margin-top: 12px;
+  padding: 12px;
+  background: #ecfdf5;
+  border-radius: 6px;
+  border: 1px solid #d1fae5;
+}
+
+.payment-note small {
+  color: #065f46;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* 🔄 Loading states */
+.price-breakdown.loading {
+  opacity: 0.7;
+}
+
+.loading-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeleton-line {
+  height: 16px;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  border-radius: 4px;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+.skeleton-line.short {
+  width: 60%;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* 🎮 Controlli navigazione */
+.booking-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.btn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn.disabled-with-reason:disabled {
+  position: relative;
+  opacity: 0.6;
+}
+
+.btn.disabled-with-reason:disabled:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e293b;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 1000;
+  margin-bottom: 8px;
+  max-width: 200px;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.btn-secondary {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 2px solid #e2e8f0;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #e2e8f0;
+  color: #374151;
+}
+
+.btn-primary {
+  background: #0ea5e9;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #0284c7;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px -2px rgba(14, 165, 233, 0.3);
+}
+
+/* 🚨 Messaggi di errore */
+.error-message {
+  padding: 16px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #dc2626;
+  font-size: 14px;
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ⚠️ Avviso soggiorno minimo */
+.minimum-stay-warning {
+  margin: 24px 0;
+  padding: 20px;
+  background: #fffbeb;
+  border: 2px solid #f59e0b;
+  border-radius: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  animation: warningPulse 2s ease-in-out;
+}
+
+.minimum-stay-warning .icon {
+  font-size: 20px;
+  color: #f59e0b;
+  margin-top: 2px;
+}
+
+.warning-content {
+  flex: 1;
+}
+
+.warning-content strong {
+  display: block;
+  font-size: 16px;
+  color: #92400e;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.warning-content p {
+  margin: 0;
+  font-size: 14px;
+  color: #b45309;
+  line-height: 1.4;
+}
+
+@keyframes warningPulse {
+  0%, 100% { 
+    border-color: #f59e0b;
+    background: #fffbeb;
+  }
+  50% { 
+    border-color: #d97706;
+    background: #fef3c7;
+  }
+}
+
+/* 📱 Responsive design */
+@media (max-width: 768px) {
+  .booking-system-enhanced {
+    padding: 16px;
+  }
+  
+  .booking-content {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  
+  .booking-sidebar {
+    position: static;
+    order: -1;
+  }
+  
+  .progress-steps {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .progress-step:not(:last-child)::after {
+    display: none;
+  }
+  
+  .guests-controls {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .parking-options {
+    gap: 8px;
+  }
+  
+  .booking-navigation {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* 🎨 Animazioni */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.booking-step {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* 🎭 Icone */
+.icon {
+  font-size: 16px;
+}
+
+.step-icon {
+  font-size: 16px;
+}

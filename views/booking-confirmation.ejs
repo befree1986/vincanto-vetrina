@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 20px auto; padding: 20px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .header { color: #2c3e50; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; text-align: center; }
+        .details-box { background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #e0e0e0; }
+        h3 { color: #34495e; margin-top: 0; border-bottom: 1px solid #ddd; padding-bottom: 5px;}
+        ul { list-style-type: none; padding-left: 0; }
+        li { margin-bottom: 10px; }
+        strong { color: #555; }
+        .total-row { border-top: 1px solid #ccc; padding-top: 10px; margin-top: 10px; font-weight: bold; }
+        .footer { text-align: center; font-size: 0.9em; color: #777; margin-top: 20px; }
+        .important { background-color: #fffbe6; border-left: 4px solid #f0ad4e; padding: 15px; margin-top: 20px; border-radius: 4px; }
+        a { color: #3498db; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="header">Richiesta di Prenotazione Ricevuta</h2>
+
+        <p>Gentile <%= formData.name %> <%= formData.surname %>,</p>
+        <p>Grazie per aver scelto <strong>Vincanto</strong>! Abbiamo ricevuto la tua richiesta di prenotazione e la stiamo elaborando. Ecco il riepilogo:</p>
+
+        <div class="details-box">
+            <h3>Dettagli Prenotazione (ID: #<%= bookingId %>)</h3>
+            <ul>
+                <li><strong>Nome:</strong> <%= formData.name %> <%= formData.surname %></li>
+                <li><strong>Email:</strong> <a href="mailto:<%= formData.email %>"><%= formData.email %></a></li>
+                <li><strong>Telefono:</strong> <%= formData.phone %></li>
+                <li><strong>Check-in:</strong> <%= new Date(formData.checkin).toLocaleDateString('it-IT', { year: 'numeric', month: 'long', day: 'numeric' }) %></li>
+                <li><strong>Check-out:</strong> <%= new Date(formData.checkout).toLocaleDateString('it-IT', { year: 'numeric', month: 'long', day: 'numeric' }) %></li>
+                <li>
+                    <strong>Ospiti:</strong> <%= formData.guests %> adulto<%= parseInt(formData.guests, 10) > 1 ? 'i' : '' %>
+                    <% if (formData.children > 0) { %>
+                        e <%= formData.children %> bambino<%= formData.children > 1 ? 'i' : '' %>
+                        <% if (formData.childrenAges && formData.childrenAges.length > 0) { %>
+                            (età: <%= formData.childrenAges.join(', ') %>)
+                        <% } %>
+                    <% } %>
+                </li>
+                <li><strong>Durata del soggiorno:</strong> <%= costs.numberOfNights %> notti</li>
+            </ul>
+
+            <h3>Riepilogo Costi</h3>
+            <ul>
+                <li>Subtotale soggiorno: €<%= costs.subtotalNightlyRate.toFixed(2) %></li>
+                <% if (formData.parkingOption === 'private') { %>
+                    <li>Costo parcheggio privato: €<%= costs.parkingCost.toFixed(2) %></li>
+                <% } %>
+                <li>Costo pulizia: €<%= costs.cleaningFee.toFixed(2) %></li>
+                <li class="total-row">Totale da pagare online: €<%= costs.totalPayableOnline.toFixed(2) %></li>
+                <% if (paymentAmount === 'acconto') { %>
+                    <li><strong>Acconto (30%) da versare: €<%= costs.depositAmount.toFixed(2) %></strong></li>
+                <% } %>
+                <li style="margin-top: 15px;">Tassa di soggiorno (da pagare in struttura): €<%= costs.touristTax.toFixed(2) %></li>
+                <li class="total-row">Importo Totale Soggiorno: €<%= costs.grandTotalWithTax.toFixed(2) %></li>
+            </ul>
+
+            <h3>Pagamento</h3>
+            <ul>
+                <li><strong>Opzione scelta:</strong> <%= paymentOptionText %></li>
+                <li><strong>Metodo:</strong> <%= paymentMethodName %></li>
+            </ul>
+
+            <% if (paymentMethod === 'bonifico') { %>
+                <div class="important">
+                    <p>Per confermare la prenotazione, effettua un bonifico di 
+                    <strong>€<%= (paymentAmount === 'acconto' ? costs.depositAmount : costs.totalPayableOnline).toFixed(2) %></strong>
+                    alle seguenti coordinate:</p>
+                    <ul>
+                        <li><strong>Beneficiario:</strong> <%= bankBeneficiary %></li>
+                        <li><strong>IBAN:</strong> <%= bankIban %></li>
+                        <li><strong>Causale:</strong> Prenotazione Vincanto, <%= formData.name %> <%= formData.surname %>, ID #<%= bookingId %></li>
+                    </ul>
+                    <p>Ti preghiamo di inviarci una copia della contabile via email a <a href="mailto:prenotazioni@vincantomaiori.it">prenotazioni@vincantomaiori.it</a>.</p>
+                </div>
+            <% } %>
+        </div>
+
+        <% if (paymentMethod === 'bonifico') { %>
+            <p><strong>IMPORTANTE:</strong> La prenotazione sarà finalizzata solo dopo la ricezione e verifica del pagamento. Hai 48 ore per effettuare il versamento e inviare la contabile, altrimenti la richiesta potrebbe essere annullata.</p>
+        <% } else { %>
+            <p>A breve riceverai conferma del pagamento se effettuato con carta o altro metodo elettronico istantaneo.</p>
+        <% } %>
+
+        <p>Non vediamo l'ora di accoglierti a Vincanto!</p>
+
+        <div class="footer">
+            <p>&copy; <%= new Date().getFullYear() %> Vincanto Maiori</p>
+        </div>
+    </div>
+</body>
+</html>

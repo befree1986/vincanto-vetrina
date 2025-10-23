@@ -1,0 +1,6 @@
+# Consenti a tutti i crawler di accedere al sito
+User-agent: *
+Disallow:
+
+# Indica la posizione della sitemap
+Sitemap: https://www.vincantomaiori.it/sitemap.xml

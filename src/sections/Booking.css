@@ -1,0 +1,82 @@
+/* Booking Options Toggle */
+.booking-options {
+  margin-bottom: 40px;
+  display: flex;
+  justify-content: center;
+}
+
+.option-toggle {
+  display: flex;
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: transparent;
+  color: #6c757d;
+}
+
+.toggle-btn.active {
+  background: #d2691e;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(210, 105, 30, 0.3);
+}
+
+.toggle-btn:hover:not(.active) {
+  background: rgba(210, 105, 30, 0.1);
+  color: #d2691e;
+}
+
+/* Logo Links */
+.logo-only-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2.5rem;
+  margin-top: 2.5rem;
+  flex-wrap: wrap;
+}
+
+.logo-link {
+  display: inline-block;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.logo-image {
+  height: 60px;
+  width: auto;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.055));
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.logo-link:hover .logo-image {
+  transform: scale(1.05);
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.185));
+}
+
+@media (max-width: 600px) {
+  .logo-image {
+    height: 50px;
+  }
+}
+
+.booking-subtitle {
+  text-align: center;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 2.5rem;
+  color: #555;
+  font-size: 1.1rem;
+  display: block;
+}

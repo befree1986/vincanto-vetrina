@@ -1,0 +1,74 @@
+.about-hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  color: var(--white);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.about-hero h2 {
+  font-size: clamp(2.5rem, 6vw, 4rem); /* Ripristiniamo la dimensione originale */
+  font-weight: 700;
+  color: var(--white); /* Assicura che il titolo sia bianco */
+}
+
+.about-content {
+  padding: 3rem 0;
+}
+
+.about-description {
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+.about-description .about-title {
+  font-size: clamp(2rem, 5vw, 3rem);
+  color: var(--blue-dark);
+  margin-bottom: 1.5rem;
+}
+
+.about-description p {
+  font-size: 1.1rem;
+  line-height: 1.7;
+  max-width: 800px;
+  margin: 0 auto 1.5rem auto;
+}
+
+.location-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+  align-items: center;
+  margin-top: 4rem;
+}
+
+.location-description {
+  margin-top: 1rem;
+}
+
+.distances {
+  margin-top: 1.5rem;
+}
+
+.distances-row {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.distance-item {
+  width: 32%;
+  margin-right: 2%;
+}
+
+.distance-item:last-child {
+  margin-right: 0;
+}
+
+@media (max-width: 992px) {
+  .location-info {
+    grid-template-columns: 1fr;
+  }
+}

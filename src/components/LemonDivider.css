@@ -1,0 +1,119 @@
+.lemon-divider {
+  position: relative;
+  width: 100%;
+  height: 80px;
+  margin: 2rem 0;
+  overflow: hidden;
+}
+
+.lemon-branch-container {
+  position: absolute;
+  width: 60%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  transform: translateX(0);
+  opacity: 0;
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+.lemon-divider.visible .lemon-branch-container {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.lemon-divider.left .lemon-branch-container {
+  left: 0;
+  justify-content: flex-end;
+  transform: translateX(-40px); /* movimento in uscita */
+}
+
+.lemon-divider.right .lemon-branch-container {
+  right: 0;
+  justify-content: flex-start;
+  transform: translateX(40px); /* movimento in uscita */
+}
+
+.lemon-divider.visible.left .lemon-branch-container {
+  transform: translateX(20px); /* entra verso centro da sinistra */
+}
+
+.lemon-divider.visible.right .lemon-branch-container {
+  transform: translateX(-20px); /* entra verso centro da destra */
+}
+
+.lemon-branch {
+  height: 2px;
+  background-color: var(--yellow);
+  position: relative;
+  width: 100%;
+}
+
+.lemon-divider.left .lemon-branch {
+  background: linear-gradient(90deg, transparent, var(--yellow));
+}
+
+.lemon-divider.right .lemon-branch {
+  background: linear-gradient(90deg, var(--yellow), transparent);
+}
+
+.lemon-branch::before,
+.lemon-branch::after {
+  content: '';
+  position: absolute;
+  background-size: contain;
+  background-repeat: no-repeat;
+  width: 80px;
+  height: 80px;
+}
+
+.lemon-divider.left .lemon-branch::before {
+  background-image: url('/lemon-branch-left.svg');
+  right: 0;
+  top: -40px;
+}
+
+.lemon-divider.right .lemon-branch::before {
+  background-image: url('/lemon-branch-right.svg');
+  left: 0;
+  top: -40px;
+}
+
+/* --- Responsive version --- */
+@media (max-width: 768px) {
+  .lemon-divider {
+    height: 60px;
+  }
+
+  .lemon-branch-container {
+    width: 90%;
+    transition: transform 1.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.8s ease-out;
+  }
+
+  .lemon-branch::before,
+  .lemon-branch::after {
+    width: 60px;
+    height: 60px;
+  }
+
+  .lemon-divider.left .lemon-branch::before,
+  .lemon-divider.right .lemon-branch::before {
+    top: -30px;
+  }
+
+  .lemon-divider.left .lemon-branch-container {
+    transform: translateX(-16px);
+  }
+
+  .lemon-divider.right .lemon-branch-container {
+    transform: translateX(16px);
+  }
+
+  .lemon-divider.visible.left .lemon-branch-container {
+    transform: translateX(40px);
+  }
+
+  .lemon-divider.visible.right .lemon-branch-container {
+    transform: translateX(-40px);
+  }
+}

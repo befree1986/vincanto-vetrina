@@ -1,0 +1,19 @@
+.cookie-toggle {
+    display: inline-block;
+    padding: 8px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    user-select: none;
+    background-color: #ddd;
+    transition: background-color 0.3s;
+}
+
+.cookie-toggle.on {
+    background-color: #4caf50;
+    color: white;
+}
+
+.cookie-toggle.off {
+    background-color: #f44336;
+    color: white;
+}

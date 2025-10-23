@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conferma Richiesta di Prenotazione - Vincanto</title>
+<!--[if mso]>
+<style>
+  table {border-collapse:collapse;border-spacing:0;border:none;margin:0;}
+  .mso-font-fix-arial { font-family: Arial, sans-serif; }
+</style>
+<![endif]-->
+</head>
+<body style="margin:0; padding:0; word-spacing:normal; background-color:#f7f7f7;">
+  <div role="article" aria-roledescription="email" lang="it" style="background-color:#f7f7f7;">
+    <table role="presentation" style="width:100%; border:0; border-spacing:0;">
+      <tr>
+        <td align="center">
+          <!--[if mso]>
+          <table role="presentation" align="center" style="width:600px;">
+          <tr>
+          <td>
+          <![endif]-->
+          <table role="presentation" style="width:94%; max-width:600px; border:0; border-spacing:0; margin: 20px auto; background-color: #ffffff; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-radius: 8px;">
+            <!-- Logo Header -->
+            <tr>
+              <td style="padding:20px 30px 10px 30px; text-align:center;">
+                <a href="https://vincantomaiori.it/" target="_blank">
+                  <img src="http://localhost:5173/public/logo.webp" width="180" alt="Vincanto Logo" style="width:180px; max-width:80%; height:auto; border:0; -ms-interpolation-mode:bicubic;">
+                </a>
+              </td>
+            </tr>
+            <!-- Hero Image -->
+            <tr>
+              <td style="padding:0;">
+                 <!-- === SOSTITUISCI CON L'URL DI UN'IMMAGINE DELLA TUA STRUTTURA === -->
+                <img src="http://localhost:5173/public/limoneto.webp" width="600" alt="Immagine di Vincanto" style="width:100%; height:auto; display:block; border:0;">
+              </td>
+            </tr>
+            <!-- Content -->
+            <tr>
+              <td style="padding:25px 30px 30px 30px; font-family: Arial, sans-serif; font-size:16px; line-height:1.6; color:#333333;">
+                <h1 style="margin-top:0; margin-bottom:16px; font-size:26px; font-weight:bold; color:#2c3e50;">Grazie per la tua richiesta, <%= booking.guest_name %>!</h1>
+                <p style="margin:0;">Abbiamo ricevuto con piacere la tua richiesta di prenotazione. Il tuo soggiorno è attualmente <strong style="color: #e67e22;">IN ATTESA DI CONFERMA</strong>. Riceverai un'ulteriore comunicazione non appena avremo verificato la disponibilità.</p>
+                
+                <h2 style="margin-top:30px; margin-bottom:15px; font-size:22px; color:#34495e; border-bottom:2px solid #3498db; padding-bottom:5px;">Riepilogo del Soggiorno</h2>
+                <table role="presentation" style="width:100%; border:0; border-spacing:0;">
+                  <tr>
+                    <td style="padding:5px 0; font-weight:bold;">Check-in:</td>
+                    <td style="padding:5px 0; text-align:right;"><%= new Date(booking.check_in_date).toLocaleDateString('it-IT', { year: 'numeric', month: 'long', day: 'numeric' }) %></td>
+                  </tr>
+                  <tr>
+                    <td style="padding:5px 0; font-weight:bold;">Check-out:</td>
+                    <td style="padding:5px 0; text-align:right;"><%= new Date(booking.check_out_date).toLocaleDateString('it-IT', { year: 'numeric', month: 'long', day: 'numeric' }) %></td>
+                  </tr>
+                  <tr>
+                    <td style="padding:5px 0; font-weight:bold;">Ospiti:</td>
+                    <td style="padding:5px 0; text-align:right;"><%= booking.num_adults %> Adulti<% if (booking.num_children > 0) { %>, <%= booking.num_children %> Bambini<% } %></td>
+                  </tr>
+                </table>
+
+                <h2 style="margin-top:30px; margin-bottom:15px; font-size:22px; color:#34495e; border-bottom:2px solid #3498db; padding-bottom:5px;">Dettaglio Costi</h2>
+                <table role="presentation" style="width:100%; border:0; border-spacing:0;">
+                  <tr>
+                    <td style="padding:5px 0;">Costo base soggiorno</td>
+                    <td style="padding:5px 0; text-align:right;">€ <%= Number(booking.base_price).toFixed(2) %></td>
+                  </tr>
+                  <% if (booking.parking_cost > 0) { %>
+                  <tr>
+                    <td style="padding:5px 0;">Costo parcheggio privato</td>
+                    <td style="padding:5px 0; text-align:right;">€ <%= Number(booking.parking_cost).toFixed(2) %></td>
+                  </tr>
+                  <% } %>
+                  <tr>
+                    <td style="padding:5px 0;">Costo pulizie finali</td>
+                    <td style="padding:5px 0; text-align:right;">€ <%= Number(booking.cleaning_fee).toFixed(2) %></td>
+                  </tr>
+                  <tr>
+                    <td style="padding:5px 0; border-bottom:1px solid #dddddd;">Tassa di soggiorno</td>
+                    <td style="padding:5px 0; text-align:right; border-bottom:1px solid #dddddd;">€ <%= Number(booking.tourist_tax).toFixed(2) %></td>
+                  </tr>
+                  <tr>
+                    <td style="padding:10px 0 0 0; font-weight:bold; font-size:18px; color:#3498db;">Totale Soggiorno</td>
+                    <td style="padding:10px 0 0 0; text-align:right; font-weight:bold; font-size:18px; color:#3498db;">€ <%= Number(booking.total_amount).toFixed(2) %></td>
+                  </tr>
+                </table>
+
+                <!-- Divider -->
+                <table role="presentation" align="center" style="width:100%; border:0; border-spacing:0; margin-top:30px; margin-bottom:20px;">
+                  <tr>
+                    <td align="center" style="width:45%;"><img src="http://localhost:5173/public/lemon-branch-left.svg" width="100" alt="divider" style="width:100px; max-width:100%; height:auto;"></td>
+                    <td align="center" style="width:10%;"></td>
+                    <td align="center" style="width:45%;"><img src="http://localhost:5173/public/lemon-branch-right.webp" width="100" alt="divider" style="width:100px; max-width:100%; height:auto;"></td>
+                  </tr>
+                </table>
+
+                <div style="background-color:#eaf5ff; border-left:4px solid #3498db; padding:20px; border-radius:4px;">
+                  <h2 style="margin-top:0; margin-bottom:15px; font-size:22px; color:#2980b9; border:none;">Istruzioni per il Pagamento</h2>
+                  <% if (booking.payment_choice === 'acconto') { %>
+                      <p style="margin:0 0 10px 0;">Per confermare la prenotazione, è richiesto il versamento di un acconto.</p>
+                      <p style="margin:0; font-size:18px;"><strong style="color:#2980b9;">Importo da versare: € <%= Number(booking.deposit_amount).toFixed(2) %></strong></p>
+                  <% } else { %>
+                      <p style="margin:0 0 10px 0;">Per confermare la prenotazione, è richiesto il versamento dell'importo totale.</p>
+                      <p style="margin:0; font-size:18px;"><strong style="color:#2980b9;">Importo da versare: € <%= Number(booking.total_amount).toFixed(2) %></strong></p>
+                  <% } %>
+                  <p style="margin-top:20px; margin-bottom:10px;">Puoi effettuare il pagamento tramite bonifico bancario utilizzando i seguenti dati:</p>
+                  <ul style="margin:0; padding-left:20px; list-style-type: disc;">
+                      <li style="margin-bottom:5px;"><strong>Beneficiario:</strong> <%= bankDetails.beneficiary %></li>
+                      <li style="margin-bottom:5px;"><strong>IBAN:</strong> <%= bankDetails.iban %></li>
+                      <li><strong>Causale:</strong> Prenotazione <%= booking.guest_name %> <%= booking.guest_surname %> - dal <%=  new Date(booking.check_in_date).toLocaleDateString('it-IT') %></li>
+                  </ul>
+                  <p style="margin-top:20px; margin-bottom:0;">Una volta effettuato il pagamento, ti preghiamo di inviare una copia della ricevuta a questo indirizzo email per accelerare la conferma.</p>
+                </div>
+              </td>
+            </tr>
+            <!-- Footer -->
+            <tr>
+              <td style="padding:20px 30px; text-align:center; font-size:12px; color:#888888; font-family: Arial, sans-serif;">
+                <p style="margin:0;">Per qualsiasi domanda, non esitare a contattarci.</p>
+                <p style="margin:5px 0;">Grazie,<br>Il team di Vincanto</p>
+              </td>
+            </tr>
+          </table>
+          <!--[if mso]>
+          </td>
+          </tr>
+          </table>
+          <![endif]-->
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>

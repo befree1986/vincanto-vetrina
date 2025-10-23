@@ -1,0 +1,194 @@
+/* Modalità notte per il footer */
+.dark-theme .footer {
+  background-color: #181a1b !important;
+  color: #ffeaa7 !important;
+}
+.dark-theme .footer h3,
+.dark-theme .footer h4 {
+  color: #f9d423 !important;
+}
+.dark-theme .footer a,
+.dark-theme .footer-links ul li a,
+.dark-theme .footer-bottom,
+.dark-theme .footer-contact p,
+.dark-theme .footer-paytourist-logo p,
+.dark-theme .footer-verfied-logo p {
+  color: #ffeaa7 !important;
+}
+.dark-theme .footer a:hover,
+.dark-theme .footer-links ul li a:hover {
+  color: #f9d423 !important;
+}
+.dark-theme .footer-bottom {
+  border-top: 1px solid #444 !important;
+}
+.footer {
+  background-color: var(--blue-dark);
+  color: var(--white);
+  padding: 4rem 0 2rem;
+}
+
+.footer-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.footer-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.footer-logo-img {
+  height: 60px;
+  margin-bottom: 1rem;
+  /* Rimuovo il filtro che rende il logo bianco */
+}
+
+.footer-paytourist-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+ 
+}
+
+.footer-paytourist-logo-img {
+  height: 60px;
+  width: auto; /* Importante per mantenere le proporzioni quando si imposta l'altezza */
+  margin-bottom: 0.1px;
+ }
+
+.footer-paytourist-logo p {
+  font-size: 0.8rem; /* Riduci la dimensione del font */
+  color: #cccccc;   /* Cambia il colore (es. grigio chiaro) o rimuovi questa riga per mantenere il bianco ereditato */
+  margin-top: 0; /* Aggiusta lo spazio sopra il testo */
+  margin-bottom: 0; /* Rimuovi lo spazio sotto il testo, se necessario */
+  line-height: 1.2; /* Opzionale: aggiusta l'interlinea se il testo va su più righe */
+}
+
+.footer-verfied-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 1rem;
+}
+.footer-verfied-logo img {
+  height: 30px;
+  width: auto; /* Importante per mantenere le proporzioni quando si imposta l'altezza */
+  margin-right: 0.5rem; /* Spazio tra il logo e il testo */
+}
+.footer-verfied-logo p {
+  font-size: 0.8rem; /* Riduci la dimensione del font */
+  color: #cccccc;   /* Cambia il colore (es. grigio chiaro) o rimuovi questa riga per mantenere il bianco ereditato */
+  margin-top: 0; /* Aggiusta lo spazio sopra il testo */
+  margin-bottom: 0; /* Rimuovi lo spazio sotto il testo, se necessario */
+  line-height: 1.2; /* Opzionale: aggiusta l'interlinea se il testo va su più righe */
+}
+.footer h4 {
+  color: var(--white);
+  margin-bottom: 1.5rem;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.footer h4::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 40px;
+  height: 2px;
+  background-color: var(--yellow);
+}
+
+.footer h3 {
+  color: var(--white);
+  margin-bottom: 1.0rem;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.footer h3::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 40px;
+  height: 2px;
+  background-color: var(--yellow);
+} 
+
+.footer-links ul {
+  list-style: none;
+}
+
+.footer-links li {
+  margin-bottom: 0.75rem;
+}
+
+.footer a {
+  color: var(--gray-light);
+  transition: all 0.3s ease;
+}
+
+.footer a:hover {
+  color: var(--yellow);
+}
+
+.footer-contact p {
+  margin-bottom: 0.75rem;
+}
+
+.footer-bottom {
+  padding-top: 2rem;
+  text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* .footer-social h4 inherits styles from .footer h4. Add custom styles here if needed. */
+
+.social-icons-list {
+  display: flex;
+  gap: 1rem; /* Spazio tra le icone */
+  margin-top: 1rem; /* Spazio sotto il titolo "Seguici" */
+}
+
+.social-icons-list a {
+  color: var(--gray-light); /* O var(--white) */
+  font-size: 1.6rem; /* Dimensione delle icone, aggiusta secondo necessità */
+  transition: color 0.3s ease;
+}
+
+.social-icons-list a:hover {
+  color: var(--yellow);
+}
+
+@media (max-width: 768px) {
+  .footer {
+    padding: 3rem 0 1.5rem;
+  }
+  
+  .footer-content {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  
+  .footer-logo {
+    align-items: center;
+  }
+  
+  .footer h4::after {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .social-icons-list {
+    justify-content: center; /* Centra le icone su mobile */
+  }
+}
+
+.coockie-edit-btn::before {
+  content: "🛈";
+  margin-right: 4px;
+}

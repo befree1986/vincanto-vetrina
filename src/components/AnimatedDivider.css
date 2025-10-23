@@ -1,0 +1,10 @@
+.divider {
+  opacity: 0;
+  transform: translateX(-80px) rotate(-3deg);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.divider.visible {
+  opacity: 1;
+  transform: translateX(0) rotate(0deg);
+}

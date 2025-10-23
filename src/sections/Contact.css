@@ -1,0 +1,152 @@
+.contact-section {
+  padding: var(--spacing-xxl, 4rem) 0;
+  background-color: var(--background-color, #fff);
+  scroll-margin-top: 80px; /* Regola in base all'altezza del tuo header fisso */
+}
+
+.contact-section .section-title {
+  text-align: center;
+  margin-bottom: var(--spacing-xl, 2.5rem);
+}
+
+.contact-content {
+  display: flex;
+  gap: var(--spacing-xl, 3rem);
+  align-items: center; /* Allinea verticalmente gli item (inclusa la linea) quando in riga, e orizzontalmente quando in colonna */
+}
+
+.booking-form-container, /* Riusiamo alcuni stili dal booking form */
+.contact-info {
+  flex: 1;
+}
+.booking-form-container h3,
+.contact-info h3 {
+  font-size: var(--font-size-xl, 1.6rem);
+  margin-bottom: var(--spacing-lg, 1.5rem);
+  color: var(--blue-dark); /* O il colore che preferisci */
+}
+
+.booking-form .form-row { /* Stili specifici per il form di contatto se necessario */
+  display: flex;
+  gap: var(--spacing-lg, 1.5rem);
+}
+
+.booking-form .form-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.booking-form .form-group label {
+  margin-bottom: var(--spacing-xs, 0.5rem);
+  font-weight: 500;
+}
+
+.booking-form input[type="text"],
+.booking-form input[type="email"],
+.booking-form input[type="tel"],
+.booking-form input[type="date"],
+.booking-form select,
+.booking-form textarea {
+  width: 100%;
+  padding: var(--spacing-sm, 0.75rem);
+  border: 1px solid var(--border-color, #ccc);
+  border-radius: var(--border-radius-md, 6px);
+  font-size: var(--font-size-base, 1rem);
+}
+
+.success-message {
+  padding: var(--spacing-lg, 1.5rem);
+  background-color: var(--success-bg, #e6ffed);
+  color: var(--success-text, #2f6f4f);
+  border: 1px solid var(--success-border, #b7e4c7);
+  border-radius: var(--border-radius-md, 6px);
+  text-align: center;
+}
+
+.error-message {
+  padding: var(--spacing-md, 1rem);
+  margin-bottom: var(--spacing-lg, 1.5rem);
+  background-color: var(--error-bg, #ffebee);
+  color: var(--error-text, #c62828);
+  border: 1px solid var(--error-border, #ef9a9a);
+  border-radius: var(--border-radius-md, 6px);
+  text-align: center;
+}
+
+.contact-details .contact-item {
+  margin-bottom: var(--spacing-lg, 1.5rem);
+}
+
+.contact-details .contact-item h4 {
+  font-size: var(--font-size-md, 1.1rem);
+  margin-bottom: var(--spacing-xs, 0.5rem);
+  color: var(--text-color, #444);
+}
+
+.contact-details .contact-item p {
+  margin: var(--spacing-xxs, 0.25rem) 0;
+  color: var(--text-color-secondary, #555);
+}
+
+.map-container {
+  margin-top: var(--spacing-lg, 2rem);
+  border-radius: var(--border-radius-lg, 8px);
+  overflow: hidden; /* Per far rispettare il border-radius all'iframe */
+  box-shadow: var(--shadow-md, 0 4px 15px rgba(0,0,0,0.1));
+}
+
+.map-iframe {
+  border: none;
+  display: block; /* Rimuove spazio extra sotto l'iframe */
+}
+
+.contact-divider {
+  /* Stile per la linea VERTICALE (default, per desktop) */
+  width: 2px;                     /* Spessore della linea */
+  height: 750px;                  /* Altezza della linea verticale - puoi aggiustare questo valore */
+  background-color: var(--gray-light); /* Colore della linea */
+  margin: 0; /* Il 'gap' del genitore .contact-content gestirà lo spazio attorno alla linea */
+  border-radius: var(--border-radius-full, 10px);
+}
+
+/* Responsive adjustments for Contact section */
+@media (max-width: 992px) { /* Tablet e inferiori */
+  .contact-content {
+    flex-direction: column;
+    gap: var(--spacing-xl, 2.5rem);
+    /* align-items: center; è ereditato e ora centra orizzontalmente gli item impilati */
+  }
+  .contact-divider {
+    /* Stile per la linea ORIZZONTALE (per tablet/mobile) */
+    width: 80%;       /* Larghezza della linea orizzontale */
+    max-width: 200px; /* Mantiene la larghezza massima che avevi prima */
+    height: 2px;      /* Spessore della linea orizzontale */
+    /* margin: 0; è ereditato, il 'gap' del genitore gestisce lo spazio verticale */
+  }
+  .booking-form .form-row {
+    flex-direction: column; /* Stack form groups in a row */
+    gap: var(--spacing-lg, 1.5rem); /* Mantieni il gap anche quando impilati */
+  }
+  .booking-form-container h3,
+  .contact-info h3 {
+    font-size: var(--font-size-lg, 1.4rem);
+  }
+  .discount-info {
+  font-size: var(--font-size-sm, 0.9em);
+  color: var(--text-color-secondary, #555);
+  margin-left: var(--spacing-md, 1rem);
+}
+
+.original-price {
+  text-decoration: line-through;
+  color: var(--text-color-muted, #999);
+  margin-right: var(--spacing-xs, 0.5rem);
+}
+
+.discounted-price {
+  font-weight: bold;
+  color: var(--success-color, #27ae60); /* Un colore verde per evidenziare lo sconto */
+}
+
+}

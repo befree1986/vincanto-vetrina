@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    /* Type Checking */
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* Modules */
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "esModuleInterop": true, // Cruciale per la compatibilità tra require e import
+    "outDir": "./dist",
+
+    /* Language and Environment */
+    "target": "ES2020",
+    "lib": ["ES2020"],
+
+    /* Module Resolution */
+    "baseUrl": ".", // Dice a TS che la radice per i percorsi è la cartella corrente
+    "paths": {
+      "@models/*": ["src/models/*"],
+      "@config/*": ["src/config/*"],
+      "@controllers/*": ["src/controllers/*"],
+      "@routes/*": ["src/routes/*"],
+      "@schemas/*": ["src/schemas/*"],
+      "@middleware/*": ["src/middleware/*"],
+      "@services/*": ["src/services/*"]
+    },
+
+    /* Completeness */
+    "skipLibCheck": true
+  },
+  "include": [
+    "server.ts",      // Includi esplicitamente il file server.ts nella root
+    "src/**/*.ts"     // Ora questo include automaticamente anche la cartella models
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

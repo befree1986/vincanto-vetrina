@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Nuova Richiesta di Prenotazione</title>
+</head>
+<body style="font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4;">
+    <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+        <h1 style="color: #333333; text-align: center;">Nuova Richiesta di Prenotazione Ricevuta</h1>
+        <p style="font-size: 16px; color: #555555;">Ciao, hai ricevuto una nuova richiesta di prenotazione. Ecco i dettagli:</p>
+
+        <h2 style="color: #444444; border-bottom: 2px solid #eeeeee; padding-bottom: 5px;">Dati Ospite</h2>
+        <ul style="list-style: none; padding: 0;">
+            <li style="margin-bottom: 10px;"><strong>Nome:</strong> <%= formData.name %> <%= formData.surname %></li>
+            <li style="margin-bottom: 10px;"><strong>Email:</strong> <a href="mailto:<%= formData.email %>"><%= formData.email %></a></li>
+            <li style="margin-bottom: 10px;"><strong>Telefono:</strong> <a href="tel:<%= formData.phone %>"><%= formData.phone %></a></li>
+        </ul>
+
+        <h2 style="color: #444444; border-bottom: 2px solid #eeeeee; padding-bottom: 5px;">Dettagli Soggiorno</h2>
+        <ul style="list-style: none; padding: 0;">
+            <li style="margin-bottom: 10px;"><strong>Check-in:</strong> <%= new Date(formData.checkin).toLocaleDateString('it-IT', { year: 'numeric', month: 'long', day: 'numeric' }) %></li>
+            <li style="margin-bottom: 10px;"><strong>Check-out:</strong> <%= new Date(formData.checkout).toLocaleDateString('it-IT', { year: 'numeric', month: 'long', day: 'numeric' }) %></li>
+            <li style="margin-bottom: 10px;"><strong>Notti:</strong> <%= costs.numberOfNights %></li>
+            <li style="margin-bottom: 10px;"><strong>Adulti:</strong> <%= formData.guests %></li>
+            <li style="margin-bottom: 10px;"><strong>Bambini:</strong> <%= formData.children %></li>
+            <% if (formData.children > 0 && formData.childrenAges && formData.childrenAges.length > 0) { %>
+                <li style="margin-bottom: 10px;"><strong>Età bambini:</strong> <%= formData.childrenAges.join(', ') %></li>
+            <% } %>
+            <li style="margin-bottom: 10px;"><strong>Parcheggio:</strong> <%= formData.parkingOption === 'private' ? 'Privato' : (formData.parkingOption === 'public' ? 'Pubblico' : 'Nessuno') %></li>
+        </ul>
+
+        <h2 style="color: #444444; border-bottom: 2px solid #eeeeee; padding-bottom: 5px;">Dettagli Pagamento</h2>
+        <ul style="list-style: none; padding: 0;">
+            <li style="margin-bottom: 10px;"><strong>Metodo di pagamento scelto:</strong> <%= paymentMethod === 'bonifico' ? 'Bonifico Bancario' : 'PayPal' %></li>
+            <li style="margin-bottom: 10px;"><strong>Importo da pagare:</strong> <%= paymentAmount === 'acconto' ? 'Acconto' : 'Saldo Totale' %></li>
+        </ul>
+
+        <h2 style="color: #444444; border-bottom: 2px solid #eeeeee; padding-bottom: 5px;">Riepilogo Costi</h2>
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr><td style="padding: 8px; border-bottom: 1px solid #dddddd;">Subtotale soggiorno (<%= costs.numberOfNights %> notti):</td><td style="padding: 8px; border-bottom: 1px solid #dddddd; text-align: right;">€ <%= costs.subtotalNightlyRate.toFixed(2) %></td></tr>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #dddddd;">Costo pulizie:</td><td style="padding: 8px; border-bottom: 1px solid #dddddd; text-align: right;">€ <%= costs.cleaningFee.toFixed(2) %></td></tr>
+            <% if (costs.parkingCost > 0) { %>
+                <tr><td style="padding: 8px; border-bottom: 1px solid #dddddd;">Costo parcheggio:</td><td style="padding: 8px; border-bottom: 1px solid #dddddd; text-align: right;">€ <%= costs.parkingCost.toFixed(2) %></td></tr>
+            <% } %>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #dddddd;">Tassa di soggiorno (<%= costs.touristTaxEligibleGuests %> ospiti):</td><td style="padding: 8px; border-bottom: 1px solid #dddddd; text-align: right;">€ <%= costs.touristTax.toFixed(2) %></td></tr>
+            <tr style="font-weight: bold;"><td style="padding: 8px; border-top: 2px solid #333;">Totale:</td><td style="padding: 8px; border-top: 2px solid #333; text-align: right;">€ <%= costs.grandTotalWithTax.toFixed(2) %></td></tr>
+            <% if (paymentAmount === 'acconto') { %>
+                <tr style="font-weight: bold;"><td style="padding: 8px;">Acconto da versare:</td><td style="padding: 8px; text-align: right;">€ <%= costs.depositAmount.toFixed(2) %></td></tr>
+            <% } %>
+        </table>
+
+        <p style="margin-top: 20px; font-size: 14px; color: #888888; text-align: center;">Questa è una notifica automatica.</p>
+    </div>
+</body>
+</html>
