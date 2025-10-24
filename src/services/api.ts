@@ -98,7 +98,7 @@ export async function getBookingQuote(data: BookingQuoteRequest): Promise<Bookin
     
     try {
         // Invia i dati nel formato che il backend si aspetta
-        const response = await api.post('/booking/quote', data);
+        const response = await api.post('/quote', data);
         
         console.log('📦 Backend quote response:', response.data);
         
