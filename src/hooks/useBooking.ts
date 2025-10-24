@@ -189,12 +189,10 @@ export function useBooking(): BookingState {
         
         try {
             const quoteRequest: BookingQuoteRequest = {
-                check_in_date: formatDateForApi(formData.check_in_date),
-                check_out_date: formatDateForApi(formData.check_out_date),
-                num_adults: formData.num_adults,
-                num_children: formData.num_children,
-                children_ages: formData.children_ages,
-                parking_option: formData.parking_option
+                checkIn: formatDateForApi(formData.check_in_date),
+                checkOut: formatDateForApi(formData.check_out_date),
+                guests: formData.num_adults + formData.num_children,
+                includeParking: formData.parking_option === 'private'
             };
             
             console.log('🚀 Sending quote request:', quoteRequest);

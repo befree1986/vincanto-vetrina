@@ -39,12 +39,10 @@ api.interceptors.response.use(
 // === BOOKING API ===
 
 export interface BookingQuoteRequest {
-    check_in_date: string;
-    check_out_date: string;
-    num_adults: number;
-    num_children: number;
-    children_ages?: number[];
-    parking_option: 'none' | 'street' | 'private';
+    checkIn: string;
+    checkOut: string;
+    guests: number;
+    includeParking?: boolean;
 }
 
 export interface BookingQuoteResponse {
@@ -97,31 +95,31 @@ export async function getBookingQuote(data: BookingQuoteRequest): Promise<Bookin
     console.log('🚀 Frontend sending quote request:', data);
     
     try {
-        // Invia i dati nel formato che il backend si aspetta
+        // Invia i dati nel formato che l'API si aspetta
         const response = await api.post('/quote', data);
         
-        console.log('📦 Backend quote response:', response.data);
+        console.log('📦 API quote response:', response.data);
         
-        // Il backend restituisce { success: true, costs: {...} }
+        // L'API restituisce { success: true, costs: {...} }
         const costs = response.data.costs;
         
-        // Trasforma i nomi delle proprietà dal backend (snake_case) al frontend (camelCase)
+        // Trasforma la risposta API per il frontend
         const transformedCosts: BookingQuoteResponse = {
             nights: costs.nights,
-            guests: costs.num_adults + costs.num_children,
-            basePrice: costs.base_price,
-            parkingCost: costs.parking_cost,
-            cleaningFee: costs.cleaning_fee,
-            touristTax: costs.tourist_tax,
+            guests: costs.guests,
+            basePrice: costs.basePrice,
+            parkingCost: costs.parkingCost || 0,
+            cleaningFee: costs.cleaningFee,
+            touristTax: costs.touristTax,
             subtotal: costs.subtotal,
-            totalAmount: costs.total_amount,
-            depositAmount: costs.deposit_amount,
-            depositPercentage: costs.deposit_percentage || 0.30,
-            currency: 'EUR',
+            totalAmount: costs.totalAmount,
+            depositAmount: costs.depositAmount,
+            depositPercentage: costs.depositPercentage || 0.30,
+            currency: costs.currency || 'EUR',
             pricingConfig: {
-                basePrice: costs.base_price,
-                additionalGuestPrice: 0, // Da implementare se necessario
-                minimumNights: costs.nights
+                basePrice: costs.breakdown?.pricePerNight || 80,
+                additionalGuestPrice: costs.breakdown?.additionalGuestPricePerNight || 20,
+                minimumNights: 2
             }
         };
         
@@ -129,26 +127,27 @@ export async function getBookingQuote(data: BookingQuoteRequest): Promise<Bookin
         return transformedCosts;
         
     } catch (error) {
-        console.warn('⚠️ Backend not available, using mock data for testing');
+        console.warn('⚠️ API not available, using mock data for testing');
         
-        // FALLBACK TEMPORANEO per test senza backend
-        const checkIn = new Date(data.check_in_date);
-        const checkOut = new Date(data.check_out_date);
+        // FALLBACK TEMPORANEO per test senza API
+        const checkIn = new Date(data.checkIn);
+        const checkOut = new Date(data.checkOut);
         const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
-        const guests = data.num_adults + data.num_children;
+        const guests = data.guests;
         
-        const basePrice = nights * guests * 80; // €80 per persona per notte (mock)
-        const parkingCost = data.parking_option === 'private' ? nights * 10 : 0;
+        const basePrice = nights * 80; // €80 per notte base
+        const additionalGuestPrice = Math.max(0, guests - 1) * nights * 20; // €20 per ospite extra
+        const parkingCost = data.includeParking ? nights * 10 : 0;
         const cleaningFee = 50;
         const touristTax = guests * nights * 2;
-        const subtotal = basePrice + parkingCost + cleaningFee;
+        const subtotal = basePrice + additionalGuestPrice + parkingCost + cleaningFee;
         const totalAmount = subtotal + touristTax;
         const depositAmount = totalAmount * 0.30;
         
         const mockResponse: BookingQuoteResponse = {
             nights,
             guests,
-            basePrice,
+            basePrice: basePrice + additionalGuestPrice,
             parkingCost,
             cleaningFee,
             touristTax,
@@ -159,8 +158,8 @@ export async function getBookingQuote(data: BookingQuoteRequest): Promise<Bookin
             currency: 'EUR',
             pricingConfig: {
                 basePrice: 80,
-                additionalGuestPrice: 80,
-                minimumNights: 1
+                additionalGuestPrice: 20,
+                minimumNights: 2
             }
         };
         

@@ -30,7 +30,7 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({ costs, loading }) => {
     
     if (!costs) return null;
 
-    const remainingAmount = costs.total_amount - costs.deposit_amount;
+    const remainingAmount = costs.totalAmount - costs.depositAmount;
 
     return (
         <div className="price-breakdown enhanced">
@@ -51,16 +51,26 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({ costs, loading }) => {
                             <span className="icon">🏠</span>
                             {getSafeTranslation(t, 'booking.basePrice', 'Prezzo base')}
                         </span>
-                        <span className="item-value">€{costs.accommodation_amount?.toFixed(2) || '0.00'}</span>
+                        <span className="item-value">€{costs.basePrice?.toFixed(2) || '0.00'}</span>
                     </div>
 
-                    {costs.parking_amount > 0 && (
+                    {costs.parkingCost > 0 && (
                         <div className="breakdown-item">
                             <span className="item-label">
                                 <span className="icon">🚗</span>
                                 {getSafeTranslation(t, 'booking.parkingFee', 'Parcheggio privato')}
                             </span>
-                            <span className="item-value">€{costs.parking_amount.toFixed(2)}</span>
+                            <span className="item-value">€{costs.parkingCost.toFixed(2)}</span>
+                        </div>
+                    )}
+
+                    {costs.cleaningFee > 0 && (
+                        <div className="breakdown-item">
+                            <span className="item-label">
+                                <span className="icon">🧽</span>
+                                {getSafeTranslation(t, 'booking.cleaningFee', 'Pulizia finale')}
+                            </span>
+                            <span className="item-value">€{costs.cleaningFee.toFixed(2)}</span>
                         </div>
                     )}
 
@@ -69,7 +79,7 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({ costs, loading }) => {
                             <span className="icon">🏛️</span>
                             {getSafeTranslation(t, 'booking.touristTax', 'Tassa di soggiorno')}
                         </span>
-                        <span className="item-value">€{costs.tourist_tax_amount?.toFixed(2) || '0.00'}</span>
+                        <span className="item-value">€{costs.touristTax?.toFixed(2) || '0.00'}</span>
                     </div>
                 </div>
 
@@ -81,7 +91,7 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({ costs, loading }) => {
                             <span className="icon">💰</span>
                             {getSafeTranslation(t, 'booking.total', 'Totale')}
                         </span>
-                        <span className="item-value total-amount">€{costs.total_amount?.toFixed(2) || '0.00'}</span>
+                        <span className="item-value total-amount">€{costs.totalAmount?.toFixed(2) || '0.00'}</span>
                     </div>
 
                     <div className="payment-info">
@@ -90,7 +100,7 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({ costs, loading }) => {
                                 <span className="icon">💳</span>
                                 {getSafeTranslation(t, 'booking.deposit', 'Acconto richiesto (30%)')}
                             </span>
-                            <span className="item-value">€{costs.deposit_amount?.toFixed(2) || '0.00'}</span>
+                            <span className="item-value">€{costs.depositAmount?.toFixed(2) || '0.00'}</span>
                         </div>
 
                         <div className="breakdown-item">
