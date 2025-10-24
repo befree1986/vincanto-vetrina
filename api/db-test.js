@@ -1,4 +1,11 @@
-import { Pool } from 'pg';
+// Import compatibile con Vercel serverless
+let Pool;
+try {
+    const pg = await import('pg');
+    Pool = pg.Pool;
+} catch (error) {
+    console.error('Failed to import pg module:', error);
+}
 
 export default async function handler(req, res) {
     // CORS headers
@@ -23,10 +30,19 @@ export default async function handler(req, res) {
             hasDatabaseUrl: !!process.env.DATABASE_URL,
             hasNodeEnv: !!process.env.NODE_ENV,
             hasJwtSecret: !!process.env.JWT_SECRET,
-            nodeEnv: process.env.NODE_ENV || 'undefined'
+            nodeEnv: process.env.NODE_ENV || 'undefined',
+            hasPoolClass: !!Pool
         };
         
         console.log('🔍 Environment variables:', envVars);
+        
+        if (!Pool) {
+            return res.status(500).json({
+                success: false,
+                error: 'PostgreSQL module not available',
+                envVars
+            });
+        }
         
         if (!process.env.DATABASE_URL) {
             return res.status(500).json({
@@ -75,7 +91,8 @@ export default async function handler(req, res) {
             envVars: {
                 hasDatabaseUrl: !!process.env.DATABASE_URL,
                 hasNodeEnv: !!process.env.NODE_ENV,
-                nodeEnv: process.env.NODE_ENV || 'undefined'
+                nodeEnv: process.env.NODE_ENV || 'undefined',
+                hasPoolClass: !!Pool
             }
         });
     }

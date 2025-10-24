@@ -1,0 +1,26 @@
+# Variabili ambiente per Vercel deployment
+# Da copiare nelle Environment Variables di Vercel
+
+DATABASE_URL=postgresql://neondb_owner:npg_5TBySVaU7Ktf@ep-sweet-glitter-ag53yugd-pooler.c-2.eu-central-1.aws.neon.tech/neondb?sslmode=require
+
+NODE_ENV=production
+JWT_SECRET=vincanto-production-jwt-secret-2025
+
+# Email Configuration
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=info@vincantomaori.it
+SMTP_PASS=your-gmail-app-password
+MAIL_FROM=noreply@vincantomaori.it
+MAIL_TO=info@vincantomaori.it
+
+# Frontend URL
+FRONTEND_URL=https://vincanto-vetrina.vercel.app
+PRODUCTION_URL=https://vincanto-vetrina.vercel.app
+
+# Payment Configuration (Test)
+STRIPE_PUBLISHABLE_KEY=pk_test_mock
+STRIPE_SECRET_KEY=sk_test_mock
+PAYPAL_CLIENT_ID=mock-client-id
+PAYPAL_CLIENT_SECRET=mock-client-secret
+PAYPAL_MODE=sandbox

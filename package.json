@@ -27,6 +27,7 @@
     "jsdom": "^27.0.0",
     "lucide-react": "^0.344.0",
     "nodemailer": "^7.0.5",
+    "pg": "^8.16.3",
     "react": "^18.3.1",
     "react-datepicker": "^8.8.0",
     "react-dom": "^18.3.1",
