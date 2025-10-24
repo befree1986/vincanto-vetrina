@@ -102,7 +102,10 @@ async function calculateBookingCosts(bookingData) {
  * Valida i dati di input per il calcolo del preventivo
  */
 function validateQuoteData(data) {
-    const { checkIn, checkOut, guests } = data;
+    // Supporta entrambi i formati API: nuovo (checkIn/checkOut/guests) e vecchio (check_in_date/check_out_date/num_adults)
+    const checkIn = data.checkIn || data.check_in_date;
+    const checkOut = data.checkOut || data.check_out_date;
+    const guests = data.guests || (data.num_adults + (data.num_children || 0));
     
     if (!checkIn || !checkOut) {
         return { valid: false, error: 'Date di check-in e check-out sono richieste' };
@@ -130,7 +133,15 @@ function validateQuoteData(data) {
         return { valid: false, error: 'Data di check-in non può essere nel passato' };
     }
     
-    return { valid: true };
+    return { 
+        valid: true, 
+        normalizedData: {
+            checkIn,
+            checkOut,
+            guests,
+            parking: data.parking || (data.parking_option === 'private')
+        }
+    };
 }
 
 /**
@@ -166,8 +177,8 @@ export default async function handler(req, res) {
             });
         }
         
-        // Calcola i costi
-        const costs = await calculateBookingCosts(req.body);
+        // Calcola i costi usando i dati normalizzati
+        const costs = await calculateBookingCosts(validation.normalizedData);
         
         console.log('💰 Preventivo calcolato:', costs);
         
