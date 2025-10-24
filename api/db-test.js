@@ -1,11 +1,6 @@
-// Import compatibile con Vercel serverless
-let Pool;
-try {
-    const pg = await import('pg');
-    Pool = pg.Pool;
-} catch (error) {
-    console.error('Failed to import pg module:', error);
-}
+// Import PostgreSQL per Vercel
+import pg from 'pg';
+const { Pool } = pg;
 
 export default async function handler(req, res) {
     // CORS headers

@@ -14,6 +14,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsConditions from './pages/TermsConditions';
 import Accessibility from './pages/Accessibility';
 import AdminPageSimple from './pages/AdminPageSimple';
+import AdminPanelPro from './pages/AdminPanelPro';
 import './App.css';
 import { Routes, Route } from 'react-router-dom';
 import { Analytics } from "@vercel/analytics/react";
@@ -60,6 +61,7 @@ function App() {
         <Route path="/terms-conditions" element={<TermsConditions />} />
         <Route path="/accessibility" element={<Accessibility />} />
         <Route path="/admin" element={<AdminPageSimple />} />
+        <Route path="/admin-pro" element={<AdminPanelPro />} />
       </Routes>
 
       {showBanner && (

@@ -3,16 +3,16 @@
  * Integrato con sistema configurazione admin real-time
  */
 
-// Configurazione sistema (utilizzata dalle API admin)
+// Configurazione sistema - SINCRONIZZATA CON DATABASE NEON
 const systemConfig = {
     pricing: {
-        basePrice: 80,
-        additionalGuestPrice: 20,
-        cleaningFee: 50,
-        parkingFeePerNight: 10,
-        touristTaxPerPersonPerNight: 2,
-        minimumNights: 2,
-        depositPercentage: 0.30,
+        basePrice: 80.00,            // base_price_per_adult
+        additionalGuestPrice: 20.00, // additional_guest_price 
+        cleaningFee: 50.00,          // cleaning_fee
+        parkingFeePerNight: 10.00,   // parking_fee_per_night
+        touristTaxPerPersonPerNight: 2.00, // tourist_tax_per_person
+        minimumNights: 2,            // minimum_nights
+        depositPercentage: 0.30,     // deposit_percentage (30%)
         currency: 'EUR'
     }
 };

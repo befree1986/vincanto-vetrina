@@ -1,20 +1,12 @@
-// Import compatibile con Vercel serverless
-let Pool;
-try {
-    const pgModule = await import('pg');
-    Pool = pgModule.Pool;
-} catch (error) {
-    console.error('Failed to import pg module:', error);
-}
+// Import PostgreSQL per Vercel  
+import pg from 'pg';
+const { Pool } = pg;
 
 // Configurazione database per Vercel
-let db;
-if (Pool && process.env.DATABASE_URL) {
-    db = new Pool({
-        connectionString: process.env.DATABASE_URL,
-        ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-    });
-}
+const db = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
 
 /**
  * Calcola i costi dettagliati per una prenotazione

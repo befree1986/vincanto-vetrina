@@ -1,37 +1,17 @@
-// Import compatibile con Vercel serverless
-let Pool;
-try {
-    const pgModule = await import('pg');
-    Pool = pgModule.Pool;
-} catch (error) {
-    console.error('Failed to import pg module:', error);
-}
+// Import PostgreSQL per Vercel
+import pg from 'pg';
+const { Pool } = pg;
 
 // Configurazione database per Vercel
-let db;
-if (Pool && process.env.DATABASE_URL) {
-    db = new Pool({
-        connectionString: process.env.DATABASE_URL,
-        ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-    });
-}
+const db = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
 
 /**
  * Valida che le date siano disponibili
  */
 async function checkDateAvailability(check_in_date, check_out_date) {
-    // Fallback se database non disponibile
-    if (!db || !Pool) {
-        console.warn('⚠️ Database non disponibile, assumendo disponibilità');
-        return {
-            available: true,
-            conflicts: {
-                bookings: 0,
-                blocked_dates: 0
-            },
-            note: 'Database non disponibile - controllo limitato'
-        };
-    }
     
     try {
         // Controlla sovrapposizioni con prenotazioni esistenti
