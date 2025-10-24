@@ -25,15 +25,16 @@ const PORT = process.env.PORT || 5000;
 const { Pool } = pg;
 export const db = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: {
+    ssl: process.env.NODE_ENV === 'production' ? {
         rejectUnauthorized: false
-    }
+    } : false
 });
 
 // Test database connection
 db.query('SELECT NOW()', (err, res) => {
     if (err) {
-        console.error('❌ Errore connessione database:', err);
+        console.error('❌ Errore connessione database:', err.message);
+        console.log('⚠️ Server continuerà senza database - alcune funzioni potrebbero non funzionare');
     } else {
         console.log('🔗 Database connesso:', res.rows[0].now);
     }

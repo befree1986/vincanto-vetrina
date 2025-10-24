@@ -174,7 +174,24 @@ const BookingSystem: React.FC = () => {
         <div className="booking-step-content">
             <h2>Dettagli Prenotazione</h2>
             
-            {quote && <PriceBreakdown costs={quote} isDeposit={formData.payment_type === 'deposit'} />}
+            {/* Loading indicator per calcolo prezzi */}
+            {isLoadingQuote && (
+                <div className="quote-loading">
+                    <p>🔄 Calcolando prezzi...</p>
+                </div>
+            )}
+            
+            {/* Errore nel calcolo prezzi */}
+            {quoteError && (
+                <div className="quote-error">
+                    <p>❌ {quoteError}</p>
+                </div>
+            )}
+            
+            {/* Preventivo calcolato */}
+            {quote && !isLoadingQuote && (
+                <PriceBreakdown costs={quote} isDeposit={formData.payment_type === 'deposit'} />
+            )}
             
             <div className="guests-selection">
                 <h3>Ospiti</h3>
