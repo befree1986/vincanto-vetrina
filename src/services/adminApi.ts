@@ -19,7 +19,6 @@ export interface DashboardStats {
   totalRevenue: number;
   confirmedBookings: number;
   pendingBookings: number;
-  thisMonthBookings: number;
   averageStay: number;
   occupancyRate: number;
 }
