@@ -1,54 +1,82 @@
 /* AdminPanelPro.css - Ultra Modern Admin Dashboard */
 
+/* === DEBUG STYLES === */
+.debug-admin-panel {
+  padding: 20px;
+  background-color: #f8fafc;
+  color: #1e293b;
+  min-height: 100vh;
+  font-size: 18px;
+  font-family: Arial, sans-serif;
+}
+
+.debug-admin-panel h1 {
+  color: #2563eb;
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.debug-admin-panel p {
+  margin: 10px 0;
+  line-height: 1.5;
+}
+
+.debug-admin-panel button {
+  padding: 10px 20px;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 20px;
+}
+
+.debug-admin-panel button:hover {
+  background-color: #1e40af;
+}
+
 /* === RESET E VARIABILI AVANZATE === */
 .admin-panel-pro * {
   box-sizing: border-box;
 }
 
 :root {
-  /* Palette Colori Moderna - Migliorata per leggibilità */
-  --admin-primary: #3b82f6;
-  --admin-primary-dark: #2563eb;
-  --admin-primary-light: #93c5fd;
-  --admin-secondary: #64748b;
-  --admin-success: #10b981;
-  --admin-warning: #f59e0b;
-  --admin-danger: #ef4444;
-  --admin-info: #06b6d4;
+  /* Palette Colori Light Theme Professionale - Ottimizzata per leggibilità */
+  --admin-primary: #2563eb;
+  --admin-primary-dark: #1e40af;
+  --admin-primary-light: #dbeafe;
+  --admin-secondary: #475569;
+  --admin-success: #059669;
+  --admin-warning: #d97706;
+  --admin-danger: #dc2626;
+  --admin-info: #0891b2;
   
-  /* Sfumature e Gradienti */
-  --admin-gradient-primary: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  --admin-gradient-secondary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  --admin-gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  --admin-gradient-dashboard: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  /* Light Theme Variables */
+  --admin-bg: #f8fafc;
+  --admin-card: #ffffff;
+  --admin-card-hover: #f1f5f9;
+  --admin-text: #1e293b;
+  --admin-text-muted: #64748b;
+  --admin-border: #e2e8f0;
+  --admin-border-light: #f1f5f9;
+  --admin-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --admin-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   
-  /* Backgrounds - Più chiari per leggibilità */
-  --admin-bg: #0f172a;
-  --admin-bg-secondary: #1e293b;
-  --admin-card: #334155;
-  --admin-card-hover: #475569;
+  /* Variabili per SuperAdmin - Aggiornate per Light Theme */
+  --dark-card: #ffffff;
+  --text-light: #1e293b;
   
-  /* Borders e Shadow */
-  --admin-border: #475569;
-  --admin-border-light: #64748b;
-  --admin-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-  --admin-shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
-  --admin-shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  /* Sfumature e Gradienti Light */
+  --admin-gradient-primary: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  --admin-gradient-secondary: linear-gradient(135deg, #3730a3 0%, #6366f1 100%);
+  --admin-gradient-success: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  --admin-gradient-warning: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+  --admin-gradient-danger: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
   
-  /* Typography - Testi più contrastati */
-  --admin-text: #f8fafc;
-  --admin-text-light: #f1f5f9;
-  --admin-text-muted: #cbd5e1;
-  
-  /* Spacing & Effects */
-  --admin-radius: 12px;
-  --admin-radius-lg: 16px;
+  /* Transition & Effects */
   --admin-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --admin-transition-fast: all 0.15s ease;
-  
-  /* Glass Effect */
-  --glass-bg: rgba(51, 65, 85, 0.95);
-  --glass-border: rgba(148, 163, 184, 0.3);
 }
 
 /* === LOGIN MODERNO === */
