@@ -735,6 +735,13 @@ export default async function handler(req, res) {
             WHERE table_name = 'admin_bookings' AND table_schema = 'public'
           `);
           
+          // Verifica colonne admin_blocked_dates
+          const blockedColumns = await client.query(`
+            SELECT column_name, data_type 
+            FROM information_schema.columns 
+            WHERE table_name = 'admin_blocked_dates' AND table_schema = 'public'
+          `);
+          
           // Conta record
           const counts = {};
           for (const table of tables.rows) {
@@ -750,6 +757,7 @@ export default async function handler(req, res) {
             success: true,
             tables: tables.rows.map(r => r.table_name),
             bookingColumns: bookingColumns.rows,
+            blockedColumns: blockedColumns.rows,
             recordCounts: counts,
             databaseUrl: !!process.env.DATABASE_URL
           });
