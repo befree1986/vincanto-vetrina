@@ -631,10 +631,20 @@ export default async function handler(req, res) {
                 deposit_amount DECIMAL(10,2) DEFAULT 0,
                 platform VARCHAR(50) DEFAULT 'direct',
                 confirmation_code VARCHAR(50) UNIQUE,
+                admin_notes TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
               )
             `);
+            
+            // Aggiungi colonna admin_notes se mancante
+            try {
+              await client.query(`
+                ALTER TABLE admin_bookings ADD COLUMN IF NOT EXISTS admin_notes TEXT
+              `);
+            } catch (alterError) {
+              console.log('Column admin_notes already exists');
+            }
             
             // Crea tabella admin_blocked_dates se non esiste
             await client.query(`
