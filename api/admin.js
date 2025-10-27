@@ -459,7 +459,7 @@ export default async function handler(req, res) {
           const result = await client.query(`
             SELECT id, blocked_date, reason, block_type, created_at, is_active
             FROM admin_blocked_dates 
-            WHERE blocked_date >= CURRENT_DATE AND is_active = true
+            WHERE is_active = true
             ORDER BY blocked_date ASC
           `);
           
