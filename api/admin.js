@@ -1,4 +1,8 @@
-﻿import { Pool } from 'pg';
+﻿const { Pool } = require('pg');
+
+// Debug variabili d'ambiente
+console.log('DATABASE_URL present:', !!process.env.DATABASE_URL);
+console.log('DATABASE_URL length:', process.env.DATABASE_URL ? process.env.DATABASE_URL.length : 0);
 
 // Configurazione database Neon
 const pool = new Pool({
@@ -8,7 +12,7 @@ const pool = new Pool({
   }
 });
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
