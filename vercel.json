@@ -2,6 +2,14 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
+  "env": {
+    "DATABASE_URL": "@database_url"
+  },
+  "functions": {
+    "api/**/*.js": {
+      "maxDuration": 10
+    }
+  },
   "rewrites": [
     {
       "source": "/api/booking/(.*)",
