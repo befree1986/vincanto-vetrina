@@ -708,6 +708,46 @@ export default async function handler(req, res) {
         }
         break;
 
+      case 'database-status':
+        try {
+          // Verifica stato tabelle
+          const tables = await client.query(`
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_schema = 'public' 
+            AND table_name LIKE 'admin_%'
+          `);
+          
+          // Verifica colonne admin_bookings
+          const bookingColumns = await client.query(`
+            SELECT column_name, data_type 
+            FROM information_schema.columns 
+            WHERE table_name = 'admin_bookings' AND table_schema = 'public'
+          `);
+          
+          // Conta record
+          const counts = {};
+          for (const table of tables.rows) {
+            try {
+              const countResult = await client.query(`SELECT COUNT(*) FROM ${table.table_name}`);
+              counts[table.table_name] = parseInt(countResult.rows[0].count);
+            } catch (e) {
+              counts[table.table_name] = `Error: ${e.message}`;
+            }
+          }
+          
+          return res.status(200).json({
+            success: true,
+            tables: tables.rows.map(r => r.table_name),
+            bookingColumns: bookingColumns.rows,
+            recordCounts: counts,
+            databaseUrl: !!process.env.DATABASE_URL
+          });
+        } catch (dbError) {
+          console.error('Database status error:', dbError);
+          return res.status(500).json({ success: false, error: 'Database status error', details: dbError.message });
+        }
+
       default:
         return res.status(400).json({
           success: false,
