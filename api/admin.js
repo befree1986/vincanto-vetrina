@@ -671,14 +671,25 @@ export default async function handler(req, res) {
               `);
             }
             
-            // Aggiorna notifiche con dati reali
-            await client.query(`
-              UPDATE admin_notifications SET 
-                title = 'Sistema Admin Configurato',
-                message = 'Database configurato con successo. Tutte le funzionalità sono ora operative.',
-                notification_type = 'system'
-              WHERE id = 1
-            `);
+            // Aggiungi colonne mancanti se necessario
+            try {
+              await client.query(`
+                ALTER TABLE admin_notifications ADD COLUMN IF NOT EXISTS notification_type VARCHAR(50) DEFAULT 'system'
+              `);
+            } catch (alterError) {
+              console.log('Column already exists or alter failed:', alterError.message);
+            }
+            
+            // Aggiorna o inserisci notifica di setup
+            try {
+              await client.query(`
+                INSERT INTO admin_notifications (title, message, notification_type, is_read)
+                VALUES ('Sistema Admin Configurato', 'Database configurato con successo. Tutte le funzionalità sono ora operative.', 'system', false)
+                ON CONFLICT DO NOTHING
+              `);
+            } catch (notifError) {
+              console.log('Notification insert failed:', notifError.message);
+            }
             
             return res.status(200).json({
               success: true,
