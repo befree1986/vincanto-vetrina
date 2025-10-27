@@ -101,42 +101,43 @@ export default async function handler(req, res) {
 
       case 'bookings':
         try {
-          // Verifica se esiste la tabella bookings
-          const checkBookingsTable = await client.query(`
-            SELECT EXISTS (
-              SELECT FROM information_schema.tables 
-              WHERE table_schema = 'public' 
-              AND table_name = 'bookings'
-            );
-          `);
-          
-          let bookings = [];
-          
-          if (checkBookingsTable.rows[0].exists) {
-            const result = await client.query(`
-              SELECT 
-                id, guest_name, guest_email, checkin_date, checkout_date, 
-                guest_count, status, total_amount, created_at
-              FROM bookings 
-              ORDER BY created_at DESC
-              LIMIT 50
-            `);
-            
-            bookings = result.rows.map(row => ({
-              id: row.id,
-              guestName: row.guest_name,
-              guestEmail: row.guest_email,
-              checkIn: row.checkin_date,
-              checkOut: row.checkout_date,
-              guests: row.guest_count,
-              status: row.status,
-              totalAmount: parseFloat(row.total_amount)
-            }));
-          }
+          // Dati mock per bookings
+          const mockBookings = [
+            {
+              id: 1,
+              guestName: 'Mario Rossi',
+              guestEmail: 'mario.rossi@email.com',
+              checkIn: '2025-01-20',
+              checkOut: '2025-01-25',
+              guests: 2,
+              status: 'confirmed',
+              totalAmount: 850.00
+            },
+            {
+              id: 2,
+              guestName: 'Anna Bianchi',
+              guestEmail: 'anna.bianchi@email.com',
+              checkIn: '2025-02-10',
+              checkOut: '2025-02-15',
+              guests: 4,
+              status: 'pending',
+              totalAmount: 1200.00
+            },
+            {
+              id: 3,
+              guestName: 'Giuseppe Verdi',
+              guestEmail: 'g.verdi@email.com',
+              checkIn: '2025-01-15',
+              checkOut: '2025-01-18',
+              guests: 1,
+              status: 'confirmed',
+              totalAmount: 480.00
+            }
+          ];
           
           return res.status(200).json({
             success: true,
-            bookings: bookings
+            bookings: mockBookings
           });
         } catch (dbError) {
           console.error('Database error in bookings:', dbError);
