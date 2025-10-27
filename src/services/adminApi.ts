@@ -27,12 +27,14 @@ export interface AdminBooking {
   id: string;
   guestName: string;
   guestEmail: string;
+  guestPhone: string;
   checkIn: string;
   checkOut: string;
-  status: 'confirmed' | 'pending' | 'cancelled';
+  status: 'confirmed' | 'pending' | 'cancelled' | 'completed';
   totalAmount: number;
   depositAmount: number;
   guests: number;
+  platform: string;
   includeParking: boolean;
   created: string;
   notes: string;
@@ -46,6 +48,7 @@ export interface AdminCalendar {
   isActive: boolean;
   lastSync: string;
   syncStatus: 'success' | 'error' | 'manual';
+  syncFrequency?: number;
   blockedDates: string[];
 }
 
@@ -224,6 +227,108 @@ export const exportData = async (type: 'bookings' | 'analytics' | 'all') => {
     return response.data;
   } catch (error) {
     console.error('Errore export dati:', error);
+    throw error;
+  }
+};
+
+// === NUOVE FUNZIONI SUPERADMIN ===
+
+export const createCalendar = async (calendarData: {
+  name: string;
+  platform: string;
+  url?: string | null;
+  isActive: boolean;
+}) => {
+  try {
+    const response = await adminApi.post('/admin?action=create-calendar', calendarData);
+    return response.data;
+  } catch (error) {
+    console.error('Errore creazione calendario:', error);
+    throw error;
+  }
+};
+
+export const updateCalendar = async (calendarId: string, updates: {
+  name?: string;
+  isActive?: boolean;
+  syncFrequency?: number;
+}) => {
+  try {
+    const response = await adminApi.put(`/admin?action=update-calendar&calendarId=${calendarId}`, updates);
+    return response.data;
+  } catch (error) {
+    console.error('Errore aggiornamento calendario:', error);
+    throw error;
+  }
+};
+
+export const deleteCalendar = async (calendarId: string) => {
+  try {
+    const response = await adminApi.delete(`/admin?action=delete-calendar&calendarId=${calendarId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Errore eliminazione calendario:', error);
+    throw error;
+  }
+};
+
+export const updateBooking = async (bookingId: string, bookingData: {
+  guestName: string;
+  guestEmail: string;
+  guestPhone: string;
+  checkIn: string;
+  checkOut: string;
+  guests: number;
+  status: string;
+  totalAmount: number;
+}) => {
+  try {
+    const response = await adminApi.put(`/admin?action=update-booking&bookingId=${bookingId}`, bookingData);
+    return response.data;
+  } catch (error) {
+    console.error('Errore aggiornamento prenotazione:', error);
+    throw error;
+  }
+};
+
+export const sendBookingEmail = async (bookingId: string, templateType: string) => {
+  try {
+    const response = await adminApi.post('/admin?action=send-booking-email', { bookingId, templateType });
+    return response.data;
+  } catch (error) {
+    console.error('Errore invio email prenotazione:', error);
+    throw error;
+  }
+};
+
+export const saveEmailTemplate = async (templateType: string, templateData: {
+  subject: string;
+  htmlContent: string;
+}) => {
+  try {
+    const response = await adminApi.post('/admin?action=save-email-template', {
+      templateType,
+      ...templateData
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Errore salvataggio template email:', error);
+    throw error;
+  }
+};
+
+export const testEmailTemplate = async (templateType: string, templateData: {
+  subject: string;
+  htmlContent: string;
+}) => {
+  try {
+    const response = await adminApi.post('/admin?action=test-email-template', {
+      templateType,
+      ...templateData
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Errore test email template:', error);
     throw error;
   }
 };

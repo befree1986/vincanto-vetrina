@@ -775,6 +775,8 @@ export default async function handler(req, res) {
           return res.status(500).json({ success: false, error: 'Database status error', details: dbError.message });
         }
 
+
+
       default:
         return res.status(400).json({
           success: false,
@@ -789,6 +791,7 @@ export default async function handler(req, res) {
       details: error.message,
       stack: error.stack
     });
+
   } finally {
     if (client) {
       client.release();
