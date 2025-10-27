@@ -5,12 +5,17 @@ console.log('DATABASE_URL present:', !!process.env.DATABASE_URL);
 console.log('DATABASE_URL length:', process.env.DATABASE_URL ? process.env.DATABASE_URL.length : 0);
 
 // Configurazione database Neon
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
-});
+let pool;
+try {
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false
+    }
+  });
+} catch (poolError) {
+  console.error('Pool creation error:', poolError);
+}
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -23,6 +28,17 @@ module.exports = async function handler(req, res) {
 
   const { action } = req.query;
   let client;
+
+  // Verifica che DATABASE_URL sia disponibile
+  if (!process.env.DATABASE_URL) {
+    console.error('DATABASE_URL not found in environment');
+    return res.status(500).json({ success: false, error: 'Database configuration missing' });
+  }
+
+  if (!pool) {
+    console.error('Database pool not initialized');
+    return res.status(500).json({ success: false, error: 'Database pool not available' });
+  }
 
   try {
     client = await pool.connect();
