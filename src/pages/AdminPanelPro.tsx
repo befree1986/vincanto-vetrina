@@ -379,6 +379,8 @@ const AdminPanelPro: React.FC = () => {
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
               className="admin-input"
+              aria-label="Password Admin"
+              title="Inserisci password per accedere al pannello admin"
             />
             
             <button onClick={handleLogin} className="admin-btn-primary">
@@ -949,6 +951,8 @@ const AdminPanelPro: React.FC = () => {
                           placeholder="es. Airbnb Principale"
                           value={newCalendar.name}
                           onChange={(e) => setNewCalendar({...newCalendar, name: e.target.value})}
+                          aria-label="Nome Calendario"
+                          title="Inserisci il nome per il nuovo calendario"
                         />
                       </div>
                       <div className="config-item">
@@ -974,6 +978,8 @@ const AdminPanelPro: React.FC = () => {
                         placeholder="https://calendar.airbnb.com/calendar/ical/..."
                         value={newCalendar.url}
                         onChange={(e) => setNewCalendar({...newCalendar, url: e.target.value})}
+                        aria-label="URL Calendar iCal"
+                        title="Inserisci URL del calendario iCal da sincronizzare"
                       />
                     </div>
                     
@@ -1112,6 +1118,8 @@ const AdminPanelPro: React.FC = () => {
                                   type="text"
                                   value={editBookingData.guestName}
                                   onChange={(e) => setEditBookingData({...editBookingData, guestName: e.target.value})}
+                                  aria-label="Nome ospite"
+                                  title="Modifica nome ospite"
                                 />
                               ) : (
                                 booking.guestName
@@ -1123,6 +1131,8 @@ const AdminPanelPro: React.FC = () => {
                                   type="email"
                                   value={editBookingData.guestEmail}
                                   onChange={(e) => setEditBookingData({...editBookingData, guestEmail: e.target.value})}
+                                  aria-label="Email ospite"
+                                  title="Modifica email ospite"
                                 />
                               ) : (
                                 booking.guestEmail
@@ -1134,6 +1144,8 @@ const AdminPanelPro: React.FC = () => {
                                   type="tel"
                                   value={editBookingData.guestPhone}
                                   onChange={(e) => setEditBookingData({...editBookingData, guestPhone: e.target.value})}
+                                  aria-label="Telefono ospite"
+                                  title="Modifica telefono ospite"
                                 />
                               ) : (
                                 booking.guestPhone
@@ -1145,6 +1157,8 @@ const AdminPanelPro: React.FC = () => {
                                   type="date"
                                   value={editBookingData.checkIn}
                                   onChange={(e) => setEditBookingData({...editBookingData, checkIn: e.target.value})}
+                                  aria-label="Data check-in"
+                                  title="Modifica data check-in"
                                 />
                               ) : (
                                 new Date(booking.checkIn).toLocaleDateString()
@@ -1156,6 +1170,8 @@ const AdminPanelPro: React.FC = () => {
                                   type="date"
                                   value={editBookingData.checkOut}
                                   onChange={(e) => setEditBookingData({...editBookingData, checkOut: e.target.value})}
+                                  aria-label="Data check-out"
+                                  title="Modifica data check-out"
                                 />
                               ) : (
                                 new Date(booking.checkOut).toLocaleDateString()
@@ -1168,6 +1184,8 @@ const AdminPanelPro: React.FC = () => {
                                   min="1"
                                   value={editBookingData.guests}
                                   onChange={(e) => setEditBookingData({...editBookingData, guests: parseInt(e.target.value)})}
+                                  aria-label="Numero ospiti"
+                                  title="Modifica numero ospiti"
                                 />
                               ) : (
                                 booking.guests
@@ -1198,6 +1216,8 @@ const AdminPanelPro: React.FC = () => {
                                   step="0.01"
                                   value={editBookingData.totalAmount}
                                   onChange={(e) => setEditBookingData({...editBookingData, totalAmount: parseFloat(e.target.value)})}
+                                  aria-label="Importo totale"
+                                  title="Modifica importo totale"
                                 />
                               ) : (
                                 `€${booking.totalAmount.toFixed(2)}`
@@ -1259,15 +1279,21 @@ const AdminPanelPro: React.FC = () => {
                     <div className="config-form">
                       <div className="config-item">
                         <label>Stripe Public Key</label>
-                        <input type="text" placeholder="pk_live_..." />
+                        <input type="text" placeholder="pk_live_..." 
+                               aria-label="Stripe Public Key"
+                               title="Inserisci la chiave pubblica di Stripe" />
                       </div>
                       <div className="config-item">
                         <label>Stripe Secret Key</label>
-                        <input type="password" placeholder="sk_live_..." />
+                        <input type="password" placeholder="sk_live_..." 
+                               aria-label="Stripe Secret Key"
+                               title="Inserisci la chiave segreta di Stripe" />
                       </div>
                       <div className="config-item">
                         <label>Commissione (%)</label>
-                        <input type="number" step="0.01" defaultValue="2.9" />
+                        <input type="number" step="0.01" defaultValue="2.9" 
+                               aria-label="Commissione percentuale"
+                               title="Inserisci la percentuale di commissione" />
                       </div>
                       <button className="admin-btn-primary">💾 Salva Stripe</button>
                     </div>
@@ -1278,15 +1304,21 @@ const AdminPanelPro: React.FC = () => {
                     <div className="config-form">
                       <div className="config-item">
                         <label>PayPal Client ID</label>
-                        <input type="text" placeholder="Client ID PayPal" />
+                        <input type="text" placeholder="Client ID PayPal" 
+                               aria-label="PayPal Client ID"
+                               title="Inserisci il Client ID di PayPal" />
                       </div>
                       <div className="config-item">
                         <label>PayPal Client Secret</label>
-                        <input type="password" placeholder="Client Secret" />
+                        <input type="password" placeholder="Client Secret" 
+                               aria-label="PayPal Client Secret"
+                               title="Inserisci il Client Secret di PayPal" />
                       </div>
                       <div className="config-item">
                         <label>Commissione (%)</label>
-                        <input type="number" step="0.01" defaultValue="3.4" />
+                        <input type="number" step="0.01" defaultValue="3.4" 
+                               aria-label="Commissione percentuale PayPal"
+                               title="Inserisci la percentuale di commissione PayPal" />
                       </div>
                       <button className="admin-btn-primary">💾 Salva PayPal</button>
                     </div>
@@ -1409,7 +1441,9 @@ const AdminPanelPro: React.FC = () => {
                     <div className="config-form">
                       <div className="config-item">
                         <label>Nome Proprietà</label>
-                        <input type="text" defaultValue="Vincanto Maori" />
+                          <input type="text" defaultValue="Vincanto Maori" 
+                                 aria-label="Nome proprietà"
+                                 title="Nome della proprietà" />
                       </div>
                       <div className="config-item">
                         <label>Indirizzo</label>
@@ -1432,11 +1466,21 @@ const AdminPanelPro: React.FC = () => {
                       <div className="config-row">
                         <div className="config-item">
                           <label>Orario Check-in</label>
-                          <input type="time" defaultValue="15:00" />
+                          <input 
+                            type="time" 
+                            defaultValue="15:00" 
+                            aria-label="Orario check-in"
+                            title="Orario predefinito check-in"
+                          />
                         </div>
                         <div className="config-item">
                           <label>Orario Check-out</label>
-                          <input type="time" defaultValue="11:00" />
+                          <input 
+                            type="time" 
+                            defaultValue="11:00" 
+                            aria-label="Orario check-out"
+                            title="Orario predefinito check-out"
+                          />
                         </div>
                       </div>
                     </div>
