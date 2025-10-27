@@ -93,7 +93,12 @@ export default async function handler(req, res) {
           });
         } catch (dbError) {
           console.error('Database error in dashboard-stats:', dbError);
-          return res.status(500).json({ success: false, error: 'Database error' });
+          return res.status(500).json({ 
+            success: false, 
+            error: 'Database error',
+            details: dbError.message,
+            code: dbError.code
+          });
         }
 
       case 'bookings':
@@ -315,7 +320,9 @@ export default async function handler(req, res) {
     console.error('Admin API Error:', error);
     return res.status(500).json({
       success: false,
-      error: 'Errore interno del server'
+      error: 'Errore interno del server',
+      details: error.message,
+      stack: error.stack
     });
   } finally {
     if (client) {
