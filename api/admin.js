@@ -434,8 +434,8 @@ export default async function handler(req, res) {
             const { date, reason, type } = req.body;
             
             const result = await client.query(`
-              INSERT INTO admin_blocked_dates (blocked_date, reason, block_type, created_at, updated_at)
-              VALUES ($1, $2, $3, NOW(), NOW())
+              INSERT INTO admin_blocked_dates (blocked_date, reason, block_type, is_active, created_at, updated_at)
+              VALUES ($1, $2, $3, true, NOW(), NOW())
               RETURNING id
             `, [date, reason, type || 'manual']);
             
