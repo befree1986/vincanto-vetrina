@@ -1,4 +1,4 @@
-﻿const { Pool } = require('pg');
+﻿import { Pool } from 'pg';
 
 // Debug variabili d'ambiente
 console.log('DATABASE_URL present:', !!process.env.DATABASE_URL);
@@ -17,7 +17,7 @@ try {
   console.error('Pool creation error:', poolError);
 }
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
