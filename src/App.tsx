@@ -14,6 +14,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsConditions from './pages/TermsConditions';
 import Accessibility from './pages/Accessibility';
 import AdminPanelPro from './pages/AdminPanelPro';
+import OAuthCallback from './pages/OAuthCallback';
 import './App.css';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Analytics } from "@vercel/analytics/react";
@@ -45,6 +46,7 @@ function App() {
         {userPreferences?.analytics && <GoogleAnalytics />}
         <Routes>
           <Route path="/admin" element={<AdminPanelPro />} />
+          <Route path="/oauth/callback" element={<OAuthCallback />} />
         </Routes>
         <Analytics />
       </>

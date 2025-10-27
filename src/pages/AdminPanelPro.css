@@ -36,6 +36,38 @@
   background-color: #1e40af;
 }
 
+/* Debug Component Specific Styles */
+.debug-container {
+  padding: 40px;
+  text-align: center;
+  font-size: 24px;
+  color: #059669;
+}
+
+.debug-info-box {
+  background-color: #f0f9ff;
+  padding: 20px;
+  margin: 20px 0;
+  border-radius: 8px;
+  border: 1px solid #0ea5e9;
+}
+
+.debug-list {
+  text-align: left;
+  display: inline-block;
+}
+
+.debug-error {
+  padding: 40px;
+  text-align: center;
+  font-size: 18px;
+  color: #dc2626;
+  background-color: #fef2f2;
+  border: 2px solid #fca5a5;
+  border-radius: 8px;
+  margin: 20px;
+}
+
 /* === RESET E VARIABILI AVANZATE === */
 .admin-panel-pro * {
   box-sizing: border-box;
@@ -1147,7 +1179,351 @@
 }
 
 /* Responsive per nuovi pannelli */
+/* === SEZIONE PREZZI ESTESA === */
+.admin-pricing-section {
+  margin-bottom: 32px;
+  padding: 24px;
+  background: var(--admin-card);
+  border-radius: 16px;
+  border: 1px solid var(--admin-border);
+  box-shadow: var(--admin-shadow);
+}
+
+.admin-pricing-section h3 {
+  color: var(--admin-text);
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--admin-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.admin-pricing-card {
+  background: var(--admin-bg);
+  border: 1px solid var(--admin-border-light);
+  border-radius: 12px;
+  padding: 20px;
+  transition: var(--admin-transition);
+}
+
+.admin-pricing-card:hover {
+  background: var(--admin-card-hover);
+  box-shadow: var(--admin-shadow-lg);
+  transform: translateY(-2px);
+}
+
+.admin-pricing-card h4 {
+  color: var(--admin-primary);
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background: var(--admin-primary-light);
+  border-radius: 8px;
+  border-left: 4px solid var(--admin-primary);
+}
+
+.pricing-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pricing-controls label {
+  color: var(--admin-text);
+  font-weight: 500;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.pricing-note {
+  color: var(--admin-text-muted);
+  font-style: italic;
+  font-size: 13px;
+  padding: 6px 12px;
+  background: var(--admin-border-light);
+  border-radius: 6px;
+  border-left: 3px solid var(--admin-info);
+}
+
+/* Servizi Personalizzati */
+.custom-service-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 12px;
+  background: var(--admin-card);
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.custom-service-item input[type="text"] {
+  flex: 2;
+}
+
+.custom-service-item input[type="number"] {
+  flex: 1;
+  max-width: 100px;
+}
+
+.existing-services {
+  margin: 16px 0;
+}
+
+.service-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--admin-card);
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  transition: var(--admin-transition);
+}
+
+.service-row:hover {
+  background: var(--admin-card-hover);
+  box-shadow: var(--admin-shadow);
+}
+
+.service-row span:first-child {
+  font-weight: 500;
+  color: var(--admin-text);
+}
+
+.service-row span:nth-child(2) {
+  color: var(--admin-primary);
+  font-weight: 600;
+}
+
+.promo-dates {
+  display: flex;
+  gap: 8px;
+  align-items: end;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.promo-dates input {
+  flex: 1;
+  min-width: 120px;
+}
+
+/* Azioni Prezzi */
+.admin-pricing-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 32px;
+  padding: 24px;
+  background: linear-gradient(135deg, var(--admin-border-light) 0%, var(--admin-card) 100%);
+  border-radius: 16px;
+  border: 1px solid var(--admin-border);
+}
+
+/* === CALENDARIO PROFESSIONALE === */
+.admin-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.admin-calendar-card {
+  background: var(--admin-card);
+  border: 1px solid var(--admin-border);
+  border-radius: 16px;
+  padding: 24px;
+  position: relative;
+  transition: var(--admin-transition);
+  overflow: hidden;
+}
+
+.admin-calendar-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--admin-gradient-primary);
+}
+
+.admin-calendar-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--admin-shadow-lg);
+}
+
+.admin-calendar-card h3 {
+  color: var(--admin-text);
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.calendar-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.calendar-status.active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.calendar-status.inactive {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.calendar-status.syncing {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.calendar-info {
+  margin: 16px 0;
+  color: var(--admin-text-muted);
+  font-size: 14px;
+}
+
+.calendar-controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.calendar-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+/* Status Indicators */
+.sync-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.sync-indicator.success {
+  color: var(--admin-success);
+}
+
+.sync-indicator.error {
+  color: var(--admin-danger);
+}
+
+.sync-indicator.pending {
+  color: var(--admin-warning);
+}
+
+/* === BUTTONS MIGLIORATI === */
+.admin-btn-small {
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: var(--admin-transition);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.admin-btn-small:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--admin-shadow);
+}
+
+.admin-btn-primary.admin-btn-small {
+  background: var(--admin-gradient-primary);
+  color: white;
+}
+
+.admin-btn-secondary.admin-btn-small {
+  background: var(--admin-card);
+  color: var(--admin-text);
+  border: 1px solid var(--admin-border);
+}
+
+.admin-btn-danger {
+  background: var(--admin-gradient-danger);
+  color: white;
+}
+
+.admin-btn-warning {
+  background: var(--admin-gradient-warning);
+  color: white;
+}
+
+.admin-btn-success {
+  background: var(--admin-gradient-success);
+  color: white;
+}
+
+/* === RESPONSIVE DESIGN === */
 @media (max-width: 768px) {
+  .admin-pricing-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .admin-calendar-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .custom-service-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .service-row {
+    flex-direction: column;
+    align-items: start;
+    gap: 8px;
+  }
+  
+  .promo-dates {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .admin-pricing-actions {
+    flex-direction: column;
+  }
+  
+  .calendar-controls {
+    justify-content: center;
+  }
+  
   .export-options {
     grid-template-columns: 1fr;
   }
@@ -1163,4 +1539,36 @@
     text-align: center;
     gap: 12px;
   }
+}
+
+/* === STILI AGGIUNTIVI PER CORREZIONI === */
+.no-data-message {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--admin-text-secondary);
+  font-size: 16px;
+  font-style: italic;
+  background: var(--admin-bg);
+  border-radius: 8px;
+  border: 1px solid var(--admin-border-light);
+}
+
+.dashboard-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.auth-error-message {
+  background: #fee;
+  color: #c53030;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid #feb2b2;
+  margin: 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
 }

@@ -107,14 +107,19 @@ const Contact: React.FC = () => {
             ) : (
               <form className="booking-form" onSubmit={handleSubmit} aria-label="Modulo di contatto per richieste o prenotazioni">
                 {/* Honeypot anti-bot invisibile */}
-                <input
-                  type="text"
-                  name="honeypot"
-                  value={formData.honeypot}
-                  onChange={handleChange}
-                  style={{ display: 'none' }}
-                  autoComplete="off"
-                />
+                <label className="honeypot-field">
+                  Non compilare questo campo
+                  <input
+                    type="text"
+                    name="honeypot"
+                    value={formData.honeypot}
+                    onChange={handleChange}
+                    className="honeypot-field"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    aria-hidden="true"
+                  />
+                </label>
 
                 <div className="form-group">
                   <label htmlFor="name">{t('contact.form.name')}</label>
@@ -234,7 +239,6 @@ const Contact: React.FC = () => {
                   type="submit"
                   className="btn btn-accent"
                   disabled={loading}
-                  aria-busy={loading}
                 >
                   {loading ? t('contact.form.sending') : t('contact.form.submit')}
                 </button>

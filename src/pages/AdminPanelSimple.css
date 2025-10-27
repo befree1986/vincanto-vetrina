@@ -1,0 +1,32 @@
+/* AdminPanelSimple styles */
+.simple-container {
+  padding: 50px;
+  text-align: center;
+  background-color: #f0f9ff;
+  min-height: 100vh;
+}
+
+.simple-title {
+  color: #059669;
+  font-size: 2rem;
+}
+
+.simple-description {
+  font-size: 1.2rem;
+  margin-top: 20px;
+}
+
+.simple-status-box {
+  background-color: white;
+  border: 2px solid #10b981;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 30px;
+  max-width: 500px;
+  margin: 30px auto 0;
+}
+
+.simple-status-list {
+  text-align: left;
+  list-style: none;
+}

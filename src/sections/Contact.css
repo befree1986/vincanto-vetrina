@@ -149,4 +149,14 @@
   color: var(--success-color, #27ae60); /* Un colore verde per evidenziare lo sconto */
 }
 
+/* Honeypot anti-spam field - invisibile */
+.honeypot-field {
+  display: none !important;
+  position: absolute;
+  left: -9999px;
+  width: 0;
+  height: 0;
+  opacity: 0;
+}
+
 }

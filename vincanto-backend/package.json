@@ -1,20 +1,42 @@
 {
   "name": "vincanto-backend",
-  "version": "1.0.0",
-  "main": "index.js",
+  "version": "2.0.0",
+  "main": "server-api.js",
+  "description": "Vincanto Backend API - Complete REST API for vacation rental management",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js",
+    "start": "node server-api.js",
+    "dev": "nodemon server-api.js",
+    "legacy": "node server.js",
+    "db:setup": "node scripts/init-database.js setup",
+    "db:reset": "node scripts/init-database.js reset",
+    "db:stats": "node scripts/init-database.js stats",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "vincanto",
+    "api",
+    "vacation-rental",
+    "booking",
+    "calendar",
+    "payments"
+  ],
+  "author": "Vincanto Team",
   "license": "ISC",
-  "description": "",
   "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "compression": "^1.7.4",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
-    "express": "^5.1.0",
-    "nodemailer": "^7.0.9"
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^7.0.9",
+    "sequelize": "^6.37.7",
+    "sqlite3": "^5.1.7",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
   }
 }

@@ -7,12 +7,11 @@ import { Helmet } from 'react-helmet';
 const Home: React.FC = () => {
   const { t } = useTranslation();
 
-  <Helmet>
-  <title>TEST | Titolo Manuale</title>
-</Helmet>
-
   return (
     <React.Fragment>
+      <Helmet>
+        <title>TEST | Titolo Manuale</title>
+      </Helmet>
       
         <section id="home" className="home-section">
         <ParallaxBackground imageUrl="/welcome.webp">
