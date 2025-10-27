@@ -446,7 +446,12 @@ export default async function handler(req, res) {
             });
           } catch (dbError) {
             console.error('Database error adding blocked date:', dbError);
-            return res.status(500).json({ success: false, error: 'Database error' });
+            return res.status(500).json({ 
+              success: false, 
+              error: 'Database error',
+              details: dbError.message,
+              sqlState: dbError.code
+            });
           }
         }
         
