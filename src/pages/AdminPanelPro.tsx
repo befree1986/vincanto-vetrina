@@ -9,8 +9,7 @@ const AdminPanelPro: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
-  // SuperAdmin nascosto
-  const [showSuperAdmin, setShowSuperAdmin] = useState(false);
+  // Tutti i pannelli sempre disponibili (SuperAdmin sempre attivo)
   
   // Stati per gestione dati con API reali
   const [dashboardStats, setDashboardStats] = useState<AdminAPI.DashboardStats | null>(null);
@@ -209,14 +208,10 @@ const AdminPanelPro: React.FC = () => {
           <div className="admin-user-info">
             <span>👤 Administrator</span>
             
-            {/* Pulsante SuperAdmin nascosto */}
-            <button 
-              className="admin-btn-ghost"
-              onClick={() => setShowSuperAdmin(!showSuperAdmin)}
-              title="SuperAdmin"
-            >
-              ⚙️
-            </button>
+            {/* Indicatore SuperAdmin attivo */}
+            <div className="admin-super-indicator" title="Modalità SuperAdmin Attiva">
+              ⚡ SuperAdmin
+            </div>
             
             {/* Notifiche */}
             <div className="admin-notifications">
@@ -235,7 +230,7 @@ const AdminPanelPro: React.FC = () => {
         </div>
       </header>
 
-      {/* Navigazione Tab */}
+      {/* Navigazione Tab Completa */}
       <nav className="admin-nav">
         <div className="admin-nav-container">
           <button 
@@ -259,14 +254,33 @@ const AdminPanelPro: React.FC = () => {
             🗓️ Calendari
           </button>
           
-          {showSuperAdmin && (
-            <button 
-              className={`admin-nav-item super-admin ${activeTab === 'config' ? 'active' : ''}`}
-              onClick={() => setActiveTab('config')}
-            >
-              ⚡ SuperAdmin
-            </button>
-          )}
+          <button 
+            className={`admin-nav-item ${activeTab === 'analytics' ? 'active' : ''}`}
+            onClick={() => setActiveTab('analytics')}
+          >
+            📈 Analytics
+          </button>
+          
+          <button 
+            className={`admin-nav-item ${activeTab === 'notifications' ? 'active' : ''}`}
+            onClick={() => setActiveTab('notifications')}
+          >
+            🔔 Notifiche
+          </button>
+          
+          <button 
+            className={`admin-nav-item ${activeTab === 'export' ? 'active' : ''}`}
+            onClick={() => setActiveTab('export')}
+          >
+            💾 Esporta
+          </button>
+          
+          <button 
+            className={`admin-nav-item super-admin ${activeTab === 'config' ? 'active' : ''}`}
+            onClick={() => setActiveTab('config')}
+          >
+            ⚡ SuperAdmin
+          </button>
         </div>
       </nav>
 
@@ -448,8 +462,128 @@ const AdminPanelPro: React.FC = () => {
           </div>
         )}
 
+        {/* Analytics */}
+        {activeTab === 'analytics' && (
+          <div className="admin-analytics">
+            <h2>📈 Analytics e Statistiche</h2>
+            
+            <div className="admin-section">
+              <h3>📊 Panoramica Performance</h3>
+              <div className="admin-stats-grid">
+                <div className="admin-stat-card">
+                  <h3>Tasso di Occupazione</h3>
+                  <div className="stat-value">87%</div>
+                </div>
+                <div className="admin-stat-card">
+                  <h3>Revenue per Notte</h3>
+                  <div className="stat-value">€142</div>
+                </div>
+                <div className="admin-stat-card">
+                  <h3>Giorni Prenotati (30gg)</h3>
+                  <div className="stat-value">26</div>
+                </div>
+                <div className="admin-stat-card">
+                  <h3>Rating Medio</h3>
+                  <div className="stat-value">4.8⭐</div>
+                </div>
+              </div>
+              
+              <div className="analytics-charts">
+                <div className="chart-placeholder">
+                  📊 Grafici Analytics (Integration con Chart.js)
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Notifiche */}
+        {activeTab === 'notifications' && (
+          <div className="admin-notifications-panel">
+            <h2>🔔 Centro Notifiche</h2>
+            
+            <div className="admin-section">
+              <div className="notifications-header">
+                <h3>Notifiche Recenti ({unreadCount} non lette)</h3>
+                <button className="admin-btn-secondary">Segna tutte come lette</button>
+              </div>
+              
+              <div className="notifications-list">
+                {notifications.length === 0 ? (
+                  <div className="empty-state">
+                    <p>✅ Tutte le notifiche sono state lette</p>
+                  </div>
+                ) : (
+                  notifications.map(notification => (
+                    <div key={notification.id} className={`notification-item ${notification.read ? 'read' : 'unread'}`}>
+                      <div className="notification-icon">
+                        {notification.type === 'booking' && '📅'}
+                        {notification.type === 'calendar' && '🗓️'}
+                        {notification.type === 'system' && '⚙️'}
+                        {notification.type === 'payment' && '💳'}
+                      </div>
+                      <div className="notification-content">
+                        <h4>{notification.title}</h4>
+                        <p>{notification.message}</p>
+                        <small>{new Date(notification.timestamp).toLocaleString()}</small>
+                      </div>
+                      {!notification.read && <div className="unread-indicator"></div>}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Esportazione Dati */}
+        {activeTab === 'export' && (
+          <div className="admin-export">
+            <h2>💾 Esportazione Dati</h2>
+            
+            <div className="admin-section">
+              <h3>📋 Esporta Report</h3>
+              <div className="export-options">
+                <div className="export-card">
+                  <h4>📅 Report Prenotazioni</h4>
+                  <p>Esporta tutte le prenotazioni con dettagli completi</p>
+                  <button className="admin-btn-primary">Esporta Excel</button>
+                  <button className="admin-btn-secondary">Esporta PDF</button>
+                </div>
+                
+                <div className="export-card">
+                  <h4>💰 Report Ricavi</h4>
+                  <p>Analisi finanziaria dettagliata per periodo</p>
+                  <button className="admin-btn-primary">Esporta Excel</button>
+                  <button className="admin-btn-secondary">Esporta PDF</button>
+                </div>
+                
+                <div className="export-card">
+                  <h4>🗓️ Report Calendario</h4>
+                  <p>Disponibilità e occupazione per periodo</p>
+                  <button className="admin-btn-primary">Esporta Excel</button>
+                  <button className="admin-btn-secondary">Esporta PDF</button>
+                </div>
+                
+                <div className="export-card">
+                  <h4>👥 Report Ospiti</h4>
+                  <p>Database completo degli ospiti e statistiche</p>
+                  <button className="admin-btn-primary">Esporta Excel</button>
+                  <button className="admin-btn-secondary">Esporta PDF</button>
+                </div>
+              </div>
+              
+              <div className="backup-section">
+                <h3>💾 Backup Completo</h3>
+                <p>Crea un backup completo di tutti i dati del sistema</p>
+                <button className="admin-btn-danger">Genera Backup Completo</button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* SuperAdmin Configuration */}
-        {activeTab === 'config' && showSuperAdmin && (
+        {activeTab === 'config' && (
           <div className="admin-config">
             <h2>⚡ SuperAdmin Configuration</h2>
             

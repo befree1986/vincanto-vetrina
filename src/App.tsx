@@ -15,7 +15,7 @@ import TermsConditions from './pages/TermsConditions';
 import Accessibility from './pages/Accessibility';
 import AdminPanelPro from './pages/AdminPanelPro';
 import './App.css';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { Analytics } from "@vercel/analytics/react";
 import GoogleAnalytics from "./utils/GoogleAnalytics";
 import SafeSeo from './components/SafeSeo';
@@ -24,6 +24,9 @@ import SafeSeo from './components/SafeSeo';
 
 
 function App() {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  
   const {
     showBanner,
     setShowBanner,
@@ -34,6 +37,21 @@ function App() {
     savePreferences
   } = useCookieContext() || {};
 
+  // Layout standalone per admin
+  if (isAdminRoute) {
+    return (
+      <>
+        {/* Google Analytics solo se accettato */}
+        {userPreferences?.analytics && <GoogleAnalytics />}
+        <Routes>
+          <Route path="/admin" element={<AdminPanelPro />} />
+        </Routes>
+        <Analytics />
+      </>
+    );
+  }
+
+  // Layout normale per il sito
   return (
     <>
       {/* Google Analytics pageview tracking, solo se accettato */}
@@ -59,7 +77,6 @@ function App() {
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-conditions" element={<TermsConditions />} />
         <Route path="/accessibility" element={<Accessibility />} />
-        <Route path="/admin" element={<AdminPanelPro />} />
       </Routes>
 
       {showBanner && (
