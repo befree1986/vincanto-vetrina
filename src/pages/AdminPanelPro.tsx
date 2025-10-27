@@ -115,24 +115,6 @@ const AdminPanelPro: React.FC = () => {
   };
 
   // === GESTORI EVENTI ===
-  const handleAddCalendar = async (name: string, platform: string, url: string) => {
-    try {
-      await AdminAPI.addCalendar({ 
-        name, 
-        platform, 
-        url, 
-        isActive: true, 
-        syncStatus: 'manual' as const, 
-        blockedDates: [], 
-        lastSync: new Date().toISOString() 
-      });
-      await loadCalendars();
-    } catch (error) {
-      console.error('Errore aggiunta calendario:', error);
-      setError('Errore nell\'aggiunta del calendario');
-    }
-  };
-
   const handleSyncCalendar = async (calendarId: string) => {
     try {
       await AdminAPI.syncCalendar(calendarId);
@@ -140,16 +122,6 @@ const AdminPanelPro: React.FC = () => {
     } catch (error) {
       console.error('Errore sincronizzazione calendario:', error);
       setError('Errore nella sincronizzazione del calendario');
-    }
-  };
-
-  const handleAddBlockedDate = async (date: string, reason: string, type: string) => {
-    try {
-      await AdminAPI.addBlockedDate(date, reason, type);
-      await loadBlockedDates();
-    } catch (error) {
-      console.error('Errore aggiunta data bloccata:', error);
-      setError('Errore nell\'aggiunta della data bloccata');
     }
   };
 
@@ -593,8 +565,9 @@ const AdminPanelPro: React.FC = () => {
                 <h3>💰 Configurazione Prezzi</h3>
                 <div className="config-grid">
                   <div className="config-item">
-                    <label>Prezzo Base (notte)</label>
+                    <label htmlFor="basePrice">Prezzo Base (notte)</label>
                     <input 
+                      id="basePrice"
                       type="number" 
                       step="0.01"
                       value={pricingConfig.basePrice}
@@ -606,8 +579,9 @@ const AdminPanelPro: React.FC = () => {
                   </div>
                   
                   <div className="config-item">
-                    <label>Prezzo Ospite Aggiuntivo</label>
+                    <label htmlFor="additionalGuestPrice">Prezzo Ospite Aggiuntivo</label>
                     <input 
+                      id="additionalGuestPrice"
                       type="number" 
                       step="0.01"
                       value={pricingConfig.additionalGuestPrice}
@@ -619,8 +593,9 @@ const AdminPanelPro: React.FC = () => {
                   </div>
                   
                   <div className="config-item">
-                    <label>Tassa di Pulizia</label>
+                    <label htmlFor="cleaningFee">Tassa di Pulizia</label>
                     <input 
+                      id="cleaningFee"
                       type="number" 
                       step="0.01"
                       value={pricingConfig.cleaningFee}
@@ -632,8 +607,9 @@ const AdminPanelPro: React.FC = () => {
                   </div>
                   
                   <div className="config-item">
-                    <label>Parcheggio (per notte)</label>
+                    <label htmlFor="parkingFee">Parcheggio (per notte)</label>
                     <input 
+                      id="parkingFee"
                       type="number" 
                       step="0.01"
                       value={pricingConfig.parkingFeePerNight}
@@ -645,8 +621,9 @@ const AdminPanelPro: React.FC = () => {
                   </div>
                   
                   <div className="config-item">
-                    <label>Notti Minime</label>
+                    <label htmlFor="minimumNights">Notti Minime</label>
                     <input 
+                      id="minimumNights"
                       type="number" 
                       min="1"
                       value={pricingConfig.minimumNights}
@@ -658,8 +635,9 @@ const AdminPanelPro: React.FC = () => {
                   </div>
                   
                   <div className="config-item">
-                    <label>Percentuale Deposito (%)</label>
+                    <label htmlFor="depositPercentage">Percentuale Deposito (%)</label>
                     <input 
+                      id="depositPercentage"
                       type="number" 
                       step="0.01"
                       min="0"
