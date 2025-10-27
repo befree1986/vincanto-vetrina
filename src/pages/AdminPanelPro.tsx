@@ -172,8 +172,9 @@ const AdminPanelPro: React.FC = () => {
         await AdminAPI.createCalendar({
           name: newCalendar.name,
           platform: newCalendar.platform,
-          url: newCalendar.url || null,
-          isActive: true
+          url: newCalendar.url || '',
+          isActive: true,
+          blockedDates: []
         });
         
         await loadCalendars();
