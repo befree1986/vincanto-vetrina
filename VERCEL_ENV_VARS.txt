@@ -18,8 +18,8 @@ MAIL_TO=info@vincantomaori.it
 FRONTEND_URL=https://vincanto-vetrina.vercel.app
 PRODUCTION_URL=https://vincanto-vetrina.vercel.app
 
-# Payment Configuration (Test)
-STRIPE_PUBLISHABLE_KEY=pk_test_mock
+# Payment Configuration (Production)
+STRIPE_PUBLISHABLE_KEY=
 STRIPE_SECRET_KEY=sk_test_mock
 PAYPAL_CLIENT_ID=mock-client-id
 PAYPAL_CLIENT_SECRET=mock-client-secret

@@ -1,281 +1,230 @@
-/**
- * API Service per pannello admin
- * Gestisce comunicazione tra frontend admin e backend
- */
-
+// Servizio API per pannelli Admin
 import axios from 'axios';
 
-const API_BASE_URL = '/api/admin';
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://vincanto-vetrina.vercel.app/api'
+  : 'http://localhost:3000/api';
 
-// Configurazione Axios per admin
 const adminApi = axios.create({
-    baseURL: API_BASE_URL,
-    timeout: 30000,
-    headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer superadmin-token'
-    },
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
-// Interceptors per log
-adminApi.interceptors.request.use(
-    (config) => {
-        console.log(`🔗 Admin API Request: ${config.method?.toUpperCase()} ${config.url}`);
-        return config;
-    },
-    (error) => {
-        console.error('❌ Admin API Request Error:', error);
-        return Promise.reject(error);
-    }
-);
-
-adminApi.interceptors.response.use(
-    (response) => {
-        console.log(`✅ Admin API Response: ${response.status} ${response.config.url}`);
-        return response;
-    },
-    (error) => {
-        console.error('❌ Admin API Response Error:', error.response?.data || error.message);
-        return Promise.reject(error);
-    }
-);
-
-// === CALENDARI ===
-
-export interface Calendar {
-    id: string;
-    name: string;
-    platform: string;
-    url: string;
-    active: boolean;
-    lastSync: string;
-    createdAt: string;
+// === TYPES ===
+export interface DashboardStats {
+  totalBookings: number;
+  activeCalendars: number;
+  totalRevenue: number;
+  confirmedBookings: number;
+  pendingBookings: number;
+  thisMonthBookings: number;
+  averageStay: number;
+  occupancyRate: number;
 }
 
-export async function getCalendars(): Promise<Calendar[]> {
-    const response = await adminApi.get('/calendars');
-    return response.data.calendars;
+export interface AdminBooking {
+  id: string;
+  guestName: string;
+  guestEmail: string;
+  checkIn: string;
+  checkOut: string;
+  status: 'confirmed' | 'pending' | 'cancelled';
+  totalAmount: number;
+  depositAmount: number;
+  guests: number;
+  includeParking: boolean;
+  created: string;
+  notes: string;
 }
 
-export async function createCalendar(calendar: Omit<Calendar, 'id' | 'lastSync' | 'createdAt'>): Promise<Calendar> {
-    const response = await adminApi.post('/calendars', calendar);
-    return response.data.calendar;
+export interface AdminCalendar {
+  id: string;
+  name: string;
+  platform: string;
+  url: string;
+  isActive: boolean;
+  lastSync: string;
+  syncStatus: 'success' | 'error' | 'manual';
+  blockedDates: string[];
 }
-
-export async function updateCalendar(id: string, updates: Partial<Calendar>): Promise<Calendar> {
-    const response = await adminApi.put(`/calendars?id=${id}`, updates);
-    return response.data.calendar;
-}
-
-export async function deleteCalendar(id: string): Promise<void> {
-    await adminApi.delete(`/calendars?id=${id}`);
-}
-
-export async function syncCalendar(id: string): Promise<Calendar> {
-    const response = await adminApi.put(`/calendars?id=${id}`, { 
-        lastSync: new Date().toISOString() 
-    });
-    return response.data.calendar;
-}
-
-// === DATE BLOCCATE ===
 
 export interface BlockedDate {
-    id: string;
-    startDate: string;
-    endDate: string;
-    type: 'booking' | 'maintenance' | 'unavailable';
-    source: string;
-    guestName?: string;
-    reason?: string;
-    status: string;
-    createdAt: string;
+  id: string;
+  date: string;
+  reason: string;
+  type: 'maintenance' | 'holiday' | 'personal';
 }
 
-export async function getBlockedDates(filters?: {
-    startDate?: string;
-    endDate?: string;
-    type?: string;
-}): Promise<BlockedDate[]> {
-    const params = new URLSearchParams();
-    if (filters?.startDate) params.append('startDate', filters.startDate);
-    if (filters?.endDate) params.append('endDate', filters.endDate);
-    if (filters?.type) params.append('type', filters.type);
-    
-    const response = await adminApi.get(`/blocked-dates?${params.toString()}`);
+export interface PricingConfig {
+  basePrice: number;
+  additionalGuestPrice: number;
+  cleaningFee: number;
+  parkingFeePerNight: number;
+  touristTaxPerPersonPerNight: number;
+  minimumNights: number;
+  depositPercentage: number;
+  currency: string;
+  seasonalPricing?: SeasonalPricing[];
+}
+
+export interface SeasonalPricing {
+  id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  multiplier: number;
+}
+
+export interface AdminNotification {
+  id: string;
+  type: 'booking' | 'payment' | 'calendar' | 'system';
+  title: string;
+  message: string;
+  timestamp: string;
+  read: boolean;
+}
+
+// === API FUNCTIONS ===
+
+export const getDashboardStats = async (): Promise<DashboardStats> => {
+  try {
+    const response = await adminApi.get('/admin?action=dashboard-stats');
+    return response.data.stats;
+  } catch (error) {
+    console.error('Errore caricamento statistiche:', error);
+    throw error;
+  }
+};
+
+export const getBookings = async (): Promise<AdminBooking[]> => {
+  try {
+    const response = await adminApi.get('/admin?action=bookings');
+    return response.data.bookings;
+  } catch (error) {
+    console.error('Errore caricamento prenotazioni:', error);
+    throw error;
+  }
+};
+
+export const createBooking = async (booking: Partial<AdminBooking>): Promise<string> => {
+  try {
+    const response = await adminApi.post('/admin?action=bookings', booking);
+    return response.data.bookingId;
+  } catch (error) {
+    console.error('Errore creazione prenotazione:', error);
+    throw error;
+  }
+};
+
+export const getCalendars = async (): Promise<AdminCalendar[]> => {
+  try {
+    const response = await adminApi.get('/admin?action=calendars');
+    return response.data.calendars;
+  } catch (error) {
+    console.error('Errore caricamento calendari:', error);
+    throw error;
+  }
+};
+
+export const addCalendar = async (calendar: Partial<AdminCalendar>): Promise<string> => {
+  try {
+    const response = await adminApi.post('/admin?action=calendars', calendar);
+    return response.data.calendarId;
+  } catch (error) {
+    console.error('Errore aggiunta calendario:', error);
+    throw error;
+  }
+};
+
+export const syncCalendar = async (calendarId: string): Promise<string> => {
+  try {
+    const response = await adminApi.post('/admin?action=sync-calendar', { calendarId });
+    return response.data.syncId;
+  } catch (error) {
+    console.error('Errore sincronizzazione calendario:', error);
+    throw error;
+  }
+};
+
+export const getBlockedDates = async (): Promise<BlockedDate[]> => {
+  try {
+    const response = await adminApi.get('/admin?action=blocked-dates');
     return response.data.blockedDates;
-}
+  } catch (error) {
+    console.error('Errore caricamento date bloccate:', error);
+    throw error;
+  }
+};
 
-export async function createBlockedDate(blockedDate: Omit<BlockedDate, 'id' | 'createdAt'>): Promise<BlockedDate> {
-    const response = await adminApi.post('/blocked-dates', blockedDate);
-    return response.data.blockedDate;
-}
+export const addBlockedDate = async (date: string, reason: string, type: string): Promise<string> => {
+  try {
+    const response = await adminApi.post('/admin?action=blocked-dates', { date, reason, type });
+    return response.data.id;
+  } catch (error) {
+    console.error('Errore aggiunta data bloccata:', error);
+    throw error;
+  }
+};
 
-export async function updateBlockedDate(id: string, updates: Partial<BlockedDate>): Promise<BlockedDate> {
-    const response = await adminApi.put(`/blocked-dates?id=${id}`, updates);
-    return response.data.blockedDate;
-}
-
-export async function deleteBlockedDate(id: string): Promise<void> {
-    await adminApi.delete(`/blocked-dates?id=${id}`);
-}
-
-// === CONFIGURAZIONE SISTEMA ===
-
-export interface SystemConfig {
-    pricing: {
-        basePrice: number;
-        additionalGuestPrice: number;
-        cleaningFee: number;
-        parkingFeePerNight: number;
-        touristTaxPerPersonPerNight: number;
-        minimumNights: number;
-        depositPercentage: number;
-        currency: string;
-    };
-    payments: {
-        stripe: {
-            enabled: boolean;
-            publicKey: string;
-            secretKey: string;
-        };
-        paypal: {
-            enabled: boolean;
-            clientId: string;
-            clientSecret: string;
-        };
-        bankTransfer: {
-            enabled: boolean;
-            iban: string;
-            bankName: string;
-            accountHolder: string;
-        };
-    };
-    apis: {
-        google: {
-            calendarApiKey: string;
-            enabled: boolean;
-        };
-        airbnb: {
-            apiKey: string;
-            enabled: boolean;
-        };
-        booking: {
-            apiKey: string;
-            enabled: boolean;
-        };
-        email: {
-            smtpHost: string;
-            smtpPort: number;
-            smtpUser: string;
-            smtpPassword: string;
-            enabled: boolean;
-        };
-    };
-    notifications: {
-        emailNotifications: boolean;
-        smsNotifications: boolean;
-        webhookUrl: string;
-        adminEmail: string;
-    };
-    features: {
-        autoSync: boolean;
-        realTimeUpdates: boolean;
-        multiLanguage: boolean;
-        analytics: boolean;
-        backupEnabled: boolean;
-        debugMode: boolean;
-    };
-}
-
-export async function getSystemConfig(section?: string): Promise<SystemConfig | any> {
-    const params = section ? `?section=${section}` : '';
-    const response = await adminApi.get(`/config${params}`);
+export const getPricingConfig = async (): Promise<PricingConfig> => {
+  try {
+    const response = await adminApi.get('/admin?action=pricing-config');
     return response.data.config;
-}
+  } catch (error) {
+    console.error('Errore caricamento configurazione prezzi:', error);
+    throw error;
+  }
+};
 
-export async function updateSystemConfig(section: string, data: any): Promise<any> {
-    const response = await adminApi.put('/config', { section, data });
-    return response.data.config;
-}
+export const updatePricingConfig = async (config: PricingConfig): Promise<void> => {
+  try {
+    await adminApi.post('/admin?action=pricing-config', config);
+  } catch (error) {
+    console.error('Errore aggiornamento configurazione prezzi:', error);
+    throw error;
+  }
+};
 
-export async function testConfiguration(type: string, config: any): Promise<any> {
-    const response = await adminApi.post('/config', { type, config });
-    return response.data;
-}
-
-// === PRENOTAZIONI ===
-
-export interface Booking {
-    id: string;
-    guestName: string;
-    guestEmail: string;
-    checkIn: string;
-    checkOut: string;
-    status: 'pending' | 'confirmed' | 'cancelled';
-    amount: number;
-    source: string;
-    createdAt: string;
-}
-
-export async function getBookings(_filters?: {
-    status?: string;
-    startDate?: string;
-    endDate?: string;
-}): Promise<Booking[]> {
-    // Implementazione futura - per ora usa dati mock
-    return [
-        {
-            id: '1',
-            guestName: 'Mario Rossi',
-            guestEmail: 'mario@example.com',
-            checkIn: '2025-11-15',
-            checkOut: '2025-11-18',
-            status: 'confirmed',
-            amount: 450.00,
-            source: 'direct',
-            createdAt: '2025-10-20T00:00:00Z'
-        },
-        {
-            id: '2',
-            guestName: 'Laura Bianchi',
-            guestEmail: 'laura@example.com',
-            checkIn: '2025-12-01',
-            checkOut: '2025-12-05',
-            status: 'pending',
-            amount: 680.00,
-            source: 'airbnb',
-            createdAt: '2025-10-21T00:00:00Z'
-        }
-    ];
-}
-
-export async function updateBookingStatus(id: string, status: 'pending' | 'confirmed' | 'cancelled'): Promise<Booking> {
-    // Implementazione futura - per ora simula aggiornamento
-    console.log(`Aggiornamento stato prenotazione ${id} a ${status}`);
-    
-    // Simula risposta
+export const getNotifications = async (): Promise<{ notifications: AdminNotification[], unreadCount: number }> => {
+  try {
+    const response = await adminApi.get('/admin?action=notifications');
     return {
-        id,
-        guestName: 'Mock Guest',
-        guestEmail: 'mock@example.com',
-        checkIn: '2025-11-01',
-        checkOut: '2025-11-03',
-        status,
-        amount: 300,
-        source: 'direct',
-        createdAt: new Date().toISOString()
+      notifications: response.data.notifications,
+      unreadCount: response.data.unreadCount
     };
-}
+  } catch (error) {
+    console.error('Errore caricamento notifiche:', error);
+    throw error;
+  }
+};
 
-// === UTILITIES ===
+export const markNotificationAsRead = async (notificationId: string): Promise<void> => {
+  try {
+    await adminApi.post('/admin?action=notifications', { notificationId });
+  } catch (error) {
+    console.error('Errore aggiornamento notifica:', error);
+    throw error;
+  }
+};
 
-export function handleApiError(error: any): string {
-    if (error.response) {
-        return error.response.data?.error || `Errore HTTP ${error.response.status}`;
-    } else if (error.request) {
-        return 'Errore di connessione al server';
-    } else {
-        return error.message || 'Errore sconosciuto';
-    }
-}
+export const getAnalytics = async (period: string = '30d') => {
+  try {
+    const response = await adminApi.get(`/admin?action=analytics&period=${period}`);
+    return response.data.analytics;
+  } catch (error) {
+    console.error('Errore caricamento analytics:', error);
+    throw error;
+  }
+};
+
+export const exportData = async (type: 'bookings' | 'analytics' | 'all') => {
+  try {
+    const response = await adminApi.post('/admin?action=export-data', { type });
+    return response.data;
+  } catch (error) {
+    console.error('Errore export dati:', error);
+    throw error;
+  }
+};

@@ -13,7 +13,6 @@ import CookiePolicy from './pages/CookiePolicy';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsConditions from './pages/TermsConditions';
 import Accessibility from './pages/Accessibility';
-import AdminPageSimple from './pages/AdminPageSimple';
 import AdminPanelPro from './pages/AdminPanelPro';
 import './App.css';
 import { Routes, Route } from 'react-router-dom';
@@ -60,8 +59,7 @@ function App() {
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-conditions" element={<TermsConditions />} />
         <Route path="/accessibility" element={<Accessibility />} />
-        <Route path="/admin" element={<AdminPageSimple />} />
-        <Route path="/admin-pro" element={<AdminPanelPro />} />
+        <Route path="/admin" element={<AdminPanelPro />} />
       </Routes>
 
       {showBanner && (

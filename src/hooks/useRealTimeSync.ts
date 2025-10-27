@@ -9,8 +9,8 @@ import * as AdminAPI from '../services/adminApi';
 interface UseRealTimeSyncOptions {
   enabled: boolean;
   pollingInterval: number; // in millisecondi
-  onCalendarsUpdate?: (calendars: AdminAPI.Calendar[]) => void;
-  onBookingsUpdate?: (bookings: AdminAPI.Booking[]) => void;
+  onCalendarsUpdate?: (calendars: AdminAPI.AdminCalendar[]) => void;
+  onBookingsUpdate?: (bookings: AdminAPI.AdminBooking[]) => void;
   onError?: (error: string) => void;
 }
 
@@ -48,7 +48,7 @@ export function useRealTimeSync({
     } catch (error) {
       console.error('❌ Errore sincronizzazione:', error);
       if (onError) {
-        onError(AdminAPI.handleApiError(error));
+        onError(error instanceof Error ? error.message : 'Errore sconosciuto');
       }
     }
   }, [enabled, onCalendarsUpdate, onBookingsUpdate, onError]);
@@ -103,8 +103,8 @@ export function useRealTimeSync({
 
 // Hook semplificato per uso specifico dell'admin panel
 export function useAdminRealTimeSync(
-  setCalendars: (calendars: AdminAPI.Calendar[]) => void,
-  setBookings: (bookings: AdminAPI.Booking[]) => void,
+  setCalendars: (calendars: AdminAPI.AdminCalendar[]) => void,
+  setBookings: (bookings: AdminAPI.AdminBooking[]) => void,
   setError: (error: string) => void,
   enabled: boolean = true
 ) {
