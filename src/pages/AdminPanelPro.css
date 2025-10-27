@@ -24,9 +24,9 @@
   
   /* Backgrounds */
   --admin-bg: #1a202c;
-  --admin-bg-secondary: #2d3748;
-  --admin-card: #2d3748;
-  --admin-card-hover: #4a5568;
+  --admin-bg-secondary: #374151;
+  --admin-card: #374151;
+  --admin-card-hover: #4b5563;
   
   /* Borders e Shadow */
   --admin-border: #4a5568;
@@ -47,8 +47,8 @@
   --admin-transition-fast: all 0.15s ease;
   
   /* Glass Effect */
-  --glass-bg: rgba(30, 41, 59, 0.7);
-  --glass-border: rgba(148, 163, 184, 0.1);
+  --glass-bg: rgba(30, 41, 59, 0.95);
+  --glass-border: rgba(148, 163, 184, 0.3);
 }
 
 /* === LOGIN MODERNO === */

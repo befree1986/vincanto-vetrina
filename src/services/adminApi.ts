@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://vincanto-vetrina.vercel.app/api'
+  ? '/api'  // Usa path relativo su Vercel
   : 'http://localhost:3000/api';
 
 const adminApi = axios.create({
