@@ -1,164 +1,116 @@
 /**
- * Routes per la gestione dei pagamenti
- * Endpoint REST per tracking pagamenti, transazioni e statistiche finanziarie
+ * Routes per la gestione dei pagamenti - POSTGRESQL ENTERPRISE
+ * Endpoint REST per tracking pagamenti, transazioni e statistiche finanziarie con database
  */
 
 const express = require('express');
 const router = express.Router();
-
-// Storage temporaneo per transazioni pagamenti
-let payments = [
-  {
-    id: 'pay_001',
-    bookingId: 'book_001',
-    type: 'deposit', // deposit, balance, full, refund
-    amount: 117.6,
-    currency: 'EUR',
-    status: 'completed', // pending, completed, failed, refunded
-    method: 'card', // card, bank_transfer, cash, paypal
-    provider: 'stripe', // stripe, paypal, manual
-    transactionId: 'txn_1234567890',
-    guestInfo: {
-      email: 'mario.rossi@email.com',
-      name: 'Mario Rossi'
-    },
-    metadata: {
-      cardLast4: '1234',
-      cardBrand: 'visa',
-      receiptUrl: 'https://example.com/receipt/pay_001'
-    },
-    createdAt: '2024-11-01T10:00:00Z',
-    processedAt: '2024-11-01T10:01:00Z',
-    updatedAt: '2024-11-01T10:01:00Z'
-  }
-];
-
-// Storage per configurazioni pagamento
-let paymentConfigs = {
-  providers: {
-    stripe: {
-      enabled: true,
-      publicKey: 'pk_test_...',
-      webhookSecret: 'whsec_...',
-      currency: 'EUR'
-    },
-    paypal: {
-      enabled: false,
-      clientId: '',
-      clientSecret: '',
-      mode: 'sandbox'
-    }
-  },
-  settings: {
-    depositPercentage: 30,
-    allowedMethods: ['card', 'bank_transfer'],
-    autoCapture: true,
-    refundPolicy: 'flexible',
-    currency: 'EUR'
-  },
-  fees: {
-    cardProcessingFee: 2.9, // percentuale
-    fixedFee: 0.30, // importo fisso
-    internationalFee: 1.4 // percentuale aggiuntiva per carte internazionali
-  }
-};
+const { Payment, Booking } = require('../models');
+const { Op } = require('sequelize');
 
 // GET /api/payments - Ottieni tutti i pagamenti con filtri
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const { 
       status, 
-      type, 
-      bookingId, 
-      fromDate, 
-      toDate,
+      payment_type,
       method,
+      startDate,
+      endDate,
       limit = 50, 
       offset = 0 
     } = req.query;
     
-    let filteredPayments = [...payments];
+    // Costruzione filtri
+    let whereClause = {};
     
-    // Applica filtri
     if (status) {
-      filteredPayments = filteredPayments.filter(p => p.status === status);
+      whereClause.status = status;
     }
     
-    if (type) {
-      filteredPayments = filteredPayments.filter(p => p.type === type);
-    }
-    
-    if (bookingId) {
-      filteredPayments = filteredPayments.filter(p => p.bookingId === bookingId);
+    if (payment_type) {
+      whereClause.payment_type = payment_type;
     }
     
     if (method) {
-      filteredPayments = filteredPayments.filter(p => p.method === method);
+      whereClause.payment_method = method;
     }
     
-    if (fromDate) {
-      filteredPayments = filteredPayments.filter(p => 
-        new Date(p.createdAt) >= new Date(fromDate)
-      );
+    if (startDate && endDate) {
+      whereClause.created_at = {
+        [Op.between]: [new Date(startDate), new Date(endDate)]
+      };
     }
     
-    if (toDate) {
-      filteredPayments = filteredPayments.filter(p => 
-        new Date(p.createdAt) <= new Date(toDate)
-      );
-    }
-    
-    // Ordina per data decrescente
-    filteredPayments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    
-    // Paginazione
-    const total = filteredPayments.length;
-    const paginatedPayments = filteredPayments
-      .slice(parseInt(offset), parseInt(offset) + parseInt(limit));
+    // Query database con paginazione
+    const { rows: payments, count: total } = await Payment.findAndCountAll({
+      where: whereClause,
+      include: [{
+        model: Booking,
+        as: 'booking',
+        attributes: ['booking_number', 'guest_first_name', 'guest_last_name', 'guest_email']
+      }],
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      order: [['created_at', 'DESC']]
+    });
     
     // Statistiche
-    const stats = {
-      total: payments.length,
-      completed: payments.filter(p => p.status === 'completed').length,
-      pending: payments.filter(p => p.status === 'pending').length,
-      failed: payments.filter(p => p.status === 'failed').length,
-      totalAmount: payments
-        .filter(p => p.status === 'completed')
-        .reduce((sum, p) => sum + p.amount, 0),
-      avgAmount: payments.length > 0 
-        ? (payments.reduce((sum, p) => sum + p.amount, 0) / payments.length).toFixed(2)
-        : 0
+    const stats = await Payment.findAll({
+      attributes: [
+        'status',
+        [Payment.sequelize.fn('COUNT', '*'), 'count'],
+        [Payment.sequelize.fn('SUM', Payment.sequelize.col('amount')), 'total_amount']
+      ],
+      group: ['status'],
+      raw: true
+    });
+    
+    const formattedStats = {
+      total: total,
+      completed: stats.find(s => s.status === 'completed')?.count || 0,
+      pending: stats.find(s => s.status === 'pending')?.count || 0,
+      failed: stats.find(s => s.status === 'failed')?.count || 0,
+      refunded: stats.find(s => s.status === 'refunded')?.count || 0,
+      totalRevenue: stats.reduce((sum, s) => sum + (parseFloat(s.total_amount) || 0), 0)
     };
     
     res.json({
       success: true,
       data: {
-        payments: paginatedPayments,
+        payments: payments,
         pagination: {
           total: total,
           limit: parseInt(limit),
           offset: parseInt(offset),
           hasMore: (parseInt(offset) + parseInt(limit)) < total
         },
-        stats: stats
+        stats: formattedStats
       },
       timestamp: new Date().toISOString()
     });
   } catch (error) {
+    console.error('Database error in payments route:', error);
     res.status(500).json({
       success: false,
-      message: 'Errore nel recupero dei pagamenti',
+      message: 'Errore nel recupero dei pagamenti dal database',
       error: error.message
     });
   }
 });
 
 // GET /api/payments/:paymentId - Ottieni pagamento specifico
-router.get('/:paymentId', (req, res) => {
+router.get('/:paymentId', async (req, res) => {
   try {
     const { paymentId } = req.params;
     
-    const payment = payments.find(p => p.id === paymentId);
+    const payment = await Payment.findByPk(paymentId, {
+      include: [{
+        model: Booking,
+        as: 'booking',
+        attributes: ['booking_number', 'guest_first_name', 'guest_last_name', 'guest_email', 'total_amount']
+      }]
+    });
     
     if (!payment) {
       return res.status(404).json({
@@ -173,6 +125,7 @@ router.get('/:paymentId', (req, res) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
+    console.error('Database error in get payment by ID:', error);
     res.status(500).json({
       success: false,
       message: 'Errore nel recupero del pagamento',
@@ -181,92 +134,68 @@ router.get('/:paymentId', (req, res) => {
   }
 });
 
-// POST /api/payments - Crea nuovo pagamento/transazione
-router.post('/', (req, res) => {
+// POST /api/payments - Crea nuovo pagamento
+router.post('/', async (req, res) => {
   try {
     const {
-      bookingId,
-      type,
+      booking_id,
+      payment_type,
       amount,
       currency = 'EUR',
-      method,
-      guestInfo,
-      metadata = {}
+      payment_method,
+      provider,
+      transaction_id,
+      external_payment_id,
+      guest_name,
+      guest_email
     } = req.body;
     
-    // Validazione campi obbligatori
-    if (!bookingId || !type || !amount || !method) {
+    // Validazione
+    if (!booking_id || !payment_type || !amount || !payment_method) {
       return res.status(400).json({
         success: false,
-        message: 'Campi richiesti: bookingId, type, amount, method'
+        message: 'Campi obbligatori mancanti',
+        required: ['booking_id', 'payment_type', 'amount', 'payment_method']
       });
     }
     
-    const validTypes = ['deposit', 'balance', 'full', 'refund'];
-    if (!validTypes.includes(type)) {
-      return res.status(400).json({
+    // Verifica che la prenotazione esista
+    const booking = await Booking.findByPk(booking_id);
+    if (!booking) {
+      return res.status(404).json({
         success: false,
-        message: `Tipo pagamento non valido. Validi: ${validTypes.join(', ')}`
+        message: 'Prenotazione non trovata'
       });
     }
     
-    if (amount <= 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'L\'importo deve essere maggiore di zero'
-      });
-    }
+    // Genera numero pagamento
+    const paymentNumber = `PAY${Date.now().toString().slice(-6)}`;
     
-    // Crea nuovo pagamento
-    const paymentId = 'pay_' + Date.now();
-    const newPayment = {
-      id: paymentId,
-      bookingId: bookingId,
-      type: type,
+    // Crea pagamento
+    const payment = await Payment.create({
+      payment_number: paymentNumber,
+      booking_id,
+      payment_type,
       amount: parseFloat(amount),
-      currency: currency,
+      currency,
       status: 'pending',
-      method: method,
-      provider: method === 'card' ? 'stripe' : 'manual',
-      transactionId: null,
-      guestInfo: guestInfo || {},
-      metadata: {
-        ...metadata,
-        createdVia: 'admin_panel'
-      },
-      createdAt: new Date().toISOString(),
-      processedAt: null,
-      updatedAt: new Date().toISOString()
-    };
-    
-    // Simula processamento pagamento
-    if (method === 'card') {
-      // Simula successo/fallimento random per demo
-      const success = Math.random() > 0.1; // 90% success rate
-      
-      if (success) {
-        newPayment.status = 'completed';
-        newPayment.processedAt = new Date().toISOString();
-        newPayment.transactionId = 'txn_' + Date.now();
-        newPayment.metadata.cardLast4 = '4242';
-        newPayment.metadata.cardBrand = 'visa';
-      } else {
-        newPayment.status = 'failed';
-        newPayment.metadata.errorCode = 'card_declined';
-        newPayment.metadata.errorMessage = 'La carta è stata rifiutata';
-      }
-    }
-    
-    payments.push(newPayment);
+      payment_method,
+      provider: provider || 'manual',
+      transaction_id,
+      external_payment_id,
+      guest_name: guest_name || `${booking.guest_first_name} ${booking.guest_last_name}`,
+      guest_email: guest_email || booking.guest_email
+    });
     
     res.status(201).json({
       success: true,
-      message: `Pagamento ${newPayment.status === 'completed' ? 'completato' : 'creato'} con successo`,
-      data: newPayment,
+      message: 'Pagamento creato con successo',
+      data: payment,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    res.status(400).json({
+    console.error('Database error in create payment:', error);
+    res.status(500).json({
       success: false,
       message: 'Errore nella creazione del pagamento',
       error: error.message
@@ -275,83 +204,69 @@ router.post('/', (req, res) => {
 });
 
 // PATCH /api/payments/:paymentId/status - Aggiorna status pagamento
-router.patch('/:paymentId/status', (req, res) => {
+router.patch('/:paymentId/status', async (req, res) => {
   try {
     const { paymentId } = req.params;
-    const { status, transactionId, metadata = {} } = req.body;
+    const { status, transaction_id, processed_at, failure_reason } = req.body;
     
     if (!status) {
       return res.status(400).json({
         success: false,
-        message: 'Status richiesto'
+        message: 'Status è obbligatorio'
       });
     }
     
-    const validStatuses = ['pending', 'completed', 'failed', 'refunded', 'cancelled'];
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({
-        success: false,
-        message: `Status non valido. Validi: ${validStatuses.join(', ')}`
-      });
-    }
-    
-    const paymentIndex = payments.findIndex(p => p.id === paymentId);
-    
-    if (paymentIndex === -1) {
+    const payment = await Payment.findByPk(paymentId);
+    if (!payment) {
       return res.status(404).json({
         success: false,
         message: 'Pagamento non trovato'
       });
     }
     
-    const oldStatus = payments[paymentIndex].status;
+    const updateData = { status };
     
-    // Aggiorna pagamento
-    payments[paymentIndex].status = status;
-    payments[paymentIndex].updatedAt = new Date().toISOString();
-    
-    if (transactionId) {
-      payments[paymentIndex].transactionId = transactionId;
+    if (transaction_id) {
+      updateData.transaction_id = transaction_id;
     }
     
-    if (status === 'completed' && oldStatus !== 'completed') {
-      payments[paymentIndex].processedAt = new Date().toISOString();
+    if (status === 'completed') {
+      updateData.processed_at = new Date();
     }
     
-    // Merge metadata
-    payments[paymentIndex].metadata = {
-      ...payments[paymentIndex].metadata,
-      ...metadata
-    };
+    if (status === 'failed' && failure_reason) {
+      updateData.failure_reason = failure_reason;
+    }
+    
+    await payment.update(updateData);
     
     res.json({
       success: true,
-      message: `Status pagamento aggiornato da '${oldStatus}' a '${status}'`,
-      data: {
-        paymentId: paymentId,
-        oldStatus: oldStatus,
-        newStatus: status,
-        updatedAt: payments[paymentIndex].updatedAt
+      message: `Status pagamento aggiornato a: ${status}`,
+      data: { 
+        status, 
+        updated_at: payment.updated_at,
+        processed_at: updateData.processed_at 
       },
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    res.status(400).json({
+    console.error('Database error in update payment status:', error);
+    res.status(500).json({
       success: false,
-      message: 'Errore nell\'aggiornamento del pagamento',
+      message: 'Errore nell\'aggiornamento dello status del pagamento',
       error: error.message
     });
   }
 });
 
-// POST /api/payments/:paymentId/refund - Rimborsa pagamento
-router.post('/:paymentId/refund', (req, res) => {
+// POST /api/payments/:paymentId/refund - Processo di rimborso
+router.post('/:paymentId/refund', async (req, res) => {
   try {
     const { paymentId } = req.params;
-    const { amount, reason = 'Rimborso amministrativo' } = req.body;
+    const { refund_amount, reason } = req.body;
     
-    const payment = payments.find(p => p.id === paymentId);
-    
+    const payment = await Payment.findByPk(paymentId);
     if (!payment) {
       return res.status(404).json({
         success: false,
@@ -362,230 +277,225 @@ router.post('/:paymentId/refund', (req, res) => {
     if (payment.status !== 'completed') {
       return res.status(400).json({
         success: false,
-        message: 'Solo i pagamenti completati possono essere rimborsati'
+        message: 'Può essere rimborsato solo un pagamento completato'
       });
     }
     
-    const refundAmount = amount || payment.amount;
+    const amount = refund_amount ? parseFloat(refund_amount) : payment.amount;
     
-    if (refundAmount > payment.amount) {
+    if (amount > payment.amount) {
       return res.status(400).json({
         success: false,
-        message: 'L\'importo del rimborso non può superare l\'importo del pagamento'
+        message: 'L\'importo del rimborso non può essere superiore al pagamento originale'
       });
     }
     
-    // Crea transazione di rimborso
-    const refundId = 'ref_' + Date.now();
-    const refund = {
-      id: refundId,
-      bookingId: payment.bookingId,
-      type: 'refund',
-      amount: -Math.abs(refundAmount), // Importo negativo per rimborso
+    // Crea record rimborso
+    const refundPayment = await Payment.create({
+      payment_number: `REF${Date.now().toString().slice(-6)}`,
+      booking_id: payment.booking_id,
+      payment_type: 'refund',
+      amount: -amount, // Negativo per il rimborso
       currency: payment.currency,
       status: 'completed',
-      method: payment.method,
+      payment_method: payment.payment_method,
       provider: payment.provider,
-      transactionId: 'ref_txn_' + Date.now(),
-      guestInfo: payment.guestInfo,
-      metadata: {
-        originalPaymentId: paymentId,
-        reason: reason,
-        refundType: refundAmount === payment.amount ? 'full' : 'partial'
-      },
-      createdAt: new Date().toISOString(),
-      processedAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+      refund_reason: reason,
+      original_payment_id: payment.id,
+      guest_name: payment.guest_name,
+      guest_email: payment.guest_email,
+      processed_at: new Date()
+    });
     
-    payments.push(refund);
-    
-    // Aggiorna pagamento originale se rimborso completo
-    if (refundAmount === payment.amount) {
-      const paymentIndex = payments.findIndex(p => p.id === paymentId);
-      payments[paymentIndex].status = 'refunded';
-      payments[paymentIndex].updatedAt = new Date().toISOString();
-      payments[paymentIndex].metadata.refundId = refundId;
+    // Aggiorna pagamento originale se rimborso totale
+    if (amount === payment.amount) {
+      await payment.update({ status: 'refunded' });
     }
     
     res.json({
       success: true,
-      message: 'Rimborso processato con successo',
+      message: 'Rimborso elaborato con successo',
       data: {
-        refund: refund,
-        originalPayment: payment,
-        refundType: refundAmount === payment.amount ? 'full' : 'partial'
+        original_payment: payment,
+        refund_payment: refundPayment
       },
       timestamp: new Date().toISOString()
     });
   } catch (error) {
+    console.error('Database error in refund payment:', error);
     res.status(500).json({
       success: false,
-      message: 'Errore nel processamento del rimborso',
+      message: 'Errore nell\'elaborazione del rimborso',
       error: error.message
     });
   }
 });
 
-// GET /api/payments/config - Ottieni configurazioni pagamento
-router.get('/config/settings', (req, res) => {
+// GET /api/payments/stats/dashboard - Statistiche pagamenti per dashboard
+router.get('/stats/dashboard', async (req, res) => {
   try {
+    const today = new Date();
+    const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const thisMonthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    
+    // Revenue del mese corrente
+    const monthlyRevenue = await Payment.sum('amount', {
+      where: {
+        status: 'completed',
+        payment_type: { [Op.ne]: 'refund' },
+        processed_at: { [Op.between]: [thisMonth, thisMonthEnd] }
+      }
+    }) || 0;
+    
+    // Revenue del mese scorso per confronto
+    const lastMonthRevenue = await Payment.sum('amount', {
+      where: {
+        status: 'completed',
+        payment_type: { [Op.ne]: 'refund' },
+        processed_at: { [Op.between]: [lastMonth, thisMonth] }
+      }
+    }) || 0;
+    
+    // Pagamenti del giorno
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+    
+    const todayPayments = await Payment.sum('amount', {
+      where: {
+        status: 'completed',
+        payment_type: { [Op.ne]: 'refund' },
+        processed_at: { [Op.between]: [todayStart, todayEnd] }
+      }
+    }) || 0;
+    
+    // Statistiche generali
+    const totalRevenue = await Payment.sum('amount', {
+      where: {
+        status: 'completed',
+        payment_type: { [Op.ne]: 'refund' }
+      }
+    }) || 0;
+    
+    const pendingPayments = await Payment.count({
+      where: { status: 'pending' }
+    });
+    
+    const failedPayments = await Payment.count({
+      where: { 
+        status: 'failed',
+        created_at: { [Op.gte]: thisMonth }
+      }
+    });
+    
+    // Metodi di pagamento del mese
+    const paymentMethods = await Payment.findAll({
+      attributes: [
+        'payment_method',
+        [Payment.sequelize.fn('COUNT', '*'), 'count'],
+        [Payment.sequelize.fn('SUM', Payment.sequelize.col('amount')), 'total_amount']
+      ],
+      where: {
+        status: 'completed',
+        processed_at: { [Op.gte]: thisMonth }
+      },
+      group: ['payment_method'],
+      raw: true
+    });
+    
+    // Calcolo crescita
+    const growthRate = lastMonthRevenue > 0 
+      ? (((monthlyRevenue - lastMonthRevenue) / lastMonthRevenue) * 100).toFixed(1)
+      : '0';
+    
     res.json({
       success: true,
-      data: paymentConfigs,
+      data: {
+        revenue: {
+          today: todayPayments,
+          thisMonth: monthlyRevenue,
+          lastMonth: lastMonthRevenue,
+          total: totalRevenue,
+          growthRate: parseFloat(growthRate)
+        },
+        payments: {
+          pending: pendingPayments,
+          failed: failedPayments
+        },
+        methods: paymentMethods.map(method => ({
+          method: method.payment_method,
+          count: parseInt(method.count),
+          amount: parseFloat(method.total_amount || 0)
+        })),
+        period: {
+          month: today.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })
+        }
+      },
       timestamp: new Date().toISOString()
     });
   } catch (error) {
+    console.error('Database error in payment stats:', error);
     res.status(500).json({
       success: false,
-      message: 'Errore nel recupero delle configurazioni',
+      message: 'Errore nel recupero delle statistiche pagamenti',
       error: error.message
     });
   }
 });
 
-// PUT /api/payments/config - Aggiorna configurazioni pagamento
-router.put('/config/settings', (req, res) => {
+// GET /api/payments/reports/monthly/:year/:month - Report mensile dettagliato
+router.get('/reports/monthly/:year/:month', async (req, res) => {
   try {
-    const updateData = req.body;
+    const { year, month } = req.params;
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0);
     
-    // Validazione configurazioni
-    if (updateData.settings && updateData.settings.depositPercentage) {
-      const deposit = updateData.settings.depositPercentage;
-      if (deposit < 0 || deposit > 100) {
-        return res.status(400).json({
-          success: false,
-          message: 'La percentuale di deposito deve essere tra 0 e 100'
-        });
-      }
-    }
+    const payments = await Payment.findAll({
+      where: {
+        processed_at: { [Op.between]: [startDate, endDate] },
+        status: 'completed'
+      },
+      include: [{
+        model: Booking,
+        as: 'booking',
+        attributes: ['booking_number', 'guest_first_name', 'guest_last_name']
+      }],
+      order: [['processed_at', 'ASC']]
+    });
     
-    // Aggiorna configurazioni
-    paymentConfigs = {
-      ...paymentConfigs,
-      ...updateData,
-      providers: {
-        ...paymentConfigs.providers,
-        ...(updateData.providers || {})
-      },
-      settings: {
-        ...paymentConfigs.settings,
-        ...(updateData.settings || {})
-      },
-      fees: {
-        ...paymentConfigs.fees,
-        ...(updateData.fees || {})
-      }
+    // Aggregazioni
+    const summary = {
+      totalRevenue: payments
+        .filter(p => p.payment_type !== 'refund')
+        .reduce((sum, p) => sum + p.amount, 0),
+      totalRefunds: payments
+        .filter(p => p.payment_type === 'refund')
+        .reduce((sum, p) => sum + Math.abs(p.amount), 0),
+      netRevenue: payments.reduce((sum, p) => sum + p.amount, 0),
+      transactionCount: payments.length,
+      averageTransaction: payments.length > 0 
+        ? (payments.reduce((sum, p) => sum + Math.abs(p.amount), 0) / payments.length).toFixed(2)
+        : 0
     };
     
     res.json({
       success: true,
-      message: 'Configurazioni pagamento aggiornate',
-      data: paymentConfigs,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: 'Errore nell\'aggiornamento delle configurazioni',
-      error: error.message
-    });
-  }
-});
-
-// GET /api/payments/reports/:type - Genera report pagamenti
-router.get('/reports/:type', (req, res) => {
-  try {
-    const { type } = req.params;
-    const { fromDate, toDate, groupBy = 'day' } = req.query;
-    
-    let filteredPayments = payments.filter(p => p.status === 'completed');
-    
-    if (fromDate) {
-      filteredPayments = filteredPayments.filter(p => 
-        new Date(p.createdAt) >= new Date(fromDate)
-      );
-    }
-    
-    if (toDate) {
-      filteredPayments = filteredPayments.filter(p => 
-        new Date(p.createdAt) <= new Date(toDate)
-      );
-    }
-    
-    let report = {};
-    
-    switch (type) {
-      case 'revenue':
-        const totalRevenue = filteredPayments
-          .filter(p => p.amount > 0) // Esclude rimborsi
-          .reduce((sum, p) => sum + p.amount, 0);
-        
-        const refunds = filteredPayments
-          .filter(p => p.amount < 0) // Solo rimborsi
-          .reduce((sum, p) => sum + Math.abs(p.amount), 0);
-        
-        report = {
-          totalRevenue: totalRevenue,
-          totalRefunds: refunds,
-          netRevenue: totalRevenue - refunds,
-          transactionCount: filteredPayments.filter(p => p.amount > 0).length,
-          avgTransactionValue: filteredPayments.length > 0 
-            ? (totalRevenue / filteredPayments.filter(p => p.amount > 0).length).toFixed(2)
-            : 0
-        };
-        break;
-        
-      case 'methods':
-        const methodStats = {};
-        filteredPayments.forEach(p => {
-          if (!methodStats[p.method]) {
-            methodStats[p.method] = { count: 0, total: 0 };
-          }
-          methodStats[p.method].count++;
-          methodStats[p.method].total += p.amount;
-        });
-        
-        report = { methodBreakdown: methodStats };
-        break;
-        
-      case 'daily':
-        const dailyStats = {};
-        filteredPayments.forEach(p => {
-          const date = new Date(p.createdAt).toISOString().split('T')[0];
-          if (!dailyStats[date]) {
-            dailyStats[date] = { count: 0, total: 0, deposits: 0, balances: 0 };
-          }
-          dailyStats[date].count++;
-          dailyStats[date].total += p.amount;
-          if (p.type === 'deposit') dailyStats[date].deposits++;
-          if (p.type === 'balance') dailyStats[date].balances++;
-        });
-        
-        report = { dailyBreakdown: dailyStats };
-        break;
-        
-      default:
-        return res.status(400).json({
-          success: false,
-          message: 'Tipo report non valido. Validi: revenue, methods, daily'
-        });
-    }
-    
-    res.json({
-      success: true,
-      data: report,
-      period: {
-        from: fromDate || 'inception',
-        to: toDate || 'now',
-        totalTransactions: filteredPayments.length
+      data: {
+        period: {
+          year: parseInt(year),
+          month: parseInt(month),
+          monthName: new Date(year, month - 1).toLocaleDateString('it-IT', { month: 'long' })
+        },
+        payments: payments,
+        summary: summary
       },
       timestamp: new Date().toISOString()
     });
   } catch (error) {
+    console.error('Database error in monthly payment report:', error);
     res.status(500).json({
       success: false,
-      message: 'Errore nella generazione del report',
+      message: 'Errore nel recupero del report mensile pagamenti',
       error: error.message
     });
   }

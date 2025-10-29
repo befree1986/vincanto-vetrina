@@ -1,132 +1,111 @@
 /**
- * Routes per la gestione delle prenotazioni
- * Endpoint REST per CRUD prenotazioni e gestione stato
+ * Routes per la gestione delle prenotazioni - POSTGRESQL ENTERPRISE
+ * Endpoint REST per CRUD prenotazioni con database completo
  */
 
 const express = require('express');
 const router = express.Router();
+const { Booking, Payment } = require('../models');
+const { Op } = require('sequelize');
 
-// Storage temporaneo per prenotazioni
-let bookings = [
-  {
-    id: 'book_001',
-    status: 'confirmed',
-    guestInfo: {
-      firstName: 'Mario',
-      lastName: 'Rossi',
-      email: 'mario.rossi@email.com',
-      phone: '+39 123 456 7890',
-      nationality: 'IT'
-    },
-    stayDetails: {
-      checkIn: '2024-12-15',
-      checkOut: '2024-12-18',
-      nights: 3,
-      guests: 2,
-      children: [],
-      specialRequests: 'Arrivo tardivo'
-    },
-    pricing: {
-      basePrice: 300,
-      extraCosts: 50,
-      cleaningFee: 30,
-      touristTax: 12,
-      total: 392,
-      deposit: 117.6,
-      balance: 274.4,
-      currency: 'EUR'
-    },
-    payment: {
-      status: 'deposit_paid',
-      depositPaidAt: '2024-11-01T10:00:00Z',
-      method: 'card',
-      transactionId: 'tx_001'
-    },
-    createdAt: '2024-11-01T10:00:00Z',
-    updatedAt: '2024-11-01T10:00:00Z'
-  }
-];
-
-// GET /api/bookings - Ottieni tutte le prenotazioni con filtri opzionali
-router.get('/', (req, res) => {
+// GET /api/bookings - Ottieni tutte le prenotazioni con filtri e paginazione
+router.get('/', async (req, res) => {
   try {
     const { 
       status, 
-      fromDate, 
-      toDate, 
+      startDate, 
+      endDate, 
       guestEmail, 
       limit = 50, 
       offset = 0 
     } = req.query;
     
-    let filteredBookings = [...bookings];
+    // Costruzione filtri per Sequelize
+    let whereClause = {};
     
-    // Applica filtri
     if (status) {
-      filteredBookings = filteredBookings.filter(b => b.status === status);
+      whereClause.status = status;
     }
     
-    if (fromDate) {
-      filteredBookings = filteredBookings.filter(b => 
-        new Date(b.stayDetails.checkIn) >= new Date(fromDate)
-      );
-    }
-    
-    if (toDate) {
-      filteredBookings = filteredBookings.filter(b => 
-        new Date(b.stayDetails.checkOut) <= new Date(toDate)
-      );
+    if (startDate && endDate) {
+      whereClause.check_in_date = {
+        [Op.between]: [new Date(startDate), new Date(endDate)]
+      };
     }
     
     if (guestEmail) {
-      filteredBookings = filteredBookings.filter(b => 
-        b.guestInfo.email.toLowerCase().includes(guestEmail.toLowerCase())
-      );
+      whereClause.guest_email = {
+        [Op.iLike]: `%${guestEmail}%`
+      };
     }
     
-    // Paginazione
-    const total = filteredBookings.length;
-    const paginatedBookings = filteredBookings
-      .slice(parseInt(offset), parseInt(offset) + parseInt(limit));
+    // Query database con paginazione
+    const { rows: bookings, count: total } = await Booking.findAndCountAll({
+      where: whereClause,
+      include: [{
+        model: Payment,
+        as: 'payments',
+        required: false
+      }],
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      order: [['created_at', 'DESC']]
+    });
     
-    // Statistiche
-    const stats = {
-      total: bookings.length,
-      confirmed: bookings.filter(b => b.status === 'confirmed').length,
-      pending: bookings.filter(b => b.status === 'pending').length,
-      cancelled: bookings.filter(b => b.status === 'cancelled').length,
-      completed: bookings.filter(b => b.status === 'completed').length
+    // Statistiche dal database
+    const stats = await Booking.findAll({
+      attributes: [
+        'status',
+        [Booking.sequelize.fn('COUNT', '*'), 'count']
+      ],
+      group: ['status'],
+      raw: true
+    });
+    
+    const formattedStats = {
+      total: total,
+      confirmed: stats.find(s => s.status === 'confirmed')?.count || 0,
+      pending: stats.find(s => s.status === 'pending')?.count || 0,
+      cancelled: stats.find(s => s.status === 'cancelled')?.count || 0,
+      completed: stats.find(s => s.status === 'completed')?.count || 0
     };
     
     res.json({
       success: true,
       data: {
-        bookings: paginatedBookings,
+        bookings: bookings,
         pagination: {
           total: total,
           limit: parseInt(limit),
           offset: parseInt(offset),
           hasMore: (parseInt(offset) + parseInt(limit)) < total
         },
-        stats: stats
+        stats: formattedStats
       },
       timestamp: new Date().toISOString()
     });
   } catch (error) {
+    console.error('Database error in bookings route:', error);
     res.status(500).json({
       success: false,
-      message: 'Errore nel recupero delle prenotazioni',
+      message: 'Errore nel recupero delle prenotazioni dal database',
       error: error.message
     });
   }
 });
 
 // GET /api/bookings/:bookingId - Ottieni prenotazione specifica
-router.get('/:bookingId', (req, res) => {
+router.get('/:bookingId', async (req, res) => {
   try {
     const { bookingId } = req.params;
     
-    const booking = bookings.find(b => b.id === bookingId);
+    const booking = await Booking.findByPk(bookingId, {
+      include: [{
+        model: Payment,
+        as: 'payments',
+        required: false
+      }]
+    });
     
     if (!booking) {
       return res.status(404).json({
@@ -141,6 +120,7 @@ router.get('/:bookingId', (req, res) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
+    console.error('Database error in get booking by ID:', error);
     res.status(500).json({
       success: false,
       message: 'Errore nel recupero della prenotazione',
@@ -150,104 +130,78 @@ router.get('/:bookingId', (req, res) => {
 });
 
 // POST /api/bookings - Crea nuova prenotazione
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const {
-      guestInfo,
-      stayDetails,
-      pricing,
-      specialRequests = ''
+      guest_first_name,
+      guest_last_name,
+      guest_email,
+      guest_phone,
+      check_in,
+      check_out,
+      guests_count,
+      children_count = 0,
+      special_requests = '',
+      base_price,
+      extra_costs = 0,
+      cleaning_fee = 0,
+      tourist_tax = 0,
+      total_amount,
+      deposit_amount,
+      currency = 'EUR'
     } = req.body;
     
-    // Validazione campi obbligatori
-    if (!guestInfo || !guestInfo.email || !guestInfo.firstName || !guestInfo.lastName) {
-      return res.status(400).json({
-        success: false,
-        message: 'Informazioni ospite richieste: email, nome, cognome'
-      });
-    }
-    
-    if (!stayDetails || !stayDetails.checkIn || !stayDetails.checkOut || !stayDetails.guests) {
-      return res.status(400).json({
-        success: false,
-        message: 'Dettagli soggiorno richiesti: checkIn, checkOut, guests'
-      });
-    }
-    
     // Calcola notti
-    const checkinDate = new Date(stayDetails.checkIn);
-    const checkoutDate = new Date(stayDetails.checkOut);
-    const nights = Math.ceil((checkoutDate - checkinDate) / (1000 * 60 * 60 * 24));
+    const checkInDate = new Date(check_in);
+    const checkOutDate = new Date(check_out);
+    const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
     
-    if (nights <= 0) {
+    // Validazione campi obbligatori
+    if (!guest_first_name || !guest_last_name || !guest_email || !check_in || !check_out) {
       return res.status(400).json({
         success: false,
-        message: 'Date di soggiorno non valide'
+        message: 'Campi obbligatori mancanti',
+        required: ['guest_first_name', 'guest_last_name', 'guest_email', 'check_in', 'check_out']
       });
     }
     
-    // Controlla disponibilità (simulata)
-    const conflictBooking = bookings.find(b => 
-      b.status !== 'cancelled' &&
-      ((new Date(b.stayDetails.checkIn) <= checkinDate && new Date(b.stayDetails.checkOut) > checkinDate) ||
-       (new Date(b.stayDetails.checkIn) < checkoutDate && new Date(b.stayDetails.checkOut) >= checkoutDate) ||
-       (new Date(b.stayDetails.checkIn) >= checkinDate && new Date(b.stayDetails.checkOut) <= checkoutDate))
-    );
+    // Genera numero prenotazione
+    const bookingNumber = `VINC${Date.now().toString().slice(-6)}`;
     
-    if (conflictBooking) {
-      return res.status(409).json({
-        success: false,
-        message: 'Date non disponibili - conflitto con prenotazione esistente',
-        conflictBookingId: conflictBooking.id
-      });
-    }
-    
-    // Crea nuova prenotazione
-    const bookingId = 'book_' + Date.now();
-    const newBooking = {
-      id: bookingId,
+    // Crea prenotazione
+    const booking = await Booking.create({
+      booking_number: bookingNumber,
       status: 'pending',
-      guestInfo: {
-        ...guestInfo,
-        nationality: guestInfo.nationality || 'IT'
-      },
-      stayDetails: {
-        ...stayDetails,
-        nights: nights,
-        children: stayDetails.children || [],
-        specialRequests: specialRequests
-      },
-      pricing: pricing || {
-        basePrice: nights * 100,
-        extraCosts: 0,
-        cleaningFee: 30,
-        touristTax: stayDetails.guests * 2 * nights,
-        total: (nights * 100) + 30 + (stayDetails.guests * 2 * nights),
-        deposit: ((nights * 100) + 30 + (stayDetails.guests * 2 * nights)) * 0.3,
-        currency: 'EUR'
-      },
-      payment: {
-        status: 'pending',
-        method: null,
-        transactionId: null
-      },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    
-    // Calcola balance
-    newBooking.pricing.balance = newBooking.pricing.total - newBooking.pricing.deposit;
-    
-    bookings.push(newBooking);
+      guest_first_name,
+      guest_last_name,
+      guest_email,
+      guest_phone,
+      check_in_date: new Date(check_in),
+      check_out_date: new Date(check_out),
+      nights: nights,
+      num_adults: parseInt(guests_count),
+      num_children: parseInt(children_count),
+      total_guests: parseInt(guests_count) + parseInt(children_count),
+      special_requests,
+      base_price: parseFloat(base_price),
+      extra_guest_fee: parseFloat(extra_costs),
+      cleaning_fee: parseFloat(cleaning_fee),
+      tourist_tax: parseFloat(tourist_tax),
+      total_amount: parseFloat(total_amount),
+      deposit_amount: parseFloat(deposit_amount),
+      balance_amount: parseFloat(total_amount) - parseFloat(deposit_amount),
+      currency
+    });
     
     res.status(201).json({
       success: true,
       message: 'Prenotazione creata con successo',
-      data: newBooking,
+      data: booking,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    res.status(400).json({
+    console.error('Database error in create booking:', error);
+    res.status(500).json({
       success: false,
       message: 'Errore nella creazione della prenotazione',
       error: error.message
@@ -256,43 +210,41 @@ router.post('/', (req, res) => {
 });
 
 // PUT /api/bookings/:bookingId - Aggiorna prenotazione
-router.put('/:bookingId', (req, res) => {
+router.put('/:bookingId', async (req, res) => {
   try {
     const { bookingId } = req.params;
     const updateData = req.body;
     
-    const bookingIndex = bookings.findIndex(b => b.id === bookingId);
-    
-    if (bookingIndex === -1) {
+    // Trova prenotazione
+    const booking = await Booking.findByPk(bookingId);
+    if (!booking) {
       return res.status(404).json({
         success: false,
         message: 'Prenotazione non trovata'
       });
     }
     
-    // Previeni modifica di prenotazioni completate/cancellate
-    if (['completed', 'cancelled'].includes(bookings[bookingIndex].status) && updateData.status !== 'cancelled') {
-      return res.status(400).json({
-        success: false,
-        message: 'Impossibile modificare prenotazioni completate o cancellate'
-      });
-    }
+    // Aggiorna
+    await booking.update(updateData);
     
-    // Aggiorna prenotazione
-    bookings[bookingIndex] = {
-      ...bookings[bookingIndex],
-      ...updateData,
-      updatedAt: new Date().toISOString()
-    };
+    // Ricarica con relazioni
+    const updatedBooking = await Booking.findByPk(bookingId, {
+      include: [{
+        model: Payment,
+        as: 'payments',
+        required: false
+      }]
+    });
     
     res.json({
       success: true,
       message: 'Prenotazione aggiornata con successo',
-      data: bookings[bookingIndex],
+      data: updatedBooking,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    res.status(400).json({
+    console.error('Database error in update booking:', error);
+    res.status(500).json({
       success: false,
       message: 'Errore nell\'aggiornamento della prenotazione',
       error: error.message
@@ -300,67 +252,41 @@ router.put('/:bookingId', (req, res) => {
   }
 });
 
-// PATCH /api/bookings/:bookingId/status - Aggiorna solo lo stato
-router.patch('/:bookingId/status', (req, res) => {
+// PATCH /api/bookings/:bookingId/status - Aggiorna solo status
+router.patch('/:bookingId/status', async (req, res) => {
   try {
     const { bookingId } = req.params;
-    const { status, reason = '' } = req.body;
+    const { status, notes } = req.body;
     
     if (!status) {
       return res.status(400).json({
         success: false,
-        message: 'Status richiesto'
+        message: 'Status è obbligatorio'
       });
     }
     
-    const validStatuses = ['pending', 'confirmed', 'checked_in', 'checked_out', 'completed', 'cancelled'];
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({
-        success: false,
-        message: `Status non valido. Validi: ${validStatuses.join(', ')}`
-      });
-    }
-    
-    const bookingIndex = bookings.findIndex(b => b.id === bookingId);
-    
-    if (bookingIndex === -1) {
+    const booking = await Booking.findByPk(bookingId);
+    if (!booking) {
       return res.status(404).json({
         success: false,
         message: 'Prenotazione non trovata'
       });
     }
     
-    const oldStatus = bookings[bookingIndex].status;
-    
-    // Aggiorna status
-    bookings[bookingIndex].status = status;
-    bookings[bookingIndex].updatedAt = new Date().toISOString();
-    
-    // Log cambio stato
-    if (!bookings[bookingIndex].statusHistory) {
-      bookings[bookingIndex].statusHistory = [];
-    }
-    
-    bookings[bookingIndex].statusHistory.push({
-      from: oldStatus,
-      to: status,
-      reason: reason,
-      timestamp: new Date().toISOString()
+    await booking.update({ 
+      status,
+      admin_notes: notes || booking.admin_notes 
     });
     
     res.json({
       success: true,
-      message: `Status aggiornato da '${oldStatus}' a '${status}'`,
-      data: {
-        bookingId: bookingId,
-        oldStatus: oldStatus,
-        newStatus: status,
-        updatedAt: bookings[bookingIndex].updatedAt
-      },
+      message: `Status aggiornato a: ${status}`,
+      data: { status, updated_at: booking.updated_at },
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    res.status(400).json({
+    console.error('Database error in update booking status:', error);
+    res.status(500).json({
       success: false,
       message: 'Errore nell\'aggiornamento dello status',
       error: error.message
@@ -368,120 +294,118 @@ router.patch('/:bookingId/status', (req, res) => {
   }
 });
 
-// DELETE /api/bookings/:bookingId - Cancella prenotazione
-router.delete('/:bookingId', (req, res) => {
+// DELETE /api/bookings/:bookingId - Elimina prenotazione
+router.delete('/:bookingId', async (req, res) => {
   try {
     const { bookingId } = req.params;
-    const { reason = 'Cancellazione amministrativa' } = req.body;
     
-    const bookingIndex = bookings.findIndex(b => b.id === bookingId);
-    
-    if (bookingIndex === -1) {
+    const booking = await Booking.findByPk(bookingId);
+    if (!booking) {
       return res.status(404).json({
         success: false,
         message: 'Prenotazione non trovata'
       });
     }
     
-    // Soft delete - marca come cancellata invece di eliminare
-    bookings[bookingIndex].status = 'cancelled';
-    bookings[bookingIndex].cancellationReason = reason;
-    bookings[bookingIndex].cancelledAt = new Date().toISOString();
-    bookings[bookingIndex].updatedAt = new Date().toISOString();
+    // Verifica se ci sono pagamenti associati
+    const payments = await Payment.findAll({ where: { booking_id: bookingId } });
+    if (payments.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Impossibile eliminare: prenotazione ha pagamenti associati',
+        suggestion: 'Considera di annullare la prenotazione invece di eliminarla'
+      });
+    }
+    
+    await booking.destroy();
     
     res.json({
       success: true,
-      message: 'Prenotazione cancellata con successo',
-      data: {
-        bookingId: bookingId,
-        status: 'cancelled',
-        reason: reason,
-        cancelledAt: bookings[bookingIndex].cancelledAt
-      },
+      message: 'Prenotazione eliminata con successo',
       timestamp: new Date().toISOString()
     });
   } catch (error) {
+    console.error('Database error in delete booking:', error);
     res.status(500).json({
       success: false,
-      message: 'Errore nella cancellazione della prenotazione',
+      message: 'Errore nell\'eliminazione della prenotazione',
       error: error.message
     });
   }
 });
 
-// GET /api/bookings/calendar/:year/:month - Vista calendario delle prenotazioni
-router.get('/calendar/:year/:month', (req, res) => {
+// GET /api/bookings/stats/dashboard - Statistiche dashboard
+router.get('/stats/dashboard', async (req, res) => {
   try {
-    const { year, month } = req.params;
+    const today = new Date();
+    const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
     
-    if (!year || !month || isNaN(year) || isNaN(month)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Anno e mese devono essere numerici'
-      });
-    }
-    
-    const startDate = new Date(parseInt(year), parseInt(month) - 1, 1);
-    const endDate = new Date(parseInt(year), parseInt(month), 0);
-    
-    // Filtra prenotazioni per il mese
-    const monthBookings = bookings.filter(booking => {
-      const checkIn = new Date(booking.stayDetails.checkIn);
-      const checkOut = new Date(booking.stayDetails.checkOut);
-      
-      return (checkIn <= endDate && checkOut >= startDate) && 
-             booking.status !== 'cancelled';
+    // Statistiche generali
+    const totalBookings = await Booking.count();
+    const activeBookings = await Booking.count({ where: { status: { [Op.in]: ['confirmed', 'pending'] } } });
+    const thisMonthBookings = await Booking.count({ 
+      where: { 
+        created_at: { [Op.gte]: thisMonth },
+        status: { [Op.ne]: 'cancelled' }
+      } 
     });
     
-    // Crea vista calendario
-    const calendar = [];
-    for (let day = 1; day <= endDate.getDate(); day++) {
-      const currentDate = new Date(parseInt(year), parseInt(month) - 1, day);
-      const dateStr = currentDate.toISOString().split('T')[0];
-      
-      const dayBookings = monthBookings.filter(booking => {
-        const checkIn = new Date(booking.stayDetails.checkIn);
-        const checkOut = new Date(booking.stayDetails.checkOut);
-        return currentDate >= checkIn && currentDate < checkOut;
-      });
-      
-      calendar.push({
-        date: dateStr,
-        day: day,
-        dayOfWeek: currentDate.getDay(),
-        bookings: dayBookings.map(b => ({
-          id: b.id,
-          guestName: `${b.guestInfo.firstName} ${b.guestInfo.lastName}`,
-          status: b.status,
-          checkIn: b.stayDetails.checkIn,
-          checkOut: b.stayDetails.checkOut,
-          nights: b.stayDetails.nights,
-          guests: b.stayDetails.guests
-        })),
-        isOccupied: dayBookings.length > 0,
-        occupancyRate: dayBookings.reduce((sum, b) => sum + b.stayDetails.guests, 0)
-      });
-    }
+    // Revenue del mese
+    const monthlyRevenue = await Booking.sum('total_amount', {
+      where: { 
+        created_at: { [Op.gte]: thisMonth },
+        status: 'confirmed'
+      }
+    });
+    
+    // Prossimi check-in (prossimi 7 giorni)
+    const nextWeek = new Date();
+    nextWeek.setDate(today.getDate() + 7);
+    
+    const upcomingCheckins = await Booking.findAll({
+      where: {
+        check_in_date: { [Op.between]: [today, nextWeek] },
+        status: 'confirmed'
+      },
+      attributes: ['id', 'booking_number', 'guest_first_name', 'guest_last_name', 'check_in_date', 'check_out_date'],
+      order: [['check_in_date', 'ASC']],
+      limit: 10
+    });
+    
+    // Occupancy rate del mese corrente
+    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+    const occupiedNights = await Booking.sum('nights', {
+      where: {
+        check_in_date: { [Op.gte]: thisMonth },
+        status: 'confirmed'
+      }
+    }) || 0;
+    
+    const occupancyRate = ((occupiedNights / daysInMonth) * 100).toFixed(1);
     
     res.json({
       success: true,
       data: {
-        year: parseInt(year),
-        month: parseInt(month),
-        calendar: calendar,
-        summary: {
-          totalBookings: monthBookings.length,
-          occupiedDays: calendar.filter(d => d.isOccupied).length,
-          totalDays: calendar.length,
-          occupancyRate: (calendar.filter(d => d.isOccupied).length / calendar.length * 100).toFixed(1)
+        overview: {
+          totalBookings,
+          activeBookings,
+          thisMonthBookings,
+          monthlyRevenue: monthlyRevenue || 0,
+          occupancyRate: parseFloat(occupancyRate)
+        },
+        upcomingCheckins: upcomingCheckins,
+        period: {
+          month: today.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })
         }
       },
       timestamp: new Date().toISOString()
     });
   } catch (error) {
+    console.error('Database error in booking stats:', error);
     res.status(500).json({
       success: false,
-      message: 'Errore nel recupero del calendario prenotazioni',
+      message: 'Errore nel recupero delle statistiche',
       error: error.message
     });
   }
