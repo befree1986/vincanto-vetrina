@@ -6,6 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const { Op } = require('sequelize');
+const { sequelize } = require('../config/database');
 
 // Import modelli database
 const { User, Booking, Payment, PricingConfig, CalendarConfig, SystemSettings } = require('../models');
@@ -95,17 +96,49 @@ router.get('/bookings', async (req, res) => {
             ];
         }
         
-        const { rows: bookings, count } = await Booking.findAndCountAll({
-            where,
-            limit: parseInt(limit),
-            offset: parseInt(offset),
-            order: [['created_at', 'DESC']],
-            include: [{
-                model: Payment,
-                as: 'payments',
-                required: false
-            }]
-        });
+        // Query raw per evitare cache Sequelize
+        const totalResult = await sequelize.query(
+            'SELECT COUNT(*) as count FROM bookings WHERE 1=1' + 
+            (status && status !== 'all' ? ` AND status = :status` : '') +
+            (search ? ` AND (guest_first_name ILIKE :search OR guest_last_name ILIKE :search OR guest_email ILIKE :search OR booking_number ILIKE :search)` : ''),
+            {
+                replacements: { status, search: search ? `%${search}%` : null },
+                type: sequelize.QueryTypes.SELECT
+            }
+        );
+        
+        const bookings = await sequelize.query(
+            `SELECT b.*, 
+                    json_agg(
+                        CASE WHEN p.id IS NOT NULL THEN
+                            json_build_object(
+                                'id', p.id,
+                                'amount', p.amount,
+                                'status', p.status,
+                                'payment_method', p.payment_method
+                            )
+                        END
+                    ) FILTER (WHERE p.id IS NOT NULL) as payments
+             FROM bookings b
+             LEFT JOIN payments p ON b.id = p.booking_id
+             WHERE 1=1` +
+            (status && status !== 'all' ? ` AND b.status = :status` : '') +
+            (search ? ` AND (b.guest_first_name ILIKE :search OR b.guest_last_name ILIKE :search OR b.guest_email ILIKE :search OR b.booking_number ILIKE :search)` : '') +
+            ` GROUP BY b.id
+             ORDER BY b.created_at DESC
+             LIMIT :limit OFFSET :offset`,
+            {
+                replacements: { 
+                    status, 
+                    search: search ? `%${search}%` : null,
+                    limit: parseInt(limit),
+                    offset: parseInt(offset)
+                },
+                type: sequelize.QueryTypes.SELECT
+            }
+        );
+        
+        const count = totalResult[0].count;
         
         res.json({
             success: true,
@@ -426,8 +459,8 @@ router.put('/system-settings', async (req, res) => {
             settings.map(setting => 
                 SystemSettings.update(
                     { 
-                        setting_value: setting.value,
-                        last_updated_by: 'admin'
+                        setting_value: setting.value
+                        // Rimosso last_updated_by per evitare errore UUID
                     },
                     { 
                         where: { setting_key: setting.key } 

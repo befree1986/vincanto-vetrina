@@ -16,22 +16,13 @@ const SystemSettings = require('./SystemSettings');
 // Definisci le relazioni tra i modelli
 const initializeRelations = () => {
   
-  // User relationships
-  User.hasMany(Booking, {
-    foreignKey: 'created_by',
-    as: 'createdBookings'
-  });
-  
+  // User relationships - RIMOSSO created_by da Booking (campo inesistente)
   User.hasMany(SystemSettings, {
     foreignKey: 'last_updated_by',
     as: 'updatedSettings'
   });
   
-  // Booking relationships
-  Booking.belongsTo(User, {
-    foreignKey: 'created_by',
-    as: 'creator'
-  });
+  // Booking relationships - RIMOSSA relazione con User per created_by
   
   Booking.hasMany(Payment, {
     foreignKey: 'booking_id',
