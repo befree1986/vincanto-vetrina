@@ -4,19 +4,10 @@
   "framework": "vite",
   "functions": {
     "api/**/*.js": {
-      "maxDuration": 30
+      "maxDuration": 10
     }
   },
-  "env": {
-    "DATABASE_URL": "@database_url",
-    "STRIPE_SECRET_KEY": "@stripe_secret_key",
-    "JWT_SECRET": "@jwt_secret"
-  },
   "rewrites": [
-    {
-      "source": "/api/admin/(.*)",
-      "destination": "/api/admin/$1.js"
-    },
     {
       "source": "/api/booking/(.*)",
       "destination": "/api/booking/$1.js"
