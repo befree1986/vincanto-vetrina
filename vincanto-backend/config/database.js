@@ -1,13 +1,37 @@
 /**
  * Database Configuration
- * Configurazione Sequelize per SQLite database
+ * Configurazione Sequelize per PostgreSQL (Neon) + SQLite fallback
  */
 
 const { Sequelize } = require('sequelize');
 const path = require('path');
+require('dotenv').config();
 
-// Configurazione database
-const DB_CONFIG = {
+// Configurazione database - PostgreSQL primary, SQLite fallback
+const DB_CONFIG = process.env.DATABASE_URL ? {
+  // 🟢 PostgreSQL (Production/Development con Neon)
+  dialect: 'postgres',
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false
+    }
+  },
+  logging: process.env.NODE_ENV === 'development' ? false : false, // Disabilita per performance
+  define: {
+    timestamps: true,
+    underscored: true,
+    freezeTableName: true
+  },
+  pool: {
+    max: 3,        // Ridotto per free tier
+    min: 1,        // Almeno 1 connessione
+    acquire: 60000, // Timeout più lungo (60s)
+    idle: 30000,   // Idle più lungo
+    evict: 60000   // Keep alive
+  }
+} : {
+  // 🟡 SQLite (Fallback locale)
   dialect: 'sqlite',
   storage: path.join(__dirname, '../data/vincanto.db'),
   logging: process.env.NODE_ENV === 'development' ? console.log : false,
@@ -25,7 +49,9 @@ const DB_CONFIG = {
 };
 
 // Inizializza Sequelize
-const sequelize = new Sequelize(DB_CONFIG);
+const sequelize = process.env.DATABASE_URL 
+  ? new Sequelize(process.env.DATABASE_URL, DB_CONFIG)
+  : new Sequelize(DB_CONFIG);
 
 // Test connessione database
 async function testConnection() {

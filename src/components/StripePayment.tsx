@@ -193,13 +193,24 @@ const StripePayment: React.FC<StripePaymentProps> = (props) => {
                 setIsLoading(true);
                 setError(null);
 
-                const response = await createStripePaymentIntent({
+                console.log('💳 Inizializzazione Payment Intent:', {
                     booking_id: props.bookingId,
-                    amount: props.amount
+                    amount: props.amount,
+                    customer_email: props.customerEmail,
+                    customer_name: props.customerName
                 });
 
+                const response = await createStripePaymentIntent({
+                    booking_id: props.bookingId,
+                    amount: props.amount,
+                    customer_email: props.customerEmail,
+                    customer_name: props.customerName
+                });
+
+                console.log('✅ Payment Intent creato:', response);
                 setClientSecret(response.client_secret);
             } catch (error) {
+                console.error('❌ Errore Payment Intent:', error);
                 const errorMessage = handleApiError(error);
                 setError(errorMessage);
                 props.onPaymentError(errorMessage);

@@ -50,7 +50,8 @@ const BookingForm: React.FC = () => {
 
 const Booking: React.FC = () => {
   const { t } = useTranslation();
-  const [showBookingSystem, setShowBookingSystem] = useState(false);
+  // ✅ PRESELEZIONA il booking diretto (sinistra) - sistema interno attivo di default
+  const [showBookingSystem, setShowBookingSystem] = useState(true);
 
   return (
   <React.Fragment>
@@ -66,20 +67,20 @@ const Booking: React.FC = () => {
           </p>
         </header>
         
-        {/* Toggle tra booking esterno e sistema interno */}
+        {/* Toggle tra booking interno (preselezionato) e piattaforme esterne */}
         <div className="booking-options">
           <div className="option-toggle">
-            <button 
-              className={`toggle-btn ${!showBookingSystem ? 'active' : ''}`}
-              onClick={() => setShowBookingSystem(false)}
-            >
-              🏨 Prenota su Booking.com/Airbnb
-            </button>
             <button 
               className={`toggle-btn ${showBookingSystem ? 'active' : ''}`}
               onClick={() => setShowBookingSystem(true)}
             >
               💳 Prenota Direttamente
+            </button>
+            <button 
+              className={`toggle-btn ${!showBookingSystem ? 'active' : ''}`}
+              onClick={() => setShowBookingSystem(false)}
+            >
+              🏨 Booking.com/Airbnb
             </button>
           </div>
         </div>

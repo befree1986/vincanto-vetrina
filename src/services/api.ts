@@ -95,30 +95,41 @@ export async function getBookingQuote(data: BookingQuoteRequest): Promise<Bookin
     console.log('🚀 Frontend sending quote request:', data);
     
     try {
-        // Invia i dati nel formato che l'API si aspetta
-        const response = await api.post('/quote', data);
+        // Invia i dati nel formato che il backend si aspetta
+        const response = await api.get('/pricing/calculate/quote', {
+            params: {
+                checkIn: data.checkIn,
+                checkOut: data.checkOut,
+                guests: data.guests,
+                includeParking: data.includeParking || false
+            }
+        });
         
         console.log('📦 API quote response:', response.data);
         
-        // L'API restituisce { success: true, costs: {...} }
-        const costs = response.data.costs;
+        // Il nuovo backend restituisce { success: true, data: { pricing: {...}, config_used: {...}, booking_details: {...} } }
+        if (!response.data.success || !response.data.data) {
+            throw new Error('Invalid API response format');
+        }
+        
+        const { pricing, config_used, booking_details } = response.data.data;
         
         // Trasforma la risposta API per il frontend
         const transformedCosts: BookingQuoteResponse = {
-            nights: costs.nights,
-            guests: costs.guests,
-            basePrice: costs.basePrice,
-            parkingCost: costs.parkingCost || 0,
-            cleaningFee: costs.cleaningFee,
-            touristTax: costs.touristTax,
-            subtotal: costs.subtotal,
-            totalAmount: costs.totalAmount,
-            depositAmount: costs.depositAmount,
-            depositPercentage: costs.depositPercentage || 0.30,
-            currency: costs.currency || 'EUR',
+            nights: booking_details.nights,
+            guests: booking_details.guests,
+            basePrice: pricing.base_price,
+            parkingCost: 0, // TODO: Implementare parcheggio nel nuovo sistema
+            cleaningFee: pricing.cleaning_fee,
+            touristTax: pricing.tourist_tax,
+            subtotal: pricing.subtotal,
+            totalAmount: pricing.total,
+            depositAmount: pricing.total * 0.30, // TODO: Prendere da configurazione
+            depositPercentage: 0.30,
+            currency: 'EUR',
             pricingConfig: {
-                basePrice: costs.breakdown?.pricePerNight || 80,
-                additionalGuestPrice: costs.breakdown?.additionalGuestPricePerNight || 20,
+                basePrice: config_used.base_price_per_night || pricing.rate_per_night,
+                additionalGuestPrice: 0, // TODO: Implementare nel nuovo sistema
                 minimumNights: 2
             }
         };
@@ -254,6 +265,8 @@ export async function getNextAvailableDates(nights: number = 2, fromDate?: strin
 export interface StripePaymentIntentRequest {
     booking_id: string;
     amount: number;
+    customer_email?: string;
+    customer_name?: string;
 }
 
 export interface StripePaymentIntentResponse {
@@ -266,7 +279,12 @@ export interface StripePaymentIntentResponse {
  * Crea Payment Intent per Stripe
  */
 export async function createStripePaymentIntent(data: StripePaymentIntentRequest): Promise<StripePaymentIntentResponse> {
-    const response = await api.post('/payment/create-intent', data);
+    const response = await api.post('/stripe/create-payment-intent', {
+        booking_id: data.booking_id,
+        amount: data.amount,
+        customer_email: data.customer_email || '',
+        customer_name: data.customer_name || ''
+    });
     return response.data;
 }
 
@@ -274,7 +292,7 @@ export async function createStripePaymentIntent(data: StripePaymentIntentRequest
  * Conferma pagamento Stripe
  */
 export async function confirmStripePayment(paymentIntentId: string) {
-    const response = await api.post('/payment/confirm-stripe', {
+    const response = await api.post('/stripe/confirm-payment', {
         payment_intent_id: paymentIntentId
     });
     return response.data;

@@ -20,6 +20,10 @@ const pricingRoutes = require('./routes/pricing');
 const calendarRoutes = require('./routes/calendars');
 const bookingRoutes = require('./routes/bookings');
 const paymentRoutes = require('./routes/payments');
+const stripeRoutes = require('./routes/stripe'); // 💳 Integrazione Stripe completa
+const emailRoutes = require('./routes/email'); // 📧 Sistema email professionale
+const calendarSyncRoutes = require('./routes/calendar-sync'); // 📅 Calendar sync anti-overbooking
+const adminRoutes = require('./routes/admin'); // 🎛️ Admin panel unificato
 
 const app = express();
 
@@ -107,14 +111,22 @@ app.get('/api', (req, res) => {
       pricing: 'Pricing configuration and calculation endpoints',
       calendars: 'Calendar management and Google Calendar integration',
       bookings: 'Booking management and CRUD operations',
-      payments: 'Payment processing and financial reporting'
+      payments: 'Payment processing and financial reporting',
+      admin: 'Admin panel dashboard and management endpoints',
+      stripe: 'Stripe payment integration and webhooks',
+      email: 'Professional email system and notifications',
+      'calendar-sync': 'External calendar sync and anti-overbooking protection'
     },
     endpoints: {
       auth: '/api/auth/*',
       pricing: '/api/pricing/*',
       calendars: '/api/calendars/*',
       bookings: '/api/bookings/*',
-      payments: '/api/payments/*'
+      payments: '/api/payments/*',
+      admin: '/api/admin/*',
+      stripe: '/api/stripe/*',
+      email: '/api/email/*',
+      'calendar-sync': '/api/calendar-sync/*'
     },
     features: [
       'JWT Authentication',
@@ -139,6 +151,10 @@ app.use('/api/pricing', logAdminActivity, pricingRoutes);
 app.use('/api/calendars', logAdminActivity, calendarRoutes);
 app.use('/api/bookings', logAdminActivity, bookingRoutes);
 app.use('/api/payments', logAdminActivity, paymentRoutes);
+app.use('/api/stripe', stripeRoutes); // 💳 Stripe API routes (no auth per webhook)
+app.use('/api/email', logAdminActivity, emailRoutes); // 📧 Sistema email professionale
+app.use('/api/calendar-sync', logAdminActivity, calendarSyncRoutes); // 📅 Calendar sync anti-overbooking
+app.use('/api/admin', logAdminActivity, adminRoutes); // 🎛️ Admin panel unificato
 
 // Endpoint legacy per compatibilità (da deprecare)
 app.post('/api/contact', (req, res) => {
@@ -162,7 +178,9 @@ app.use('/api/*', (req, res) => {
       pricing: '/api/pricing/*',
       calendars: '/api/calendars/*',
       bookings: '/api/bookings/*',
-      payments: '/api/payments/*'
+      payments: '/api/payments/*',
+      admin: '/api/admin/*',
+      stripe: '/api/stripe/*'
     }
   });
 });

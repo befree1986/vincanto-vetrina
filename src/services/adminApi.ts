@@ -1,9 +1,8 @@
 // Servizio API per pannelli Admin con fallback dati mock
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? '/api'  // Usa path relativo su Vercel
-  : 'http://localhost:3000/api';
+// 🎛️ API UNIFICATA: Ora tutto passa da Express backend
+const API_BASE_URL = '/api'; // Usa proxy Vite in sviluppo, path relativo in produzione
 
 const adminApi = axios.create({
   baseURL: API_BASE_URL,
@@ -224,8 +223,10 @@ const withFallback = async <T>(apiCall: () => Promise<T>, fallbackData: T): Prom
 export const getDashboardStats = async (): Promise<DashboardStats> => {
   return withFallback(
     async () => {
-      const response = await adminApi.get('/admin?action=dashboard-stats');
-      return response.data;
+      console.log('📊 Chiamata API dashboard stats (Express)');
+      const response = await adminApi.get('/admin/dashboard-stats');
+      console.log('✅ Dashboard stats response:', response.data);
+      return response.data.stats; // Express restituisce { success: true, stats: {...} }
     },
     mockDashboardStats
   );
@@ -234,8 +235,10 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
 export const getBookings = async (): Promise<AdminBooking[]> => {
   return withFallback(
     async () => {
-      const response = await adminApi.get('/admin?action=bookings');
-      return response.data;
+      console.log('📅 Chiamata API bookings (Express)');
+      const response = await adminApi.get('/admin/bookings');
+      console.log('✅ Bookings response:', response.data);
+      return response.data.bookings; // Express restituisce { success: true, bookings: [...] }
     },
     mockBookings
   );
@@ -244,8 +247,10 @@ export const getBookings = async (): Promise<AdminBooking[]> => {
 export const getCalendars = async (): Promise<AdminCalendar[]> => {
   return withFallback(
     async () => {
-      const response = await adminApi.get('/admin?action=calendars');
-      return response.data;
+      console.log('📆 Chiamata API calendars (Express)');
+      const response = await adminApi.get('/admin/calendars');
+      console.log('✅ Calendars response:', response.data);
+      return response.data.calendars; // Express restituisce { success: true, calendars: [...] }
     },
     mockCalendars
   );

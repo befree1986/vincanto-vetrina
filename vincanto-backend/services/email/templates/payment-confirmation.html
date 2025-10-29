@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagamento Confermato - Vincanto Maori</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        .header .checkmark {
+            font-size: 48px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .content {
+            padding: 30px 25px;
+        }
+        .success-message {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            border-radius: 8px;
+            padding: 25px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .success-message h2 {
+            color: #155724;
+            margin-bottom: 10px;
+            font-size: 22px;
+        }
+        .success-message p {
+            color: #155724;
+            font-size: 16px;
+        }
+        .payment-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 25px 0;
+            border-left: 4px solid #28a745;
+        }
+        .payment-detail {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .payment-detail:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .detail-value {
+            color: #34495e;
+            font-weight: 500;
+        }
+        .amount-highlight {
+            background: #e8f5e8;
+            border: 2px solid #28a745;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin: 25px 0;
+        }
+        .amount-highlight .amount {
+            font-size: 32px;
+            font-weight: bold;
+            color: #28a745;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .amount-highlight .label {
+            color: #155724;
+            font-weight: 600;
+        }
+        .transaction-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .transaction-info h3 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+        .security-note {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .security-note h3 {
+            color: #0c5460;
+            margin-bottom: 10px;
+        }
+        .next-steps {
+            background: #e2e3e5;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .next-steps h3 {
+            color: #383d41;
+            margin-bottom: 15px;
+        }
+        .next-steps ul {
+            margin-left: 20px;
+            color: #495057;
+        }
+        .next-steps li {
+            margin-bottom: 8px;
+        }
+        .footer {
+            background: #2c3e50;
+            color: white;
+            padding: 25px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .footer p {
+            margin-bottom: 5px;
+        }
+        @media (max-width: 600px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+            }
+            .content {
+                padding: 20px 15px;
+            }
+            .payment-detail {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <span class="checkmark">✅</span>
+            <h1>Pagamento Confermato</h1>
+            <p>La tua prenotazione è stata confermata con successo!</p>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Success Message -->
+            <div class="success-message">
+                <h2>🎉 Pagamento Ricevuto!</h2>
+                <p>Il tuo pagamento è stato elaborato con successo. La prenotazione è ora confermata.</p>
+            </div>
+
+            <div>
+                Caro/a <strong>{{customerName}}</strong>,
+            </div>
+
+            <p style="margin: 20px 0;">
+                Il pagamento per la tua prenotazione presso <strong>Vincanto Maori</strong> è stato processato con successo! 🏖️
+            </p>
+
+            <!-- Payment Amount Highlight -->
+            <div class="amount-highlight">
+                <span class="amount">{{paymentAmount}}</span>
+                <div class="label">PAGAMENTO CONFERMATO</div>
+            </div>
+
+            <!-- Payment Details -->
+            <div class="payment-card">
+                <h3 style="color: #28a745; margin-bottom: 20px;">💳 Dettagli Pagamento</h3>
+                
+                <div class="payment-detail">
+                    <span class="detail-label">Prenotazione:</span>
+                    <span class="detail-value"><strong>#{{bookingId}}</strong></span>
+                </div>
+                
+                <div class="payment-detail">
+                    <span class="detail-label">Importo Pagato:</span>
+                    <span class="detail-value">{{paymentAmount}}</span>
+                </div>
+                
+                <div class="payment-detail">
+                    <span class="detail-label">Data Pagamento:</span>
+                    <span class="detail-value">{{paymentDate}}</span>
+                </div>
+                
+                <div class="payment-detail">
+                    <span class="detail-label">Metodo Pagamento:</span>
+                    <span class="detail-value">{{paymentMethod}}</span>
+                </div>
+                
+                <div class="payment-detail">
+                    <span class="detail-label">ID Transazione:</span>
+                    <span class="detail-value" style="font-family: monospace; font-size: 12px;">{{transactionId}}</span>
+                </div>
+            </div>
+
+            <!-- Transaction Info -->
+            <div class="transaction-info">
+                <h3>📄 Ricevuta di Pagamento</h3>
+                <p>Questa email serve come ricevuta ufficiale del tuo pagamento. Conservala per i tuoi archivi.</p>
+                <p><strong>Importante:</strong> Il pagamento potrebbe apparire sul tuo estratto conto come "VINCANTO MAORI" o simile.</p>
+            </div>
+
+            <!-- Next Steps -->
+            <div class="next-steps">
+                <h3>🔄 Prossimi Passi</h3>
+                <ul>
+                    <li><strong>Check-in confermato:</strong> La tua prenotazione è garantita</li>
+                    <li><strong>Istruzioni di arrivo:</strong> Le riceverai 24 ore prima del check-in</li>
+                    <li><strong>Assistenza:</strong> Siamo disponibili per qualsiasi domanda</li>
+                    <li><strong>Preparazione:</strong> Inizia a pianificare la tua vacanza da sogno!</li>
+                </ul>
+            </div>
+
+            <!-- Security Note -->
+            <div class="security-note">
+                <h3>🔐 Sicurezza</h3>
+                <p>La transazione è stata processata attraverso sistemi di pagamento sicuri e crittografati. I tuoi dati finanziari sono protetti secondo gli standard PCI DSS.</p>
+            </div>
+
+            <p style="margin-top: 30px; text-align: center; color: #666; font-size: 18px;">
+                <strong>Grazie per aver scelto Vincanto Maori!</strong><br>
+                <em>La tua vacanza perfetta ti aspetta! 🌊☀️</em>
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>Vincanto Maori - Conferma Pagamento</strong></p>
+            <p>Per domande sui pagamenti: info@vincantomaori.it</p>
+            <p style="margin-top: 15px; opacity: 0.8;">
+                Email generata automaticamente - Non rispondere direttamente a questo messaggio
+            </p>
+        </div>
+    </div>
+</body>
+</html>
