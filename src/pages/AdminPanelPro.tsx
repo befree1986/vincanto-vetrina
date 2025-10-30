@@ -57,6 +57,20 @@ const AdminPanelPro: React.FC = () => {
     end_date: '',
     reason: 'maintenance'
   });
+
+  // Stati per gestione prezzi
+  const [pricingConfig, setPricingConfig] = useState({
+    basePrice: 100,
+    cleaningFee: 50,
+    weekendSurcharge: 20,
+    monthlyDiscount: 15,
+    weeklyDiscount: 10,
+    minStay: 2,
+    maxStay: 14,
+    advanceBookingDiscount: 0,
+    lastMinuteDiscount: 0
+  });
+  const [isUpdatingPricing, setIsUpdatingPricing] = useState(false);
   
   // Stati per calendario (variabili mancanti)
   const [calendarEvents, setCalendarEvents] = useState<any[]>([]);
@@ -122,6 +136,66 @@ const AdminPanelPro: React.FC = () => {
 
 
 
+  // === PRICING FUNCTIONS ===
+  const loadPricingConfig = async () => {
+    try {
+      if (!adminApiService) return;
+      console.log('💰 Caricamento configurazione prezzi...');
+      const result = await adminApiService.getPricingConfig();
+      
+      if (result.success && result.data.length > 0) {
+        const config = result.data[0]; // Prendi la configurazione master
+        setPricingConfig({
+          basePrice: config.base_price_per_night || 100,
+          cleaningFee: config.cleaning_fee || 50,
+          weekendSurcharge: config.weekend_surcharge_percentage || 20,
+          monthlyDiscount: config.monthly_discount_percentage || 15,
+          weeklyDiscount: config.weekly_discount_percentage || 10,
+          minStay: config.minimum_stay_nights || 2,
+          maxStay: config.maximum_stay_nights || 14,
+          advanceBookingDiscount: config.advance_booking_discount_percentage || 0,
+          lastMinuteDiscount: config.last_minute_discount_percentage || 0
+        });
+        console.log('✅ Configurazione prezzi caricata:', config);
+      }
+    } catch (error) {
+      console.error('❌ Errore caricamento prezzi:', error);
+    }
+  };
+
+  const savePricingConfig = async () => {
+    try {
+      if (!adminApiService) {
+        alert('❌ Servizio API non disponibile');
+        return;
+      }
+
+      setIsUpdatingPricing(true);
+      console.log('💰 Salvataggio configurazione prezzi:', pricingConfig);
+      
+      const result = await adminApiService.updatePricingConfig(pricingConfig);
+      
+      if (result.success) {
+        alert('✅ Configurazione prezzi salvata con successo!');
+        console.log('✅ Prezzi salvati:', result.data);
+      } else {
+        alert('❌ Errore nel salvataggio: ' + (result.message || 'Errore sconosciuto'));
+      }
+    } catch (error) {
+      console.error('❌ Errore salvataggio prezzi:', error);
+      alert('❌ Errore nel salvataggio della configurazione prezzi');
+    } finally {
+      setIsUpdatingPricing(false);
+    }
+  };
+
+  const updatePricingField = (field: string, value: number) => {
+    setPricingConfig(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   // Carica dati reali dalle API backend
   const loadRealApiData = async () => {
     if (!adminApiService) {
@@ -133,7 +207,7 @@ const AdminPanelPro: React.FC = () => {
     try {
       console.log('🔄 Caricamento dati API reali...');
       
-      // Carica tutti i dati in parallelo
+      // Carica tutti i dati in parallelo inclusi prezzi
       const [
         statsData,
         bookingsData,
@@ -158,6 +232,9 @@ const AdminPanelPro: React.FC = () => {
       setAnalytics(analyticsData);
       setNotifications(notificationsData);
       setBlockedDates(blockedDatesData);
+      
+      // Carica anche la configurazione prezzi
+      loadPricingConfig();
       
       // Simula transazioni da prenotazioni reali
       const simulatedTransactions = bookingsData.map((booking: any) => ({
@@ -722,46 +799,136 @@ const AdminPanelPro: React.FC = () => {
           </div>
         )}
 
-        {/* Sezione Prezzi Completa */}
+        {/* Sezione Prezzi FUNZIONALE */}
         {activeTab === 'prezzi' && (
           <div className="admin-prezzi">
-            <h2>💰 Gestione Prezzi Completa</h2>
+            <div className="admin-header">
+              <h2>💰 Configurazione Prezzi</h2>
+              <button 
+                onClick={savePricingConfig}
+                disabled={isUpdatingPricing}
+                className="admin-button primary"
+              >
+                {isUpdatingPricing ? '⏳ Salvando...' : '💾 Salva Configurazione'}
+              </button>
+            </div>
             
-            {/* Tariffe Base Per Persona */}
+            {/* Configurazione Base FUNZIONALE */}
             <div className="admin-pricing-section">
-              <h3>👥 Tariffe Base a Persona/Notte</h3>
+              <h3>🏠 Tariffe Base</h3>
               <div className="admin-pricing-grid">
                 <div className="admin-pricing-card">
-                  <h4>Stagionalità (€ a persona/notte)</h4>
+                  <h4>Prezzo Base per Notte</h4>
                   <div className="pricing-controls">
-                    <label>Bassa Stagione (Nov-Feb):</label>
-                    <input type="number" defaultValue="30" className="admin-input-small" aria-label="Prezzo persona bassa stagione" />
+                    <label htmlFor="basePrice">Prezzo base (€/notte):</label>
+                    <input 
+                      id="basePrice"
+                      type="number" 
+                      value={pricingConfig.basePrice}
+                      onChange={(e) => updatePricingField('basePrice', Number(e.target.value))}
+                      className="admin-input-small" 
+                      min="1"
+                    />
                     
-                    <label>Media Stagione (Mar-Mag, Set-Ott):</label>
-                    <input type="number" defaultValue="45" className="admin-input-small" aria-label="Prezzo persona media stagione" />
+                    <label htmlFor="cleaningFee">Tassa di pulizia (€):</label>
+                    <input 
+                      id="cleaningFee"
+                      type="number" 
+                      value={pricingConfig.cleaningFee}
+                      onChange={(e) => updatePricingField('cleaningFee', Number(e.target.value))}
+                      className="admin-input-small" 
+                      min="0"
+                    />
                     
-                    <label>Alta Stagione (Giu-Ago):</label>
-                    <input type="number" defaultValue="70" className="admin-input-small" aria-label="Prezzo persona alta stagione" />
-                    
-                    <label>Festivi/Eventi Speciali:</label>
-                    <input type="number" defaultValue="85" className="admin-input-small" aria-label="Prezzo persona festivi" />
+                    <label htmlFor="weekendSurcharge">Supplemento Weekend (%):</label>
+                    <input 
+                      id="weekendSurcharge"
+                      type="number" 
+                      value={pricingConfig.weekendSurcharge}
+                      onChange={(e) => updatePricingField('weekendSurcharge', Number(e.target.value))}
+                      className="admin-input-small" 
+                      min="0"
+                      max="100"
+                    />
                   </div>
                 </div>
                 
                 <div className="admin-pricing-card">
-                  <h4>Configurazione Ospiti Flessibile</h4>
+                  <h4>Sconti per Soggiorno</h4>
                   <div className="pricing-controls">
-                    <label>Ospiti Inclusi (numero base):</label>
-                    <input type="number" defaultValue="2" className="admin-input-small" aria-label="Numero ospiti base inclusi" />
+                    <label htmlFor="weeklyDiscount">Sconto Settimanale (%):</label>
+                    <input 
+                      id="weeklyDiscount"
+                      type="number" 
+                      value={pricingConfig.weeklyDiscount}
+                      onChange={(e) => updatePricingField('weeklyDiscount', Number(e.target.value))}
+                      className="admin-input-small" 
+                      min="0"
+                      max="50"
+                    />
                     
-                    <label>Ospiti Aggiuntivi (dal 3° in poi):</label>
-                    <input type="number" defaultValue="25" className="admin-input-small" aria-label="Costo ospiti aggiuntivi dal terzo" />
-                    
-                    <label>Capacità Massima:</label>
-                    <input type="number" defaultValue="6" className="admin-input-small" aria-label="Capacità massima ospiti" />
+                    <label htmlFor="monthlyDiscount">Sconto Mensile (%):</label>
+                    <input 
+                      id="monthlyDiscount"
+                      type="number" 
+                      value={pricingConfig.monthlyDiscount}
+                      onChange={(e) => updatePricingField('monthlyDiscount', Number(e.target.value))}
+                      className="admin-input-small" 
+                      min="0"
+                      max="50"
+                    />
                     
                     <div className="pricing-note">
-                      💡 Tariffe calcolate automaticamente: (Ospiti Base × Tariffa) + (Ospiti Extra × Supplemento)
+                      💡 Sconti applicati automaticamente per soggiorni lunghi
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Regole di Soggiorno */}
+            <div className="admin-pricing-section">
+              <h3>📅 Regole di Soggiorno</h3>
+              <div className="admin-pricing-grid">
+                <div className="admin-pricing-card">
+                  <h4>Durata Soggiorno</h4>
+                  <div className="pricing-controls">
+                    <label htmlFor="minStay">Soggiorno Minimo (notti):</label>
+                    <input 
+                      id="minStay"
+                      type="number" 
+                      value={pricingConfig.minStay}
+                      onChange={(e) => updatePricingField('minStay', Number(e.target.value))}
+                      className="admin-input-small" 
+                      min="1"
+                    />
+                    
+                    <label htmlFor="maxStay">Soggiorno Massimo (notti):</label>
+                    <input 
+                      id="maxStay"
+                      type="number" 
+                      value={pricingConfig.maxStay}
+                      onChange={(e) => updatePricingField('maxStay', Number(e.target.value))}
+                      className="admin-input-small" 
+                      min="1"
+                    />
+                  </div>
+                </div>
+                
+                <div className="admin-pricing-card">
+                  <h4>Anteprima Calcolo</h4>
+                  <div className="pricing-preview">
+                    <div className="preview-item">
+                      <span>2 notti:</span>
+                      <strong>€{(pricingConfig.basePrice * 2 + pricingConfig.cleaningFee).toFixed(2)}</strong>
+                    </div>
+                    <div className="preview-item">
+                      <span>7 notti (con sconto):</span>
+                      <strong>€{((pricingConfig.basePrice * 7) * (1 - pricingConfig.weeklyDiscount/100) + pricingConfig.cleaningFee).toFixed(2)}</strong>
+                    </div>
+                    <div className="preview-item">
+                      <span>Weekend (con supplemento):</span>
+                      <strong>€{(pricingConfig.basePrice * (1 + pricingConfig.weekendSurcharge/100) * 2 + pricingConfig.cleaningFee).toFixed(2)}</strong>
                     </div>
                   </div>
                 </div>

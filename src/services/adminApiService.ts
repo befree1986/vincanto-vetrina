@@ -97,6 +97,48 @@ class AdminApiService {
     });
   }
 
+  // Pricing Management
+  async getPricingConfig() {
+    try {
+      const response = await fetch(`${this.baseUrl}/pricing`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching pricing config:', error);
+      return { success: false, data: [] };
+    }
+  }
+
+  async updatePricingConfig(pricingData: any) {
+    try {
+      const response = await fetch(`${this.baseUrl}/pricing/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(pricingData),
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating pricing config:', error);
+      return { success: false, message: 'Errore aggiornamento prezzi' };
+    }
+  }
+
+  async createPricingConfig(pricingData: any) {
+    try {
+      const response = await fetch(`${this.baseUrl}/pricing`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(pricingData),
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error creating pricing config:', error);
+      return { success: false, message: 'Errore creazione configurazione prezzi' };
+    }
+  }
+
   // Calendar Management
   async getCalendarData() {
     try {
@@ -131,23 +173,7 @@ class AdminApiService {
     });
   }
 
-  // Pricing Configuration
-  async getPricingConfig() {
-    try {
-      const data = await this.request('pricing-config');
-      return data.pricing || {};
-    } catch (error) {
-      console.error('Error fetching pricing config:', error);
-      return {};
-    }
-  }
-
-  async updatePricingConfig(pricingData: any) {
-    return this.request('pricing-config', {
-      method: 'PUT',
-      body: JSON.stringify(pricingData),
-    });
-  }
+  // Pricing Configuration (usando endpoint /pricing diretto)
 
   // Notifications Management
   async getNotifications() {

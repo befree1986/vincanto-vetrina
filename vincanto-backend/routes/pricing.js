@@ -160,6 +160,73 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// POST /api/pricing/update - Aggiorna configurazione globale prezzi
+router.post('/update', async (req, res) => {
+  try {
+    console.log('🎯 Update pricing config ricevuto:', req.body);
+    
+    const { 
+      basePrice, 
+      cleaningFee, 
+      weekendSurcharge,
+      monthlyDiscount,
+      weeklyDiscount,
+      minStay,
+      maxStay,
+      advanceBookingDiscount,
+      lastMinuteDiscount 
+    } = req.body;
+    
+    // Crea o aggiorna configurazione master
+    const [config, created] = await PricingConfig.findOrCreate({
+      where: { config_name: 'master_pricing' },
+      defaults: {
+        config_name: 'master_pricing',
+        base_price_per_night: basePrice || 100,
+        cleaning_fee: cleaningFee || 50,
+        weekend_surcharge_percentage: weekendSurcharge || 20,
+        monthly_discount_percentage: monthlyDiscount || 15,
+        weekly_discount_percentage: weeklyDiscount || 10,
+        minimum_stay_nights: minStay || 2,
+        maximum_stay_nights: maxStay || 14,
+        advance_booking_discount_percentage: advanceBookingDiscount || 0,
+        last_minute_discount_percentage: lastMinuteDiscount || 0,
+        is_active: true
+      }
+    });
+    
+    if (!created) {
+      // Aggiorna configurazione esistente
+      await config.update({
+        base_price_per_night: basePrice || config.base_price_per_night,
+        cleaning_fee: cleaningFee || config.cleaning_fee,
+        weekend_surcharge_percentage: weekendSurcharge || config.weekend_surcharge_percentage,
+        monthly_discount_percentage: monthlyDiscount || config.monthly_discount_percentage,
+        weekly_discount_percentage: weeklyDiscount || config.weekly_discount_percentage,
+        minimum_stay_nights: minStay || config.minimum_stay_nights,
+        maximum_stay_nights: maxStay || config.maximum_stay_nights,
+        advance_booking_discount_percentage: advanceBookingDiscount || config.advance_booking_discount_percentage,
+        last_minute_discount_percentage: lastMinuteDiscount || config.last_minute_discount_percentage
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: 'Configurazione prezzi aggiornata con successo',
+      data: config,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('❌ Errore update pricing:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Errore nell\'aggiornamento della configurazione prezzi',
+      error: error.message
+    });
+  }
+});
+
 // POST /api/pricing/calculate - Calcola preventivo per una prenotazione
 router.post('/calculate', async (req, res) => {
   try {
