@@ -1,11 +1,12 @@
 /* eslint-disable jsx-a11y/label-has-associated-control, jsx-a11y/no-autofocus */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './AdminPanelPro.css';
 import '../styles/AdminSuperAdmin.css';
 import GoogleCalendarService, { type CalendarEvent } from '../services/googleCalendarService';
 // import GoogleCalendarApiService from '../services/googleCalendarApiService';
 import GoogleCalendarAuth from '../components/GoogleCalendarAuth';
 import MockBookingService from '../services/mockBookingService';
+import AdminApiService from '../services/adminApiService';
 
 const AdminPanelPro: React.FC = () => {
   console.log('🚀 AdminPanelPro component rendering...');
@@ -38,6 +39,25 @@ const AdminPanelPro: React.FC = () => {
       return null;
     }
   });
+
+  // Servizio Admin API
+  const [adminApiService] = useState(() => {
+    try {
+      console.log('🔌 Inizializzazione AdminApiService...');
+      return new AdminApiService();
+    } catch (error) {
+      console.error('❌ Errore AdminApiService:', error);
+      return null;
+    }
+  });
+
+  // Stati per i dati API
+  const [dashboardStats, setDashboardStats] = useState<any>({});
+  const [realBookings, setRealBookings] = useState<any[]>([]);
+  const [pricingConfig, setPricingConfig] = useState<any>({});
+  const [systemSettings, setSystemSettings] = useState<any[]>([]);
+  const [analytics, setAnalytics] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
   
   // Servizio API - temporaneamente commentato
   // const [calendarApiService] = useState(() => {
@@ -58,6 +78,13 @@ const AdminPanelPro: React.FC = () => {
   // Stati autenticazione Google
   const [isGoogleAuthenticated, setIsGoogleAuthenticated] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+
+  // Effect per caricare dati all'avvio
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadRealApiData();
+    }
+  }, [isAuthenticated]);
   
   // === AUTENTICAZIONE ===
   const handleLogin = async () => {
@@ -98,11 +125,61 @@ const AdminPanelPro: React.FC = () => {
       setRecentBookings(MockBookingService.getRecentBookings());
       setPaymentTransactions(MockBookingService.getPaymentTransactions());
       
+      // Carica dati reali dalle API
+      loadRealApiData();
+      
       console.log('📅 Dati calendario caricati:', { eventsCount: events.length, stats });
     } catch (error) {
       console.error('❌ Errore nel caricamento calendario:', error);
     } finally {
       setIsLoadingCalendar(false);
+    }
+  };
+
+  // Carica dati reali dalle API backend
+  const loadRealApiData = async () => {
+    if (!adminApiService) {
+      console.warn('⚠️ AdminApiService non disponibile');
+      return;
+    }
+
+    try {
+      console.log('🔄 Caricamento dati API reali...');
+      
+      // Carica tutti i dati in parallelo
+      const [
+        statsData,
+        bookingsData,
+        pricingData,
+        settingsData,
+        analyticsData,
+        notificationsData
+      ] = await Promise.all([
+        adminApiService.getDashboardStats(),
+        adminApiService.getBookings(),
+        adminApiService.getPricingConfig(),
+        adminApiService.getSystemSettings(),
+        adminApiService.getAnalytics(),
+        adminApiService.getNotifications()
+      ]);
+
+      // Aggiorna gli stati
+      setDashboardStats(statsData);
+      setRealBookings(bookingsData);
+      setPricingConfig(pricingData);
+      setSystemSettings(settingsData);
+      setAnalytics(analyticsData);
+      setNotifications(notificationsData);
+
+      console.log('✅ Dati API reali caricati:', {
+        stats: statsData,
+        bookings: bookingsData.length,
+        settings: settingsData.length,
+        analytics: analyticsData.length,
+        notifications: notificationsData.length
+      });
+    } catch (error) {
+      console.error('❌ Errore nel caricamento dati API:', error);
     }
   };
 
@@ -285,6 +362,13 @@ const AdminPanelPro: React.FC = () => {
           </button>
           
           <button 
+            className={`admin-nav-item ${activeTab === 'analytics' ? 'active' : ''}`}
+            onClick={() => setActiveTab('analytics')}
+          >
+            📈 Analytics
+          </button>
+          
+          <button 
             className={`admin-nav-item ${activeTab === 'sistema' ? 'active' : ''}`}
             onClick={() => setActiveTab('sistema')}
           >
@@ -301,29 +385,64 @@ const AdminPanelPro: React.FC = () => {
         {activeTab === 'dashboard' && (
           <div className="admin-dashboard">
             <h2>📊 Dashboard Generale {isLoadingCalendar && '(Caricamento...)'}</h2>
-            <div className="admin-stats-grid">
-              <div className="admin-stat-card">
-                <h3>Prenotazioni Totali</h3>
-                <div className="stat-value">{calendarStats.totalBookings}</div>
-                <small>Dal calendario Google</small>
+            
+            {/* Statistiche Backend Reali */}
+            <div className="admin-section">
+              <h3>🔥 Statistiche Live Backend</h3>
+              <div className="admin-stats-grid">
+                <div className="admin-stat-card">
+                  <h3>Prenotazioni Backend</h3>
+                  <div className="stat-value">{dashboardStats.totalBookings || 0}</div>
+                  <small>Database reale</small>
+                </div>
+                
+                <div className="admin-stat-card">
+                  <h3>Ricavi Totali</h3>
+                  <div className="stat-value">€{(dashboardStats.totalRevenue || 0).toFixed(2)}</div>
+                  <small>Da API backend</small>
+                </div>
+                
+                <div className="admin-stat-card">
+                  <h3>Occupazione %</h3>
+                  <div className="stat-value">{dashboardStats.occupancyRate || 0}%</div>
+                  <small>Calcolo dinamico</small>
+                </div>
+                
+                <div className="admin-stat-card">
+                  <h3>Pagamenti Pending</h3>
+                  <div className="stat-value">{dashboardStats.pendingPayments || 0}</div>
+                  <small>In attesa</small>
+                </div>
               </div>
-              
-              <div className="admin-stat-card">
-                <h3>Prenotazioni Mese</h3>
-                <div className="stat-value">{calendarStats.thisMonth}</div>
-                <small>Mese corrente</small>
-              </div>
-              
-              <div className="admin-stat-card">
-                <h3>Ricavi Mese</h3>
-                <div className="stat-value">€{calendarStats.revenueThisMonth.toFixed(2)}</div>
-                <small>Fatturato mensile</small>
-              </div>
-              
-              <div className="admin-stat-card">
-                <h3>Tasso Occupazione</h3>
-                <div className="stat-value">{calendarStats.occupancyRate}%</div>
-                <small>Occupazione mensile</small>
+            </div>
+            
+            {/* Statistiche Google Calendar */}
+            <div className="admin-section">
+              <h3>📅 Statistiche Google Calendar</h3>
+              <div className="admin-stats-grid">
+                <div className="admin-stat-card">
+                  <h3>Prenotazioni Totali</h3>
+                  <div className="stat-value">{calendarStats.totalBookings}</div>
+                  <small>Dal calendario Google</small>
+                </div>
+                
+                <div className="admin-stat-card">
+                  <h3>Prenotazioni Mese</h3>
+                  <div className="stat-value">{calendarStats.thisMonth}</div>
+                  <small>Mese corrente</small>
+                </div>
+                
+                <div className="admin-stat-card">
+                  <h3>Ricavi Mese</h3>
+                  <div className="stat-value">€{calendarStats.revenueThisMonth.toFixed(2)}</div>
+                  <small>Fatturato mensile</small>
+                </div>
+                
+                <div className="admin-stat-card">
+                  <h3>Tasso Occupazione</h3>
+                  <div className="stat-value">{calendarStats.occupancyRate}%</div>
+                  <small>Occupazione mensile</small>
+                </div>
               </div>
             </div>
 
@@ -855,9 +974,80 @@ const AdminPanelPro: React.FC = () => {
               </div>
             </div>
             
-            {/* Tabella Prenotazioni */}
+            {/* Prenotazioni Backend Reali */}
             <div className="admin-pricing-section">
-              <h3>📋 Lista Prenotazioni</h3>
+              <h3>🔥 Prenotazioni Backend (Dati Reali)</h3>
+              <div className="bookings-table-container">
+                {realBookings.length > 0 ? (
+                  <table className="bookings-table">
+                    <thead>
+                      <tr>
+                        <th>ID Backend</th>
+                        <th>Cliente</th>
+                        <th>Email</th>
+                        <th>Check-in</th>
+                        <th>Check-out</th>
+                        <th>Ospiti</th>
+                        <th>Stato</th>
+                        <th>Totale</th>
+                        <th>Azioni API</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {realBookings.map((booking) => (
+                        <tr key={booking.id} className="booking-row">
+                          <td><strong>#{booking.id}</strong></td>
+                          <td>{booking.customer_name || booking.guestName || 'N/A'}</td>
+                          <td>{booking.customer_email || booking.email || 'N/A'}</td>
+                          <td>{booking.check_in || booking.checkIn}</td>
+                          <td>{booking.check_out || booking.checkOut}</td>
+                          <td>{booking.guests}</td>
+                          <td>
+                            <span className={`status ${booking.status}`}>
+                              {booking.status === 'confirmed' && '✅ Confermata'}
+                              {booking.status === 'pending' && '🟡 In attesa'}
+                              {booking.status === 'cancelled' && '❌ Cancellata'}
+                              {!booking.status && '📊 Backend'}
+                            </span>
+                          </td>
+                          <td>€{(booking.total_amount || booking.totalPrice || 0).toFixed(2)}</td>
+                          <td>
+                            <div className="action-buttons">
+                              <button 
+                                className="admin-btn-small" 
+                                onClick={() => adminApiService?.updateBooking(booking.id, { status: 'confirmed' })}
+                              >
+                                ✅ Conferma
+                              </button>
+                              <button 
+                                className="admin-btn-small" 
+                                onClick={() => adminApiService?.deleteBooking(booking.id)}
+                              >
+                                ❌ Elimina
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="admin-pricing-card">
+                    <p>📊 Nessuna prenotazione trovata nel database backend</p>
+                    <button 
+                      className="admin-btn-primary" 
+                      onClick={loadRealApiData}
+                    >
+                      🔄 Ricarica Dati API
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Tabella Prenotazioni Mock */}
+            <div className="admin-pricing-section">
+              <h3>📋 Lista Prenotazioni (Demo/Mock)</h3>
               <div className="bookings-table-container">
                 <table className="bookings-table">
                   <thead>
@@ -1254,6 +1444,76 @@ const AdminPanelPro: React.FC = () => {
           <div className="admin-sistema">
             <h2>⚙️ Configurazione Sistema Avanzata</h2>
             
+            {/* Impostazioni Backend Reali */}
+            <div className="admin-pricing-section">
+              <h3>🔥 Impostazioni Backend Live</h3>
+              <div className="admin-pricing-grid">
+                <div className="admin-pricing-card">
+                  <h4>Configurazioni Sistema</h4>
+                  <div className="pricing-controls">
+                    {systemSettings.length > 0 ? (
+                      systemSettings.map((setting) => (
+                        <div key={setting.id || setting.key} className="setting-row">
+                          <label>{setting.label || setting.key}:</label>
+                          <input 
+                            type="text" 
+                            defaultValue={setting.value} 
+                            className="admin-input" 
+                            onChange={(e) => {
+                              if (adminApiService) {
+                                adminApiService.updateSystemSetting(setting.key, e.target.value);
+                              }
+                            }}
+                            aria-label={setting.label || setting.key}
+                          />
+                          <small>Categoria: {setting.category}</small>
+                        </div>
+                      ))
+                    ) : (
+                      <div>
+                        <p>📊 Nessuna impostazione caricata dal backend</p>
+                        <button 
+                          className="admin-btn-primary" 
+                          onClick={loadRealApiData}
+                        >
+                          🔄 Carica Impostazioni API
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="admin-pricing-card">
+                  <h4>Statistiche API</h4>
+                  <div className="pricing-controls">
+                    <div className="stat-row">
+                      <span>📊 Prenotazioni Backend:</span>
+                      <span className="stat-value">{realBookings.length}</span>
+                    </div>
+                    <div className="stat-row">
+                      <span>⚙️ Impostazioni Attive:</span>
+                      <span className="stat-value">{systemSettings.length}</span>
+                    </div>
+                    <div className="stat-row">
+                      <span>📈 Analytics Records:</span>
+                      <span className="stat-value">{analytics.length}</span>
+                    </div>
+                    <div className="stat-row">
+                      <span>🔔 Notifiche:</span>
+                      <span className="stat-value">{notifications.length}</span>
+                    </div>
+                  </div>
+                  
+                  <button 
+                    className="admin-btn-primary" 
+                    onClick={loadRealApiData}
+                  >
+                    🔄 Ricarica Tutti i Dati API
+                  </button>
+                </div>
+              </div>
+            </div>
+            
             {/* Informazioni Proprietà */}
             <div className="admin-pricing-section">
               <h3>🏠 Informazioni Struttura</h3>
@@ -1386,6 +1646,122 @@ const AdminPanelPro: React.FC = () => {
               <button className="admin-btn-secondary">🛡️ Test Sicurezza</button>
               <button className="admin-btn-secondary">📊 Report Performance</button>
               <button className="admin-btn-secondary">⚙️ Manutenzione Programmata</button>
+            </div>
+          </div>
+        )}
+
+        {/* Sezione Analytics Professionale */}
+        {activeTab === 'analytics' && (
+          <div className="admin-analytics">
+            <h2>📈 Analytics e Statistiche Avanzate</h2>
+            
+            {/* Analytics Backend Reali */}
+            <div className="admin-pricing-section">
+              <h3>🔥 Analytics Backend (Dati Reali 30 Giorni)</h3>
+              <div className="admin-pricing-grid">
+                {analytics.length > 0 ? (
+                  <div className="admin-pricing-card">
+                    <h4>📊 Dati Giornalieri</h4>
+                    <div className="analytics-table">
+                      <table className="bookings-table">
+                        <thead>
+                          <tr>
+                            <th>Data</th>
+                            <th>Prenotazioni</th>
+                            <th>Ricavi</th>
+                            <th>Occupancy %</th>
+                            <th>Trend</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {analytics.slice(0, 10).map((day, index) => (
+                            <tr key={index}>
+                              <td>{day.date}</td>
+                              <td>{day.bookings}</td>
+                              <td>€{day.revenue}</td>
+                              <td>{day.occupancy}%</td>
+                              <td>
+                                {day.occupancy > 70 ? '🔥' : day.occupancy > 40 ? '📈' : '📉'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="admin-pricing-card">
+                    <h4>📊 Nessun Dato Analytics</h4>
+                    <p>Non sono stati trovati dati analytics dal backend</p>
+                    <button 
+                      className="admin-btn-primary" 
+                      onClick={loadRealApiData}
+                    >
+                      🔄 Ricarica Analytics API
+                    </button>
+                  </div>
+                )}
+                
+                <div className="admin-pricing-card">
+                  <h4>📈 Statistiche Aggregate</h4>
+                  <div className="pricing-controls">
+                    <div className="stat-row">
+                      <span>📊 Totale Record Analytics:</span>
+                      <span className="stat-value">{analytics.length}</span>
+                    </div>
+                    <div className="stat-row">
+                      <span>💰 Ricavo Medio Giornaliero:</span>
+                      <span className="stat-value">
+                        €{analytics.length > 0 
+                          ? (analytics.reduce((sum, day) => sum + (day.revenue || 0), 0) / analytics.length).toFixed(2)
+                          : '0.00'}
+                      </span>
+                    </div>
+                    <div className="stat-row">
+                      <span>🏠 Occupancy Media:</span>
+                      <span className="stat-value">
+                        {analytics.length > 0 
+                          ? Math.round(analytics.reduce((sum, day) => sum + (day.occupancy || 0), 0) / analytics.length)
+                          : 0}%
+                      </span>
+                    </div>
+                    <div className="stat-row">
+                      <span>📅 Giorni con Prenotazioni:</span>
+                      <span className="stat-value">
+                        {analytics.filter(day => day.bookings > 0).length}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Grafici e Trend */}
+            <div className="admin-pricing-section">
+              <h3>📊 Trend Visuali (Simulati)</h3>
+              <div className="admin-pricing-card">
+                <h4>📈 Andamento Ricavi</h4>
+                <div className="trend-chart">
+                  {analytics.slice(0, 7).map((day, index) => (
+                    <div key={index} className="chart-bar" style={{ 
+                      height: `${Math.max(10, (day.revenue || 0) / 10)}px`,
+                      backgroundColor: day.revenue > 300 ? '#4CAF50' : day.revenue > 150 ? '#FF9800' : '#f44336'
+                    }}>
+                      <small>{day.date?.split('-')[2] || index + 1}</small>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Azioni Analytics */}
+            <div className="admin-pricing-actions">
+              <button className="admin-btn-primary" onClick={loadRealApiData}>
+                🔄 Aggiorna Dati Analytics
+              </button>
+              <button className="admin-btn-secondary">📊 Esporta CSV</button>
+              <button className="admin-btn-secondary">📈 Report Mensile</button>
+              <button className="admin-btn-secondary">📧 Invia Report Email</button>
             </div>
           </div>
         )}
