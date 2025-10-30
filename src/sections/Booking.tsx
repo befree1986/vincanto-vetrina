@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, Suspense, lazy } from "react";
 import "./Booking.css";
 import LemonDivider from "../components/LemonDivider";
-import BookingSystemEnhanced from "../components/BookingSystemEnhanced";
 import { useTranslation } from "react-i18next";
+
+// Lazy loading per il sistema di booking pesante
+const BookingSystemEnhanced = lazy(() => import("../components/BookingSystemEnhanced"));
 
 const BOOKING_URL = "https://www.booking.com/hotel/it/vincanto-maiori-costiera-amalfitana.it.html";
 const AIRBNB_URL = "https://www.airbnb.it/rooms/1387891577187940063";
@@ -85,7 +87,18 @@ const Booking: React.FC = () => {
           </div>
         </div>
 
-        {showBookingSystem ? <BookingSystemEnhanced /> : <BookingForm />}
+        {showBookingSystem ? (
+          <Suspense fallback={
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span className="ml-3">Caricamento sistema prenotazioni...</span>
+            </div>
+          }>
+            <BookingSystemEnhanced />
+          </Suspense>
+        ) : (
+          <BookingForm />
+        )}
       </div>
       <LemonDivider position="left" />
       </section>

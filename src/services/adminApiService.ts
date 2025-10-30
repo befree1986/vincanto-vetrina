@@ -250,35 +250,262 @@ class AdminApiService {
     }
   }
 
-  // Calendar Management
-  async getCalendarEvents() {
+  // === CALENDAR MANAGEMENT API ===
+  
+  // Ottieni configurazioni calendario
+  async getCalendarConfigs() {
     try {
-      const data = await this.request('calendar-events');
-      return data.events || [];
+      const response = await fetch(`${this.baseUrl}/calendars`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      const data = await response.json();
+      console.log('📅 Calendar configs:', data);
+      return data;
     } catch (error) {
-      console.error('Error fetching calendar events:', error);
-      return [];
+      console.error('❌ Error fetching calendar configs:', error);
+      return { calendars: [], stats: {} };
     }
   }
 
-  async syncCalendar() {
+  // Crea nuova configurazione calendario
+  async createCalendarConfig(config: any) {
     try {
-      return await this.request('calendar-sync', { method: 'POST' });
+      const response = await fetch(`${this.baseUrl}/calendars`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config)
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      return await response.json();
     } catch (error) {
-      console.error('Error syncing calendar:', error);
+      console.error('❌ Error creating calendar config:', error);
       throw error;
     }
   }
 
-  async testCalendarConnection() {
+  // Aggiorna configurazione calendario
+  async updateCalendarConfig(id: string, config: any) {
     try {
-      const data = await this.request('calendar-test');
-      return data.connected || false;
+      const response = await fetch(`${this.baseUrl}/calendars/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config)
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      return await response.json();
     } catch (error) {
-      console.error('Error testing calendar connection:', error);
-      return false;
+      console.error('❌ Error updating calendar config:', error);
+      throw error;
     }
   }
+
+  // Elimina configurazione calendario  
+  async deleteCalendarConfig(id: string) {
+    try {
+      const response = await fetch(`${this.baseUrl}/calendars/${id}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      return await response.json();
+    } catch (error) {
+      console.error('❌ Error deleting calendar config:', error);
+      throw error;
+    }
+  }
+
+  // Stato sincronizzazione calendari
+  async getCalendarSyncStatus() {
+    try {
+      const response = await fetch(`${this.baseUrl}/calendar-sync/status`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      return await response.json();
+    } catch (error) {
+      console.error('❌ Error fetching calendar sync status:', error);
+      return { success: false, stats: {} };
+    }
+  }
+
+  // Forza sincronizzazione calendario
+  async forceCalendarSync(calendarId?: string) {
+    try {
+      const url = calendarId 
+        ? `${this.baseUrl}/calendar-sync/force/${calendarId}`
+        : `${this.baseUrl}/calendar-sync/force-all`;
+        
+      const response = await fetch(url, { method: 'POST' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      return await response.json();
+    } catch (error) {
+      console.error('❌ Error forcing calendar sync:', error);
+      throw error;
+    }
+  }
+
+  // Test connessione calendario
+  async testCalendarConnection(config: any) {
+    try {
+      const response = await fetch(`${this.baseUrl}/calendars/test-connection`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config)
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      return await response.json();
+    } catch (error) {
+      console.error('❌ Error testing calendar connection:', error);
+      throw error;
+    }
+  }
+
+  // === GOOGLE CALENDAR API METHODS ===
+
+  // Ottieni URL autorizzazione Google
+  async getGoogleAuthUrl() {
+    try {
+      const response = await fetch(`${this.baseUrl}/google-calendar/auth-url`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      return await response.json();
+    } catch (error) {
+      console.error('❌ Error getting Google auth URL:', error);
+      throw error;
+    }
+  }
+
+  // Completa autorizzazione Google
+  async completeGoogleAuth(code: string) {
+    try {
+      const response = await fetch(`${this.baseUrl}/google-calendar/callback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      return await response.json();
+    } catch (error) {
+      console.error('❌ Error completing Google auth:', error);
+      throw error;
+    }
+  }
+
+  // Verifica stato autenticazione Google
+  async getGoogleAuthStatus() {
+    try {
+      const response = await fetch(`${this.baseUrl}/google-calendar/status`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      return await response.json();
+    } catch (error) {
+      console.error('❌ Error getting Google auth status:', error);
+      return { success: false, data: { isAuthenticated: false } };
+    }
+  }
+
+  // Lista calendari Google
+  async getGoogleCalendars() {
+    try {
+      const response = await fetch(`${this.baseUrl}/google-calendar/calendars`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      return await response.json();
+    } catch (error) {
+      console.error('❌ Error getting Google calendars:', error);
+      throw error;
+    }
+  }
+
+  // Ottieni eventi da Google Calendar
+  async getGoogleCalendarEvents(calendarId?: string, timeMin?: string, timeMax?: string) {
+    try {
+      const params = new URLSearchParams();
+      if (calendarId) params.append('calendarId', calendarId);
+      if (timeMin) params.append('timeMin', timeMin);
+      if (timeMax) params.append('timeMax', timeMax);
+      
+      const response = await fetch(`${this.baseUrl}/google-calendar/events?${params}`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      return await response.json();
+    } catch (error) {
+      console.error('❌ Error getting Google calendar events:', error);
+      throw error;
+    }
+  }
+
+  // Sincronizza prenotazioni con Google Calendar
+  async syncBookingsToGoogle(bookings: any[], calendarId?: string) {
+    try {
+      const response = await fetch(`${this.baseUrl}/google-calendar/sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          calendarId: calendarId || 'primary',
+          bookings: bookings
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      return await response.json();
+    } catch (error) {
+      console.error('❌ Error syncing bookings to Google:', error);
+      throw error;
+    }
+  }
+
+  // Test connessione Google Calendar
+  async testGoogleConnection() {
+    try {
+      const response = await fetch(`${this.baseUrl}/google-calendar/test`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      return await response.json();
+    } catch (error) {
+      console.error('❌ Error testing Google connection:', error);
+      throw error;
+    }
+  }
+
+  // Ottieni eventi convertiti da prenotazioni
+  async getBookingEvents() {
+    try {
+      const response = await fetch(`${this.baseUrl}/google-calendar/booking-events`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      return await response.json();
+    } catch (error) {
+      console.error('❌ Error getting booking events:', error);
+      return { success: false, data: [], count: 0 };
+    }
+  }
+
+  // Metodi per l'autenticazione e gestione Google Calendar
+  async initiateGoogleAuth() {
+    try {
+      const response = await fetch(`${this.baseUrl}/google-calendar/auth`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      const result = await response.json();
+      return result.authUrl;
+    } catch (error) {
+      console.error('❌ Error initiating Google auth:', error);
+      throw error;
+    }
+  }
+
+  async syncGoogleCalendar() {
+    try {
+      const response = await fetch(`${this.baseUrl}/google-calendar/sync`, { method: 'POST' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      return await response.json();
+    } catch (error) {
+      console.error('❌ Error syncing Google Calendar:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  }
+
+  async getGoogleCalendarStatus() {
+    try {
+      const response = await fetch(`${this.baseUrl}/google-calendar/status`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      return await response.json();
+    } catch (error) {
+      console.error('❌ Error getting Google Calendar status:', error);
+      return { isAuthenticated: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  }
+
+
 }
 
 export default AdminApiService;

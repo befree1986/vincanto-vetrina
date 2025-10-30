@@ -439,6 +439,15 @@ app.post('/api/contact-request', async (req, res) => {
   }
 });
 
+// Google Calendar routes integration
+try {
+  const googleCalendarRoutes = require('./routes/google-calendar');
+  app.use('/api/google-calendar', googleCalendarRoutes);
+  console.log('📅 Google Calendar routes loaded successfully');
+} catch (error) {
+  console.warn('⚠️  Google Calendar routes not available:', error.message);
+}
+
 // Forza l'ascolto su IPv4 per evitare conflitti IPv6
 app.listen(3001, '127.0.0.1', () => {
   console.log('✅ Backend avviato su http://127.0.0.1:3001');

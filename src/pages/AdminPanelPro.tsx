@@ -72,15 +72,28 @@ const AdminPanelPro: React.FC = () => {
   });
   const [isUpdatingPricing, setIsUpdatingPricing] = useState(false);
   
-  // Stati per calendario (variabili mancanti)
-  const [calendarEvents, setCalendarEvents] = useState<any[]>([]);
-  const [isLoadingCalendar, setIsLoadingCalendar] = useState(false);
+  // === STATI CALENDAR MANAGEMENT ===
+  const [calendarConfigs, setCalendarConfigs] = useState<any[]>([]);
   const [calendarStats, setCalendarStats] = useState({
-    totalBookings: 0,
-    upcomingBookings: 0,
-    revenue: 0
+    total: 0,
+    active: 0,
+    googleCalendar: 0,
+    external: 0,
+    lastSyncSuccess: null
   });
-  const [isGoogleAuthenticated, setIsGoogleAuthenticated] = useState(false);
+  const [isLoadingCalendars, setIsLoadingCalendars] = useState(false);
+  const [showNewCalendarForm, setShowNewCalendarForm] = useState(false);
+  // const [editingCalendar, setEditingCalendar] = useState<any>(null); // Non utilizzato
+  
+  // Form nuovo calendario
+  const [newCalendarData, setNewCalendarData] = useState({
+    name: '',
+    calendar_type: 'google_calendar', // google_calendar, airbnb, booking_com, vrbo
+    url: '',
+    credentials: '',
+    sync_frequency: 30, // minuti
+    is_active: true
+  });
   
   // Servizio API - temporaneamente commentato
   // const [calendarApiService] = useState(() => {
@@ -97,6 +110,9 @@ const AdminPanelPro: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  
+  // Stato autenticazione Google Calendar
+  const [isGoogleAuthenticated, setIsGoogleAuthenticated] = useState(false);
   
 
 
@@ -196,6 +212,149 @@ const AdminPanelPro: React.FC = () => {
     }));
   };
 
+  // === CALENDAR FUNCTIONS ===
+  
+  const loadCalendarConfigs = async () => {
+    if (!adminApiService) return;
+    
+    try {
+      setIsLoadingCalendars(true);
+      console.log('📅 Caricamento configurazioni calendario...');
+      
+      const result = await adminApiService.getCalendarConfigs();
+      
+      if (result.success !== false) {
+        setCalendarConfigs(result.calendars || []);
+        setCalendarStats(result.stats || {});
+        console.log('✅ Calendari caricati:', result);
+      }
+    } catch (error) {
+      console.error('❌ Errore caricamento calendari:', error);
+    } finally {
+      setIsLoadingCalendars(false);
+    }
+  };
+
+  // Rimossa funzione loadCalendarSyncStatus non utilizzata
+
+  const handleCreateCalendar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adminApiService) return;
+
+    try {
+      setIsLoadingCalendars(true);
+      console.log('📅 Creazione nuovo calendario:', newCalendarData);
+
+      const result = await adminApiService.createCalendarConfig(newCalendarData);
+      
+      if (result.success) {
+        alert('✅ Calendario configurato con successo!');
+        setShowNewCalendarForm(false);
+        setNewCalendarData({
+          name: '',
+          calendar_type: 'google_calendar',
+          url: '',
+          credentials: '',
+          sync_frequency: 30,
+          is_active: true
+        });
+        await loadCalendarConfigs(); // Ricarica la lista
+      } else {
+        alert('❌ Errore nella configurazione: ' + (result.message || 'Errore sconosciuto'));
+      }
+    } catch (error) {
+      console.error('❌ Errore creazione calendario:', error);
+      alert('❌ Errore nella creazione del calendario');
+    } finally {
+      setIsLoadingCalendars(false);
+    }
+  };
+
+  const handleUpdateCalendar = async (id: string, updates: any) => {
+    if (!adminApiService) return;
+
+    try {
+      setIsLoadingCalendars(true);
+      const result = await adminApiService.updateCalendarConfig(id, updates);
+      
+      if (result.success) {
+        alert('✅ Calendario aggiornato con successo!');
+        await loadCalendarConfigs();
+      } else {
+        alert('❌ Errore aggiornamento: ' + (result.message || 'Errore sconosciuto'));
+      }
+    } catch (error) {
+      console.error('❌ Errore aggiornamento calendario:', error);
+      alert('❌ Errore nell\'aggiornamento del calendario');
+    } finally {
+      setIsLoadingCalendars(false);
+    }
+  };
+
+  const handleDeleteCalendar = async (id: string) => {
+    if (!adminApiService) return;
+    
+    if (!confirm('⚠️ Sei sicuro di voler eliminare questa configurazione calendario?')) return;
+
+    try {
+      setIsLoadingCalendars(true);
+      const result = await adminApiService.deleteCalendarConfig(id);
+      
+      if (result.success) {
+        alert('✅ Calendario eliminato con successo!');
+        await loadCalendarConfigs();
+      } else {
+        alert('❌ Errore eliminazione: ' + (result.message || 'Errore sconosciuto'));
+      }
+    } catch (error) {
+      console.error('❌ Errore eliminazione calendario:', error);
+      alert('❌ Errore nell\'eliminazione del calendario');
+    } finally {
+      setIsLoadingCalendars(false);
+    }
+  };
+
+  const handleForceSync = async (calendarId?: string) => {
+    if (!adminApiService) return;
+
+    try {
+      setIsLoadingCalendars(true);
+      const result = await adminApiService.forceCalendarSync(calendarId);
+      
+      if (result.success) {
+        alert('✅ Sincronizzazione completata!');
+        await loadCalendarConfigs();
+      } else {
+        alert('❌ Errore sincronizzazione: ' + (result.message || 'Errore sconosciuto'));
+      }
+    } catch (error) {
+      console.error('❌ Errore sincronizzazione:', error);
+      alert('❌ Errore nella sincronizzazione');
+    } finally {
+      setIsLoadingCalendars(false);
+    }
+  };
+
+  const handleTestConnection = async (config: any) => {
+    if (!adminApiService) return;
+
+    try {
+      setIsLoadingCalendars(true);
+      const result = await adminApiService.testCalendarConnection(config);
+      
+      if (result.success) {
+        alert('✅ Connessione testata con successo!');
+      } else {
+        alert('❌ Test connessione fallito: ' + (result.message || 'Errore sconosciuto'));
+      }
+    } catch (error) {
+      console.error('❌ Errore test connessione:', error);
+      alert('❌ Errore nel test di connessione');
+    } finally {
+      setIsLoadingCalendars(false);
+    }
+  };
+
   // Carica dati reali dalle API backend
   const loadRealApiData = async () => {
     if (!adminApiService) {
@@ -233,8 +392,9 @@ const AdminPanelPro: React.FC = () => {
       setNotifications(notificationsData);
       setBlockedDates(blockedDatesData);
       
-      // Carica anche la configurazione prezzi
+      // Carica configurazioni prezzi e calendari
       loadPricingConfig();
+      loadCalendarConfigs();
       
       // Simula transazioni da prenotazioni reali
       const simulatedTransactions = bookingsData.map((booking: any) => ({
@@ -434,22 +594,18 @@ const AdminPanelPro: React.FC = () => {
 
   // === GESTIONE CALENDARIO ===
   
+  // Stati per eventi calendario (legacy - ora usati per la dashboard)
+  const [calendarEvents, setCalendarEvents] = useState<any[]>([]);
+  const [isLoadingCalendar, setIsLoadingCalendar] = useState(false);
+
   const loadCalendarData = async () => {
     setIsLoadingCalendar(true);
     try {
       if (!adminApiService) return;
       
-      // Carica eventi calendario da backend
-      const events = await adminApiService.getCalendarEvents() || [];
-      setCalendarEvents(events);
-      
-      // Aggiorna statistiche calendario
-      const stats = {
-        totalBookings: events.length,
-        upcomingBookings: events.filter((e: any) => new Date(e.start) > new Date()).length,
-        revenue: events.reduce((sum: number, e: any) => sum + (e.totalPrice || 0), 0)
-      };
-      setCalendarStats(stats);
+      // Carica prenotazioni dal sistema per mostrare nel calendario
+      const bookings = await adminApiService.getBookings() || [];
+      setCalendarEvents(bookings);
       
     } catch (error) {
       console.error('Errore caricamento calendario:', error);
@@ -458,25 +614,81 @@ const AdminPanelPro: React.FC = () => {
     }
   };
 
-  const forceSyncCalendar = async () => {
+  // Funzioni rimosse: forceSyncCalendar e testCalendarConnection non utilizzate nell'interfaccia
+  // Le funzioni Google Calendar attive sono: handleGoogleCalendarSync, testGoogleConnection, etc.
+
+  const initiateGoogleAuth = async () => {
     try {
       if (!adminApiService) return;
-      await adminApiService.syncCalendar();
-      await loadCalendarData();
-      alert('✅ Sincronizzazione completata!');
+      
+      const authUrl = await adminApiService.initiateGoogleAuth();
+      if (authUrl) {
+        window.open(authUrl, '_blank', 'width=500,height=600');
+        alert('🔐 Finestra di autenticazione aperta. Completa il login e torna qui.');
+      }
     } catch (error) {
-      alert('❌ Errore nella sincronizzazione');
+      console.error('Errore autenticazione Google:', error);
+      alert('❌ Errore nell\'avvio dell\'autenticazione Google');
     }
   };
 
-  const testCalendarConnection = async () => {
+  const handleGoogleCalendarSync = async () => {
     try {
       if (!adminApiService) return;
-      const isConnected = await adminApiService.testCalendarConnection();
-      setIsGoogleAuthenticated(isConnected);
-      alert(isConnected ? '✅ Connessione ok!' : '❌ Connessione fallita');
+      
+      setIsLoadingCalendar(true);
+      const result = await adminApiService.syncGoogleCalendar();
+      
+      if (result.success) {
+        await loadCalendarData();
+        alert(`✅ Sincronizzazione completata! ${result.syncedEvents || 0} eventi sincronizzati.`);
+      } else {
+        alert('❌ Sincronizzazione fallita: ' + (result.error || 'Errore sconosciuto'));
+      }
     } catch (error) {
-      alert('❌ Test connessione fallito');
+      console.error('Errore sincronizzazione Google Calendar:', error);
+      alert('❌ Errore nella sincronizzazione Google Calendar');
+    } finally {
+      setIsLoadingCalendar(false);
+    }
+  };
+
+  const testGoogleConnection = async () => {
+    try {
+      if (!adminApiService) return;
+      
+      const status = await adminApiService.getGoogleCalendarStatus();
+      
+      if (status.isAuthenticated) {
+        setIsGoogleAuthenticated(true);
+        alert(`✅ Google Calendar connesso!\n📧 Email: ${status.email}\n📅 Calendari: ${status.calendarsCount || 0}`);
+      } else {
+        setIsGoogleAuthenticated(false);
+        alert('❌ Google Calendar non autenticato. Usa il pulsante "🔐 Autentica Google" per connetterti.');
+      }
+    } catch (error) {
+      console.error('Errore test connessione Google:', error);
+      alert('❌ Errore nel test della connessione Google Calendar');
+    }
+  };
+
+  const loadGoogleCalendarEvents = async () => {
+    try {
+      if (!adminApiService) return;
+      
+      setIsLoadingCalendar(true);
+      const events = await adminApiService.getGoogleCalendarEvents();
+      
+      console.log('Eventi Google Calendar caricati:', events);
+      alert(`📅 Caricati ${events.length || 0} eventi da Google Calendar`);
+      
+      return events;
+    } catch (error) {
+      console.error('Errore caricamento eventi Google:', error);
+      alert('❌ Errore nel caricamento eventi Google Calendar');
+      return [];
+    } finally {
+      setIsLoadingCalendar(false);
     }
   };
 
@@ -1126,10 +1338,251 @@ const AdminPanelPro: React.FC = () => {
           </div>
         )}
 
-        {/* Sezione Calendari Backend Reale */}
+        {/* === SEZIONE CALENDARI COMPLETA === */}
         {activeTab === 'calendari' && (
           <div className="admin-calendari">
-            <h2>🗓️ Gestione Calendari Backend {isLoadingData && '(Caricamento...)'}</h2>
+            <h2>🗓️ Gestione Calendari {isLoadingCalendars && '(Caricamento...)'}</h2>
+            
+            {/* Statistiche Calendari */}
+            <div className="admin-pricing-section">
+              <h3>📊 Statistiche Calendario</h3>
+              <div className="pricing-controls">
+                <div className="pricing-preview">
+                  <div className="preview-item">
+                    <span>Totali Configurati:</span>
+                    <strong>{calendarStats.total || 0}</strong>
+                  </div>
+                  <div className="preview-item">
+                    <span>Calendari Attivi:</span>
+                    <strong className="status-success">{calendarStats.active || 0}</strong>
+                  </div>
+                  <div className="preview-item">
+                    <span>Google Calendar:</span>
+                    <strong className="status-google">{calendarStats.googleCalendar || 0}</strong>
+                  </div>
+                  <div className="preview-item">
+                    <span>Calendari Esterni:</span>
+                    <strong className="status-warning">{calendarStats.external || 0}</strong>
+                  </div>
+                  <div className="preview-item">
+                    <span>Ultima Sincronizzazione:</span>
+                    <strong>{calendarStats.lastSyncSuccess ? new Date(calendarStats.lastSyncSuccess).toLocaleString('it-IT') : 'Mai'}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Form Nuovo Calendario */}
+            {showNewCalendarForm && (
+              <div className="admin-pricing-section">
+                <h3>➕ Aggiungi Nuovo Calendario</h3>
+                <div className="admin-pricing-card">
+                  <form onSubmit={handleCreateCalendar}>
+                    <div className="pricing-controls">
+                      <label htmlFor="cal-name">Nome Calendario:</label>
+                      <input 
+                        id="cal-name"
+                        type="text" 
+                        value={newCalendarData.name}
+                        onChange={(e) => setNewCalendarData({...newCalendarData, name: e.target.value})}
+                        className="admin-input-small" 
+                        placeholder="Es: Booking.com Master Calendar"
+                        required 
+                      />
+                      
+                      <label htmlFor="cal-type">Tipo Calendario:</label>
+                      <select 
+                        id="cal-type"
+                        value={newCalendarData.calendar_type}
+                        onChange={(e) => setNewCalendarData({...newCalendarData, calendar_type: e.target.value})}
+                        className="admin-select"
+                      >
+                        <option value="google_calendar">🎯 Google Calendar</option>
+                        <option value="airbnb">🏠 Airbnb</option>
+                        <option value="booking_com">🌍 Booking.com</option>
+                        <option value="vrbo">🏖️ VRBO</option>
+                        <option value="holidu">🏖️ Holidu</option>
+                        <option value="ical_external">📅 iCal Esterno</option>
+                      </select>
+                      
+                      <label htmlFor="cal-url">URL/iCal Feed:</label>
+                      <input 
+                        id="cal-url"
+                        type="url" 
+                        value={newCalendarData.url}
+                        onChange={(e) => setNewCalendarData({...newCalendarData, url: e.target.value})}
+                        className="admin-input-small" 
+                        placeholder="https://calendar.google.com/calendar/ical/..."
+                      />
+                      
+                      <label htmlFor="cal-frequency">Sincronizzazione (minuti):</label>
+                      <select 
+                        id="cal-frequency"
+                        value={newCalendarData.sync_frequency}
+                        onChange={(e) => setNewCalendarData({...newCalendarData, sync_frequency: parseInt(e.target.value)})}
+                        className="admin-select"
+                      >
+                        <option value="15">15 minuti</option>
+                        <option value="30">30 minuti</option>
+                        <option value="60">1 ora</option>
+                        <option value="120">2 ore</option>
+                        <option value="360">6 ore</option>
+                        <option value="720">12 ore</option>
+                        <option value="1440">24 ore</option>
+                      </select>
+                      
+                      <label>
+                        <input 
+                          type="checkbox" 
+                          checked={newCalendarData.is_active}
+                          onChange={(e) => setNewCalendarData({...newCalendarData, is_active: e.target.checked})}
+                        />
+                        Attivo dalla creazione
+                      </label>
+                    </div>
+                    
+                    <div className="admin-pricing-actions">
+                      <button type="submit" className="admin-btn-primary" disabled={isLoadingCalendars}>
+                        {isLoadingCalendars ? '⏳ Creazione...' : '✅ Crea Calendario'}
+                      </button>
+                      <button 
+                        type="button" 
+                        className="admin-btn-secondary" 
+                        onClick={() => setShowNewCalendarForm(false)}
+                      >
+                        ❌ Annulla
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* Lista Calendari Configurati */}
+            <div className="admin-pricing-section">
+              <h3>🗓️ Calendari Configurati</h3>
+              <div className="admin-pricing-actions margin-bottom">
+                <button 
+                  className="admin-btn-primary" 
+                  onClick={() => setShowNewCalendarForm(true)}
+                  disabled={isLoadingCalendars}
+                >
+                  ➕ Aggiungi Calendario
+                </button>
+                <button 
+                  className="admin-btn-secondary" 
+                  onClick={() => handleForceSync()}
+                  disabled={isLoadingCalendars}
+                >
+                  {isLoadingCalendars ? '⏳ Sincronizzazione...' : '🔄 Sincronizza Tutti'}
+                </button>
+                <button 
+                  className="admin-btn-secondary" 
+                  onClick={loadCalendarConfigs}
+                  disabled={isLoadingCalendars}
+                >
+                  🔄 Ricarica
+                </button>
+              </div>
+              
+              {calendarConfigs.length > 0 ? (
+                <div className="bookings-table-container">
+                  <table className="bookings-table">
+                    <thead>
+                      <tr>
+                        <th>Nome</th>
+                        <th>Tipo</th>
+                        <th>Stato</th>
+                        <th>Ultima Sync</th>
+                        <th>Frequenza</th>
+                        <th>Eventi</th>
+                        <th>Azioni</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {calendarConfigs.map((calendar: any) => (
+                        <tr key={calendar.id}>
+                          <td><strong>{calendar.name}</strong></td>
+                          <td>
+                            <span className={`status ${calendar.calendar_type}`}>
+                              {calendar.calendar_type === 'google_calendar' && '🎯 Google'}
+                              {calendar.calendar_type === 'airbnb' && '🏠 Airbnb'}
+                              {calendar.calendar_type === 'booking_com' && '🌍 Booking.com'}
+                              {calendar.calendar_type === 'vrbo' && '🏖️ VRBO'}
+                              {calendar.calendar_type === 'ical_external' && '📅 iCal'}
+                            </span>
+                          </td>
+                          <td>
+                            <span className={`status ${calendar.is_active ? 'confirmed' : 'cancelled'}`}>
+                              {calendar.is_active ? '🟢 Attivo' : '🔴 Disattivo'}
+                            </span>
+                          </td>
+                          <td>{calendar.last_sync_at ? new Date(calendar.last_sync_at).toLocaleString('it-IT') : 'Mai'}</td>
+                          <td>{calendar.sync_frequency} min</td>
+                          <td>{calendar.events_count || 0}</td>
+                          <td>
+                            <div className="calendar-actions">
+                              <button 
+                                className="admin-btn-small" 
+                                onClick={() => handleForceSync(calendar.id)}
+                                disabled={isLoadingCalendars}
+                                title="Sincronizza ora"
+                              >
+                                🔄
+                              </button>
+                              <button 
+                                className="admin-btn-small" 
+                                onClick={() => handleTestConnection(calendar)}
+                                disabled={isLoadingCalendars}
+                                title="Test connessione"
+                              >
+                                🧪
+                              </button>
+                              <button 
+                                className="admin-btn-small" 
+                                onClick={() => handleUpdateCalendar(calendar.id, {is_active: !calendar.is_active})}
+                                disabled={isLoadingCalendars}
+                                title={calendar.is_active ? "Disattiva" : "Attiva"}
+                              >
+                                {calendar.is_active ? '⏸️' : '▶️'}
+                              </button>
+                              <button 
+                                className="admin-btn-small" 
+                                onClick={() => handleUpdateCalendar(calendar.id, { is_active: !calendar.is_active })}
+                                disabled={isLoadingCalendars}
+                                title="Modifica"
+                              >
+                                ✏️
+                              </button>
+                              <button 
+                                className="admin-btn-small admin-btn-danger" 
+                                onClick={() => handleDeleteCalendar(calendar.id)}
+                                disabled={isLoadingCalendars}
+                                title="Elimina"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="admin-pricing-card">
+                  <p>📊 Nessun calendario configurato. Aggiungi il primo calendario per iniziare la sincronizzazione automatica.</p>
+                  <div className="admin-pricing-actions">
+                    <button 
+                      className="admin-btn-primary" 
+                      onClick={() => setShowNewCalendarForm(true)}
+                    >
+                      ➕ Configura Primo Calendario
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
             
             {/* Form per Bloccare Date */}
             {showBlockDateForm && (
@@ -1275,7 +1728,7 @@ const AdminPanelPro: React.FC = () => {
                 <div className="calendar-info">
                   <p>📧 Email: vincantomaiori@gmail.com</p>
                   <p>🔄 Ultima sincronizzazione: {new Date().toLocaleString('it-IT')}</p>
-                  <p>📊 Eventi sincronizzati: {calendarStats.totalBookings}</p>
+                  <p>📊 Eventi sincronizzati: {calendarStats.total || 0}</p>
                   <div className={`sync-indicator ${isGoogleAuthenticated ? 'success' : 'warning'}`} id="calendar-connection-status">
                     {isGoogleAuthenticated 
                       ? '✅ Autenticato - Sincronizzazione attiva' 
@@ -1283,8 +1736,13 @@ const AdminPanelPro: React.FC = () => {
                   </div>
                 </div>
                 <div className="calendar-controls">
-                  <button className="admin-btn-primary admin-btn-small" onClick={() => forceSyncCalendar()}>🔄 Sincronizza Ora</button>
-                  <button className="admin-btn-secondary admin-btn-small" onClick={() => testCalendarConnection()}>⚙️ Test Connessione</button>
+                  {!isGoogleAuthenticated ? (
+                    <button className="admin-btn-success admin-btn-small" onClick={() => initiateGoogleAuth()}>🔐 Autentica Google</button>
+                  ) : (
+                    <button className="admin-btn-primary admin-btn-small" onClick={() => handleGoogleCalendarSync()}>🔄 Sincronizza Google</button>
+                  )}
+                  <button className="admin-btn-secondary admin-btn-small" onClick={() => testGoogleConnection()}>⚙️ Test Google</button>
+                  <button className="admin-btn-secondary admin-btn-small" onClick={() => loadGoogleCalendarEvents()}>📅 Carica Eventi</button>
                   <button className="admin-btn-secondary admin-btn-small">📱 Condividi Calendario</button>
                   <button className="admin-btn-secondary admin-btn-small">📊 Report Sincronizzazione</button>
                 </div>
@@ -1366,6 +1824,33 @@ const AdminPanelPro: React.FC = () => {
                     <button className="admin-btn-success admin-btn-small">▶️ Riattiva</button>
                     <button className="admin-btn-secondary admin-btn-small">✏️ Modifica</button>
                     <button className="admin-btn-danger admin-btn-small">🗑️ Elimina</button>
+                  </div>
+                </div>
+                
+                <div className="admin-calendar-card">
+                  <h3>🏖️ Holidu Calendar</h3>
+                  <div className="calendar-status ready">🟡 Pronto per Configurazione</div>
+                  <div className="calendar-info">
+                    <p>🔗 URL: https://api.host.holidu.com/pmc/rest/apartments/65376863/ical.ics?key=72d27a56f3e8836f690500877301d000</p>
+                    <p>🆔 Apartment ID: 65376863</p>
+                    <p>🔑 API Key: 72d27a56f3e8836f690500877301d000</p>
+                    <div className="sync-indicator ready">
+                      ✅ URL iCal fornito - Pronto per attivazione
+                    </div>
+                  </div>
+                  <div className="calendar-controls">
+                    <button className="admin-btn-primary admin-btn-small" onClick={() => {
+                      setNewCalendarData({
+                        name: 'Holidu - Vincanto Maori',
+                        calendar_type: 'holidu',
+                        url: 'https://api.host.holidu.com/pmc/rest/apartments/65376863/ical.ics?key=72d27a56f3e8836f690500877301d000',
+                        credentials: 'apartment_id:65376863,api_key:72d27a56f3e8836f690500877301d000',
+                        sync_frequency: 60,
+                        is_active: true
+                      });
+                      setShowNewCalendarForm(true);
+                    }}>⚡ Configura Subito</button>
+                    <button className="admin-btn-secondary admin-btn-small">🔍 Test URL</button>
                   </div>
                 </div>
               </div>

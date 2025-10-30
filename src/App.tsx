@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense, lazy } from 'react';
 import Navbar from './components/Navbar';
 import Home from './sections/Home';
 import About from './sections/About';
@@ -13,9 +13,21 @@ import CookiePolicy from './pages/CookiePolicy';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsConditions from './pages/TermsConditions';
 import Accessibility from './pages/Accessibility';
-import AdminPanelPro from './pages/AdminPanelPro';
 import AdminSetup from './components/AdminSetup';
-import OAuthCallback from './pages/OAuthCallback';
+import { setupIntelligentPreload, preloadOnIdle } from './utils/preloadComponents';
+
+// Lazy loading per componenti pesanti
+const AdminPanelPro = lazy(() => import('./pages/AdminPanelPro'));
+const OAuthCallback = lazy(() => import('./pages/OAuthCallback'));
+
+// Componente di loading per lazy imports
+const LazyLoadingSpinner = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+    <div className="ml-4 text-xl">Caricamento...</div>
+  </div>
+);
+
 import './App.css';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Analytics } from "@vercel/analytics/react";
@@ -39,17 +51,31 @@ function App() {
     savePreferences
   } = useCookieContext() || {};
 
+  // Setup preload intelligente per componenti lazy
+  useEffect(() => {
+    if (!isAdminRoute) {
+      // Avvia preload intelligente solo per le pagine normali
+      const cleanup = setupIntelligentPreload();
+      // Avvia preload su idle dopo 1 secondo
+      setTimeout(preloadOnIdle, 1000);
+      
+      return cleanup;
+    }
+  }, [isAdminRoute]);
+
   // Layout standalone per admin
   if (isAdminRoute) {
     return (
       <>
         {/* Google Analytics solo se accettato */}
         {userPreferences?.analytics && <GoogleAnalytics />}
-        <Routes>
-          <Route path="/admin" element={<AdminPanelPro />} />
-          <Route path="/admin/setup" element={<AdminSetup />} />
-          <Route path="/oauth/callback" element={<OAuthCallback />} />
-        </Routes>
+        <Suspense fallback={<LazyLoadingSpinner />}>
+          <Routes>
+            <Route path="/admin" element={<AdminPanelPro />} />
+            <Route path="/admin/setup" element={<AdminSetup />} />
+            <Route path="/oauth/callback" element={<OAuthCallback />} />
+          </Routes>
+        </Suspense>
         <Analytics />
       </>
     );

@@ -15,6 +15,11 @@ const { initializeDatabase } = require('./models');
 
 // Import middleware e routes
 const { logAdminActivity, handleAuthError } = require('./middleware/auth');
+const { 
+  sanitizeInput, 
+  logSuspiciousActivity, 
+  securityHeaders 
+} = require('./middleware/security');
 const authRoutes = require('./routes/auth');
 const pricingRoutes = require('./routes/pricing');
 const calendarRoutes = require('./routes/calendars');
@@ -23,6 +28,7 @@ const paymentRoutes = require('./routes/payments');
 const stripeRoutes = require('./routes/stripe'); // 💳 Integrazione Stripe completa
 const emailRoutes = require('./routes/email'); // 📧 Sistema email professionale
 const calendarSyncRoutes = require('./routes/calendar-sync'); // 📅 Calendar sync anti-overbooking
+const googleCalendarRoutes = require('./routes/google-calendar'); // 🎯 Google Calendar integration
 const adminRoutes = require('./routes/admin'); // 🎛️ Admin panel unificato
 const setupRoutes = require('./routes/setup'); // 🎯 Setup iniziale produzione
 
@@ -70,15 +76,75 @@ const authLimiter = rateLimit({
   }
 });
 
+// Rate limiting per booking (prevenire spam)
+const bookingLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 ora
+  max: 5, // max 5 prenotazioni per ora per IP
+  message: {
+    success: false,
+    message: 'Limite prenotazioni raggiunto, riprova più tardi',
+    code: 'BOOKING_RATE_LIMIT_EXCEEDED'
+  }
+});
+
+// Rate limiting per pagamenti (sicurezza extra)
+const paymentLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minuti
+  max: 3, // max 3 tentativi di pagamento per 10 minuti
+  message: {
+    success: false,
+    message: 'Limite pagamenti raggiunto, riprova più tardi',
+    code: 'PAYMENT_RATE_LIMIT_EXCEEDED'
+  }
+});
+
 // Middleware base
 app.use(compression());
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || ['http://localhost:5173', 'https://www.vincantomaori.it'],
+
+// CORS configuration con sicurezza produzione
+const corsOptions = {
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      'http://localhost:5173', // dev
+      'https://vincanto-vetrina.vercel.app', // vercel production
+      'https://www.vincantomaori.it', // domain production
+      'https://vincantomaori.it'
+    ];
+    
+    // Allow requests with no origin (mobile apps, etc)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`🚫 CORS rejected origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  exposedHeaders: ['X-Total-Count', 'X-Rate-Limit-Remaining']
+};
+
+app.use(cors(corsOptions));
+
+// Security middleware
+app.use(securityHeaders);
+app.use(logSuspiciousActivity);
+app.use(express.json({ 
+  limit: '2mb', // Ridotto per sicurezza
+  verify: (req, res, buf, encoding) => {
+    // Verifica che il JSON sia valido
+    try {
+      JSON.parse(buf);
+    } catch (e) {
+      console.warn(`🚫 Invalid JSON from IP: ${req.ip}`);
+      res.status(400).json({ success: false, message: 'Invalid JSON format' });
+      return;
+    }
+  }
 }));
-app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+app.use(sanitizeInput);
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Trust proxy per ottenere IP reali dietro reverse proxy
@@ -150,6 +216,7 @@ app.use('/api', limiter);
 app.use('/api/auth', logAdminActivity, authRoutes);
 app.use('/api/pricing', logAdminActivity, pricingRoutes);
 app.use('/api/calendars', logAdminActivity, calendarRoutes);
+app.use('/api/google-calendar', logAdminActivity, googleCalendarRoutes); // 🎯 Google Calendar integration
 app.use('/api/bookings', logAdminActivity, bookingRoutes);
 app.use('/api/payments', logAdminActivity, paymentRoutes);
 app.use('/api/stripe', stripeRoutes); // 💳 Stripe API routes (no auth per webhook)
