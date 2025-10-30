@@ -42,39 +42,26 @@ class GoogleCalendarService {
     try {
       const response = await fetch(this.config.publicCalendarUrl);
       
-      // Se la risposta non è OK, usa i dati mock
+      // Se la risposta non è OK, ritorna array vuoto
       if (!response.ok) {
-        console.warn('Google Calendar non disponibile, usando dati mock');
-        const { default: MockBookingService } = await import('./mockBookingService');
-        return MockBookingService.generateMockEvents();
+        console.warn('🎯 Google Calendar non disponibile - sistema produzione pulito');
+        return [];
       }
       
       const icsData = await response.text();
       
-      // Se il contenuto ICS è vuoto o non valido, usa i dati mock
+      // Se il contenuto ICS è vuoto o non valido, ritorna array vuoto
       if (!icsData || icsData.length < 50) {
-        console.warn('Dati ICS non validi, usando dati mock');
-        const { default: MockBookingService } = await import('./mockBookingService');
-        return MockBookingService.generateMockEvents();
+        console.warn('🎯 Dati ICS non validi - sistema produzione pulito');
+        return [];
       }
       
       const events = this.parseICSData(icsData);
-      
-      // Se non ci sono eventi nel calendario, usa i dati mock per la demo
-      if (events.length === 0) {
-        console.warn('Nessun evento nel calendario Google, usando dati mock per la demo');
-        const { default: MockBookingService } = await import('./mockBookingService');
-        return MockBookingService.generateMockEvents();
-      }
-      
       return events;
     } catch (error) {
-      console.error('Errore nel recupero eventi calendario:', error);
-      console.log('Utilizzando dati mock come fallback');
-      
-      // Fallback ai dati mock in caso di errore
-      const { default: MockBookingService } = await import('./mockBookingService');
-      return MockBookingService.generateMockEvents();
+      console.error('❌ Errore nel recupero eventi calendario:', error);
+      console.log('🎯 Sistema produzione: ritorno array vuoto');
+      return [];
     }
   }
 
@@ -339,10 +326,16 @@ class GoogleCalendarService {
     try {
       const events = await this.fetchCalendarEvents();
       
-      // Se non ci sono eventi reali, prova a usare le statistiche mock
+      // Se non ci sono eventi reali, ritorna statistiche vuote
       if (events.length === 0) {
-        const { default: MockBookingService } = await import('./mockBookingService');
-        return MockBookingService.getMockStats();
+        console.log('🎯 Nessun evento - sistema produzione pulito');
+        return {
+          totalBookings: 0,
+          thisMonth: 0,
+          nextMonth: 0,
+          occupancyRate: 0,
+          revenueThisMonth: 0
+        };
       }
       
       const now = new Date();
@@ -381,20 +374,15 @@ class GoogleCalendarService {
     } catch (error) {
       console.error('Errore nel calcolo statistiche calendario:', error);
       
-      // Fallback alle statistiche mock in caso di errore
-      try {
-        const { default: MockBookingService } = await import('./mockBookingService');
-        return MockBookingService.getMockStats();
-      } catch (mockError) {
-        console.error('Errore anche con dati mock:', mockError);
-        return {
-          totalBookings: 0,
-          thisMonth: 0,
-          nextMonth: 0,
-          occupancyRate: 0,
-          revenueThisMonth: 0
-        };
-      }
+      // Sistema produzione pulito - statistiche vuote in caso di errore
+      console.log('🎯 Errore statistiche - sistema produzione pulito');
+      return {
+        totalBookings: 0,
+        thisMonth: 0,
+        nextMonth: 0,
+        occupancyRate: 0,
+        revenueThisMonth: 0
+      };
     }
   }
 }

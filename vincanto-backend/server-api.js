@@ -24,6 +24,7 @@ const stripeRoutes = require('./routes/stripe'); // 💳 Integrazione Stripe com
 const emailRoutes = require('./routes/email'); // 📧 Sistema email professionale
 const calendarSyncRoutes = require('./routes/calendar-sync'); // 📅 Calendar sync anti-overbooking
 const adminRoutes = require('./routes/admin'); // 🎛️ Admin panel unificato
+const setupRoutes = require('./routes/setup'); // 🎯 Setup iniziale produzione
 
 const app = express();
 
@@ -155,6 +156,7 @@ app.use('/api/stripe', stripeRoutes); // 💳 Stripe API routes (no auth per web
 app.use('/api/email', logAdminActivity, emailRoutes); // 📧 Sistema email professionale
 app.use('/api/calendar-sync', logAdminActivity, calendarSyncRoutes); // 📅 Calendar sync anti-overbooking
 app.use('/api/admin', logAdminActivity, adminRoutes); // 🎛️ Admin panel unificato
+app.use('/api/admin', setupRoutes); // 🎯 Setup iniziale produzione (no auth per setup)
 
 // Endpoint legacy per compatibilità (da deprecare)
 app.post('/api/contact', (req, res) => {

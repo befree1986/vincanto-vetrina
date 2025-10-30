@@ -232,11 +232,11 @@ class GoogleCalendarApiService {
       const data = await response.json();
       return data.items || [];
     } catch (error) {
-      console.error('Errore nel recupero eventi:', error);
+      console.error('❌ Errore nel recupero eventi:', error);
       
-      // Fallback ai dati mock se non autenticati
-      const { default: MockBookingService } = await import('./mockBookingService');
-      return MockBookingService.generateMockEvents().map(event => this.convertToApiEvent(event));
+      // Sistema produzione pulito - nessun fallback mock
+      console.log('🎯 Sistema produzione: ritorno array vuoto');
+      return [];
     }
   }
 
@@ -402,23 +402,7 @@ class GoogleCalendarApiService {
   /**
    * Converte evento interno in formato API
    */
-  private convertToApiEvent(event: any): GoogleCalendarApiEvent {
-    return {
-      id: event.id,
-      summary: event.title,
-      description: event.description,
-      location: event.location,
-      start: {
-        dateTime: event.start,
-        timeZone: 'Europe/Rome'
-      },
-      end: {
-        dateTime: event.end,
-        timeZone: 'Europe/Rome'
-      },
-      status: 'confirmed'
-    };
-  }
+  // Metodo rimosso - non più necessario senza mock data
 
   /**
    * Verifica se l'utente è autenticato

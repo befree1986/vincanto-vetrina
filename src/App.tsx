@@ -14,6 +14,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsConditions from './pages/TermsConditions';
 import Accessibility from './pages/Accessibility';
 import AdminPanelPro from './pages/AdminPanelPro';
+import AdminSetup from './components/AdminSetup';
 import OAuthCallback from './pages/OAuthCallback';
 import './App.css';
 import { Routes, Route, useLocation } from 'react-router-dom';
@@ -46,6 +47,7 @@ function App() {
         {userPreferences?.analytics && <GoogleAnalytics />}
         <Routes>
           <Route path="/admin" element={<AdminPanelPro />} />
+          <Route path="/admin/setup" element={<AdminSetup />} />
           <Route path="/oauth/callback" element={<OAuthCallback />} />
         </Routes>
         <Analytics />

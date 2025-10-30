@@ -5,7 +5,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import GoogleCalendarApiService, { type GoogleCalendarApiEvent } from '../services/googleCalendarApiService';
-import MockBookingService from '../services/mockBookingService';
 
 interface UseGoogleCalendarReturn {
   // Stato
@@ -70,23 +69,9 @@ export const useGoogleCalendar = (): UseGoogleCalendarReturn => {
         // Usa API complete se autenticato
         calendarEvents = await calendarService.fetchCalendarEvents();
       } else {
-        // Usa dati mock se non autenticato
-        const mockEvents = MockBookingService.generateMockEvents();
-        calendarEvents = mockEvents.map(event => ({
-          id: event.id,
-          summary: event.title,
-          description: event.description,
-          location: event.location,
-          start: {
-            dateTime: event.start,
-            timeZone: 'Europe/Rome'
-          },
-          end: {
-            dateTime: event.end,
-            timeZone: 'Europe/Rome'
-          },
-          status: 'confirmed' as const
-        }));
+        // Nessun dato se non autenticato - sistema pulito di produzione
+        calendarEvents = [];
+        console.log('⚠️ Google Calendar non autenticato - nessun evento disponibile');
       }
 
       setEvents(calendarEvents);

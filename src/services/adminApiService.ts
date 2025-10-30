@@ -3,15 +3,14 @@ class AdminApiService {
   private readonly baseUrl: string;
 
   constructor() {
-    // Usa l'API Vercel in produzione, localhost in sviluppo
-    this.baseUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://vincanto-vetrina.vercel.app/api'
-      : 'http://localhost:3000/api';
+    // 🎯 PRODUZIONE VERCEL - CONFIGURAZIONE PULITA
+    this.baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://vincanto-vetrina.vercel.app/api';
+    console.log('🎯 AdminApiService PRODUZIONE:', this.baseUrl);
   }
 
   private async request(endpoint: string, options: RequestInit = {}) {
     try {
-      const url = `${this.baseUrl}/admin?action=${endpoint}`;
+      const url = `${this.baseUrl}/admin/${endpoint}`;
       console.log('🌐 API Request:', url);
       
       const response = await fetch(url, {
@@ -64,9 +63,24 @@ class AdminApiService {
   }
 
   async createBooking(bookingData: any) {
+    // Mappa i dati frontend ai campi backend
+    const mappedData = {
+      guest_name: bookingData.customer_name?.split(' ')[0] || bookingData.customer_name || '',
+      guest_surname: bookingData.customer_name?.split(' ').slice(1).join(' ') || '',
+      guest_email: bookingData.customer_email || '',
+      guest_phone: bookingData.customer_phone || '',
+      check_in_date: bookingData.check_in || '',
+      check_out_date: bookingData.check_out || '', 
+      num_adults: bookingData.guests || 1,
+      num_children: bookingData.children || 0,
+      total_amount: bookingData.total_amount || 0,
+      booking_source: bookingData.platform || 'admin',
+      status: bookingData.status || 'confirmed'
+    };
+
     return this.request('bookings', {
       method: 'POST',
-      body: JSON.stringify(bookingData),
+      body: JSON.stringify(mappedData),
     });
   }
 
@@ -207,6 +221,36 @@ class AdminApiService {
     } catch (error) {
       console.error('Error getting quote:', error);
       throw error;
+    }
+  }
+
+  // Calendar Management
+  async getCalendarEvents() {
+    try {
+      const data = await this.request('calendar-events');
+      return data.events || [];
+    } catch (error) {
+      console.error('Error fetching calendar events:', error);
+      return [];
+    }
+  }
+
+  async syncCalendar() {
+    try {
+      return await this.request('calendar-sync', { method: 'POST' });
+    } catch (error) {
+      console.error('Error syncing calendar:', error);
+      throw error;
+    }
+  }
+
+  async testCalendarConnection() {
+    try {
+      const data = await this.request('calendar-test');
+      return data.connected || false;
+    } catch (error) {
+      console.error('Error testing calendar connection:', error);
+      return false;
     }
   }
 }

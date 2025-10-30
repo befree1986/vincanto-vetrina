@@ -1650,3 +1650,58 @@
   border-left: 4px solid var(--admin-primary);
   color: var(--admin-text);
 }
+
+/* === SETTINGS FORM STYLES === */
+.setting-input-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.setting-input-group input {
+  flex: 1;
+}
+
+.setting-input-group button {
+  flex-shrink: 0;
+}
+
+/* === NOTIFICHE STYLES === */
+.booking-row.unread {
+  background-color: #f0f9ff;
+  border-left: 4px solid #2563eb;
+}
+
+.booking-row.unread td {
+  font-weight: 600;
+}
+
+/* === INLINE STYLES FIX === */
+.admin-pricing-actions.margin-bottom {
+  margin-bottom: 16px;
+}
+
+.chart-bar.dynamic {
+  border-radius: 4px;
+  min-height: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8px;
+  color: white;
+  font-weight: 600;
+  /* La height sarà gestita dinamicamente tramite JavaScript */
+}
+
+.chart-bar.high-revenue {
+  background-color: #4CAF50;
+}
+
+.chart-bar.medium-revenue {
+  background-color: #FF9800;
+}
+
+.chart-bar.low-revenue {
+  background-color: #f44336;
+}

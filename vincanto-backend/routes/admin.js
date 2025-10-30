@@ -174,25 +174,41 @@ router.post('/bookings', async (req, res) => {
             guest_phone,
             check_in_date,
             check_out_date,
-            num_adults,
-            num_children,
+            num_adults = 1,
+            num_children = 0,
             total_amount,
             booking_source = 'admin'
         } = req.body;
+        
+        // Calcola nights, total_guests e prezzi
+        const checkIn = new Date(check_in_date);
+        const checkOut = new Date(check_out_date);
+        const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
+        const total_guests = num_adults + num_children;
+        
+        // Calcola prezzi (semplificato)
+        const base_price = total_amount * 0.8; // 80% del totale come base
+        const deposit_amount = total_amount * 0.3; // 30% come caparra
+        const balance_amount = total_amount - deposit_amount;
         
         // Genera booking number univoco
         const bookingNumber = `VIN${Date.now()}`;
         
         const booking = await Booking.create({
             booking_number: bookingNumber,
-            guest_name,
-            guest_surname,
+            guest_first_name: guest_name,
+            guest_last_name: guest_surname || 'Cliente',
             guest_email,
-            guest_phone,
+            guest_phone: guest_phone || null,
             check_in_date,
             check_out_date,
+            nights,
             num_adults,
             num_children,
+            total_guests,
+            base_price,
+            deposit_amount,
+            balance_amount,
             total_amount,
             booking_source,
             status: 'confirmed',

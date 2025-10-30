@@ -127,6 +127,28 @@
             border-radius: 3px;
             font-weight: 600;
         }
+        .booking-card h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        .total-amount-label {
+            margin-bottom: 5px;
+            font-size: 16px;
+            color: #666;
+        }
+        .info-list {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        .closing-message {
+            margin-top: 25px;
+            text-align: center;
+            color: #666;
+        }
+        .footer-disclaimer {
+            margin-top: 15px;
+            opacity: 0.8;
+        }
         @media (max-width: 600px) {
             .container {
                 margin: 0;
@@ -160,7 +182,7 @@
 
             <!-- Booking Details Card -->
             <div class="booking-card">
-                <h3 style="color: #667eea; margin-bottom: 20px;">📋 Dettagli Prenotazione</h3>
+                <h3>📋 Dettagli Prenotazione</h3>
                 
                 <div class="booking-detail">
                     <span class="detail-label">Codice Prenotazione:</span>
@@ -190,7 +212,7 @@
 
             <!-- Total Amount -->
             <div class="total-amount">
-                <div style="margin-bottom: 5px; font-size: 16px; color: #666;">Importo Totale</div>
+                <div class="total-amount-label">Importo Totale</div>
                 <div class="amount">{{totalAmount}}</div>
             </div>
 
@@ -205,7 +227,7 @@
             <!-- Important Notes -->
             <div class="info-section">
                 <h3>📝 Note Importanti</h3>
-                <ul style="margin-left: 20px; margin-top: 10px;">
+                <ul class="info-list">
                     <li>Documento di identità richiesto al check-in</li>
                     <li>Animali domestici non ammessi</li>
                     <li>Check-out entro le ore 10:00</li>
@@ -227,7 +249,7 @@
                 </div>
             </div>
 
-            <p style="margin-top: 25px; text-align: center; color: #666;">
+            <p class="closing-message">
                 Non vediamo l'ora di accoglierti al Vincanto Maori!<br>
                 <em>Buon viaggio! 🌊</em>
             </p>
@@ -238,7 +260,7 @@
             <p><strong>Vincanto Maori</strong></p>
             <p>{{propertyAddress}}</p>
             <p>Email: {{contactEmail}} | Tel: {{contactPhone}}</p>
-            <p style="margin-top: 15px; opacity: 0.8;">
+            <p class="footer-disclaimer">
                 Questa email è stata generata automaticamente. Per modifiche alla prenotazione, contattaci direttamente.
             </p>
         </div>
