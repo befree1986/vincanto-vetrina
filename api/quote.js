@@ -2,19 +2,24 @@
 export default async function handler(req, res) {
   // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  if (req.method !== 'POST') {
-    return res.status(405).json({ success: false, error: 'Metodo non consentito' });
-  }
-
   try {
-    const { checkIn, checkOut, guests, includeParking } = req.body;
+    // Supporta sia GET che POST
+    let checkIn, checkOut, guests, includeParking;
+    
+    if (req.method === 'GET') {
+      ({ checkIn, checkOut, guests, includeParking } = req.query);
+    } else if (req.method === 'POST') {
+      ({ checkIn, checkOut, guests, includeParking } = req.body);
+    } else {
+      return res.status(405).json({ success: false, error: 'Metodo non consentito' });
+    }
 
     if (!checkIn || !checkOut || !guests) {
       return res.status(400).json({ 
