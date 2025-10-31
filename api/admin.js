@@ -191,32 +191,76 @@ export default async function handler(req, res) {
       case 'pricing-config':
         if (req.method === 'PUT') {
           try {
-            const { basePrice, additionalGuestPrice, cleaningFee, parkingFeePerNight, minimumNights, depositPercentage } = req.body;
+            console.log('📝 Aggiornamento configurazione prezzi ricevuta:', req.body);
+            
+            const { 
+              basePrice, 
+              cleaningFee, 
+              weekendSurcharge, 
+              monthlyDiscount, 
+              weeklyDiscount, 
+              minStay, 
+              maxStay, 
+              advanceBookingDiscount, 
+              lastMinuteDiscount 
+            } = req.body;
             
             const updates = [
-              { key: 'base_price', value: basePrice.toString() },
-              { key: 'additional_guest_price', value: additionalGuestPrice.toString() },
-              { key: 'cleaning_fee', value: cleaningFee.toString() },
-              { key: 'parking_fee_per_night', value: parkingFeePerNight.toString() },
-              { key: 'minimum_nights', value: minimumNights.toString() },
-              { key: 'deposit_percentage', value: depositPercentage.toString() }
+              { key: 'base_price', value: (basePrice || 85).toString() },
+              { key: 'cleaning_fee', value: (cleaningFee || 50).toString() },
+              { key: 'weekend_surcharge', value: (weekendSurcharge || 20).toString() },
+              { key: 'monthly_discount', value: (monthlyDiscount || 15).toString() },
+              { key: 'weekly_discount', value: (weeklyDiscount || 10).toString() },
+              { key: 'minimum_nights', value: (minStay || 2).toString() },
+              { key: 'maximum_nights', value: (maxStay || 14).toString() },
+              { key: 'advance_booking_discount', value: (advanceBookingDiscount || 0).toString() },
+              { key: 'last_minute_discount', value: (lastMinuteDiscount || 0).toString() }
             ];
             
-            for (const update of updates) {
+            console.log('📊 Updates da applicare:', updates);
+            
+            // Assicurati che la tabella admin_settings esista
+            try {
               await client.query(`
-                UPDATE admin_settings SET 
-                  setting_value = $1, updated_at = NOW()
-                WHERE setting_key = $2
-              `, [update.value, update.key]);
+                CREATE TABLE IF NOT EXISTS admin_settings (
+                  id SERIAL PRIMARY KEY,
+                  setting_key VARCHAR(255) UNIQUE NOT NULL,
+                  setting_value TEXT,
+                  category VARCHAR(100) DEFAULT 'general',
+                  created_at TIMESTAMP DEFAULT NOW(),
+                  updated_at TIMESTAMP DEFAULT NOW()
+                )
+              `);
+              console.log('✅ Tabella admin_settings verificata/creata');
+            } catch (tableError) {
+              console.error('❌ Errore creazione tabella:', tableError);
+              throw new Error('Impossibile creare tabella admin_settings');
             }
+            
+            for (const update of updates) {
+              try {
+                const result = await client.query(`
+                  INSERT INTO admin_settings (setting_key, setting_value, category, updated_at)
+                  VALUES ($1, $2, 'pricing', NOW())
+                  ON CONFLICT (setting_key) 
+                  DO UPDATE SET setting_value = $2, updated_at = NOW()
+                `, [update.key, update.value]);
+                console.log(`✅ Aggiornato ${update.key} = ${update.value}`);
+              } catch (updateError) {
+                console.error(`❌ Errore aggiornamento ${update.key}:`, updateError);
+                throw updateError;
+              }
+            }
+            
+            console.log('✅ Configurazione prezzi aggiornata con successo');
             
             return res.status(200).json({
               success: true,
-              message: 'Configurazione aggiornata con successo'
+              message: 'Configurazione prezzi aggiornata con successo'
             });
           } catch (dbError) {
-            console.error('Database error in pricing update:', dbError);
-            return res.status(500).json({ success: false, error: 'Database error' });
+            console.error('❌ Database error in pricing update:', dbError);
+            return res.status(500).json({ success: false, message: 'Errore database: ' + dbError.message });
           }
         }
         
@@ -232,19 +276,24 @@ export default async function handler(req, res) {
             settings[row.setting_key] = row.setting_value;
           });
           
+          console.log('📊 Configurazione prezzi dal database:', settings);
+          
           return res.status(200).json({
             success: true,
             config: {
               basePrice: parseFloat(settings.base_price) || 85.00,
-              additionalGuestPrice: parseFloat(settings.additional_guest_price) || 25.00,
-              cleaningFee: parseFloat(settings.cleaning_fee) || 40.00,
-              parkingFeePerNight: parseFloat(settings.parking_fee_per_night) || 15.00,
-              minimumNights: parseInt(settings.minimum_nights) || 2,
-              depositPercentage: parseFloat(settings.deposit_percentage) || 0.30
+              cleaningFee: parseFloat(settings.cleaning_fee) || 50.00,
+              weekendSurcharge: parseFloat(settings.weekend_surcharge) || 20.00,
+              monthlyDiscount: parseFloat(settings.monthly_discount) || 15.00,
+              weeklyDiscount: parseFloat(settings.weekly_discount) || 10.00,
+              minStay: parseInt(settings.minimum_nights) || 2,
+              maxStay: parseInt(settings.maximum_nights) || 14,
+              advanceBookingDiscount: parseFloat(settings.advance_booking_discount) || 0.00,
+              lastMinuteDiscount: parseFloat(settings.last_minute_discount) || 0.00
             }
           });
         } catch (dbError) {
-          console.error('Database error in pricing-config:', dbError);
+          console.error('❌ Database error in pricing-config:', dbError);
           return res.status(500).json({ success: false, error: 'Database error' });
         }
 

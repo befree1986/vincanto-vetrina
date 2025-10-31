@@ -72,6 +72,14 @@ const AdminPanelPro: React.FC = () => {
   });
   const [isUpdatingPricing, setIsUpdatingPricing] = useState(false);
   
+  // Stati per servizi personalizzati
+  const [customServices, setCustomServices] = useState([
+    { id: 1, name: 'Culla per bambini', price: 20, unit: 'soggiorno' },
+    { id: 2, name: 'Animali domestici', price: 15, unit: 'notte' }
+  ]);
+  const [newServiceName, setNewServiceName] = useState('');
+  const [newServicePrice, setNewServicePrice] = useState(0);
+  
   // === STATI CALENDAR MANAGEMENT ===
   const [calendarConfigs, setCalendarConfigs] = useState<any[]>([]);
   const [calendarStats, setCalendarStats] = useState({
@@ -159,20 +167,22 @@ const AdminPanelPro: React.FC = () => {
       console.log('💰 Caricamento configurazione prezzi...');
       const result = await adminApiService.getPricingConfig();
       
-      if (result.success && result.data.length > 0) {
-        const config = result.data[0]; // Prendi la configurazione master
+      if (result.success && result.config) {
+        const config = result.config;
         setPricingConfig({
-          basePrice: config.base_price_per_night || 100,
-          cleaningFee: config.cleaning_fee || 50,
-          weekendSurcharge: config.weekend_surcharge_percentage || 20,
-          monthlyDiscount: config.monthly_discount_percentage || 15,
-          weeklyDiscount: config.weekly_discount_percentage || 10,
-          minStay: config.minimum_stay_nights || 2,
-          maxStay: config.maximum_stay_nights || 14,
-          advanceBookingDiscount: config.advance_booking_discount_percentage || 0,
-          lastMinuteDiscount: config.last_minute_discount_percentage || 0
+          basePrice: config.basePrice || 85,
+          cleaningFee: config.cleaningFee || 50,
+          weekendSurcharge: config.weekendSurcharge || 20,
+          monthlyDiscount: config.monthlyDiscount || 15,
+          weeklyDiscount: config.weeklyDiscount || 10,
+          minStay: config.minStay || 2,
+          maxStay: config.maxStay || 14,
+          advanceBookingDiscount: config.advanceBookingDiscount || 0,
+          lastMinuteDiscount: config.lastMinuteDiscount || 0
         });
-        console.log('✅ Configurazione prezzi caricata:', config);
+        console.log('✅ Configurazione prezzi caricata dal database:', config);
+      } else {
+        console.log('⚠️ Nessuna configurazione trovata, uso valori predefiniti');
       }
     } catch (error) {
       console.error('❌ Errore caricamento prezzi:', error);
@@ -215,6 +225,40 @@ const AdminPanelPro: React.FC = () => {
       console.log('💰 Nuova configurazione prezzi:', updated);
       return updated;
     });
+  };
+
+  // === CUSTOM SERVICES FUNCTIONS ===
+  
+  const addCustomService = () => {
+    if (!newServiceName.trim() || newServicePrice <= 0) {
+      alert('⚠️ Inserisci nome e prezzo validi');
+      return;
+    }
+
+    const newService = {
+      id: Date.now(),
+      name: newServiceName.trim(),
+      price: newServicePrice,
+      unit: 'notte'
+    };
+
+    setCustomServices(prev => [...prev, newService]);
+    setNewServiceName('');
+    setNewServicePrice(0);
+    console.log('✅ Servizio aggiunto:', newService);
+  };
+
+  const updateCustomService = (id: number, field: string, value: any) => {
+    setCustomServices(prev => prev.map(service => 
+      service.id === id ? { ...service, [field]: value } : service
+    ));
+  };
+
+  const deleteCustomService = (id: number) => {
+    if (confirm('⚠️ Sei sicuro di voler eliminare questo servizio?')) {
+      setCustomServices(prev => prev.filter(service => service.id !== id));
+      console.log('🗑️ Servizio eliminato:', id);
+    }
   };
 
   // === CALENDAR FUNCTIONS ===
@@ -1276,28 +1320,68 @@ const AdminPanelPro: React.FC = () => {
                   <h4>Servizi Personalizzati</h4>
                   <div className="pricing-controls">
                     <div className="custom-service-item">
-                      <input type="text" placeholder="Nome servizio..." className="admin-input" aria-label="Nome servizio personalizzato" />
-                      <input type="number" placeholder="Prezzo" className="admin-input-small" aria-label="Prezzo servizio personalizzato" />
-                      <button className="admin-btn-small">➕</button>
+                      <input 
+                        type="text" 
+                        placeholder="Nome servizio..." 
+                        className="admin-input" 
+                        value={newServiceName}
+                        onChange={(e) => setNewServiceName(e.target.value)}
+                        aria-label="Nome servizio personalizzato" 
+                      />
+                      <input 
+                        type="number" 
+                        placeholder="Prezzo" 
+                        className="admin-input-small" 
+                        value={newServicePrice}
+                        onChange={(e) => setNewServicePrice(Number(e.target.value))}
+                        aria-label="Prezzo servizio personalizzato" 
+                      />
+                      <button 
+                        className="admin-btn-small"
+                        onClick={addCustomService}
+                        title="Aggiungi servizio"
+                      >
+                        ➕
+                      </button>
                     </div>
                     
                     <div className="existing-services">
-                      <div className="service-row">
-                        <span>Culla per bambini</span>
-                        <span>€20/soggiorno</span>
-                        <button className="admin-btn-small">✏️</button>
-                        <button className="admin-btn-small">🗑️</button>
-                      </div>
-                      
-                      <div className="service-row">
-                        <span>Animali domestici</span>
-                        <span>€15/notte</span>
-                        <button className="admin-btn-small">✏️</button>
-                        <button className="admin-btn-small">🗑️</button>
-                      </div>
+                      {customServices.map((service) => (
+                        <div key={service.id} className="service-row">
+                          <input 
+                            type="text"
+                            value={service.name}
+                            onChange={(e) => updateCustomService(service.id, 'name', e.target.value)}
+                            className="admin-input-small"
+                          />
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <span>€</span>
+                            <input 
+                              type="number"
+                              value={service.price}
+                              onChange={(e) => updateCustomService(service.id, 'price', Number(e.target.value))}
+                              className="admin-input-small"
+                              style={{ width: '60px' }}
+                            />
+                            <span>/{service.unit}</span>
+                          </div>
+                          <button 
+                            className="admin-btn-small"
+                            onClick={() => deleteCustomService(service.id)}
+                            title="Elimina servizio"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      ))}
                     </div>
                     
-                    <button className="admin-btn-secondary">➕ Aggiungi Servizio</button>
+                    <button 
+                      className="admin-btn-secondary"
+                      onClick={addCustomService}
+                    >
+                      ➕ Aggiungi Servizio
+                    </button>
                   </div>
                 </div>
               </div>
