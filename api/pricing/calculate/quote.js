@@ -1,4 +1,6 @@
 // API endpoint per calcolo preventivi Vincanto
+import { Pool } from '@vercel/postgres';
+
 export default async function handler(req, res) {
   console.log('💰 API Quote chiamata:', req.method, req.query);
 
@@ -11,6 +13,8 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
+  let client;
+  
   try {
     if (req.method === 'GET') {
       const { checkIn, checkOut, guests = 2 } = req.query;
@@ -34,8 +38,8 @@ export default async function handler(req, res) {
         });
       }
 
-      // Configurazione prezzi
-      const config = {
+      // 🔥 CARICA CONFIGURAZIONE PREZZI DAL DATABASE ADMIN IN TEMPO REALE
+      let config = {
         basePrice: 85,
         cleaningFee: 40,
         weekendSurcharge: 20,
@@ -45,6 +49,46 @@ export default async function handler(req, res) {
         maxGuests: 8,
         taxRate: 3 // €3 per persona per notte
       };
+
+      try {
+        const pool = new Pool({
+          connectionString: process.env.POSTGRES_URL
+        });
+        client = await pool.connect();
+        
+        console.log('🔄 Caricamento configurazione prezzi dal database admin...');
+        const result = await client.query(`
+          SELECT setting_key, setting_value
+          FROM admin_settings 
+          WHERE category = 'pricing'
+        `);
+        
+        if (result.rows.length > 0) {
+          const settings = {};
+          result.rows.forEach(row => {
+            settings[row.setting_key] = row.setting_value;
+          });
+          
+          // Aggiorna config con valori dal database
+          config = {
+            basePrice: parseFloat(settings.base_price) || config.basePrice,
+            cleaningFee: parseFloat(settings.cleaning_fee) || config.cleaningFee,
+            weekendSurcharge: parseFloat(settings.weekend_surcharge) || config.weekendSurcharge,
+            weeklyDiscount: parseFloat(settings.weekly_discount) || config.weeklyDiscount,
+            monthlyDiscount: parseFloat(settings.monthly_discount) || config.monthlyDiscount,
+            additionalGuestPrice: 25, // TODO: Aggiungere al pannello admin
+            maxGuests: 8,
+            taxRate: 3
+          };
+          
+          console.log('✅ Configurazione prezzi aggiornata dal database admin:', config);
+        } else {
+          console.log('⚠️ Nessuna configurazione prezzi nel database, uso valori predefiniti');
+        }
+      } catch (dbError) {
+        console.error('❌ Errore caricamento prezzi dal database:', dbError);
+        console.log('🔄 Usando configurazione prezzi predefinita');
+      }
 
       // Calcolo prezzo base
       let totalPrice = config.basePrice * nights;
@@ -125,5 +169,14 @@ export default async function handler(req, res) {
       message: 'Errore nel calcolo del preventivo',
       error: error.message
     });
+  } finally {
+    // Chiudi connessione database se aperta
+    if (client) {
+      try {
+        client.release();
+      } catch (releaseError) {
+        console.error('❌ Errore chiusura connessione database:', releaseError);
+      }
+    }
   }
 }

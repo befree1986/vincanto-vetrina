@@ -1,4 +1,6 @@
 // API Quote Semplificata - Compatibile con frontend esistente
+import { Pool } from '@vercel/postgres';
+
 export default async function handler(req, res) {
   // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -9,6 +11,8 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
+  let client;
+  
   try {
     // Supporta sia GET che POST
     let checkIn, checkOut, guests, includeParking;
@@ -58,12 +62,45 @@ export default async function handler(req, res) {
       });
     }
 
-    // Prezzi configurati (allineati al database)
-    const basePrice = 80.00;           // €80 per notte per adulto
-    const additionalGuestPrice = 20.00; // €20 per ospite aggiuntivo per notte  
-    const cleaningFee = 50.00;         // €50 pulizia finale
-    const parkingFeePerNight = 10.00;  // €10 parcheggio per notte
-    const touristTaxPerPersonPerNight = 2.00; // €2 tassa soggiorno per persona per notte
+    // 🔥 CARICA PREZZI DAL DATABASE ADMIN IN TEMPO REALE
+    let basePrice = 80.00;           // €80 per notte per adulto
+    let additionalGuestPrice = 20.00; // €20 per ospite aggiuntivo per notte  
+    let cleaningFee = 50.00;         // €50 pulizia finale
+    let parkingFeePerNight = 10.00;  // €10 parcheggio per notte
+    let touristTaxPerPersonPerNight = 2.00; // €2 tassa soggiorno per persona per notte
+
+    try {
+      const pool = new Pool({
+        connectionString: process.env.POSTGRES_URL
+      });
+      client = await pool.connect();
+      
+      console.log('🔄 Caricamento prezzi dal database admin per quote...');
+      const result = await client.query(`
+        SELECT setting_key, setting_value
+        FROM admin_settings 
+        WHERE category = 'pricing'
+      `);
+      
+      if (result.rows.length > 0) {
+        const settings = {};
+        result.rows.forEach(row => {
+          settings[row.setting_key] = row.setting_value;
+        });
+        
+        // Aggiorna prezzi con valori dal database admin
+        basePrice = parseFloat(settings.base_price) || basePrice;
+        cleaningFee = parseFloat(settings.cleaning_fee) || cleaningFee;
+        // additionalGuestPrice e altri parametri possono essere aggiunti al pannello admin in futuro
+        
+        console.log('✅ Prezzi aggiornati dal database admin:', { basePrice, cleaningFee });
+      } else {
+        console.log('⚠️ Nessuna configurazione prezzi nel database, uso valori predefiniti');
+      }
+    } catch (dbError) {
+      console.error('❌ Errore caricamento prezzi dal database:', dbError);
+      console.log('🔄 Usando prezzi predefiniti');
+    }
     const depositPercentage = 0.30;    // 30% acconto
 
     // Calcolo totale
@@ -105,5 +142,14 @@ export default async function handler(req, res) {
       success: false, 
       error: 'Errore interno del server' 
     });
+  } finally {
+    // Chiudi connessione database se aperta
+    if (client) {
+      try {
+        client.release();
+      } catch (releaseError) {
+        console.error('❌ Errore chiusura connessione database:', releaseError);
+      }
+    }
   }
 }

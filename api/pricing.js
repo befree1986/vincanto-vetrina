@@ -1,4 +1,6 @@
 // API endpoint per i prezzi Vincanto
+import { Pool } from '@vercel/postgres';
+
 export default async function handler(req, res) {
   console.log('📊 API Pricing chiamata:', req.method, req.url);
 
@@ -11,10 +13,12 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
+  let client;
+
   try {
     if (req.method === 'GET') {
-      // Configurazione prezzi predefinita
-      const pricingConfig = {
+      // 🔥 CARICA CONFIGURAZIONE PREZZI DAL DATABASE ADMIN IN TEMPO REALE
+      let pricingConfig = {
         basePrice: 85,
         cleaningFee: 40,
         weekendSurcharge: 20,
@@ -31,11 +35,52 @@ export default async function handler(req, res) {
         lastUpdated: new Date().toISOString()
       };
 
+      try {
+        const pool = new Pool({
+          connectionString: process.env.POSTGRES_URL
+        });
+        client = await pool.connect();
+        
+        console.log('🔄 Caricamento configurazione prezzi dal database admin...');
+        const result = await client.query(`
+          SELECT setting_key, setting_value
+          FROM admin_settings 
+          WHERE category = 'pricing'
+        `);
+        
+        if (result.rows.length > 0) {
+          const settings = {};
+          result.rows.forEach(row => {
+            settings[row.setting_key] = row.setting_value;
+          });
+          
+          // Aggiorna config con valori dal database admin
+          pricingConfig = {
+            ...pricingConfig,
+            basePrice: parseFloat(settings.base_price) || pricingConfig.basePrice,
+            cleaningFee: parseFloat(settings.cleaning_fee) || pricingConfig.cleaningFee,
+            weekendSurcharge: parseFloat(settings.weekend_surcharge) || pricingConfig.weekendSurcharge,
+            weeklyDiscount: parseFloat(settings.weekly_discount) || pricingConfig.weeklyDiscount,
+            monthlyDiscount: parseFloat(settings.monthly_discount) || pricingConfig.monthlyDiscount,
+            minStay: parseInt(settings.minimum_nights) || pricingConfig.minStay,
+            maxStay: parseInt(settings.maximum_nights) || pricingConfig.maxStay,
+            lastUpdated: new Date().toISOString()
+          };
+          
+          console.log('✅ Configurazione prezzi aggiornata dal database admin:', pricingConfig);
+        } else {
+          console.log('⚠️ Nessuna configurazione prezzi nel database, uso valori predefiniti');
+        }
+      } catch (dbError) {
+        console.error('❌ Errore caricamento prezzi dal database:', dbError);
+        console.log('🔄 Usando configurazione prezzi predefinita');
+      }
+
       console.log('✅ Configurazione prezzi restituita');
       return res.status(200).json({
         success: true,
         data: pricingConfig,
-        message: 'Configurazione prezzi caricata'
+        message: 'Configurazione prezzi caricata dal database admin'
       });
     }
 
@@ -62,5 +107,14 @@ export default async function handler(req, res) {
       message: 'Errore interno del server',
       error: error.message
     });
+  } finally {
+    // Chiudi connessione database se aperta
+    if (client) {
+      try {
+        client.release();
+      } catch (releaseError) {
+        console.error('❌ Errore chiusura connessione database:', releaseError);
+      }
+    }
   }
 }
