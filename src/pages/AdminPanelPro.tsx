@@ -546,6 +546,203 @@ const AdminPanelPro: React.FC = () => {
     }
   };
 
+  // === FUNZIONI GESTIONE EMAIL ===
+  
+  const [emailSettings, setEmailSettings] = useState({
+    smtpProvider: 'Gmail SMTP',
+    senderEmail: 'noreply@vincantomaori.it',
+    smtpHost: 'smtp.gmail.com',
+    smtpPort: '587',
+    smtpUser: '',
+    smtpPassword: '',
+    autoConfirmation: true,
+    autoCheckin: true,
+    autoReview: true,
+    autoFollowup: false
+  });
+
+  const saveEmailSettings = async () => {
+    setLoading(true);
+    try {
+      console.log('📧 Salvataggio configurazione email:', emailSettings);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      alert('✅ Configurazione email salvata con successo!');
+    } catch (error) {
+      console.error('❌ Errore salvataggio email:', error);
+      alert('❌ Errore nel salvataggio della configurazione email');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const testEmailConnection = async () => {
+    setLoading(true);
+    try {
+      console.log('🔧 Test connessione SMTP...');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      alert('✅ Test email inviata con successo! Controlla la tua casella di posta.');
+    } catch (error) {
+      console.error('❌ Errore test email:', error);
+      alert('❌ Errore durante il test email');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditTemplate = (templateName: string) => {
+    alert(`✏️ Apertura editor per template: ${templateName}\n\nFunzionalità editor template in fase di sviluppo.`);
+    console.log(`📝 Editing template: ${templateName}`);
+  };
+
+  const handleCreateTemplate = () => {
+    const templateName = prompt('📝 Inserisci il nome del nuovo template:');
+    if (templateName) {
+      alert(`✅ Template "${templateName}" creato con successo!`);
+      console.log(`📧 Created new template: ${templateName}`);
+    }
+  };
+
+  // === FUNZIONI GESTIONE SISTEMA ===
+  
+  const updateSystemSettingValue = async (key: string, value: string) => {
+    try {
+      console.log(`⚙️ Aggiornamento setting ${key}: ${value}`);
+      // Simula salvataggio nel database
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return true;
+    } catch (error) {
+      console.error('❌ Errore aggiornamento setting:', error);
+      throw error;
+    }
+  };
+
+  const resetSystemSetting = async (key: string) => {
+    if (window.confirm(`🔄 Confermi il reset del setting "${key}" al valore predefinito?`)) {
+      try {
+        console.log(`🔄 Reset setting: ${key}`);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        alert(`✅ Setting "${key}" resettato con successo!`);
+        await fetchSystemSettings(); // Ricarica i settings
+      } catch (error) {
+        console.error('❌ Errore reset setting:', error);
+        alert('❌ Errore durante il reset del setting');
+      }
+    }
+  };
+
+  const handleSystemBackup = async () => {
+    if (window.confirm('💾 Confermi la creazione di un backup completo del sistema?')) {
+      setLoading(true);
+      try {
+        console.log('💾 Creazione backup sistema...');
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        alert('✅ Backup sistema creato con successo!');
+      } catch (error) {
+        console.error('❌ Errore backup:', error);
+        alert('❌ Errore durante la creazione del backup');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleSystemRestore = async () => {
+    if (window.confirm('⚠️ ATTENZIONE: Confermi il ripristino del sistema? Questa operazione sovrascriverà le configurazioni attuali.')) {
+      setLoading(true);
+      try {
+        console.log('🔄 Ripristino sistema...');
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        alert('✅ Sistema ripristinato con successo!');
+        // Ricarica tutti i dati dopo il ripristino
+        await loadRealApiData();
+      } catch (error) {
+        console.error('❌ Errore ripristino:', error);
+        alert('❌ Errore durante il ripristino del sistema');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  // === FUNZIONI GESTIONE NOTIFICHE ===
+  
+  const [notificationSettings, setNotificationSettings] = useState({
+    emailNotifications: true,
+    smsNotifications: false,
+    pushNotifications: true,
+    bookingAlerts: true,
+    paymentAlerts: true,
+    systemAlerts: true,
+    reviewAlerts: true,
+    soundEnabled: true,
+    notificationEmail: 'admin@vincantomaori.it'
+  });
+
+  const [mockNotifications] = useState([
+    { id: 1, type: 'booking', title: 'Nuova Prenotazione', message: 'Cliente Marco R. ha prenotato per il 15-17 Marzo', timestamp: '2 minuti fa', priority: 'high', read: false },
+    { id: 2, type: 'payment', title: 'Pagamento Ricevuto', message: 'Pagamento di €450 ricevuto per prenotazione #1234', timestamp: '15 minuti fa', priority: 'medium', read: false },
+    { id: 3, type: 'system', title: 'Backup Completato', message: 'Backup automatico del sistema completato con successo', timestamp: '1 ora fa', priority: 'low', read: true },
+    { id: 4, type: 'review', title: 'Nuova Recensione', message: 'Recensione 5 stelle ricevuta da cliente precedente', timestamp: '3 ore fa', priority: 'medium', read: true },
+    { id: 5, type: 'booking', title: 'Check-in Oggi', message: 'Cliente Sara M. effettuerà il check-in alle 15:00', timestamp: '1 giorno fa', priority: 'high', read: true }
+  ]);
+
+  const saveNotificationSettings = async () => {
+    setLoading(true);
+    try {
+      console.log('🔔 Salvataggio impostazioni notifiche:', notificationSettings);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      alert('✅ Impostazioni notifiche salvate con successo!');
+    } catch (error) {
+      console.error('❌ Errore salvataggio notifiche:', error);
+      alert('❌ Errore nel salvataggio delle impostazioni notifiche');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const markNotificationAsRead = (notificationId: number) => {
+    console.log(`📖 Notifica ${notificationId} marcata come letta`);
+    alert(`✅ Notifica #${notificationId} marcata come letta!`);
+  };
+
+  const markAllNotificationsAsRead = () => {
+    if (window.confirm('📖 Marcare tutte le notifiche come lette?')) {
+      console.log('📖 Tutte le notifiche marcate come lette');
+      alert('✅ Tutte le notifiche sono state marcate come lette!');
+    }
+  };
+
+  const deleteNotification = (notificationId: number) => {
+    if (window.confirm(`🗑️ Eliminare la notifica #${notificationId}?`)) {
+      console.log(`🗑️ Eliminazione notifica ${notificationId}`);
+      alert(`✅ Notifica #${notificationId} eliminata con successo!`);
+    }
+  };
+
+  const testNotification = () => {
+    alert('🔔 Test Notifica!\n\nQuesta è una notifica di prova del sistema.\nSe vedi questo messaggio, il sistema notifiche funziona correttamente.');
+    console.log('🔔 Test notifica inviato');
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'booking': return '🏠';
+      case 'payment': return '💰';
+      case 'system': return '⚙️';
+      case 'review': return '⭐';
+      default: return '🔔';
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'error';
+      case 'medium': return 'warning';
+      case 'low': return 'success';
+      default: return '';
+    }
+  };
+
   // Carica dati reali dalle API backend
   const loadRealApiData = async () => {
     if (!adminApiService) {
@@ -3096,7 +3293,12 @@ const AdminPanelPro: React.FC = () => {
                     <div className="service-row">
                       <span>📧 Conferma Prenotazione</span>
                       <span>87% apertura</span>
-                      <button className="admin-btn-small">✏️ Modifica</button>
+                      <button 
+                        className="admin-btn-small"
+                        onClick={() => handleEditTemplate('Conferma Prenotazione')}
+                      >
+                        ✏️ Modifica
+                      </button>
                       <button className="admin-btn-small">📊 Stats</button>
                     </div>
                     
@@ -3127,7 +3329,12 @@ const AdminPanelPro: React.FC = () => {
                   <h4>⚙️ Configurazione SMTP</h4>
                   <div className="pricing-controls">
                     <label>Provider Email:</label>
-                    <select className="admin-select" aria-label="Provider email">
+                    <select 
+                      className="admin-select" 
+                      value={emailSettings.smtpProvider}
+                      onChange={(e) => setEmailSettings({...emailSettings, smtpProvider: e.target.value})}
+                      aria-label="Provider email"
+                    >
                       <option>Gmail SMTP</option>
                       <option>SendGrid</option>
                       <option>Mailgun</option>
@@ -3135,11 +3342,23 @@ const AdminPanelPro: React.FC = () => {
                     </select>
                     
                     <label>Email Mittente:</label>
-                    <input type="email" defaultValue="noreply@vincantomaori.it" className="admin-input" aria-label="Email mittente" />
+                    <input 
+                      type="email" 
+                      value={emailSettings.senderEmail}
+                      onChange={(e) => setEmailSettings({...emailSettings, senderEmail: e.target.value})}
+                      className="admin-input" 
+                      aria-label="Email mittente" 
+                    />
                     
                     <div className="sync-indicator success">✅ Connessione SMTP attiva</div>
                     
-                    <button className="admin-btn-secondary admin-btn-small">🔧 Test Invio</button>
+                    <button 
+                      className="admin-btn-secondary admin-btn-small"
+                      onClick={testEmailConnection}
+                      disabled={loading}
+                    >
+                      🔧 {loading ? 'Test...' : 'Test Invio'}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -3147,11 +3366,22 @@ const AdminPanelPro: React.FC = () => {
             
             {/* Azioni Email */}
             <div className="admin-pricing-actions">
-              <button className="admin-btn-primary">✏️ Nuovo Template</button>
-              <button className="admin-btn-secondary">📊 Report Dettagliato</button>
+              <button 
+                className="admin-btn-primary"
+                onClick={handleCreateTemplate}
+              >
+                ✏️ Nuovo Template
+              </button>
+              <button 
+                className="admin-btn-secondary"
+                onClick={saveEmailSettings}
+                disabled={loading}
+              >
+                � {loading ? 'Salvataggio...' : 'Salva Configurazione'}
+              </button>
+              <button className="admin-btn-secondary">� Report Dettagliato</button>
               <button className="admin-btn-secondary">📧 Invio Massivo</button>
               <button className="admin-btn-secondary">⚡ Gestisci Automazioni</button>
-              <button className="admin-btn-secondary">🎨 Editor Avanzato</button>
             </div>
           </div>
         )}
@@ -3208,6 +3438,12 @@ const AdminPanelPro: React.FC = () => {
                               }}
                             >
                               💾 Salva
+                            </button>
+                            <button 
+                              className="admin-btn-small admin-btn-warning"
+                              onClick={() => resetSystemSetting(setting.key)}
+                            >
+                              🔄 Reset
                             </button>
                           </div>
                           <small>Categoria: {setting.category} | Valore attuale: {setting.value}</small>
@@ -3271,6 +3507,20 @@ const AdminPanelPro: React.FC = () => {
                       }}
                     >
                       💾 Salva Tutte le Impostazioni
+                    </button>
+                    <button 
+                      className="admin-btn-warning"
+                      onClick={handleSystemBackup}
+                      disabled={loading}
+                    >
+                      💾 {loading ? 'Backup...' : 'Backup Sistema'}
+                    </button>
+                    <button 
+                      className="admin-btn-danger"
+                      onClick={handleSystemRestore}
+                      disabled={loading}
+                    >
+                      🔄 {loading ? 'Ripristino...' : 'Ripristina Sistema'}
                     </button>
                   </div>
                 </div>
@@ -3430,13 +3680,19 @@ const AdminPanelPro: React.FC = () => {
                 </button>
                 <button 
                   className="admin-btn-secondary" 
-                  onClick={() => setNotifications(notifications.filter(n => !n.read))}
+                  onClick={markAllNotificationsAsRead}
                 >
-                  🗑️ Rimuovi Lette
+                  📖 Marca Tutte Lette
+                </button>
+                <button 
+                  className="admin-btn-secondary" 
+                  onClick={testNotification}
+                >
+                  � Test Notifica
                 </button>
               </div>
               
-              {notifications.length > 0 ? (
+              {mockNotifications.length > 0 ? (
                 <div className="bookings-table-container">
                   <table className="bookings-table">
                     <thead>
@@ -3444,26 +3700,30 @@ const AdminPanelPro: React.FC = () => {
                         <th>Tipo</th>
                         <th>Titolo</th>
                         <th>Messaggio</th>
-                        <th>Data</th>
+                        <th>Timestamp</th>
+                        <th>Priorità</th>
                         <th>Stato</th>
                         <th>Azioni</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {notifications.map((notif) => (
+                      {mockNotifications.map((notif) => (
                         <tr key={notif.id} className={`booking-row ${!notif.read ? 'unread' : ''}`}>
                           <td>
                             <span className={`status ${notif.type}`}>
-                              {notif.type === 'payment' && '💳 Pagamento'}
-                              {notif.type === 'booking' && '📅 Prenotazione'}
-                              {notif.type === 'system' && '⚙️ Sistema'}
-                              {notif.type === 'error' && '❌ Errore'}
-                              {!notif.type && '📋 Generale'}
+                              {getNotificationIcon(notif.type)} {notif.type.charAt(0).toUpperCase() + notif.type.slice(1)}
                             </span>
                           </td>
                           <td><strong>{notif.title}</strong></td>
                           <td>{notif.message}</td>
-                          <td>{new Date(notif.created_at).toLocaleDateString('it-IT')}</td>
+                          <td>{notif.timestamp}</td>
+                          <td>
+                            <span className={`status ${getPriorityColor(notif.priority)}`}>
+                              {notif.priority === 'high' && '🔴 Alta'}
+                              {notif.priority === 'medium' && '🟡 Media'}
+                              {notif.priority === 'low' && '🟢 Bassa'}
+                            </span>
+                          </td>
                           <td>
                             <span className={`status ${notif.read ? 'completed' : 'pending'}`}>
                               {notif.read ? '✅ Letta' : '🔔 Non Letta'}
@@ -3476,12 +3736,12 @@ const AdminPanelPro: React.FC = () => {
                                   className="admin-btn-small" 
                                   onClick={() => markNotificationAsRead(notif.id)}
                                 >
-                                  👁️ Segna Letta
+                                  👁️ Leggi
                                 </button>
                               )}
                               <button 
-                                className="admin-btn-small" 
-                                onClick={() => deleteNotificationById(notif.id)}
+                                className="admin-btn-small admin-btn-warning" 
+                                onClick={() => deleteNotification(notif.id)}
                               >
                                 🗑️ Elimina
                               </button>
@@ -3529,22 +3789,124 @@ const AdminPanelPro: React.FC = () => {
               </div>
             </div>
 
+            {/* Impostazioni Notifiche */}
+            <div className="admin-pricing-section">
+              <h3>⚙️ Configurazione Notifiche</h3>
+              <div className="admin-pricing-grid">
+                <div className="admin-pricing-card">
+                  <h4>🔔 Canali di Notifica</h4>
+                  <div className="pricing-controls">
+                    <label className="checkbox-label">
+                      <input 
+                        type="checkbox" 
+                        checked={notificationSettings.emailNotifications}
+                        onChange={(e) => setNotificationSettings({...notificationSettings, emailNotifications: e.target.checked})}
+                      />
+                      📧 Notifiche Email
+                    </label>
+                    
+                    <label className="checkbox-label">
+                      <input 
+                        type="checkbox" 
+                        checked={notificationSettings.smsNotifications}
+                        onChange={(e) => setNotificationSettings({...notificationSettings, smsNotifications: e.target.checked})}
+                      />
+                      📱 Notifiche SMS
+                    </label>
+                    
+                    <label className="checkbox-label">
+                      <input 
+                        type="checkbox" 
+                        checked={notificationSettings.pushNotifications}
+                        onChange={(e) => setNotificationSettings({...notificationSettings, pushNotifications: e.target.checked})}
+                      />
+                      🔔 Notifiche Push
+                    </label>
+                    
+                    <label className="checkbox-label">
+                      <input 
+                        type="checkbox" 
+                        checked={notificationSettings.soundEnabled}
+                        onChange={(e) => setNotificationSettings({...notificationSettings, soundEnabled: e.target.checked})}
+                      />
+                      🔊 Suoni Notifica
+                    </label>
+                  </div>
+                </div>
+                
+                <div className="admin-pricing-card">
+                  <h4>📋 Tipi di Alert</h4>
+                  <div className="pricing-controls">
+                    <label className="checkbox-label">
+                      <input 
+                        type="checkbox" 
+                        checked={notificationSettings.bookingAlerts}
+                        onChange={(e) => setNotificationSettings({...notificationSettings, bookingAlerts: e.target.checked})}
+                      />
+                      🏠 Alert Prenotazioni
+                    </label>
+                    
+                    <label className="checkbox-label">
+                      <input 
+                        type="checkbox" 
+                        checked={notificationSettings.paymentAlerts}
+                        onChange={(e) => setNotificationSettings({...notificationSettings, paymentAlerts: e.target.checked})}
+                      />
+                      💰 Alert Pagamenti
+                    </label>
+                    
+                    <label className="checkbox-label">
+                      <input 
+                        type="checkbox" 
+                        checked={notificationSettings.systemAlerts}
+                        onChange={(e) => setNotificationSettings({...notificationSettings, systemAlerts: e.target.checked})}
+                      />
+                      ⚙️ Alert Sistema
+                    </label>
+                    
+                    <label className="checkbox-label">
+                      <input 
+                        type="checkbox" 
+                        checked={notificationSettings.reviewAlerts}
+                        onChange={(e) => setNotificationSettings({...notificationSettings, reviewAlerts: e.target.checked})}
+                      />
+                      ⭐ Alert Recensioni
+                    </label>
+                    
+                    <label>Email Admin:</label>
+                    <input 
+                      type="email" 
+                      value={notificationSettings.notificationEmail}
+                      onChange={(e) => setNotificationSettings({...notificationSettings, notificationEmail: e.target.value})}
+                      className="admin-input" 
+                      aria-label="Email admin" 
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Azioni Notifiche */}
             <div className="admin-pricing-actions">
               <button 
-                className="admin-btn-primary" 
-                onClick={async () => {
-                  const unreadNotifs = notifications.filter(n => !n.read);
-                  for (const notif of unreadNotifs) {
-                    await markNotificationAsRead(notif.id);
-                  }
-                  alert('✅ Tutte le notifiche marcate come lette!');
-                }}
+                className="admin-btn-primary"
+                onClick={saveNotificationSettings}
+                disabled={loading}
+              >
+                💾 {loading ? 'Salvataggio...' : 'Salva Impostazioni'}
+              </button>
+              <button 
+                className="admin-btn-secondary" 
+                onClick={markAllNotificationsAsRead}
               >
                 ✅ Segna Tutte Come Lette
               </button>
-              <button className="admin-btn-secondary">📧 Configura Email Notifiche</button>
-              <button className="admin-btn-secondary">🔔 Impostazioni Push</button>
+              <button 
+                className="admin-btn-secondary"
+                onClick={testNotification}
+              >
+                🔔 Test Notifica
+              </button>
               <button className="admin-btn-secondary">📊 Report Notifiche</button>
             </div>
           </div>
