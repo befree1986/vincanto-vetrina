@@ -202,6 +202,7 @@ export default async function handler(req, res) {
               weekendSurcharge, 
               monthlyDiscount, 
               weeklyDiscount, 
+              parkingFee, // 🅿️ Parcheggio
               minStay, 
               maxStay, 
               advanceBookingDiscount, 
@@ -214,6 +215,7 @@ export default async function handler(req, res) {
               { key: 'weekend_surcharge', value: (weekendSurcharge || 20).toString() },
               { key: 'monthly_discount', value: (monthlyDiscount || 15).toString() },
               { key: 'weekly_discount', value: (weeklyDiscount || 10).toString() },
+              { key: 'parking_fee', value: (parkingFee || 15).toString() }, // 🅿️ Parcheggio
               { key: 'minimum_nights', value: (minStay || 2).toString() },
               { key: 'maximum_nights', value: (maxStay || 14).toString() },
               { key: 'advance_booking_discount', value: (advanceBookingDiscount || 0).toString() },
@@ -307,6 +309,7 @@ export default async function handler(req, res) {
               weekendSurcharge: parseFloat(settings.weekend_surcharge) || 20.00,
               monthlyDiscount: parseFloat(settings.monthly_discount) || 15.00,
               weeklyDiscount: parseFloat(settings.weekly_discount) || 10.00,
+              parkingFee: parseFloat(settings.parking_fee) || 15.00, // 🅿️ Parcheggio
               minStay: parseInt(settings.minimum_nights) || 2,
               maxStay: parseInt(settings.maximum_nights) || 14,
               advanceBookingDiscount: parseFloat(settings.advance_booking_discount) || 0.00,

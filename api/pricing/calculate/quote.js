@@ -17,7 +17,7 @@ export default async function handler(req, res) {
   
   try {
     if (req.method === 'GET') {
-      const { checkIn, checkOut, guests = 2 } = req.query;
+      const { checkIn, checkOut, guests = 2, parking = false } = req.query;
 
       if (!checkIn || !checkOut) {
         return res.status(400).json({
@@ -45,6 +45,7 @@ export default async function handler(req, res) {
         weekendSurcharge: 20,
         weeklyDiscount: 15,
         monthlyDiscount: 25,
+        parkingFee: 15, // 🅿️ Parcheggio predefinito
         additionalGuestPrice: 25,
         maxGuests: 8,
         taxRate: 3 // €3 per persona per notte
@@ -81,6 +82,7 @@ export default async function handler(req, res) {
             weekendSurcharge: parseFloat(settings.weekend_surcharge) || config.weekendSurcharge,
             weeklyDiscount: parseFloat(settings.weekly_discount) || config.weeklyDiscount,
             monthlyDiscount: parseFloat(settings.monthly_discount) || config.monthlyDiscount,
+            parkingFee: parseFloat(settings.parking_fee) || 0, // 🅿️ Parcheggio dal database
             additionalGuestPrice: 25, // TODO: Aggiungere al pannello admin
             maxGuests: 8,
             taxRate: 3
@@ -131,6 +133,10 @@ export default async function handler(req, res) {
       const touristTax = config.taxRate * parseInt(guests) * nights;
       totalPrice += touristTax;
 
+      // 🅿️ Parcheggio opzionale (per notte)
+      const parkingCost = (parking === 'true' || parking === true) ? config.parkingFee * nights : 0;
+      totalPrice += parkingCost;
+
       const breakdown = {
         basePrice: basePrice, // €75 x persone x notti
         additionalGuests: additionalGuestsCost, // Sempre 0 con nuovo sistema
@@ -138,6 +144,7 @@ export default async function handler(req, res) {
         discount: -discount,
         cleaningFee: config.cleaningFee,
         touristTax: touristTax,
+        parking: parkingCost, // 🅿️ Costo parcheggio
         total: Math.round(totalPrice * 100) / 100
       };
 
