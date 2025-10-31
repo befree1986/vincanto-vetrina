@@ -222,36 +222,47 @@ export default async function handler(req, res) {
             
             console.log('📊 Updates da applicare:', updates);
             
-            // Assicurati che la tabella admin_settings esista
+            // Prima vediamo la struttura della tabella esistente
             try {
-              await client.query(`
-                CREATE TABLE IF NOT EXISTS admin_settings (
-                  id SERIAL PRIMARY KEY,
-                  setting_key VARCHAR(255) UNIQUE NOT NULL,
-                  setting_value TEXT,
-                  category VARCHAR(100) DEFAULT 'general',
-                  created_at TIMESTAMP DEFAULT NOW(),
-                  updated_at TIMESTAMP DEFAULT NOW()
-                )
+              const tableInfo = await client.query(`
+                SELECT column_name, is_nullable, data_type, column_default 
+                FROM information_schema.columns 
+                WHERE table_name = 'admin_settings'
+                ORDER BY ordinal_position
               `);
-              console.log('✅ Tabella admin_settings verificata/creata');
-            } catch (tableError) {
-              console.error('❌ Errore creazione tabella:', tableError);
-              throw new Error('Impossibile creare tabella admin_settings');
+              console.log('📋 Struttura tabella admin_settings:', tableInfo.rows);
+            } catch (infoError) {
+              console.log('❌ Impossibile ottenere info tabella:', infoError.message);
             }
             
             for (const update of updates) {
               try {
+                // Usa una query più sicura che gestisce tutte le colonne possibili
                 const result = await client.query(`
-                  INSERT INTO admin_settings (setting_key, setting_value, category, updated_at)
-                  VALUES ($1, $2, 'pricing', NOW())
+                  INSERT INTO admin_settings (setting_key, setting_value, setting_type, category, created_at, updated_at)
+                  VALUES ($1, $2, 'config', 'pricing', NOW(), NOW())
                   ON CONFLICT (setting_key) 
-                  DO UPDATE SET setting_value = $2, updated_at = NOW()
+                  DO UPDATE SET 
+                    setting_value = $2, 
+                    updated_at = NOW(),
+                    setting_type = COALESCE(EXCLUDED.setting_type, admin_settings.setting_type, 'config'),
+                    category = COALESCE(EXCLUDED.category, admin_settings.category, 'pricing')
                 `, [update.key, update.value]);
                 console.log(`✅ Aggiornato ${update.key} = ${update.value}`);
               } catch (updateError) {
                 console.error(`❌ Errore aggiornamento ${update.key}:`, updateError);
-                throw updateError;
+                // Proviamo una query alternativa se la prima fallisce
+                try {
+                  await client.query(`
+                    UPDATE admin_settings 
+                    SET setting_value = $2, updated_at = NOW() 
+                    WHERE setting_key = $1
+                  `, [update.key, update.value]);
+                  console.log(`✅ Aggiornato via UPDATE ${update.key} = ${update.value}`);
+                } catch (fallbackError) {
+                  console.error(`❌ Errore anche con UPDATE:`, fallbackError);
+                  throw updateError;
+                }
               }
             }
             
