@@ -42,6 +42,17 @@
   transform: none;
 }
 
+/* === SERVICE PRICE CONTAINER === */
+.service-price-container {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.admin-input-price {
+  width: 60px;
+}
+
 /* === PRICING PREVIEW === */
 .pricing-preview {
   background: #f8fafc;

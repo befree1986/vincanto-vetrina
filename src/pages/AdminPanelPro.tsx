@@ -35,7 +35,8 @@ const AdminPanelPro: React.FC = () => {
   const [analytics, setAnalytics] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
 
-  // Stati per gestione form
+  // Stati per gestione form e loading
+  const [loading, setLoading] = useState(false);
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [editingBooking, setEditingBooking] = useState<any>(null);
   const [newBookingData, setNewBookingData] = useState({
@@ -96,7 +97,6 @@ const AdminPanelPro: React.FC = () => {
   });
   const [isLoadingCalendars, setIsLoadingCalendars] = useState(false);
   const [showNewCalendarForm, setShowNewCalendarForm] = useState(false);
-  const [editingCalendar, setEditingCalendar] = useState<any>(null);
   
   // Form nuovo calendario
   const [newCalendarData, setNewCalendarData] = useState({
@@ -364,22 +364,25 @@ const AdminPanelPro: React.FC = () => {
     }
   };
 
-  // === NUOVE FUNZIONI PER GESTIONE CALENDARI ESTERNI ===
+  // === FUNZIONI PER GESTIONE CALENDARI ESTERNI ===
   
   const handleEditCalendar = (calendar: any) => {
-    setEditingCalendar(calendar);
+    alert(`✏️ Modifica calendario: ${calendar.name || 'Senza nome'}\n\nFunzionalità di modifica in fase di sviluppo.`);
     console.log('📝 Editing calendario:', calendar);
   };
 
-  const handleDeleteCalendar = async (calendarId: string, calendarName: string) => {
+  const handleDeleteCalendar = async (id: string, name?: string) => {
     if (!adminApiService) return;
     
-    const confirm = window.confirm(`⚠️ Sei sicuro di voler eliminare il calendario "${calendarName}"?\n\nQuesta azione è irreversibile!`);
-    if (!confirm) return;
+    const confirmMessage = name 
+      ? `⚠️ Sei sicuro di voler eliminare il calendario "${name}"?\n\nQuesta azione è irreversibile!`
+      : '⚠️ Sei sicuro di voler eliminare questa configurazione calendario?';
+    
+    if (!window.confirm(confirmMessage)) return;
 
     try {
       setIsLoadingCalendars(true);
-      console.log('🗑️ Eliminazione calendario:', calendarId);
+      console.log('🗑️ Eliminazione calendario:', id);
       
       // Simula eliminazione - TODO: implementare endpoint backend
       alert('✅ Calendario eliminato con successo!');
@@ -418,37 +421,14 @@ const AdminPanelPro: React.FC = () => {
 
     try {
       setIsLoadingCalendars(true);
-      console.log('🔄 Sincronizzazione calendario:', calendarId);
+      console.log('🔄 Sincronizzazione calendario:', calendarId, calendarName);
       
       // Simula sincronizzazione - TODO: implementare endpoint backend
-      alert('✅ Calendario sincronizzato con successo!');
+      alert(`✅ Calendario "${calendarName}" sincronizzato con successo!`);
       await loadCalendarConfigs();
     } catch (error) {
       console.error('❌ Errore sincronizzazione calendario:', error);
       alert('❌ Errore nella sincronizzazione del calendario');
-    } finally {
-      setIsLoadingCalendars(false);
-    }
-  };
-
-  const handleDeleteCalendar = async (id: string) => {
-    if (!adminApiService) return;
-    
-    if (!confirm('⚠️ Sei sicuro di voler eliminare questa configurazione calendario?')) return;
-
-    try {
-      setIsLoadingCalendars(true);
-      const result = await adminApiService.deleteCalendarConfig(id);
-      
-      if (result.success) {
-        alert('✅ Calendario eliminato con successo!');
-        await loadCalendarConfigs();
-      } else {
-        alert('❌ Errore eliminazione: ' + (result.message || 'Errore sconosciuto'));
-      }
-    } catch (error) {
-      console.error('❌ Errore eliminazione calendario:', error);
-      alert('❌ Errore nell\'eliminazione del calendario');
     } finally {
       setIsLoadingCalendars(false);
     }
@@ -604,25 +584,13 @@ const AdminPanelPro: React.FC = () => {
 
   // === FUNZIONI GESTIONE SISTEMA ===
   
-  const updateSystemSettingValue = async (key: string, value: string) => {
-    try {
-      console.log(`⚙️ Aggiornamento setting ${key}: ${value}`);
-      // Simula salvataggio nel database
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return true;
-    } catch (error) {
-      console.error('❌ Errore aggiornamento setting:', error);
-      throw error;
-    }
-  };
-
   const resetSystemSetting = async (key: string) => {
     if (window.confirm(`🔄 Confermi il reset del setting "${key}" al valore predefinito?`)) {
       try {
         console.log(`🔄 Reset setting: ${key}`);
         await new Promise(resolve => setTimeout(resolve, 500));
         alert(`✅ Setting "${key}" resettato con successo!`);
-        await fetchSystemSettings(); // Ricarica i settings
+        await loadRealApiData(); // Ricarica i settings
       } catch (error) {
         console.error('❌ Errore reset setting:', error);
         alert('❌ Errore durante il reset del setting');
@@ -700,10 +668,7 @@ const AdminPanelPro: React.FC = () => {
     }
   };
 
-  const markNotificationAsRead = (notificationId: number) => {
-    console.log(`📖 Notifica ${notificationId} marcata come letta`);
-    alert(`✅ Notifica #${notificationId} marcata come letta!`);
-  };
+
 
   const markAllNotificationsAsRead = () => {
     if (window.confirm('📖 Marcare tutte le notifiche come lette?')) {
@@ -886,7 +851,6 @@ const AdminPanelPro: React.FC = () => {
     if (!adminApiService) return;
     try {
       const result = await adminApiService.updateSystemSetting(key, value);
-      await loadRealApiData(); // Ricarica tutti i dati
       console.log('✅ Impostazione aggiornata:', { key, value });
       return result;
     } catch (error) {
@@ -1107,7 +1071,13 @@ const AdminPanelPro: React.FC = () => {
 
   // === GESTIONE NOTIFICHE ===
   
-  const markNotificationAsRead = async (id: string) => {
+  const markNotificationAsRead = async (id: string | number) => {
+    if (typeof id === 'number') {
+      console.log(`📖 Notifica ${id} marcata come letta`);
+      alert(`✅ Notifica #${id} marcata come letta!`);
+      return;
+    }
+    
     if (!adminApiService) return;
     
     try {
@@ -1118,19 +1088,7 @@ const AdminPanelPro: React.FC = () => {
     }
   };
 
-  const deleteNotificationById = async (id: string) => {
-    if (!adminApiService) return;
-    
-    if (confirm('⚠️ Eliminare questa notifica?')) {
-      try {
-        await adminApiService.deleteNotification(id);
-        await loadRealApiData();
-        alert('✅ Notifica eliminata!');
-      } catch (error) {
-        alert('❌ Errore nell\'eliminazione della notifica');
-      }
-    }
-  };
+
 
   // Effetto per controllare autenticazione Google all'avvio
   // COMMENTATO PER DEBUG
@@ -1714,15 +1672,18 @@ const AdminPanelPro: React.FC = () => {
                             value={service.name}
                             onChange={(e) => updateCustomService(service.id, 'name', e.target.value)}
                             className="admin-input-small"
+                            title={`Nome servizio ${service.id}`}
+                            placeholder="Nome servizio"
                           />
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                          <div className="service-price-container">
                             <span>€</span>
                             <input 
                               type="number"
                               value={service.price}
                               onChange={(e) => updateCustomService(service.id, 'price', Number(e.target.value))}
-                              className="admin-input-small"
-                              style={{ width: '60px' }}
+                              className="admin-input-small admin-input-price"
+                              title={`Prezzo servizio ${service.id}`}
+                              placeholder="Prezzo"
                             />
                             <span>/{service.unit}</span>
                           </div>
@@ -2014,7 +1975,7 @@ const AdminPanelPro: React.FC = () => {
                               </button>
                               <button 
                                 className="admin-btn-small admin-btn-danger" 
-                                onClick={() => handleDeleteCalendar(calendar.id)}
+                                onClick={() => handleDeleteCalendar(calendar.id, calendar.name)}
                                 disabled={isLoadingCalendars}
                                 title="Elimina"
                               >
