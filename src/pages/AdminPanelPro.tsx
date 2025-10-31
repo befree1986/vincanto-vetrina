@@ -206,10 +206,15 @@ const AdminPanelPro: React.FC = () => {
   };
 
   const updatePricingField = (field: string, value: number) => {
-    setPricingConfig(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    console.log('💰 Aggiornamento campo prezzo:', { field, value, currentConfig: pricingConfig });
+    setPricingConfig(prev => {
+      const updated = {
+        ...prev,
+        [field]: value
+      };
+      console.log('💰 Nuova configurazione prezzi:', updated);
+      return updated;
+    });
   };
 
   // === CALENDAR FUNCTIONS ===
@@ -366,56 +371,81 @@ const AdminPanelPro: React.FC = () => {
     try {
       console.log('🔄 Caricamento dati API reali...');
       
-      // Carica tutti i dati in parallelo inclusi prezzi
-      const [
-        statsData,
-        bookingsData,
-        settingsData,
-        analyticsData,
-        notificationsData,
-        blockedDatesData
-      ] = await Promise.all([
-        adminApiService.getDashboardStats(),
-        adminApiService.getBookings(),
-        adminApiService.getSystemSettings(),
-        adminApiService.getAnalytics(),
-        adminApiService.getNotifications(),
-        adminApiService.getBlockedDates()
-      ]);
+      // Carica dati uno alla volta per debug
+      try {
+        const stats = await adminApiService.getDashboardStats();
+        console.log('✅ Stats caricate:', stats);
+        setDashboardStats(stats || {});
+      } catch (err) {
+        console.error('❌ Errore stats:', err);
+      }
 
-      // Aggiorna gli stati - USA SOLO DATI REALI
-      setDashboardStats(statsData);
-      setRealBookings(bookingsData);
-      setRecentBookings(bookingsData); // Unifica con dati reali
-      setSystemSettings(settingsData);
-      setAnalytics(analyticsData);
-      setNotifications(notificationsData);
-      setBlockedDates(blockedDatesData);
+      try {
+        const bookings = await adminApiService.getBookings();
+        console.log('✅ Prenotazioni caricate:', bookings);
+        setRealBookings(bookings || []);
+        setRecentBookings(bookings || []);
+      } catch (err) {
+        console.error('❌ Errore prenotazioni:', err);
+      }
+
+      try {
+        const settings = await adminApiService.getSystemSettings();
+        console.log('✅ Impostazioni caricate:', settings);
+        setSystemSettings(settings || []);
+      } catch (err) {
+        console.error('❌ Errore impostazioni:', err);
+      }
+
+      try {
+        const analyticsResult = await adminApiService.getAnalytics();
+        console.log('✅ Analytics caricate:', analyticsResult);
+        setAnalytics(analyticsResult || []);
+      } catch (err) {
+        console.error('❌ Errore analytics:', err);
+      }
+
+      try {
+        const notificationsResult = await adminApiService.getNotifications();
+        console.log('✅ Notifiche caricate:', notificationsResult);
+        setNotifications(notificationsResult || []);
+      } catch (err) {
+        console.error('❌ Errore notifiche:', err);
+      }
+
+      try {
+        const blockedDatesResult = await adminApiService.getBlockedDates();
+        console.log('✅ Date bloccate caricate:', blockedDatesResult);
+        setBlockedDates(blockedDatesResult || []);
+      } catch (err) {
+        console.error('❌ Errore date bloccate:', err);
+      }
+
+      try {
+        const paymentsResult = await adminApiService.getPayments();
+        console.log('✅ Pagamenti caricati:', paymentsResult);
+        setPaymentTransactions(paymentsResult || []);
+      } catch (err) {
+        console.error('❌ Errore pagamenti:', err);
+        setPaymentTransactions([]);
+      }
       
       // Carica configurazioni prezzi e calendari
-      loadPricingConfig();
-      loadCalendarConfigs();
-      
-      // Simula transazioni da prenotazioni reali
-      const simulatedTransactions = bookingsData.map((booking: any) => ({
-        id: booking.id,
-        bookingId: booking.id,
-        amount: booking.total_amount || booking.totalPrice || 0,
-        status: booking.payment_status || 'completed',
-        method: 'stripe',
-        date: booking.created_at || new Date().toISOString(),
-        customer: booking.customer_name || booking.guestName
-      }));
-      setPaymentTransactions(simulatedTransactions);
+      try {
+        await loadPricingConfig();
+        console.log('✅ Prezzi caricati');
+      } catch (err) {
+        console.error('❌ Errore prezzi:', err);
+      }
 
-      console.log('✅ Dati API reali caricati (SOLO BACKEND):', {
-        stats: statsData,
-        bookings: bookingsData.length,
-        transactions: simulatedTransactions.length,
-        settings: settingsData.length,
-        analytics: analyticsData.length,
-        notifications: notificationsData.length
-      });
+      try {
+        await loadCalendarConfigs();
+        console.log('✅ Calendari caricati');
+      } catch (err) {
+        console.error('❌ Errore calendari:', err);
+      }
+
+      console.log('✅ Dati API reali caricati completamente');
     } catch (error) {
       console.error('❌ Errore nel caricamento dati API:', error);
     } finally {
@@ -719,38 +749,6 @@ const AdminPanelPro: React.FC = () => {
     }
   };
 
-  // === SIMULAZIONE PAGAMENTI ===
-  
-  const createSimulatedPayment = async (bookingId: string, amount: number) => {
-    // Simula un pagamento creando una transazione
-    const newTransaction = {
-      id: `pay_${Date.now()}`,
-      bookingId,
-      amount,
-      status: 'completed',
-      method: 'stripe',
-      date: new Date().toISOString(),
-      customer: `Cliente_${bookingId}`
-    };
-
-    // Aggiunge alla lista delle transazioni
-    setPaymentTransactions(prev => [...prev, newTransaction]);
-    
-    // Crea una notifica per il pagamento
-    const notification = {
-      id: `notif_${Date.now()}`,
-      type: 'payment',
-      title: 'Pagamento Ricevuto',
-      message: `Pagamento di €${amount} ricevuto per prenotazione #${bookingId}`,
-      read: false,
-      created_at: new Date().toISOString()
-    };
-
-    setNotifications(prev => [...prev, notification]);
-    
-    alert(`✅ Pagamento di €${amount} simulato con successo!`);
-  };
-
   // Effetto per controllare autenticazione Google all'avvio
   // COMMENTATO PER DEBUG
   // useEffect(() => {
@@ -837,35 +835,50 @@ const AdminPanelPro: React.FC = () => {
         <div className="admin-nav-container">
           <button 
             className={`admin-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
-            onClick={() => setActiveTab('dashboard')}
+            onClick={() => {
+              console.log('🎯 Click su tab dashboard');
+              setActiveTab('dashboard');
+            }}
           >
             📊 Dashboard
           </button>
           
           <button 
             className={`admin-nav-item ${activeTab === 'prezzi' ? 'active' : ''}`}
-            onClick={() => setActiveTab('prezzi')}
+            onClick={() => {
+              console.log('🎯 Click su tab prezzi');
+              setActiveTab('prezzi');
+            }}
           >
             💰 Prezzi
           </button>
           
           <button 
             className={`admin-nav-item ${activeTab === 'calendari' ? 'active' : ''}`}
-            onClick={() => setActiveTab('calendari')}
+            onClick={() => {
+              console.log('🎯 Click su tab calendari');
+              setActiveTab('calendari');
+            }}
           >
             🗓️ Calendari
           </button>
           
           <button 
             className={`admin-nav-item ${activeTab === 'prenotazioni' ? 'active' : ''}`}
-            onClick={() => setActiveTab('prenotazioni')}
+            onClick={() => {
+              console.log('🎯 Click su tab prenotazioni');
+              setActiveTab('prenotazioni');
+            }}
           >
             📅 Prenotazioni
           </button>
           
           <button 
             className={`admin-nav-item ${activeTab === 'pagamenti' ? 'active' : ''}`}
-            onClick={() => setActiveTab('pagamenti')}
+            onClick={() => {
+              console.log('🎯 Click su tab pagamenti');
+              setActiveTab('pagamenti');
+            }}
           >
             💳 Pagamenti
           </button>
@@ -1918,9 +1931,27 @@ const AdminPanelPro: React.FC = () => {
         )}
 
         {/* Sezione Prenotazioni Professionale */}
-        {activeTab === 'prenotazioni' && (
+        {activeTab === 'prenotazioni' && (() => {
+          try {
+            console.log('🎯 Rendering sezione prenotazioni...');
+            return (
           <div className="admin-prenotazioni">
-            <h2>📅 Gestione Prenotazioni Avanzata</h2>
+            <div className="admin-header">
+              <h2>📅 Gestione Prenotazioni Avanzata</h2>
+              <button 
+                onClick={() => setShowBookingForm(!showBookingForm)}
+                className="admin-button primary"
+              >
+                {showBookingForm ? '❌ Chiudi Form' : '➕ Nuova Prenotazione'}
+              </button>
+            </div>
+
+            {isLoadingData && (
+              <div className="loading-indicator">
+                <div className="spinner"></div>
+                <p>Caricamento prenotazioni...</p>
+              </div>
+            )}
             
             {/* Statistiche Rapide */}
             <div className="admin-pricing-section">
@@ -2327,10 +2358,28 @@ const AdminPanelPro: React.FC = () => {
               <button className="admin-btn-secondary">🔄 Sincronizza Piattaforme</button>
             </div>
           </div>
-        )}
+            );
+          } catch (error) {
+            console.error('❌ Errore nel rendering sezione prenotazioni:', error);
+            return (
+              <div className="admin-prenotazioni">
+                <div className="error-message">
+                  <h2>⚠️ Errore nella sezione prenotazioni</h2>
+                  <p>Errore: {error instanceof Error ? error.message : 'Errore sconosciuto'}</p>
+                  <button onClick={() => window.location.reload()} className="admin-btn-primary">
+                    🔄 Ricarica Pagina
+                  </button>
+                </div>
+              </div>
+            );
+          }
+        })()}
 
         {/* Sezione Pagamenti Professionale */}
-        {activeTab === 'pagamenti' && (
+        {activeTab === 'pagamenti' && (() => {
+          try {
+            console.log('🎯 Rendering sezione pagamenti...');
+            return (
           <div className="admin-pagamenti">
             <h2>💳 Gestione Pagamenti Avanzata</h2>
             
@@ -2476,9 +2525,9 @@ const AdminPanelPro: React.FC = () => {
               </div>
             </div>
 
-            {/* Simulazioni Pagamenti */}
+            {/* Gestione Pagamenti Reali */}
             <div className="admin-pricing-section">
-              <h3>💳 Simula Pagamenti per Prenotazioni</h3>
+              <h3>💳 Gestione Pagamenti</h3>
               <div className="bookings-table-container">
                 {realBookings.length > 0 ? (
                   <table className="bookings-table">
@@ -2501,6 +2550,8 @@ const AdminPanelPro: React.FC = () => {
                             <span className={`status ${booking.payment_status || 'pending'}`}>
                               {booking.payment_status === 'paid' && '✅ Pagato'}
                               {booking.payment_status === 'pending' && '🟡 In Attesa'}
+                              {booking.payment_status === 'partial' && '🟠 Parziale'}
+                              {booking.payment_status === 'failed' && '❌ Fallito'}
                               {!booking.payment_status && '⏳ Non Impostato'}
                             </span>
                           </td>
@@ -2508,18 +2559,21 @@ const AdminPanelPro: React.FC = () => {
                             <div className="action-buttons">
                               <button 
                                 className="admin-btn-small" 
-                                onClick={() => createSimulatedPayment(
-                                  booking.id, 
-                                  booking.total_amount || booking.totalPrice || 0
-                                )}
-                              >
-                                💳 Simula Pagamento
-                              </button>
-                              <button 
-                                className="admin-btn-small" 
                                 onClick={() => updateBookingStatus(booking.id, { payment_status: 'paid' })}
                               >
                                 ✅ Marca Pagato
+                              </button>
+                              <button 
+                                className="admin-btn-small" 
+                                onClick={() => updateBookingStatus(booking.id, { payment_status: 'partial' })}
+                              >
+                                � Parziale
+                              </button>
+                              <button 
+                                className="admin-btn-small" 
+                                onClick={() => updateBookingStatus(booking.id, { payment_status: 'failed' })}
+                              >
+                                ❌ Fallito
                               </button>
                             </div>
                           </td>
@@ -2529,7 +2583,7 @@ const AdminPanelPro: React.FC = () => {
                   </table>
                 ) : (
                   <div className="admin-pricing-card">
-                    <p>📊 Nessuna prenotazione trovata per simulare pagamenti</p>
+                    <p>📊 Nessuna prenotazione trovata</p>
                     <button 
                       className="admin-btn-primary" 
                       onClick={loadRealApiData}
@@ -2550,7 +2604,22 @@ const AdminPanelPro: React.FC = () => {
               <button className="admin-btn-secondary">🔔 Configura Notifiche</button>
             </div>
           </div>
-        )}
+            );
+          } catch (error) {
+            console.error('❌ Errore nel rendering sezione pagamenti:', error);
+            return (
+              <div className="admin-pagamenti">
+                <div className="error-message">
+                  <h2>⚠️ Errore nella sezione pagamenti</h2>
+                  <p>Errore: {error instanceof Error ? error.message : 'Errore sconosciuto'}</p>
+                  <button onClick={() => window.location.reload()} className="admin-btn-primary">
+                    🔄 Ricarica Pagina
+                  </button>
+                </div>
+              </div>
+            );
+          }
+        })()}
 
         {/* Sezione Email */}
         {activeTab === 'email' && (
@@ -2939,21 +3008,9 @@ const AdminPanelPro: React.FC = () => {
                 </button>
                 <button 
                   className="admin-btn-secondary" 
-                  onClick={async () => {
-                    // Simula una nuova notifica
-                    const newNotif = {
-                      id: `notif_${Date.now()}`,
-                      type: 'system',
-                      title: 'Test Notifica',
-                      message: 'Questa è una notifica di test generata dal sistema',
-                      read: false,
-                      created_at: new Date().toISOString()
-                    };
-                    setNotifications(prev => [newNotif, ...prev]);
-                    alert('✅ Notifica di test creata!');
-                  }}
+                  onClick={() => setNotifications(notifications.filter(n => !n.read))}
                 >
-                  ➕ Crea Notifica Test
+                  🗑️ Rimuovi Lette
                 </button>
               </div>
               
@@ -3159,7 +3216,7 @@ const AdminPanelPro: React.FC = () => {
 
             {/* Grafici e Trend */}
             <div className="admin-pricing-section">
-              <h3>📊 Trend Visuali (Simulati)</h3>
+              <h3>📊 Trend Visuali</h3>
               <div className="admin-pricing-card">
                 <h4>📈 Andamento Ricavi</h4>
                 <div className="trend-chart">

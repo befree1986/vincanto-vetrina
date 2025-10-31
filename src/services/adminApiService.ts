@@ -536,6 +536,46 @@ class AdminApiService {
     }
   }
 
+  // Payments
+  async getPayments() {
+    try {
+      const data = await this.request('payments');
+      return data.payments || [];
+    } catch (error) {
+      console.error('Error fetching payments:', error);
+      return [];
+    }
+  }
+
+  async createPayment(paymentData: any) {
+    try {
+      const response = await fetch(`${this.baseUrl}/admin?action=payments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(paymentData),
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error creating payment:', error);
+      return { success: false, message: 'Errore creazione pagamento' };
+    }
+  }
+
+  async updatePayment(id: string, updates: any) {
+    try {
+      const response = await fetch(`${this.baseUrl}/admin?action=payments&id=${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating payment:', error);
+      return { success: false, message: 'Errore aggiornamento pagamento' };
+    }
+  }
 
 }
 
