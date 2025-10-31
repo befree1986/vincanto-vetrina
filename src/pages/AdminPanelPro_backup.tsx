@@ -1364,22 +1364,14 @@ const AdminPanelPro: React.FC = () => {
         {activeTab === 'configurazione' && (
           <div className="admin-prezzi">
             <div className="admin-header">
-              <h2>⚙️ Configurazione Prezzi e Sistema</h2>
-              <div className="header-actions">
-                <button 
-                  onClick={savePricingConfig}
-                  disabled={isUpdatingPricing}
-                  className="admin-button primary"
-                >
-                  {isUpdatingPricing ? '⏳ Salvando...' : '💾 Salva Configurazione'}
-                </button>
-                <button 
-                  onClick={loadRealApiData}
-                  className="admin-button secondary"
-                >
-                  🔄 Aggiorna Dati
-                </button>
-              </div>
+              <h2>💰 Configurazione Prezzi</h2>
+              <button 
+                onClick={savePricingConfig}
+                disabled={isUpdatingPricing}
+                className="admin-button primary"
+              >
+                {isUpdatingPricing ? '⏳ Salvando...' : '💾 Salva Configurazione'}
+              </button>
             </div>
             
             {/* Configurazione Base FUNZIONALE */}
