@@ -1185,13 +1185,13 @@ const AdminPanelPro: React.FC = () => {
           </button>
           
           <button 
-            className={`admin-nav-item ${activeTab === 'configurazione' ? 'active' : ''}`}
+            className={`admin-nav-item ${activeTab === 'prezzi' ? 'active' : ''}`}
             onClick={() => {
-              console.log('🎯 Click su tab configurazione');
-              setActiveTab('configurazione');
+              console.log('🎯 Click su tab prezzi');
+              setActiveTab('prezzi');
             }}
           >
-            ⚙️ Configurazione
+            💰 Prezzi
           </button>
           
           <button 
@@ -1245,7 +1245,12 @@ const AdminPanelPro: React.FC = () => {
             📈 Analytics
           </button>
           
-
+          <button 
+            className={`admin-nav-item ${activeTab === 'sistema' ? 'active' : ''}`}
+            onClick={() => setActiveTab('sistema')}
+          >
+            ⚙️ Sistema
+          </button>
         </div>
       </nav>
 
@@ -1360,8 +1365,8 @@ const AdminPanelPro: React.FC = () => {
           </div>
         )}
 
-        {/* Sezione Configurazione Unificata (Prezzi + Sistema) */}
-        {activeTab === 'configurazione' && (
+        {/* Sezione Prezzi FUNZIONALE */}
+        {activeTab === 'prezzi' && (
           <div className="admin-prezzi">
             <div className="admin-header">
               <h2>⚙️ Configurazione Prezzi e Sistema</h2>
@@ -1750,72 +1755,9 @@ const AdminPanelPro: React.FC = () => {
               </div>
             </div>
             
-            {/* === SEZIONE SISTEMA INTEGRATA === */}
-            <div className="admin-pricing-section">
-              <h3>⚙️ Configurazioni Sistema Avanzate</h3>
-              <div className="admin-pricing-grid">
-                <div className="admin-pricing-card">
-                  <h4>🔥 Impostazioni Backend Live</h4>
-                  <div className="pricing-controls">
-                    {systemSettings.length > 0 ? (
-                      systemSettings.map((setting) => (
-                        <div key={setting.id || setting.key} className="setting-row">
-                          <label>{setting.label || setting.key}:</label>
-                          <div className="setting-input-group">
-                            <input 
-                              type={setting.key?.includes('email') ? 'email' : 
-                                   setting.key?.includes('price') || setting.key?.includes('amount') ? 'number' :
-                                   setting.key?.includes('nights') || setting.key?.includes('guests') ? 'number' : 'text'} 
-                              value={setting.value} 
-                              className="admin-input" 
-                              placeholder={`Inserisci ${setting.label || setting.key}`}
-                              aria-label={setting.label || setting.key}
-                              onChange={async (e) => {
-                                const updatedSettings = systemSettings.map(s => 
-                                  s.key === setting.key ? { ...s, value: e.target.value } : s
-                                );
-                                setSystemSettings(updatedSettings);
-                                
-                                try {
-                                  await updateSystemSettingValue(setting.key, e.target.value);
-                                } catch (error) {
-                                  console.error('Errore salvataggio setting:', error);
-                                }
-                              }}
-                            />
-                            <button 
-                              className="admin-btn-small" 
-                              onClick={async () => {
-                                try {
-                                  await updateSystemSettingValue(setting.key, setting.value);
-                                  alert(`✅ ${setting.label} salvata!`);
-                                } catch (error) {
-                                  alert(`❌ Errore salvataggio ${setting.label}`);
-                                }
-                              }}
-                            >
-                              💾
-                            </button>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p>📊 Caricamento configurazioni sistema...</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Azioni Finali Unificate */}
+            {/* Azioni Finali */}
             <div className="admin-pricing-actions">
-              <button 
-                onClick={savePricingConfig}
-                disabled={isUpdatingPricing}
-                className="admin-btn-primary"
-              >
-                {isUpdatingPricing ? '⏳ Salvando...' : '💾 Salva Configurazione Completa'}
-              </button>
+              <button className="admin-btn-primary">💾 Salva Configurazione Completa</button>
               <button className="admin-btn-secondary">🔄 Aggiorna Tutti i Prezzi</button>
               <button className="admin-btn-secondary">📊 Anteprima Listino</button>
               <button className="admin-btn-secondary">📤 Esporta Configurazione</button>
@@ -3412,6 +3354,84 @@ const AdminPanelPro: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* Sezione Sistema Professionale */}
+        {activeTab === 'sistema' && (
+          <div className="admin-sistema">
+            <h2>⚙️ Configurazione Sistema Avanzata</h2>
+            
+            {/* Impostazioni Backend Reali */}
+            <div className="admin-pricing-section">
+              <h3>🔥 Impostazioni Backend Live</h3>
+              <div className="admin-pricing-grid">
+                <div className="admin-pricing-card">
+                  <h4>Configurazioni Sistema</h4>
+                  <div className="pricing-controls">
+                    {systemSettings.length > 0 ? (
+                      systemSettings.map((setting) => (
+                        <div key={setting.id || setting.key} className="setting-row">
+                          <label>{setting.label || setting.key}:</label>
+                          <div className="setting-input-group">
+                            <input 
+                              type={setting.key?.includes('email') ? 'email' : 
+                                   setting.key?.includes('price') || setting.key?.includes('amount') ? 'number' :
+                                   setting.key?.includes('nights') || setting.key?.includes('guests') ? 'number' : 'text'} 
+                              value={setting.value} 
+                              className="admin-input" 
+                              onChange={async (e) => {
+                                // Aggiorna immediatamente il valore locale
+                                const updatedSettings = systemSettings.map(s => 
+                                  s.key === setting.key ? { ...s, value: e.target.value } : s
+                                );
+                                setSystemSettings(updatedSettings);
+                                
+                                // Salva nel backend con debounce
+                                try {
+                                  await updateSystemSettingValue(setting.key, e.target.value);
+                                } catch (error) {
+                                  console.error('Errore salvataggio setting:', error);
+                                }
+                              }}
+                              aria-label={setting.label || setting.key}
+                              placeholder={`Inserisci ${setting.label || setting.key}`}
+                            />
+                            <button 
+                              className="admin-btn-small" 
+                              onClick={async () => {
+                                try {
+                                  await updateSystemSettingValue(setting.key, setting.value);
+                                  alert(`✅ ${setting.label} salvata!`);
+                                } catch (error) {
+                                  alert(`❌ Errore salvataggio ${setting.label}`);
+                                }
+                              }}
+                            >
+                              💾 Salva
+                            </button>
+                            <button 
+                              className="admin-btn-small admin-btn-warning"
+                              onClick={() => resetSystemSetting(setting.key)}
+                            >
+                              🔄 Reset
+                            </button>
+                          </div>
+                          <small>Categoria: {setting.category} | Valore attuale: {setting.value}</small>
+                        </div>
+                      ))
+                    ) : (
+                      <div>
+                        <p>📊 Nessuna impostazione caricata dal backend</p>
+                        <button 
+                          className="admin-btn-primary" 
+                          onClick={loadRealApiData}
+                        >
+                          🔄 Carica Impostazioni API
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
                 <div className="admin-pricing-card">
                   <h4>Statistiche API</h4>
                   <div className="pricing-controls">
