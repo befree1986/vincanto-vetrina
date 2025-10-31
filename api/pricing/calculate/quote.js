@@ -95,13 +95,14 @@ export default async function handler(req, res) {
         console.log('🔄 Usando configurazione prezzi predefinita');
       }
 
-      // Calcolo prezzo base
-      let totalPrice = config.basePrice * nights;
+      // 🔥 NUOVO CALCOLO: PREZZO PER PERSONA (€75 a persona per notte)
+      // Minimo 2 persone come da configurazione admin
+      const effectiveGuests = Math.max(2, parseInt(guests));
+      const basePrice = config.basePrice * effectiveGuests * nights;
+      let totalPrice = basePrice;
 
-      // Ospiti aggiuntivi (oltre 2)
-      const additionalGuests = Math.max(0, parseInt(guests) - 2);
-      const additionalGuestsCost = additionalGuests * config.additionalGuestPrice * nights;
-      totalPrice += additionalGuestsCost;
+      // Non servono più ospiti aggiuntivi - tutto incluso nel prezzo per persona
+      const additionalGuestsCost = 0;
 
       // Supplemento weekend (venerdì e sabato)
       let weekendNights = 0;
@@ -111,7 +112,7 @@ export default async function handler(req, res) {
           weekendNights++;
         }
       }
-      const weekendSurcharge = (config.basePrice * config.weekendSurcharge / 100) * weekendNights;
+      const weekendSurcharge = (basePrice * config.weekendSurcharge / 100) * (weekendNights / nights);
       totalPrice += weekendSurcharge;
 
       // Sconti per durata
@@ -131,8 +132,8 @@ export default async function handler(req, res) {
       totalPrice += touristTax;
 
       const breakdown = {
-        basePrice: config.basePrice * nights,
-        additionalGuests: additionalGuestsCost,
+        basePrice: basePrice, // €75 x persone x notti
+        additionalGuests: additionalGuestsCost, // Sempre 0 con nuovo sistema
         weekendSurcharge: weekendSurcharge,
         discount: -discount,
         cleaningFee: config.cleaningFee,
