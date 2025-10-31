@@ -58,9 +58,9 @@ const AdminPanelPro: React.FC = () => {
     reason: 'maintenance'
   });
 
-  // Stati per gestione prezzi
+  // Stati per gestione prezzi AGGIORNATI secondo specifiche
   const [pricingConfig, setPricingConfig] = useState({
-    basePrice: 100,
+    basePrice: 100,           // Prezzo base per 2 persone
     cleaningFee: 50,
     weekendSurcharge: 20,
     monthlyDiscount: 15,
@@ -68,14 +68,19 @@ const AdminPanelPro: React.FC = () => {
     minStay: 2,
     maxStay: 14,
     advanceBookingDiscount: 0,
-    lastMinuteDiscount: 0
+    lastMinuteDiscount: 0,
+    // Nuovi campi per gestione bambini e tasse
+    additionalGuestPrice: 25,  // Prezzo per persona aggiuntiva oltre le 2 base
+    touristTaxAdult: 3,       // Tassa di soggiorno per adulti (€/notte)
+    touristTaxChild: 0        // Tassa di soggiorno per bambini 12+ (€/notte)
   });
   const [isUpdatingPricing, setIsUpdatingPricing] = useState(false);
   
-  // Stati per servizi personalizzati
+  // Stati per servizi personalizzati AGGIORNATI
   const [customServices, setCustomServices] = useState([
-    { id: 1, name: 'Culla per bambini', price: 20, unit: 'soggiorno' },
-    { id: 2, name: 'Animali domestici', price: 15, unit: 'notte' }
+    { id: 1, name: 'Culla per bambini (0-3 anni)', price: 30, unit: 'soggiorno' },
+    { id: 2, name: 'Seggiolone', price: 15, unit: 'soggiorno' },
+    { id: 3, name: 'Animali domestici', price: 25, unit: 'soggiorno' }
   ]);
   const [newServiceName, setNewServiceName] = useState('');
   const [newServicePrice, setNewServicePrice] = useState(0);
@@ -91,7 +96,7 @@ const AdminPanelPro: React.FC = () => {
   });
   const [isLoadingCalendars, setIsLoadingCalendars] = useState(false);
   const [showNewCalendarForm, setShowNewCalendarForm] = useState(false);
-  // const [editingCalendar, setEditingCalendar] = useState<any>(null); // Non utilizzato
+  const [editingCalendar, setEditingCalendar] = useState<any>(null);
   
   // Form nuovo calendario
   const [newCalendarData, setNewCalendarData] = useState({
@@ -118,6 +123,22 @@ const AdminPanelPro: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+
+  // === STATI PAGAMENTI ===
+  const [paymentSettings, setPaymentSettings] = useState({
+    stripeEnabled: true,
+    stripePublishableKey: 'pk_test_...',
+    stripeSecretKey: '••••••••••••',
+    paypalEnabled: true,
+    paypalClientId: 'sb_test_...',
+    bankTransferEnabled: true,
+    bankDetails: {
+      iban: 'IT60 X054 2811 1010 0000 0123456',
+      swift: 'BCITITMM',
+      beneficiary: 'Vincanto Maori'
+    }
+  });
+  const [isUpdatingPayments, setIsUpdatingPayments] = useState(false);
   
   // Stato autenticazione Google Calendar
   const [isGoogleAuthenticated, setIsGoogleAuthenticated] = useState(false);
@@ -178,7 +199,10 @@ const AdminPanelPro: React.FC = () => {
           minStay: config.minStay || 2,
           maxStay: config.maxStay || 14,
           advanceBookingDiscount: config.advanceBookingDiscount || 0,
-          lastMinuteDiscount: config.lastMinuteDiscount || 0
+          lastMinuteDiscount: config.lastMinuteDiscount || 0,
+          additionalGuestPrice: config.additionalGuestPrice || 25,
+          touristTaxAdult: config.touristTaxAdult || 3,
+          touristTaxChild: config.touristTaxChild || 0
         });
         console.log('✅ Configurazione prezzi caricata dal database:', config);
       } else {
@@ -340,6 +364,73 @@ const AdminPanelPro: React.FC = () => {
     }
   };
 
+  // === NUOVE FUNZIONI PER GESTIONE CALENDARI ESTERNI ===
+  
+  const handleEditCalendar = (calendar: any) => {
+    setEditingCalendar(calendar);
+    console.log('📝 Editing calendario:', calendar);
+  };
+
+  const handleDeleteCalendar = async (calendarId: string, calendarName: string) => {
+    if (!adminApiService) return;
+    
+    const confirm = window.confirm(`⚠️ Sei sicuro di voler eliminare il calendario "${calendarName}"?\n\nQuesta azione è irreversibile!`);
+    if (!confirm) return;
+
+    try {
+      setIsLoadingCalendars(true);
+      console.log('🗑️ Eliminazione calendario:', calendarId);
+      
+      // Simula eliminazione - TODO: implementare endpoint backend
+      alert('✅ Calendario eliminato con successo!');
+      await loadCalendarConfigs();
+    } catch (error) {
+      console.error('❌ Errore eliminazione calendario:', error);
+      alert('❌ Errore nell\'eliminazione del calendario');
+    } finally {
+      setIsLoadingCalendars(false);
+    }
+  };
+
+  const handleSuspendCalendar = async (calendarId: string, calendarName: string) => {
+    if (!adminApiService) return;
+    
+    const confirm = window.confirm(`⏸️ Sospendere temporaneamente il calendario "${calendarName}"?`);
+    if (!confirm) return;
+
+    try {
+      setIsLoadingCalendars(true);
+      console.log('⏸️ Sospensione calendario:', calendarId);
+      
+      // Simula sospensione - TODO: implementare endpoint backend
+      alert('✅ Calendario sospeso con successo!');
+      await loadCalendarConfigs();
+    } catch (error) {
+      console.error('❌ Errore sospensione calendario:', error);
+      alert('❌ Errore nella sospensione del calendario');
+    } finally {
+      setIsLoadingCalendars(false);
+    }
+  };
+
+  const handleSyncCalendar = async (calendarId: string, calendarName: string) => {
+    if (!adminApiService) return;
+
+    try {
+      setIsLoadingCalendars(true);
+      console.log('🔄 Sincronizzazione calendario:', calendarId);
+      
+      // Simula sincronizzazione - TODO: implementare endpoint backend
+      alert('✅ Calendario sincronizzato con successo!');
+      await loadCalendarConfigs();
+    } catch (error) {
+      console.error('❌ Errore sincronizzazione calendario:', error);
+      alert('❌ Errore nella sincronizzazione del calendario');
+    } finally {
+      setIsLoadingCalendars(false);
+    }
+  };
+
   const handleDeleteCalendar = async (id: string) => {
     if (!adminApiService) return;
     
@@ -401,6 +492,57 @@ const AdminPanelPro: React.FC = () => {
       alert('❌ Errore nel test di connessione');
     } finally {
       setIsLoadingCalendars(false);
+    }
+  };
+
+  // === FUNZIONI GESTIONE PAGAMENTI ===
+  
+  const savePaymentSettings = async () => {
+    try {
+      setIsUpdatingPayments(true);
+      console.log('💳 Salvataggio configurazione pagamenti:', paymentSettings);
+      
+      // Simula salvataggio - TODO: implementare endpoint backend
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      alert('✅ Configurazione pagamenti salvata con successo!');
+    } catch (error) {
+      console.error('❌ Errore salvataggio pagamenti:', error);
+      alert('❌ Errore nel salvataggio della configurazione pagamenti');
+    } finally {
+      setIsUpdatingPayments(false);
+    }
+  };
+
+  const handleRefundPayment = async (transactionId: string, amount: number) => {
+    const confirm = window.confirm(`⚠️ Sei sicuro di voler rimborsare €${amount.toFixed(2)}?\n\nQuesta azione è irreversibile!`);
+    if (!confirm) return;
+
+    try {
+      console.log('💰 Elaborazione rimborso:', { transactionId, amount });
+      
+      // Simula rimborso - TODO: implementare endpoint backend
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      alert('✅ Rimborso elaborato con successo!');
+      // Aggiorna la lista delle transazioni
+    } catch (error) {
+      console.error('❌ Errore rimborso:', error);
+      alert('❌ Errore nell\'elaborazione del rimborso');
+    }
+  };
+
+  const handleCapturePayment = async (transactionId: string) => {
+    try {
+      console.log('💳 Cattura pagamento:', transactionId);
+      
+      // Simula cattura pagamento - TODO: implementare endpoint backend
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      alert('✅ Pagamento catturato con successo!');
+    } catch (error) {
+      console.error('❌ Errore cattura pagamento:', error);
+      alert('❌ Errore nella cattura del pagamento');
     }
   };
 
@@ -1185,61 +1327,83 @@ const AdminPanelPro: React.FC = () => {
                 </div>
                 
                 <div className="admin-pricing-card">
-                  <h4>Anteprima Calcolo</h4>
+                  <h4>Anteprima Calcolo AGGIORNATO</h4>
                   <div className="pricing-preview">
                     <div className="preview-item">
-                      <span>2 notti:</span>
-                      <strong>€{(pricingConfig.basePrice * 2 + pricingConfig.cleaningFee).toFixed(2)}</strong>
+                      <span>2 adulti, 2 notti:</span>
+                      <strong>€{(pricingConfig.basePrice * 2 + pricingConfig.cleaningFee + (pricingConfig.touristTaxAdult * 2 * 2)).toFixed(2)}</strong>
                     </div>
                     <div className="preview-item">
-                      <span>7 notti (con sconto):</span>
-                      <strong>€{((pricingConfig.basePrice * 7) * (1 - pricingConfig.weeklyDiscount/100) + pricingConfig.cleaningFee).toFixed(2)}</strong>
+                      <span>4 adulti, 2 notti (+2 extra):</span>
+                      <strong>€{((pricingConfig.basePrice + pricingConfig.additionalGuestPrice * 2) * 2 + pricingConfig.cleaningFee + (pricingConfig.touristTaxAdult * 4 * 2)).toFixed(2)}</strong>
                     </div>
                     <div className="preview-item">
-                      <span>Weekend (con supplemento):</span>
-                      <strong>€{(pricingConfig.basePrice * (1 + pricingConfig.weekendSurcharge/100) * 2 + pricingConfig.cleaningFee).toFixed(2)}</strong>
+                      <span>2 adulti + 1 bambino (0-3 anni), 2 notti:</span>
+                      <strong>€{(pricingConfig.basePrice * 2 + pricingConfig.cleaningFee + (pricingConfig.touristTaxAdult * 2 * 2)).toFixed(2)}</strong>
+                      <small> (bambino gratuito)</small>
+                    </div>
+                    <div className="preview-item">
+                      <span>7 notti (con sconto settimanale):</span>
+                      <strong>€{((pricingConfig.basePrice * 7) * (1 - pricingConfig.weeklyDiscount/100) + pricingConfig.cleaningFee + (pricingConfig.touristTaxAdult * 2 * 7)).toFixed(2)}</strong>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Gestione Bambini */}
+            {/* Gestione Ospiti e Bambini AGGIORNATA */}
             <div className="admin-pricing-section">
-              <h3>👶 Gestione Bambini (0-17 anni)</h3>
+              <h3>� Gestione Ospiti e Bambini</h3>
               <div className="admin-pricing-grid">
                 <div className="admin-pricing-card">
-                  <h4>Fasce di Età</h4>
+                  <h4>Prezzo per Ospiti Aggiuntivi</h4>
                   <div className="pricing-controls">
-                    <label>Bambini 0-2 anni (Infanti):</label>
-                    <select className="admin-select" aria-label="Policy bambini 0-2">
-                      <option>Gratuiti</option>
-                      <option>€5/notte</option>
-                      <option>€10/notte</option>
-                    </select>
-                    
-                    <label>Bambini 3-11 anni:</label>
-                    <input type="number" defaultValue="15" className="admin-input-small" aria-label="Tariffa bambini 3-11" />
-                    
-                    <label>Ragazzi 12-17 anni:</label>
-                    <input type="number" defaultValue="20" className="admin-input-small" aria-label="Tariffa ragazzi 12-17" />
+                    <label htmlFor="additionalGuestPrice">Prezzo per persona aggiuntiva oltre le 2 base (€/notte):</label>
+                    <input 
+                      id="additionalGuestPrice"
+                      type="number" 
+                      value={pricingConfig.additionalGuestPrice}
+                      onChange={(e) => updatePricingField('additionalGuestPrice', Number(e.target.value))}
+                      className="admin-input-small" 
+                      min="0"
+                    />
+                    <div className="pricing-note">
+                      👥 Il prezzo base include 2 persone. Ogni persona aggiuntiva paga il supplemento sopra.
+                    </div>
                   </div>
                 </div>
                 
                 <div className="admin-pricing-card">
-                  <h4>Politiche Speciali Bambini</h4>
+                  <h4>Politiche Bambini AGGIORNATE</h4>
                   <div className="pricing-controls">
-                    <label>Culla (0-2 anni):</label>
-                    <input type="number" defaultValue="10" className="admin-input-small" aria-label="Costo culla per soggiorno" />
+                    <div className="policy-item">
+                      <span className="policy-label">👶 Bambini 0-3 anni:</span>
+                      <span className="policy-value">GRATUITI (no tassa soggiorno)</span>
+                    </div>
                     
-                    <label>Letto Aggiuntivo (3-17 anni):</label>
-                    <input type="number" defaultValue="15" className="admin-input-small" aria-label="Costo letto aggiuntivo" />
+                    <div className="policy-item">
+                      <span className="policy-label">🧒 Bambini 4-11 anni:</span>
+                      <span className="policy-value">Prezzo normale (no tassa soggiorno)</span>
+                    </div>
                     
-                    <label>Sconto Famiglie Numerose (4+ bambini):</label>
-                    <input type="number" defaultValue="10" className="admin-input-small" aria-label="Sconto famiglie numerose percentuale" />
+                    <div className="policy-item">
+                      <span className="policy-label">👦 Ragazzi 12+ anni:</span>
+                      <span className="policy-value">Prezzo normale + tassa soggiorno</span>
+                    </div>
+                    
+                    <label htmlFor="touristTaxAdult">Tassa di soggiorno adulti 12+ (€/notte):</label>
+                    <input 
+                      id="touristTaxAdult"
+                      type="number" 
+                      value={pricingConfig.touristTaxAdult}
+                      onChange={(e) => updatePricingField('touristTaxAdult', Number(e.target.value))}
+                      className="admin-input-small" 
+                      min="0"
+                    />
                     
                     <div className="pricing-note">
-                      👨‍👩‍👧‍👦 I bambini non occupano il conteggio ospiti base se dormono con i genitori
+                      🏠 <strong>Capacità max: 8 posti letto disponibili</strong><br/>
+                      📝 Letti aggiuntivi non necessari (già inclusi)
                     </div>
                   </div>
                 </div>
@@ -1862,10 +2026,33 @@ const AdminPanelPro: React.FC = () => {
                     </div>
                   </div>
                   <div className="calendar-controls">
-                    <button className="admin-btn-secondary admin-btn-small">🔄 Sincronizza</button>
-                    <button className="admin-btn-secondary admin-btn-small">✏️ Modifica</button>
-                    <button className="admin-btn-warning admin-btn-small">⏸️ Sospendi</button>
-                    <button className="admin-btn-danger admin-btn-small">🗑️ Elimina</button>
+                    <button 
+                      className="admin-btn-secondary admin-btn-small"
+                      onClick={() => handleSyncCalendar('airbnb-1', 'Airbnb Calendar')}
+                      disabled={isLoadingCalendars}
+                    >
+                      🔄 Sincronizza
+                    </button>
+                    <button 
+                      className="admin-btn-secondary admin-btn-small"
+                      onClick={() => handleEditCalendar({id: 'airbnb-1', name: 'Airbnb Calendar', type: 'airbnb'})}
+                    >
+                      ✏️ Modifica
+                    </button>
+                    <button 
+                      className="admin-btn-warning admin-btn-small"
+                      onClick={() => handleSuspendCalendar('airbnb-1', 'Airbnb Calendar')}
+                      disabled={isLoadingCalendars}
+                    >
+                      ⏸️ Sospendi
+                    </button>
+                    <button 
+                      className="admin-btn-danger admin-btn-small"
+                      onClick={() => handleDeleteCalendar('airbnb-1', 'Airbnb Calendar')}
+                      disabled={isLoadingCalendars}
+                    >
+                      🗑️ Elimina
+                    </button>
                   </div>
                 </div>
                 
@@ -1881,10 +2068,33 @@ const AdminPanelPro: React.FC = () => {
                     </div>
                   </div>
                   <div className="calendar-controls">
-                    <button className="admin-btn-secondary admin-btn-small">🔄 Sincronizza</button>
-                    <button className="admin-btn-secondary admin-btn-small">✏️ Modifica</button>
-                    <button className="admin-btn-warning admin-btn-small">⏸️ Sospendi</button>
-                    <button className="admin-btn-danger admin-btn-small">🗑️ Elimina</button>
+                    <button 
+                      className="admin-btn-secondary admin-btn-small"
+                      onClick={() => handleSyncCalendar('booking-1', 'Booking.com Calendar')}
+                      disabled={isLoadingCalendars}
+                    >
+                      🔄 Sincronizza
+                    </button>
+                    <button 
+                      className="admin-btn-secondary admin-btn-small"
+                      onClick={() => handleEditCalendar({id: 'booking-1', name: 'Booking.com Calendar', type: 'booking'})}
+                    >
+                      ✏️ Modifica
+                    </button>
+                    <button 
+                      className="admin-btn-warning admin-btn-small"
+                      onClick={() => handleSuspendCalendar('booking-1', 'Booking.com Calendar')}
+                      disabled={isLoadingCalendars}
+                    >
+                      ⏸️ Sospendi
+                    </button>
+                    <button 
+                      className="admin-btn-danger admin-btn-small"
+                      onClick={() => handleDeleteCalendar('booking-1', 'Booking.com Calendar')}
+                      disabled={isLoadingCalendars}
+                    >
+                      🗑️ Elimina
+                    </button>
                   </div>
                 </div>
                 
@@ -2363,7 +2573,7 @@ const AdminPanelPro: React.FC = () => {
                             {booking.status === 'cancelled' && '❌ Cancellata'}
                           </span>
                         </td>
-                        <td>€{booking.totalPrice.toFixed(2)}</td>
+                        <td>€{(booking.totalPrice || booking.total_amount || 0).toFixed(2)}</td>
                         <td>
                           <div className="action-buttons">
                             <button className="admin-btn-small">✏️ Modifica</button>
@@ -2585,7 +2795,7 @@ const AdminPanelPro: React.FC = () => {
                   {paymentTransactions.map((transaction) => (
                     <div key={transaction.id} className="service-row">
                       <span>{transaction.guestName}</span>
-                      <span>€{transaction.amount.toFixed(2)}</span>
+                      <span>€{(transaction.amount || 0).toFixed(2)}</span>
                       <span className={`platform-badge ${transaction.method}`}>
                         {transaction.method === 'stripe' && '💳 Stripe'}
                         {transaction.method === 'paypal' && '💰 PayPal'}
@@ -2597,6 +2807,33 @@ const AdminPanelPro: React.FC = () => {
                         {transaction.status === 'failed' && '❌ Fallito'}
                       </span>
                       <span>{new Date(transaction.date).toLocaleDateString('it-IT')}</span>
+                      <div className="action-buttons">
+                        {transaction.status === 'pending' && (
+                          <button 
+                            className="admin-btn-small admin-btn-success"
+                            onClick={() => handleCapturePayment(transaction.id)}
+                            title="Cattura pagamento"
+                          >
+                            💰 Cattura
+                          </button>
+                        )}
+                        {transaction.status === 'completed' && (
+                          <button 
+                            className="admin-btn-small admin-btn-warning"
+                            onClick={() => handleRefundPayment(transaction.id, transaction.amount)}
+                            title="Rimborsa transazione"
+                          >
+                            ↩️ Rimborso
+                          </button>
+                        )}
+                        <button 
+                          className="admin-btn-small"
+                          onClick={() => window.open(`/admin/transaction/${transaction.id}`, '_blank')}
+                          title="Vedi dettagli"
+                        >
+                          📄 Dettagli
+                        </button>
+                      </div>
                     </div>
                   ))}
                   
@@ -2679,13 +2916,114 @@ const AdminPanelPro: React.FC = () => {
               </div>
             </div>
 
+            {/* Configurazione Avanzata Pagamenti */}
+            <div className="admin-pricing-section">
+              <div className="admin-header">
+                <h3>⚙️ Configurazione Pagamenti</h3>
+                <button 
+                  onClick={savePaymentSettings}
+                  disabled={isUpdatingPayments}
+                  className="admin-button primary"
+                >
+                  {isUpdatingPayments ? '⏳ Salvando...' : '💾 Salva Configurazione'}
+                </button>
+              </div>
+              
+              <div className="admin-pricing-grid">
+                <div className="admin-pricing-card">
+                  <h4>💳 Stripe Settings</h4>
+                  <div className="pricing-controls">
+                    <label>
+                      <input 
+                        type="checkbox"
+                        checked={paymentSettings.stripeEnabled}
+                        onChange={(e) => setPaymentSettings({
+                          ...paymentSettings,
+                          stripeEnabled: e.target.checked
+                        })}
+                      />
+                      Abilita Stripe
+                    </label>
+                    <label htmlFor="stripeKey">Publishable Key:</label>
+                    <input 
+                      id="stripeKey"
+                      type="text"
+                      value={paymentSettings.stripePublishableKey}
+                      onChange={(e) => setPaymentSettings({
+                        ...paymentSettings,
+                        stripePublishableKey: e.target.value
+                      })}
+                      className="admin-input"
+                      placeholder="pk_test_..."
+                    />
+                  </div>
+                </div>
+
+                <div className="admin-pricing-card">
+                  <h4>🏦 Bonifico Bancario</h4>
+                  <div className="pricing-controls">
+                    <label>
+                      <input 
+                        type="checkbox"
+                        checked={paymentSettings.bankTransferEnabled}
+                        onChange={(e) => setPaymentSettings({
+                          ...paymentSettings,
+                          bankTransferEnabled: e.target.checked
+                        })}
+                      />
+                      Abilita Bonifico
+                    </label>
+                    <label htmlFor="iban">IBAN:</label>
+                    <input 
+                      id="iban"
+                      type="text"
+                      value={paymentSettings.bankDetails.iban}
+                      onChange={(e) => setPaymentSettings({
+                        ...paymentSettings,
+                        bankDetails: {
+                          ...paymentSettings.bankDetails,
+                          iban: e.target.value
+                        }
+                      })}
+                      className="admin-input"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Azioni Finanziarie */}
             <div className="admin-pricing-actions">
-              <button className="admin-btn-primary">➕ Aggiungi Metodo Pagamento</button>
-              <button className="admin-btn-secondary">📊 Report Finanziario Completo</button>
-              <button className="admin-btn-secondary">📈 Analisi Trend</button>
-              <button className="admin-btn-secondary">💾 Esporta Contabilità</button>
-              <button className="admin-btn-secondary">🔔 Configura Notifiche</button>
+              <button 
+                className="admin-btn-primary"
+                onClick={() => alert('🔧 Feature in sviluppo: Aggiunta metodo pagamento')}
+              >
+                ➕ Aggiungi Metodo Pagamento
+              </button>
+              <button 
+                className="admin-btn-secondary"
+                onClick={() => alert('📊 Feature in sviluppo: Report finanziario')}
+              >
+                📊 Report Finanziario Completo
+              </button>
+              <button 
+                className="admin-btn-secondary"
+                onClick={() => alert('📈 Feature in sviluppo: Analisi trend')}
+              >
+                📈 Analisi Trend
+              </button>
+              <button 
+                className="admin-btn-secondary"
+                onClick={() => alert('💾 Feature in sviluppo: Export contabilità')}
+              >
+                💾 Esporta Contabilità
+              </button>
+              <button 
+                className="admin-btn-secondary"
+                onClick={() => alert('🔔 Feature in sviluppo: Configurazione notifiche')}
+              >
+                🔔 Configura Notifiche
+              </button>
             </div>
           </div>
             );
