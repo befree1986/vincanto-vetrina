@@ -1,6 +1,5 @@
 // API endpoint per i prezzi Vincanto
-import pg from 'pg';
-const { Pool } = pg;
+import { Pool } from 'pg';
 
 export default async function handler(req, res) {
   console.log('📊 API Pricing chiamata:', req.method, req.url);

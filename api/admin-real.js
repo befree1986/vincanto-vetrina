@@ -1,7 +1,5 @@
 // /api/admin.js - API completa per pannello admin con database Neon reale
-import pg from 'pg';
-
-const { Client } = pg;
+import { Client } from 'pg';
 
 // Configurazione database
 const getDbClient = () => {

@@ -1,6 +1,5 @@
 // API Quote Semplificata - Compatibile con frontend esistente
-import pg from 'pg';
-const { Pool } = pg;
+import { Pool } from 'pg';
 
 export default async function handler(req, res) {
   // CORS Headers
