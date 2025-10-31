@@ -73,6 +73,8 @@ export default async function handler(req, res) {
             settings[row.setting_key] = row.setting_value;
           });
           
+          console.log('🔍 Settings dal database:', settings);
+          
           // Aggiorna config con valori dal database
           config = {
             basePrice: parseFloat(settings.base_price) || config.basePrice,
@@ -87,7 +89,7 @@ export default async function handler(req, res) {
           
           console.log('✅ Configurazione prezzi aggiornata dal database admin:', config);
         } else {
-          console.log('⚠️ Nessuna configurazione prezzi nel database, uso valori predefiniti');
+          console.log('⚠️ Nessuna configurazione prezzi nel database, uso valori predefiniti:', config);
         }
       } catch (dbError) {
         console.error('❌ Errore caricamento prezzi dal database:', dbError);
