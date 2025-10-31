@@ -1,5 +1,6 @@
 // API Quote Semplificata - Compatibile con frontend esistente
-import { Pool } from '@vercel/postgres';
+import pg from 'pg';
+const { Pool } = pg;
 
 export default async function handler(req, res) {
   // CORS Headers

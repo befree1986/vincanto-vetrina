@@ -1,5 +1,6 @@
 // API endpoint per calcolo preventivi Vincanto
-import { Pool } from '@vercel/postgres';
+import pg from 'pg';
+const { Pool } = pg;
 
 export default async function handler(req, res) {
   console.log('💰 API Quote chiamata:', req.method, req.query);
