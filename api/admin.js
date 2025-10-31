@@ -418,7 +418,7 @@ export default async function handler(req, res) {
             // Aggiorna last_sync nel database
             await client.query(`
               UPDATE admin_calendar_configs 
-              SET last_sync = NOW(), updated_at = NOW()
+              SET last_sync_at = NOW(), sync_status = 'active'
               WHERE id = $1
             `, [calendarId]);
             
