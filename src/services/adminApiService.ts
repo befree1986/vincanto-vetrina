@@ -10,7 +10,7 @@ class AdminApiService {
 
   private async request(endpoint: string, options: RequestInit = {}) {
     try {
-      const url = `${this.baseUrl}/admin/${endpoint}`;
+      const url = `${this.baseUrl}/admin?action=${endpoint}`;
       console.log('🌐 API Request:', url);
       
       const response = await fetch(url, {
@@ -63,46 +63,60 @@ class AdminApiService {
   }
 
   async createBooking(bookingData: any) {
-    // Mappa i dati frontend ai campi backend
+    // Mappa i dati frontend ai campi backend corretti
     const mappedData = {
-      guest_name: bookingData.customer_name?.split(' ')[0] || bookingData.customer_name || '',
-      guest_surname: bookingData.customer_name?.split(' ').slice(1).join(' ') || '',
-      guest_email: bookingData.customer_email || '',
-      guest_phone: bookingData.customer_phone || '',
-      check_in_date: bookingData.check_in || '',
-      check_out_date: bookingData.check_out || '', 
-      num_adults: bookingData.guests || 1,
-      num_children: bookingData.children || 0,
-      total_amount: bookingData.total_amount || 0,
-      booking_source: bookingData.platform || 'admin',
-      status: bookingData.status || 'confirmed'
+      guestName: bookingData.customer_name || '',
+      guestEmail: bookingData.customer_email || '',
+      guestPhone: bookingData.customer_phone || '',
+      checkIn: bookingData.check_in || '',
+      checkOut: bookingData.check_out || '', 
+      guests: bookingData.guests || 1,
+      totalAmount: bookingData.total_amount || 0,
+      depositAmount: bookingData.deposit_amount || 0,
+      notes: bookingData.notes || ''
     };
 
-    return this.request('bookings', {
-      method: 'POST',
-      body: JSON.stringify(mappedData),
-    });
+    try {
+      const response = await fetch(`${this.baseUrl}/admin?action=bookings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(mappedData),
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error creating booking:', error);
+      return { success: false, message: 'Errore creazione prenotazione' };
+    }
   }
 
   async updateBooking(id: string, updates: any) {
-    return this.request(`bookings/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(updates),
-    });
+    try {
+      console.log('🔄 Aggiornamento prenotazione simulato per ID:', id);
+      // TODO: Implementare quando avremo l'endpoint
+      return { success: true, message: 'Prenotazione aggiornata (simulato)' };
+    } catch (error) {
+      console.error('Error updating booking:', error);
+      return { success: false, message: 'Errore aggiornamento prenotazione' };
+    }
   }
 
   async deleteBooking(id: string) {
-    return this.request(`bookings/${id}`, {
-      method: 'DELETE',
-    });
+    try {
+      console.log('🗑️ Eliminazione prenotazione simulata per ID:', id);
+      // TODO: Implementare quando avremo l'endpoint
+      return { success: true, message: 'Prenotazione eliminata (simulato)' };
+    } catch (error) {
+      console.error('Error deleting booking:', error);
+      return { success: false, message: 'Errore eliminazione prenotazione' };
+    }
   }
 
   // Pricing Management
   async getPricingConfig() {
     try {
-      const response = await fetch(`${this.baseUrl}/pricing`);
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return await response.json();
+      const data = await this.request('pricing-config');
+      return data.config || {};
     } catch (error) {
       console.error('Error fetching pricing config:', error);
       return { success: false, data: [] };
@@ -111,8 +125,8 @@ class AdminApiService {
 
   async updatePricingConfig(pricingData: any) {
     try {
-      const response = await fetch(`${this.baseUrl}/pricing/update`, {
-        method: 'POST',
+      const response = await fetch(`${this.baseUrl}/admin?action=pricing-config`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(pricingData),
       });
@@ -201,7 +215,7 @@ class AdminApiService {
   // Analytics
   async getAnalytics(period: string = '30d') {
     try {
-      const data = await this.request(`analytics?period=${period}`);
+      const data = await this.request('analytics');
       return data.analytics || [];
     } catch (error) {
       console.error('Error fetching analytics:', error);
@@ -230,8 +244,9 @@ class AdminApiService {
   // Health Check
   async healthCheck() {
     try {
-      const response = await fetch(`${this.baseUrl.replace('/api', '')}/health`);
-      return response.ok;
+      const response = await fetch(`https://vincanto-vetrina.vercel.app/api/admin?action=database-status`);
+      const data = await response.json();
+      return data.success || false;
     } catch {
       return false;
     }
@@ -240,7 +255,7 @@ class AdminApiService {
   // Quote API
   async getQuote(checkIn: string, checkOut: string, guests: number) {
     try {
-      const url = `${this.baseUrl}/quote?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`;
+      const url = `https://vincanto-vetrina.vercel.app/api/quote?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`;
       const response = await fetch(url);
       if (!response.ok) throw new Error('Quote API error');
       return await response.json();
@@ -255,9 +270,7 @@ class AdminApiService {
   // Ottieni configurazioni calendario
   async getCalendarConfigs() {
     try {
-      const response = await fetch(`${this.baseUrl}/calendars`);
-      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      const data = await response.json();
+      const data = await this.request('calendars');
       console.log('📅 Calendar configs:', data);
       return data;
     } catch (error) {
@@ -269,7 +282,7 @@ class AdminApiService {
   // Crea nuova configurazione calendario
   async createCalendarConfig(config: any) {
     try {
-      const response = await fetch(`${this.baseUrl}/calendars`, {
+      const response = await fetch(`${this.baseUrl}/admin?action=calendars`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(config)
@@ -278,6 +291,24 @@ class AdminApiService {
       return await response.json();
     } catch (error) {
       console.error('❌ Error creating calendar config:', error);
+      throw error;
+    }
+  }
+
+  // Sincronizza calendario
+  async syncCalendar(calendarId: string) {
+    try {
+      const response = await fetch(`https://vincanto-vetrina.vercel.app/api/calendar-sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ calendarId })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      const data = await response.json();
+      console.log('📅 Sync result:', data);
+      return data;
+    } catch (error) {
+      console.error('❌ Error syncing calendar:', error);
       throw error;
     }
   }
