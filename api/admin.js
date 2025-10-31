@@ -189,6 +189,9 @@ export default async function handler(req, res) {
         }
 
       case 'pricing-config':
+        console.log('🔍 Metodo HTTP ricevuto:', req.method);
+        console.log('🔍 Body ricevuto:', JSON.stringify(req.body, null, 2));
+        
         if (req.method === 'PUT') {
           try {
             console.log('📝 Aggiornamento configurazione prezzi ricevuta:', req.body);
@@ -260,7 +263,14 @@ export default async function handler(req, res) {
             });
           } catch (dbError) {
             console.error('❌ Database error in pricing update:', dbError);
-            return res.status(500).json({ success: false, message: 'Errore database: ' + dbError.message });
+            console.error('❌ Error stack:', dbError.stack);
+            console.error('❌ Error details:', JSON.stringify(dbError, null, 2));
+            return res.status(500).json({ 
+              success: false, 
+              message: 'Errore database: ' + dbError.message,
+              error: dbError.message,
+              detail: dbError.detail || 'Nessun dettaglio disponibile'
+            });
           }
         }
         
