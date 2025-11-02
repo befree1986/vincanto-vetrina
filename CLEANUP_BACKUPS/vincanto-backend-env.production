@@ -1,0 +1,71 @@
+# 🎯 VINCANTO BACKEND - CONFIGURAZIONE PRODUZIONE VERCEL
+# ⚠️  INSERIRE LE CHIAVI REALI QUI
+
+# === AMBIENTE ===
+NODE_ENV=production
+
+# === DATABASE VERCEL POSTGRES ===
+# ⚠️ Configurare il database Postgres di Vercel
+DATABASE_URL=postgres://username:password@host:port/vincanto_production
+
+# === STRIPE PRODUCTION ===
+# ⚠️ SOSTITUIRE CON LE CHIAVI LIVE DI STRIPE
+STRIPE_PUBLISHABLE_KEY=pk_live_YOUR_STRIPE_LIVE_KEY_HERE
+STRIPE_SECRET_KEY=sk_live_YOUR_STRIPE_SECRET_KEY_HERE
+STRIPE_WEBHOOK_SECRET=whsec_YOUR_WEBHOOK_SECRET_HERE
+
+# === SICUREZZA JWT ===
+JWT_SECRET=vincanto-production-jwt-super-secure-secret-2025
+
+# === EMAIL PROVIDER REALE ===
+# ⚠️ Configurare provider email reale
+EMAIL_PROVIDER=smtp
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=admin@vincantomaori.it
+SMTP_PASS=your-gmail-app-password
+
+# === GOOGLE CALENDAR ===
+# ⚠️ Credenziali Google Cloud Console
+GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+GOOGLE_REDIRECT_URI=https://vincanto-vetrina.vercel.app/auth/google/callback
+
+# === CALENDAR SYNC REALI ===
+# ⚠️ URL iCal reali delle piattaforme
+BOOKING_COM_ICAL_URL=https://calendar.booking.com/your-property-ical
+AIRBNB_ICAL_URL=https://calendar.airbnb.com/your-property-ical
+VRBO_ICAL_URL=https://calendar.vrbo.com/your-property-ical
+
+# === PAYPAL PRODUCTION ===
+# ⚠️ Credenziali PayPal Live
+PAYPAL_CLIENT_ID=your-paypal-live-client-id
+PAYPAL_CLIENT_SECRET=your-paypal-live-client-secret
+PAYPAL_MODE=live
+
+# === BONIFICO BANCARIO REALE ===
+# ⚠️ Dati bancari reali
+BANK_NAME=Banca Intesa Sanpaolo
+BANK_IBAN=IT00X0000000000000000000000
+BANK_BIC=BCITITMM
+BANK_BENEFICIARY=Vincanto Maori S.r.l.
+
+# === URL E CORS ===
+BASE_URL=https://vincanto-vetrina.vercel.app
+FRONTEND_URL=https://vincanto-vetrina.vercel.app
+CORS_ORIGIN=https://vincanto-vetrina.vercel.app
+
+# === ADMIN CREDENTIALS ===
+# ⚠️ Password admin hashata con bcrypt
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD_HASH=$2b$10$your.bcrypt.hashed.admin.password.here
+
+# === NOTIFICHE ===
+# ⚠️ Per notifiche Telegram (opzionale)
+TELEGRAM_BOT_TOKEN=your-telegram-bot-token
+TELEGRAM_CHAT_ID=your-telegram-chat-id
+
+# === RATE LIMITING ===
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100

@@ -92,7 +92,7 @@ class AdminApiService {
 
   async updateBooking(id: string, updates: any) {
     try {
-      console.log('🔄 Aggiornamento prenotazione simulato per ID:', id);
+      console.log('🔄 Aggiornamento prenotazione simulato per ID:', id, 'Dati:', updates);
       // TODO: Implementare quando avremo l'endpoint
       return { success: true, message: 'Prenotazione aggiornata (simulato)' };
     } catch (error) {
@@ -215,6 +215,7 @@ class AdminApiService {
   // Analytics
   async getAnalytics(period: string = '30d') {
     try {
+      console.log('🔍 Caricamento analytics per periodo:', period);
       const data = await this.request('analytics');
       return data.analytics || [];
     } catch (error) {
