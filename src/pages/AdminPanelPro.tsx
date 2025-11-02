@@ -61,17 +61,18 @@ const AdminPanelPro: React.FC = () => {
 
   // Stati per gestione prezzi AGGIORNATI secondo specifiche
   const [pricingConfig, setPricingConfig] = useState({
-    basePrice: 100,           // Prezzo base per 2 persone
+    basePrice: 75,            // €75 per persona per notte
     cleaningFee: 50,
     weekendSurcharge: 20,
     monthlyDiscount: 15,
     weeklyDiscount: 10,
+    parkingFee: 15,          // 🅿️ AGGIUNTO: €15 parcheggio per notte
     minStay: 2,
     maxStay: 14,
     advanceBookingDiscount: 0,
     lastMinuteDiscount: 0,
     // Nuovi campi per gestione bambini e tasse
-    additionalGuestPrice: 25,  // Prezzo per persona aggiuntiva oltre le 2 base
+    additionalGuestPrice: 75,  // €75 per persona aggiuntiva (stesso prezzo per persona)
     touristTaxAdult: 3,       // Tassa di soggiorno per adulti (€/notte)
     touristTaxChild: 0        // Tassa di soggiorno per bambini 12+ (€/notte)
   });
@@ -191,16 +192,17 @@ const AdminPanelPro: React.FC = () => {
       if (result.success && result.config) {
         const config = result.config;
         setPricingConfig({
-          basePrice: config.basePrice || 85,
+          basePrice: config.basePrice || 75,
           cleaningFee: config.cleaningFee || 50,
           weekendSurcharge: config.weekendSurcharge || 20,
           monthlyDiscount: config.monthlyDiscount || 15,
           weeklyDiscount: config.weeklyDiscount || 10,
+          parkingFee: config.parkingFee || 15, // 🅿️ AGGIUNTO
           minStay: config.minStay || 2,
           maxStay: config.maxStay || 14,
           advanceBookingDiscount: config.advanceBookingDiscount || 0,
           lastMinuteDiscount: config.lastMinuteDiscount || 0,
-          additionalGuestPrice: config.additionalGuestPrice || 25,
+          additionalGuestPrice: config.additionalGuestPrice || 75,
           touristTaxAdult: config.touristTaxAdult || 3,
           touristTaxChild: config.touristTaxChild || 0
         });
@@ -1454,6 +1456,26 @@ const AdminPanelPro: React.FC = () => {
                     
                     <div className="pricing-note">
                       💡 Sconti applicati automaticamente per soggiorni lunghi
+                    </div>
+                  </div>
+                </div>
+
+                <div className="admin-pricing-card">
+                  <h4>🅿️ Parcheggio</h4>
+                  <div className="pricing-controls">
+                    <label htmlFor="parkingFee">Costo Parcheggio (€/notte):</label>
+                    <input 
+                      id="parkingFee"
+                      type="number" 
+                      value={pricingConfig.parkingFee}
+                      onChange={(e) => updatePricingField('parkingFee', Number(e.target.value))}
+                      className="admin-input-small" 
+                      min="0"
+                      max="50"
+                    />
+                    
+                    <div className="pricing-note">
+                      🅿️ Costo per posto auto privato per notte
                     </div>
                   </div>
                 </div>

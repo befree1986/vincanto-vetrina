@@ -63,15 +63,18 @@ export default async function handler(req, res) {
     }
 
     // 🔥 CARICA PREZZI DAL DATABASE ADMIN IN TEMPO REALE
-    let basePrice = 80.00;           // €80 per notte per adulto
-    let additionalGuestPrice = 20.00; // €20 per ospite aggiuntivo per notte  
+    let basePrice = 75.00;           // €75 per persona per notte (aggiornato)
+    let additionalGuestPrice = 75.00; // €75 per ospite aggiuntivo per notte (stesso prezzo per persona)
     let cleaningFee = 50.00;         // €50 pulizia finale
-    let parkingFeePerNight = 10.00;  // €10 parcheggio per notte
+    let parkingFeePerNight = 15.00;  // €15 parcheggio per notte (aggiornato)
     let touristTaxPerPersonPerNight = 2.00; // €2 tassa soggiorno per persona per notte
 
     try {
       const pool = new Pool({
-        connectionString: process.env.POSTGRES_URL
+        connectionString: process.env.DATABASE_URL,
+        ssl: {
+          rejectUnauthorized: false
+        }
       });
       client = await pool.connect();
       
@@ -88,12 +91,12 @@ export default async function handler(req, res) {
           settings[row.setting_key] = row.setting_value;
         });
         
-        // Aggiorna prezzi con valori dal database admin
+        // 🔥 Aggiorna TUTTI i prezzi con valori dal database admin
         basePrice = parseFloat(settings.base_price) || basePrice;
         cleaningFee = parseFloat(settings.cleaning_fee) || cleaningFee;
-        // additionalGuestPrice e altri parametri possono essere aggiunti al pannello admin in futuro
+        parkingFeePerNight = parseFloat(settings.parking_fee) || parkingFeePerNight; // 🅿️ CORREZIONE PARCHEGGIO!
         
-        console.log('✅ Prezzi aggiornati dal database admin:', { basePrice, cleaningFee });
+        console.log('✅ Prezzi aggiornati dal database admin:', { basePrice, cleaningFee, parkingFeePerNight });
       } else {
         console.log('⚠️ Nessuna configurazione prezzi nel database, uso valori predefiniti');
       }
@@ -103,20 +106,20 @@ export default async function handler(req, res) {
     }
     const depositPercentage = 0.30;    // 30% acconto
 
-    // Calcolo totale
-    const baseCost = nights * basePrice; // Prezzo base per primo adulto
-    const additionalGuestsCost = Math.max(0, guests - 1) * nights * additionalGuestPrice;
+    // Calcolo totale - €75 PER PERSONA PER NOTTE
+    const baseCost = nights * guests * basePrice; // €75 per OGNI persona per notte
+    const additionalGuestsCost = 0; // Non serve più calcolo separato, tutto incluso in baseCost
     const parkingCost = includeParking ? nights * parkingFeePerNight : 0;
     const touristTax = guests * nights * touristTaxPerPersonPerNight;
     
-    const subtotal = baseCost + additionalGuestsCost + cleaningFee + parkingCost;
+    const subtotal = baseCost + cleaningFee + parkingCost;
     const totalAmount = subtotal + touristTax;
     const depositAmount = Math.round(totalAmount * depositPercentage * 100) / 100;
 
     const costs = {
       nights,
       guests,
-      basePrice: baseCost + additionalGuestsCost,
+      basePrice: baseCost, // Solo baseCost perché additionalGuestsCost è 0
       parkingCost,
       cleaningFee,
       touristTax,
@@ -126,8 +129,8 @@ export default async function handler(req, res) {
       depositPercentage,
       currency: 'EUR',
       breakdown: {
-        pricePerNight: basePrice,
-        additionalGuestPricePerNight: additionalGuestPrice,
+        pricePerPersonPerNight: basePrice, // €75 per persona per notte
+        totalPersonsNights: guests * nights, // Totale persone-notte
         parkingPerNight: parkingFeePerNight,
         touristTaxPerPersonPerNight: touristTaxPerPersonPerNight,
         cleaningFeeTotal: cleaningFee

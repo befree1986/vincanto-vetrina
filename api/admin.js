@@ -210,7 +210,7 @@ export default async function handler(req, res) {
             } = req.body;
             
             const updates = [
-              { key: 'base_price', value: (basePrice || 85).toString() },
+              { key: 'base_price', value: (basePrice || 75).toString() },
               { key: 'cleaning_fee', value: (cleaningFee || 50).toString() },
               { key: 'weekend_surcharge', value: (weekendSurcharge || 20).toString() },
               { key: 'monthly_discount', value: (monthlyDiscount || 15).toString() },
@@ -304,7 +304,7 @@ export default async function handler(req, res) {
           return res.status(200).json({
             success: true,
             config: {
-              basePrice: parseFloat(settings.base_price) || 85.00,
+              basePrice: parseFloat(settings.base_price) || 75.00,
               cleaningFee: parseFloat(settings.cleaning_fee) || 50.00,
               weekendSurcharge: parseFloat(settings.weekend_surcharge) || 20.00,
               monthlyDiscount: parseFloat(settings.monthly_discount) || 15.00,
@@ -895,7 +895,7 @@ export default async function handler(req, res) {
             const settings = [
               { id: 1, key: 'min_nights', value: '2', label: 'Notti Minime', category: 'booking' },
               { id: 2, key: 'max_nights', value: '30', label: 'Notti Massime', category: 'booking' },
-              { id: 3, key: 'base_price', value: '85', label: 'Prezzo Base', category: 'pricing' },
+              { id: 3, key: 'base_price', value: '75', label: 'Prezzo Base (€/persona/notte)', category: 'pricing' },
               { id: 4, key: 'cleaning_fee', value: '40', label: 'Costo Pulizia', category: 'pricing' },
               { id: 5, key: 'parking_fee', value: '15', label: 'Costo Parcheggio', category: 'pricing' },
               { id: 6, key: 'deposit_percent', value: '30', label: 'Deposito %', category: 'pricing' },
