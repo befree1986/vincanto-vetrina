@@ -7,11 +7,13 @@ const pool = new Pool({
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
-// Email transporter
+// Email transporter (Register.it SMTP)
 const transporter = nodemailer.createTransporter({
-  service: 'gmail',
+  host: 'smtps.register.it',
+  port: 465,
+  secure: true, // SSL
   auth: {
-    user: process.env.EMAIL_USER,
+    user: process.env.EMAIL_USER, // info@vincantomaiori.it
     pass: process.env.EMAIL_PASS
   }
 });
@@ -62,7 +64,7 @@ const generateBookingConfirmationHTML = (bookingDetails) => {
         </div>
         <div class="footer">
           <p>📍 Via Nuova Chiunzi, 44 - 84010 Maiori (SA)<br>
-          📧 vincantomaiori@gmail.com | 🌐 www.vincantomaori.it</p>
+          📧 info@vincantomaiori.it | 🌐 www.vincantomaori.it</p>
         </div>
       </div>
     </body>
