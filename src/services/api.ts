@@ -231,8 +231,8 @@ export interface CalendarResponse {
  * Verifica disponibilità per date specifiche
  */
 export async function checkAvailability(data: AvailabilityCheck): Promise<AvailabilityResponse> {
-    const response = await api.get('/availability/check', {
-        params: data
+    const response = await api.get('/availability', {
+        params: { ...data, action: 'check' }
     });
     return response.data;
 }
@@ -241,11 +241,11 @@ export async function checkAvailability(data: AvailabilityCheck): Promise<Availa
  * Ottieni calendario con date occupate
  */
 export async function getCalendar(startDate?: string, endDate?: string): Promise<CalendarResponse> {
-    const params: any = {};
+    const params: any = { action: 'calendar' };
     if (startDate) params.start_date = startDate;
     if (endDate) params.end_date = endDate;
     
-    const response = await api.get('/availability/calendar', { params });
+    const response = await api.get('/availability', { params });
     return response.data;
 }
 
@@ -253,10 +253,10 @@ export async function getCalendar(startDate?: string, endDate?: string): Promise
  * Trova prossime date disponibili
  */
 export async function getNextAvailableDates(nights: number = 2, fromDate?: string) {
-    const params: any = { nights };
+    const params: any = { action: 'next-available', nights };
     if (fromDate) params.from_date = fromDate;
     
-    const response = await api.get('/availability/next-available', { params });
+    const response = await api.get('/availability', { params });
     return response.data;
 }
 
