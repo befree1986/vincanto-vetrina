@@ -75,6 +75,9 @@ module.exports = async (req, res) => {
     let parkingFeePerNight = 15.00;  // €15 parcheggio per notte (aggiornato)
     let touristTaxPerPersonPerNight = 2.00; // €2 tassa soggiorno per persona per notte
 
+    console.log('🎯 PARAMETRI RICEVUTI:', { checkIn, checkOut, guests: parseInt(guests), nights });
+    console.log('💰 PREZZI INIZIALI HARDCODED:', { basePrice, cleaningFee, parkingFeePerNight });
+
     try {
       // Usa la connessione pool già configurata
       
@@ -85,18 +88,29 @@ module.exports = async (req, res) => {
         WHERE category = 'pricing'
       `);
       
+      console.log('📊 RISULTATO DATABASE ROWS:', result.rows.length, result.rows);
+      
       if (result.rows.length > 0) {
         const settings = {};
         result.rows.forEach(row => {
           settings[row.setting_key] = row.setting_value;
         });
         
+        console.log('⚙️ SETTINGS ESTRATTE DAL DB:', settings);
+        
         // 🔥 Aggiorna TUTTI i prezzi con valori dal database admin
+        const oldBasePrice = basePrice;
         basePrice = parseFloat(settings.base_price) || basePrice;
         cleaningFee = parseFloat(settings.cleaning_fee) || cleaningFee;
         parkingFeePerNight = parseFloat(settings.parking_fee) || parkingFeePerNight; // 🅿️ CORREZIONE PARCHEGGIO!
         
-        console.log('✅ Prezzi aggiornati dal database admin:', { basePrice, cleaningFee, parkingFeePerNight });
+        console.log('✅ Prezzi AGGIORNATI:', { 
+          oldBasePrice, 
+          newBasePrice: basePrice, 
+          cleaningFee, 
+          parkingFeePerNight,
+          settings_base_price: settings.base_price
+        });
       } else {
         console.log('⚠️ Nessuna configurazione prezzi nel database, uso valori predefiniti');
       }
@@ -107,14 +121,27 @@ module.exports = async (req, res) => {
     const depositPercentage = 0.30;    // 30% acconto
 
     // Calcolo totale - €75 PER PERSONA PER NOTTE
-    const baseCost = nights * guests * basePrice; // €75 per OGNI persona per notte
+    const baseCost = nights * parseInt(guests) * basePrice; // €75 per OGNI persona per notte
     const additionalGuestsCost = 0; // Non serve più calcolo separato, tutto incluso in baseCost
     const parkingCost = includeParking ? nights * parkingFeePerNight : 0;
-    const touristTax = guests * nights * touristTaxPerPersonPerNight;
+    const touristTax = parseInt(guests) * nights * touristTaxPerPersonPerNight;
     
     const subtotal = baseCost + cleaningFee + parkingCost;
     const totalAmount = subtotal + touristTax;
     const depositAmount = Math.round(totalAmount * depositPercentage * 100) / 100;
+
+    console.log('🧮 CALCOLO DETTAGLIATO:', {
+      formula: `${nights} notti × ${guests} persone × €${basePrice} = €${baseCost}`,
+      nights,
+      guests: parseInt(guests),
+      basePrice,
+      baseCost,
+      cleaningFee,
+      parkingCost,
+      touristTax,
+      subtotal,
+      totalAmount
+    });
 
     const costs = {
       nights,
