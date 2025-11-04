@@ -271,7 +271,33 @@ export default async function handler(req, res) {
               }
             }
             
-            // 🔍 VERIFICA FINALE: Rileggi i dati dal database per conferma
+            // � SINCRONIZZAZIONE: Aggiorna anche i campi che usa l'API pricing/quote
+            console.log('🔄 SYNC: Sincronizzazione con API pricing/quote...');
+            const syncUpdates = [
+              { key: 'basePrice', value: (basePrice || 75).toString() },
+              { key: 'additionalGuestPrice', value: (req.body.additionalGuestPrice || basePrice || 75).toString() },
+              { key: 'cleaningFee', value: (cleaningFee || 50).toString() },
+              { key: 'parkingFeePerNight', value: (parkingFee || 15).toString() },
+              { key: 'touristTaxPerPersonPerNight', value: (req.body.touristTaxAdult || 2).toString() }
+            ];
+            
+            for (const syncUpdate of syncUpdates) {
+              try {
+                await client.query(`
+                  INSERT INTO admin_settings (setting_key, setting_value, setting_type, category, created_at, updated_at)
+                  VALUES ($1, $2, 'pricing', 'pricing', NOW(), NOW())
+                  ON CONFLICT (setting_key) 
+                  DO UPDATE SET 
+                    setting_value = $2, 
+                    updated_at = NOW()
+                `, [syncUpdate.key, syncUpdate.value]);
+                console.log(`🔄 SYNC: ${syncUpdate.key} = ${syncUpdate.value}`);
+              } catch (syncError) {
+                console.error(`❌ SYNC Error ${syncUpdate.key}:`, syncError);
+              }
+            }
+            
+            // �🔍 VERIFICA FINALE: Rileggi i dati dal database per conferma
             const verifyResult = await client.query(`
               SELECT setting_key, setting_value FROM admin_settings 
               WHERE category = 'pricing' 
