@@ -122,6 +122,16 @@
   grid-template-columns: 1fr 400px;
   gap: 40px;
   margin-bottom: 40px;
+  /* 🎯 DESKTOP: Aggiunto margine top per evitare sovrapposizione navbar */
+  margin-top: 60px;
+}
+
+/* 🎯 DESKTOP: Sidebar più spaziata dal contenuto principale */
+.booking-sidebar {
+  position: sticky;
+  top: 120px; /* ✅ Più in basso per evitare navbar */
+  align-self: flex-start;
+  z-index: 10;
 }
 
 .booking-step {
@@ -152,6 +162,22 @@
   font-size: 16px;
   color: #64748b;
   margin: 0;
+}
+
+/* 🎯 DESKTOP: Miglioramenti visibilità sezione date */
+.dates-section {
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  border-radius: 12px;
+  padding: 24px;
+  margin: 20px 0;
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.dates-section:hover {
+  border-color: #059669;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.15);
 }
 
 /* 👥 Sezione ospiti */
@@ -649,6 +675,18 @@
 }
 
 /* 📱 Responsive design */
+@media (max-width: 1024px) {
+  /* 📋 TABLET: Live view prezzi più in basso ma visibile */
+  .booking-content {
+    grid-template-columns: 1fr 320px;
+    gap: 20px;
+  }
+  
+  .booking-sidebar {
+    position: static;
+  }
+}
+
 @media (max-width: 768px) {
   .booking-system-enhanced {
     padding: 16px;
@@ -659,9 +697,16 @@
     gap: 24px;
   }
   
+  /* 🎯 MOBILE: Live view DOPO la selezione (order: 1) */
   .booking-sidebar {
     position: static;
-    order: -1;
+    order: 1; /* ✅ Spostato DOPO il form invece di prima */
+    margin-top: 20px;
+  }
+  
+  /* Form principale viene prima */
+  .booking-step {
+    order: 0;
   }
   
   .progress-steps {
