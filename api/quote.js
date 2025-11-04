@@ -1,7 +1,13 @@
 // API Quote Semplificata - Compatibile con frontend esistente
-import { Pool } from 'pg';
+const { Pool } = require('pg');
 
-export default async function handler(req, res) {
+// Database connection
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
+
+module.exports = async (req, res) => {
   // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -70,16 +76,10 @@ export default async function handler(req, res) {
     let touristTaxPerPersonPerNight = 2.00; // €2 tassa soggiorno per persona per notte
 
     try {
-      const pool = new Pool({
-        connectionString: process.env.DATABASE_URL,
-        ssl: {
-          rejectUnauthorized: false
-        }
-      });
-      client = await pool.connect();
+      // Usa la connessione pool già configurata
       
       console.log('🔄 Caricamento prezzi dal database admin per quote...');
-      const result = await client.query(`
+      const result = await pool.query(`
         SELECT setting_key, setting_value
         FROM admin_settings 
         WHERE category = 'pricing'
