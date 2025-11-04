@@ -146,12 +146,35 @@ export async function getBookingQuote(data: BookingQuoteRequest): Promise<Bookin
         const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
         const guests = data.guests;
         
-        // ⭐ PREZZI CORRETTI: €75 per persona per notte
-        const basePrice = nights * guests * 75; // €75 per PERSONA per notte
-        const additionalGuestPrice = 0; // Non serve più calcolo separato
-        const parkingCost = data.includeParking ? nights * 15 : 0; // €15 per notte parcheggio
-        const cleaningFee = 50;
-        const touristTax = guests * nights * 2;
+        // 🔄 PREZZI DINAMICI: Carica dal database admin tramite API quote
+        let dynamicPricing = null;
+        try {
+            // Usa l'API quote che legge i prezzi dal database admin
+            const quoteResponse = await fetch(`/api/quote?checkIn=${formatDateForApi(checkIn)}&checkOut=${formatDateForApi(checkOut)}&guests=${guests}&includeParking=${data.includeParking}`);
+            if (quoteResponse.ok) {
+                const quoteData = await quoteResponse.json();
+                if (quoteData.success && quoteData.pricingConfig) {
+                    dynamicPricing = quoteData.pricingConfig;
+                    console.log('✅ DYNAMIC PRICING: Prezzi caricati dal database admin:', dynamicPricing);
+                }
+            }
+        } catch (error) {
+            console.warn('⚠️ DYNAMIC PRICING: Fallback ai prezzi statici, errore:', error);
+        }
+
+        // Usa prezzi dinamici o fallback statici
+        const pricePerPerson = dynamicPricing?.basePrice || 75;
+        const parkingPerNight = dynamicPricing?.parkingFee || 15;
+        const cleaningPrice = dynamicPricing?.cleaningFee || 50;
+        const touristTaxRate = dynamicPricing?.touristTax || 2;
+        
+        console.log('💰 PRICING USED:', { pricePerPerson, parkingPerNight, cleaningPrice, touristTaxRate, isDynamic: !!dynamicPricing });
+        
+        const basePrice = nights * guests * pricePerPerson; // Per PERSONA per notte
+        const additionalGuestPrice = 0; // Non serve più calcolo separato  
+        const parkingCost = data.includeParking ? nights * parkingPerNight : 0; // Parcheggio dinamico
+        const cleaningFee = cleaningPrice;
+        const touristTax = guests * nights * touristTaxRate;
         const subtotal = basePrice + parkingCost + cleaningFee;
         const totalAmount = subtotal + touristTax;
         const depositAmount = totalAmount * 0.30;

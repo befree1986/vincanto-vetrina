@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useBooking } from '../hooks/useBooking';
+import { useDynamicPricing } from '../hooks/useDynamicPricing';
 import BookingCalendar from './BookingCalendar';
+import ExtraServices from './ExtraServices';
 import StripePayment from './StripePayment';
 import PayPalPayment from './PayPalPayment';
 import './BookingSystem.css';
@@ -10,12 +12,23 @@ import { getSafeTranslation } from '../i18n';
 interface PriceBreakdownProps {
     costs: any;
     isDeposit: boolean;
+    extraServicesCost?: number;
+    selectedExtraServices?: any[];
 }
 
-const PriceBreakdown: React.FC<PriceBreakdownProps> = ({ costs, isDeposit }) => {
+const PriceBreakdown: React.FC<PriceBreakdownProps> = ({ 
+    costs, 
+    isDeposit, 
+    extraServicesCost = 0, 
+    selectedExtraServices = [] 
+}) => {
     const { t } = useTranslation();
     
     if (!costs) return null;
+
+    // Calcola totale inclusi servizi extra
+    const totalWithExtras = costs.totalAmount + extraServicesCost;
+    const depositWithExtras = isDeposit ? totalWithExtras * 0.30 : totalWithExtras;
 
     return (
         <div className="price-breakdown">
@@ -42,18 +55,34 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({ costs, isDeposit }) => 
                     <span>{getSafeTranslation(t, 'booking.touristTax', 'Tassa di soggiorno')}</span>
                     <span>€{costs.touristTax.toFixed(2)}</span>
                 </div>
+
+                {/* 🛎️ SERVIZI EXTRA */}
+                {selectedExtraServices.length > 0 && (
+                    <>
+                        <div className="breakdown-separator"></div>
+                        <div className="breakdown-section-title">
+                            <span>🛎️ Servizi Extra</span>
+                        </div>
+                        {selectedExtraServices.map(service => (
+                            <div key={service.id} className="breakdown-item extra-service">
+                                <span>{service.name}</span>
+                                <span>€{service.price.toFixed(2)}</span>
+                            </div>
+                        ))}
+                    </>
+                )}
                 
                 <div className="breakdown-separator"></div>
                 
                 <div className="breakdown-item total">
                     <span>{getSafeTranslation(t, 'booking.total', 'Totale')}</span>
-                    <span>€{costs.totalAmount.toFixed(2)}</span>
+                    <span>€{totalWithExtras.toFixed(2)}</span>
                 </div>
                 
                 {isDeposit && (
                     <div className="breakdown-item deposit">
                         <span>{getSafeTranslation(t, 'booking.depositRequired', 'Acconto richiesto (30%)')}</span>
-                        <span className="highlight">€{costs.depositAmount.toFixed(2)}</span>
+                        <span className="highlight">€{depositWithExtras.toFixed(2)}</span>
                     </div>
                 )}
             </div>
@@ -62,6 +91,11 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({ costs, isDeposit }) => 
                 <p className="pricing-details">
                     {getSafeTranslation(t, 'booking.pricingNote', 'Prezzi finali tutto incluso. Pulizia e tassa di soggiorno incluse.')}
                 </p>
+                {selectedExtraServices.length > 0 && (
+                    <p className="extra-services-note">
+                        ✅ {selectedExtraServices.length} servizio{selectedExtraServices.length > 1 ? 'i' : ''} extra selezionato{selectedExtraServices.length > 1 ? 'i' : ''}
+                    </p>
+                )}
             </div>
         </div>
     );
@@ -86,6 +120,13 @@ const BookingSystem: React.FC = () => {
         validateForm,
         resetForm
     } = useBooking();
+    
+    // 🎯 PREZZI DINAMICI dal pannello admin
+    const dynamicPricing = useDynamicPricing();
+    
+    // 🛎️ SERVIZI EXTRA
+    const [extraServicesCost, setExtraServicesCost] = useState(0);
+    const [selectedExtraServices, setSelectedExtraServices] = useState<any[]>([]);
 
     const handleDateSelection = async (checkIn: Date | null, checkOut: Date | null) => {
         if (!checkIn || !checkOut) return;
@@ -191,7 +232,12 @@ const BookingSystem: React.FC = () => {
             
             {/* Preventivo calcolato */}
             {quote && !isLoadingQuote && (
-                <PriceBreakdown costs={quote} isDeposit={formData.payment_type === 'deposit'} />
+                <PriceBreakdown 
+                    costs={quote} 
+                    isDeposit={formData.payment_type === 'deposit'}
+                    extraServicesCost={extraServicesCost}
+                    selectedExtraServices={selectedExtraServices}
+                />
             )}
             
             <div className="guests-selection">
@@ -302,7 +348,9 @@ const BookingSystem: React.FC = () => {
                             />
                             <label htmlFor="parking-private">
                                 Parcheggio privato riservato e custodito
-                                <span className="service-price highlight">+€20/giorno</span>
+                                <span className="service-price highlight">
+                                    +€{dynamicPricing.loading ? '...' : dynamicPricing.parkingFee}/giorno
+                                </span>
                                 <small className="service-note">Prenotazione garantita</small>
                             </label>
                         </div>
@@ -318,6 +366,15 @@ const BookingSystem: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {/* 🛎️ SERVIZI EXTRA DINAMICI */}
+            <ExtraServices 
+                childrenAges={formData.children_ages}
+                onServicesChange={(services, totalCost) => {
+                    setSelectedExtraServices(services);
+                    setExtraServicesCost(totalCost);
+                }}
+            />
 
             <div className="guest-form">
                 <h3>Informazioni Ospite</h3>

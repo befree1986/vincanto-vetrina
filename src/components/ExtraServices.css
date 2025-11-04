@@ -1,0 +1,255 @@
+/* Stili per componente ExtraServices */
+.extra-services {
+  width: 100%;
+  padding: 1.5rem;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin: 1rem 0;
+}
+
+.extra-services-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.extra-services-header h3 {
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+  font-size: 1.5rem;
+}
+
+.extra-services-header p {
+  color: #666;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+.total-cost {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  display: inline-block;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+/* Service Categories */
+.service-category {
+  margin-bottom: 2rem;
+}
+
+.service-category h4 {
+  color: #2c3e50;
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  padding-left: 0.5rem;
+  border-left: 4px solid #667eea;
+}
+
+/* Services Grid */
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Service Cards */
+.service-card {
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+}
+
+.service-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  border-color: #667eea;
+}
+
+.service-card.selected {
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+  border-color: #667eea;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
+}
+
+.service-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.service-header h5 {
+  color: #2c3e50;
+  font-size: 1.1rem;
+  margin: 0;
+  flex: 1;
+  line-height: 1.3;
+}
+
+.service-price {
+  background: #667eea;
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  margin-left: 1rem;
+}
+
+.service-card.selected .service-price {
+  background: #2c3e50;
+}
+
+.service-description {
+  color: #666;
+  font-size: 0.9rem;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.4;
+  flex-grow: 1;
+}
+
+.service-age {
+  color: #888;
+  font-size: 0.8rem;
+  font-style: italic;
+  margin-bottom: 0.5rem;
+}
+
+.service-checkbox {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
+
+.service-checkbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: #667eea;
+  cursor: pointer;
+}
+
+/* Loading States */
+.extra-services.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-spinner span {
+  color: #666;
+  font-size: 1rem;
+}
+
+/* Error States */
+.extra-services.error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 150px;
+}
+
+.error-message {
+  background: #fee;
+  color: #c33;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #fcc;
+  text-align: center;
+  font-size: 1rem;
+}
+
+/* Empty State */
+.no-services {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 2rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .extra-services {
+    padding: 1rem;
+  }
+  
+  .services-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .service-card {
+    padding: 1rem;
+    min-height: auto;
+  }
+  
+  .service-header {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+  
+  .service-price {
+    margin-left: 0;
+    text-align: center;
+  }
+  
+  .extra-services-header h3 {
+    font-size: 1.3rem;
+  }
+  
+  .total-cost {
+    font-size: 1rem;
+    padding: 0.6rem 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .extra-services {
+    margin: 0.5rem 0;
+    padding: 0.75rem;
+  }
+  
+  .service-category h4 {
+    font-size: 1.1rem;
+  }
+  
+  .service-header h5 {
+    font-size: 1rem;
+  }
+}
