@@ -939,6 +939,112 @@ export default async function handler(req, res) {
         }
         break;
 
+      case 'pricing':
+        console.log('💰 PRICING API - Metodo ricevuto:', req.method);
+        
+        if (req.method === 'GET') {
+          // Carica i prezzi attuali dal database
+          try {
+            const result = await client.query(`
+              SELECT setting_key, setting_value FROM admin_settings 
+              WHERE category = 'pricing' 
+              ORDER BY setting_key
+            `);
+            
+            const pricing = {};
+            result.rows.forEach(row => {
+              pricing[row.setting_key] = parseFloat(row.setting_value) || 0;
+            });
+            
+            // Mappa i nomi dei campi dal database ai nomi usati dal frontend
+            const response = {
+              basePrice: pricing.base_price || pricing.basePrice || 75,
+              additionalGuestPrice: pricing.additional_guest_price || pricing.additionalGuestPrice || 75,
+              cleaningFee: pricing.cleaning_fee || pricing.cleaningFee || 50,
+              parkingFeePerNight: pricing.parking_fee_per_night || pricing.parkingFeePerNight || 15,
+              touristTaxPerPersonPerNight: pricing.tourist_tax_per_person_per_night || pricing.touristTaxPerPersonPerNight || 2
+            };
+            
+            console.log('📊 Prezzi caricati dal database:', response);
+            return res.status(200).json({ success: true, data: response });
+            
+          } catch (error) {
+            console.error('❌ Errore caricamento prezzi:', error);
+            // Fallback con prezzi di default
+            return res.status(200).json({
+              success: true,
+              data: {
+                basePrice: 75,
+                additionalGuestPrice: 75,
+                cleaningFee: 50,
+                parkingFeePerNight: 15,
+                touristTaxPerPersonPerNight: 2
+              }
+            });
+          }
+          
+        } else if (req.method === 'POST') {
+          // Salva i nuovi prezzi
+          try {
+            console.log('💾 SAVE PRICING - Body ricevuto:', JSON.stringify(req.body, null, 2));
+            
+            const { 
+              basePrice, 
+              additionalGuestPrice, 
+              cleaningFee, 
+              parkingFeePerNight, 
+              touristTaxPerPersonPerNight 
+            } = req.body;
+            
+            // Lista degli aggiornamenti da fare
+            const updates = [
+              { key: 'basePrice', value: (parseFloat(basePrice) || 75).toString() },
+              { key: 'additionalGuestPrice', value: (parseFloat(additionalGuestPrice) || 75).toString() },
+              { key: 'cleaningFee', value: (parseFloat(cleaningFee) || 50).toString() },
+              { key: 'parkingFeePerNight', value: (parseFloat(parkingFeePerNight) || 15).toString() },
+              { key: 'touristTaxPerPersonPerNight', value: (parseFloat(touristTaxPerPersonPerNight) || 2).toString() }
+            ];
+            
+            console.log('📝 Updates da salvare:', updates);
+            
+            // Salva ogni prezzo nel database
+            for (const update of updates) {
+              await client.query(`
+                INSERT INTO admin_settings (setting_key, setting_value, setting_type, category, created_at, updated_at)
+                VALUES ($1, $2, 'pricing', 'pricing', NOW(), NOW())
+                ON CONFLICT (setting_key) 
+                DO UPDATE SET 
+                  setting_value = $2, 
+                  updated_at = NOW()
+              `, [update.key, update.value]);
+              console.log(`✅ Salvato ${update.key} = ${update.value}`);
+            }
+            
+            // Verifica finale
+            const verifyResult = await client.query(`
+              SELECT setting_key, setting_value FROM admin_settings 
+              WHERE category = 'pricing' 
+              ORDER BY setting_key
+            `);
+            console.log('🎯 VERIFICA - Prezzi salvati nel database:', verifyResult.rows);
+            
+            return res.status(200).json({
+              success: true,
+              message: 'Prezzi aggiornati con successo',
+              updated: updates.length,
+              data: verifyResult.rows
+            });
+            
+          } catch (error) {
+            console.error('❌ Errore salvataggio prezzi:', error);
+            return res.status(500).json({
+              success: false,
+              error: 'Errore durante il salvataggio dei prezzi: ' + error.message
+            });
+          }
+        }
+        break;
+
       default:
         return res.status(400).json({
           success: false,
