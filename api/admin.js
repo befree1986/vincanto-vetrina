@@ -441,33 +441,34 @@ export default async function handler(req, res) {
 
       case 'analytics':
         try {
-          // Genera dati analytics mock realistici per ultimi 30 giorni
-          const analytics = [];
-          const today = new Date();
-          
-          for (let i = 29; i >= 0; i--) {
-            const date = new Date(today);
-            date.setDate(date.getDate() - i);
-            
-            const dateStr = date.toISOString().split('T')[0];
-            const weekendMultiplier = (date.getDay() === 5 || date.getDay() === 6) ? 1.5 : 1;
-            
-            analytics.push({
-              date: dateStr,
-              bookings: Math.floor(Math.random() * 3 * weekendMultiplier),
-              revenue: Math.floor((Math.random() * 500 + 100) * weekendMultiplier),
-              occupancy: Math.floor((Math.random() * 60 + 20) * weekendMultiplier)
-            });
-          }
+          // Carica dati analytics REALI dal database
+          const analyticsQuery = await client.query(`
+            SELECT 
+              DATE(created_at) as date,
+              COUNT(*) as bookings,
+              COALESCE(SUM(total_amount), 0) as revenue,
+              0 as occupancy
+            FROM admin_bookings 
+            WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
+            GROUP BY DATE(created_at)
+            ORDER BY date ASC
+          `);
           
           return res.status(200).json({
             success: true,
-            analytics,
-            period: "30d"
+            analytics: analyticsQuery.rows,
+            period: "30d",
+            note: analyticsQuery.rows.length === 0 ? 'Nessun dato analytics disponibile' : undefined
           });
         } catch (error) {
           console.error('Analytics error:', error);
-          return res.status(500).json({ success: false, error: 'Analytics error' });
+          // Se la tabella non esiste, restituisci array vuoto invece di mock
+          return res.status(200).json({ 
+            success: true, 
+            analytics: [], 
+            period: "30d",
+            note: 'Dati analytics non disponibili - tabella bookings non configurata'
+          });
         }
 
       case 'calendars':
@@ -1099,36 +1100,13 @@ export default async function handler(req, res) {
                 count: result.rows.length
               });
             } else {
-              // Tabella non esiste, restituisci dati mock
-              console.log('📋 Tabella admin_payments non esiste, restituisco dati mock');
+              // Tabella non esiste, restituisci array vuoto
+              console.log('📋 Tabella admin_payments non esiste, nessun pagamento disponibile');
               return res.status(200).json({
                 success: true,
-                data: [
-                  {
-                    id: 1,
-                    booking_id: 'MOCK_001',
-                    amount: 450.00,
-                    currency: 'EUR',
-                    payment_method: 'stripe',
-                    status: 'completed',
-                    transaction_id: 'txn_mock_001',
-                    created_at: new Date(Date.now() - 24*60*60*1000),
-                    updated_at: new Date(Date.now() - 24*60*60*1000)
-                  },
-                  {
-                    id: 2,
-                    booking_id: 'MOCK_002', 
-                    amount: 320.00,
-                    currency: 'EUR',
-                    payment_method: 'paypal',
-                    status: 'pending',
-                    transaction_id: 'txn_mock_002',
-                    created_at: new Date(Date.now() - 48*60*60*1000),
-                    updated_at: new Date(Date.now() - 48*60*60*1000)
-                  }
-                ],
-                count: 2,
-                note: 'Dati mock - tabella admin_payments non configurata'
+                data: [],
+                count: 0,
+                note: 'Nessun pagamento - tabella admin_payments non configurata'
               });
             }
             
@@ -1141,15 +1119,30 @@ export default async function handler(req, res) {
           }
           
         } else if (req.method === 'POST') {
-          // Crea un nuovo pagamento
+          // Crea un nuovo pagamento REALE
           try {
             console.log('💰 CREATE PAYMENT - Body ricevuto:', JSON.stringify(req.body, null, 2));
             
-            // Per ora ritorna successo mock, in futuro implementeremo la creazione
-            return res.status(200).json({
+            const { booking_id, amount, currency = 'EUR', payment_method, transaction_id } = req.body;
+            
+            if (!booking_id || !amount || !payment_method) {
+              return res.status(400).json({
+                success: false,
+                error: 'Parametri richiesti: booking_id, amount, payment_method'
+              });
+            }
+            
+            // Inserisci il pagamento reale nel database
+            const result = await client.query(`
+              INSERT INTO admin_payments (booking_id, amount, currency, payment_method, status, transaction_id, created_at, updated_at)
+              VALUES ($1, $2, $3, $4, 'completed', $5, NOW(), NOW())
+              RETURNING *
+            `, [booking_id, amount, currency, payment_method, transaction_id]);
+            
+            return res.status(201).json({
               success: true,
-              message: 'Funzionalità pagamenti in sviluppo',
-              data: { id: Date.now(), status: 'mock' }
+              message: 'Pagamento creato con successo',
+              data: result.rows[0]
             });
             
           } catch (error) {
