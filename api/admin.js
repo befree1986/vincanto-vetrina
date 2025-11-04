@@ -194,7 +194,10 @@ export default async function handler(req, res) {
         
         if (req.method === 'PUT') {
           try {
-            console.log('📝 Aggiornamento configurazione prezzi ricevuta:', req.body);
+            console.log('� PRICING UPDATE - Inizio processo aggiornamento');
+            console.log('📝 Headers ricevuti:', req.headers);
+            console.log('📝 Query params:', req.query);
+            console.log('📝 Body completo ricevuto:', JSON.stringify(req.body, null, 2));
             
             const { 
               basePrice, 
@@ -268,11 +271,20 @@ export default async function handler(req, res) {
               }
             }
             
+            // 🔍 VERIFICA FINALE: Rileggi i dati dal database per conferma
+            const verifyResult = await client.query(`
+              SELECT setting_key, setting_value FROM admin_settings 
+              WHERE category = 'pricing' 
+              ORDER BY setting_key
+            `);
+            console.log('🎯 VERIFICA POST-UPDATE - Dati salvati nel database:', verifyResult.rows);
+            
             console.log('✅ Configurazione prezzi aggiornata con successo');
             
             return res.status(200).json({
               success: true,
-              message: 'Configurazione prezzi aggiornata con successo'
+              message: 'Configurazione prezzi aggiornata con successo',
+              saved_data: verifyResult.rows  // 🔍 Includiamo i dati salvati nella risposta
             });
           } catch (dbError) {
             console.error('❌ Database error in pricing update:', dbError);
