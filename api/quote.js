@@ -120,16 +120,22 @@ export default async function handler(req, res) {
         
         // 🔥 Aggiorna TUTTI i prezzi con valori dal database admin
         const oldBasePrice = basePrice;
-        basePrice = parseFloat(settings.base_price) || basePrice;
-        cleaningFee = parseFloat(settings.cleaning_fee) || cleaningFee;
-        parkingFeePerNight = parseFloat(settings.parking_fee) || parkingFeePerNight; // 🅿️ CORREZIONE PARCHEGGIO!
         
-        console.log('✅ Prezzi AGGIORNATI:', { 
+        // Mappa sia camelCase che snake_case (admin salva entrambi)
+        basePrice = parseFloat(settings.basePrice || settings.base_price) || basePrice;
+        cleaningFee = parseFloat(settings.cleaningFee || settings.cleaning_fee) || cleaningFee;
+        parkingFeePerNight = parseFloat(settings.parkingFee || settings.parking_fee || settings.parkingFeePerNight || settings.parking_fee_per_night) || parkingFeePerNight;
+        additionalGuestPrice = parseFloat(settings.additionalGuestPrice || settings.additional_guest_price) || additionalGuestPrice;
+        touristTaxPerPersonPerNight = parseFloat(settings.touristTaxPerPersonPerNight || settings.touristTaxAdult) || touristTaxPerPersonPerNight;
+        
+        console.log('✅ Prezzi AGGIORNATI da database admin:', { 
           oldBasePrice, 
           newBasePrice: basePrice, 
           cleaningFee, 
           parkingFeePerNight,
-          settings_base_price: settings.base_price
+          additionalGuestPrice,
+          touristTaxPerPersonPerNight,
+          'database_fields_found': Object.keys(settings)
         });
       } else {
         console.log('⚠️ Nessuna configurazione prezzi nel database, uso valori predefiniti');
@@ -163,10 +169,12 @@ export default async function handler(req, res) {
       totalAmount
     });
 
-    const costs = {
+    // 🎯 RISPOSTA COMPATIBILE CON FRONTEND DINAMICO
+    const responseData = {
+      success: true,
       nights,
       guests,
-      basePrice: baseCost, // Solo baseCost perché additionalGuestsCost è 0
+      baseCost, 
       parkingCost,
       cleaningFee,
       touristTax,
@@ -175,6 +183,19 @@ export default async function handler(req, res) {
       depositAmount,
       depositPercentage,
       currency: 'EUR',
+      // ⭐ Aggiunta configurazione prezzi per frontend dinamico
+      pricingConfig: {
+        basePrice: basePrice, // Prezzo per persona per notte dal database
+        parkingFee: parkingFeePerNight, // Prezzo parcheggio per notte dal database
+        cleaningFee: cleaningFee, // Pulizie dal database
+        additionalGuestPrice: additionalGuestPrice, // Prezzo ospiti aggiuntivi
+        touristTax: touristTaxPerPersonPerNight, // Tassa soggiorno dal database
+        minStay: 1, // Minimo soggiorno
+        maxStay: 14 // Massimo soggiorno
+      },
+      // Manteniamo anche la struttura originale per compatibilità
+      parkingPerNight: parkingFeePerNight,
+      touristTaxPerPersonPerNight: touristTaxPerPersonPerNight,
       breakdown: {
         pricePerPersonPerNight: basePrice, // €75 per persona per notte
         totalPersonsNights: guests * nights, // Totale persone-notte
@@ -184,7 +205,8 @@ export default async function handler(req, res) {
       }
     };
 
-    return res.status(200).json({ success: true, costs });
+    console.log('📤 RISPOSTA FINALE API QUOTE:', responseData);
+    return res.status(200).json(responseData);
 
   } catch (error) {
     console.error('Errore calcolo quote:', error);
