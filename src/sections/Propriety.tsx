@@ -6,6 +6,7 @@ import '../styles/Propriety.base.css';
 import '../styles/Propriety.desktop.css';
 import '../styles/Propriety.mobile.css';
 import LemonDivider from '../components/LemonDivider';
+import DynamicPricingSections from '../components/DynamicPricingSections';
 import { Helmet } from 'react-helmet';
 import useDynamicPricing from '../hooks/useDynamicPricing';
 
@@ -287,83 +288,8 @@ const Propriety: React.FC = () => {
           </div>
         </section>
 
-        {/* Servizi Inclusi */}
-        <section className="included-services">
-          <h2 className="section-title">{t('section.includedServices.title')}</h2>
-
-          <div className="service-group">
-            <h4 className="section-subtitle">{t('section.includedServices.comfortTitle')}</h4>
-            <ul className="section-list">
-              <li>{t('section.includedServices.comfortList1')}</li>
-              <li>{t('section.includedServices.comfortList2')}</li>
-              <li>{t('section.includedServices.comfortList3')}</li>
-              <li>{t('section.includedServices.comfortList4')}</li>
-              <li>{t('section.includedServices.comfortList5')}</li>
-              <li>{t('section.includedServices.comfortList6')}</li>
-              <li>{t('section.includedServices.comfortList7')}</li>
-              <li>{t('section.includedServices.comfortList8')}</li>
-              <li>{t('section.includedServices.comfortList9')}</li>
-              <li>{t('section.includedServices.comfortList10')}</li>
-              <li>{t('section.includedServices.comfortList11')}</li>
-              <li>{t('section.includedServices.comfortList12')}</li>
-            </ul>
-          </div>
-
-          <div className="service-group">
-            <h4 className="section-subtitle">{t('section.includedServices.connectivityTitle')}</h4>
-            <ul className="section-list">
-              <li>{t('section.includedServices.connectivityList1')}</li>
-              <li>{t('section.includedServices.connectivityList2')}</li>
-            </ul>
-          </div>
-        </section>
-
-        {/* Costi Extra */}
-        <section className="extra-costs">
-          <h2 className="section-title">{t('section.extraCosts.title')}</h2>
-
-          <div className="cost-group">
-            <h4 className="section-subtitle">{t('section.extraCosts.mandatoryTitle')}</h4>
-            <ul className="section-list">
-              <li>{t('section.extraCosts.mandatoryList1')}</li>
-              <li>{t('section.extraCosts.mandatoryList2')}</li>
-            </ul>
-          </div>
-
-          <div className="cost-group">
-            <h4 className="section-subtitle">{t('section.extraCosts.onRequestTitle')}</h4>
-            <ul className="section-list">
-              <li>{t('section.extraCosts.onRequestList1')}</li>
-            </ul>
-          </div>
-        </section>
-
-        {/* Info Tassa di Soggiorno */}
-        <div className="tariffe-note">
-          <p>{t('propriety.rates.touristTaxCost')}</p>
-          <p>{t('propriety.rates.touristTaxExemptions')}</p>
-          <p>{t('propriety.rates.touristTaxPaymentInfo')}</p>
-          <p>
-            <Trans i18nKey="propriety.rates.touristTaxLinkText">
-              Per tutti i dettagli, potete consultare il sito del&nbsp;
-              <a
-                href="https://www.comune.maiori.sa.it/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Comune di Maiori
-              </a>
-              &nbsp;o il portale dedicato&nbsp;
-              <a
-                href="https://maiori.paytourist.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                PayTourist
-              </a>.
-            </Trans>
-          </p>
-        </div>
+        {/* 🎯 SEZIONI DINAMICHE: Prezzi aggiornati dal pannello admin */}
+        <DynamicPricingSections />
 
         {/* Divider finale */}
         <LemonDivider position="left" />

@@ -142,6 +142,55 @@
   font-weight: 600;
 }
 
+.summary-item.total {
+  font-size: 16px;
+  font-weight: 700;
+  background: #f1f5f9;
+  padding: 12px;
+  border-radius: 6px;
+  border: none;
+  margin-top: 8px;
+}
+
+.summary-separator {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 16px 0;
+}
+
+/* Error state per riepilogo vuoto */
+.summary-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 16px;
+  color: #dc2626;
+}
+
+.summary-error ul {
+  margin: 12px 0;
+  padding-left: 20px;
+}
+
+.summary-error li {
+  margin-bottom: 4px;
+}
+
+.summary-error .btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  padding: 8px 16px;
+  border-radius: 6px;
+  margin-top: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.summary-error .btn-secondary:hover {
+  background: #e5e7eb;
+}
+
 /* 💳 Metodi di pagamento */
 .payment-methods {
   background: white;

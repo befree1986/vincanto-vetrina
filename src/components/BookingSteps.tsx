@@ -181,6 +181,18 @@ export const BookingStep3: React.FC<BookingStep3Props> = ({ onBack }) => {
   const { t } = useTranslation();
   const booking = useBooking();
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  // 🔍 DEBUG: Log dei dati per verificare il problema del riepilogo vuoto
+  React.useEffect(() => {
+    console.log('📋 BOOKING STEP 3 DEBUG:', {
+      formData: booking.formData,
+      quote: booking.quote,
+      hasName: !!booking.formData.guest_name,
+      hasEmail: !!booking.formData.guest_email,
+      hasCheckIn: !!booking.formData.check_in_date,
+      hasCheckOut: !!booking.formData.check_out_date
+    });
+  }, [booking.formData, booking.quote]);
 
   const handleConfirmBooking = async () => {
     setIsProcessing(true);
@@ -212,43 +224,73 @@ export const BookingStep3: React.FC<BookingStep3Props> = ({ onBack }) => {
             Riepilogo Prenotazione
           </h4>
           
-          <div className="summary-details">
-            <div className="summary-item">
-              <span className="label">Ospite:</span>
-              <span className="value">
-                {booking.formData.guest_name} {booking.formData.guest_surname}
-              </span>
+          {/* 🔍 DEBUG: Verifica presenza dati */}
+          {(!booking.formData.guest_name || !booking.formData.guest_email || !booking.formData.check_in_date) ? (
+            <div className="summary-error">
+              <p>⚠️ Dati incompleti. Torna ai passaggi precedenti per completare:</p>
+              <ul>
+                {!booking.formData.guest_name && <li>Nome ospite mancante</li>}
+                {!booking.formData.guest_email && <li>Email mancante</li>}
+                {!booking.formData.check_in_date && <li>Date soggiorno mancanti</li>}
+              </ul>
+              <button onClick={onBack} className="btn-secondary">
+                ← Torna Indietro
+              </button>
             </div>
-            
-            <div className="summary-item">
-              <span className="label">Email:</span>
-              <span className="value">{booking.formData.guest_email}</span>
+          ) : (
+            <div className="summary-details">
+              <div className="summary-item">
+                <span className="label">Ospite:</span>
+                <span className="value">
+                  {booking.formData.guest_name} {booking.formData.guest_surname}
+                </span>
+              </div>
+              
+              <div className="summary-item">
+                <span className="label">Email:</span>
+                <span className="value">{booking.formData.guest_email}</span>
+              </div>
+              
+              <div className="summary-item">
+                <span className="label">Check-in:</span>
+                <span className="value">
+                  {booking.formData.check_in_date?.toLocaleDateString('it-IT')}
+                </span>
+              </div>
+              
+              <div className="summary-item">
+                <span className="label">Check-out:</span>
+                <span className="value">
+                  {booking.formData.check_out_date?.toLocaleDateString('it-IT')}
+                </span>
+              </div>
+              
+              <div className="summary-item">
+                <span className="label">Ospiti:</span>
+                <span className="value">
+                  {booking.formData.num_adults} adulti
+                  {booking.formData.num_children > 0 && 
+                    `, ${booking.formData.num_children} bambini`
+                  }
+                </span>
+              </div>
+              
+              {/* Mostra preventivo se disponibile */}
+              {booking.quote && (
+                <>
+                  <div className="summary-separator"></div>
+                  <div className="summary-item">
+                    <span className="label">Notti:</span>
+                    <span className="value">{booking.quote.nights}</span>
+                  </div>
+                  <div className="summary-item total">
+                    <span className="label">Totale:</span>
+                    <span className="value">€{booking.quote.totalAmount?.toFixed(2)}</span>
+                  </div>
+                </>
+              )}
             </div>
-            
-            <div className="summary-item">
-              <span className="label">Check-in:</span>
-              <span className="value">
-                {booking.formData.check_in_date?.toLocaleDateString('it-IT')}
-              </span>
-            </div>
-            
-            <div className="summary-item">
-              <span className="label">Check-out:</span>
-              <span className="value">
-                {booking.formData.check_out_date?.toLocaleDateString('it-IT')}
-              </span>
-            </div>
-            
-            <div className="summary-item">
-              <span className="label">Ospiti:</span>
-              <span className="value">
-                {booking.formData.num_adults} adulti
-                {booking.formData.num_children > 0 && 
-                  `, ${booking.formData.num_children} bambini`
-                }
-              </span>
-            </div>
-          </div>
+          )}
         </div>
 
         <div className="payment-methods">
