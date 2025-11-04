@@ -73,12 +73,20 @@ export default async function handler(req, res) {
     const diffTime = Math.abs(endDate - startDate);
     const nights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (nights < 2) {
+    if (nights < 1) {
       return res.status(400).json({ 
         success: false, 
-        error: 'Minimo 2 notti richieste' 
+        error: 'Almeno 1 notte richiesta' 
       });
     }
+    
+    console.log('🛏️ NIGHTS CALCULATION:', {
+      checkIn,
+      checkOut, 
+      diffTime,
+      nights,
+      isValid: nights >= 1
+    });
 
     // 🔥 CARICA PREZZI DAL DATABASE ADMIN IN TEMPO REALE
     let basePrice = 75.00;           // €75 per persona per notte (aggiornato)
