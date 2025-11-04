@@ -107,10 +107,15 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
                 <div className="service-checkbox">
                   <input
                     type="checkbox"
+                    id={`service-children-${service.id}`}
                     checked={selectedServices.includes(service.id)}
                     onChange={() => toggleService(service.id)}
                     onClick={(e) => e.stopPropagation()}
+                    aria-label={`Seleziona ${service.name} - €${service.price}/${service.unit}`}
                   />
+                  <label htmlFor={`service-children-${service.id}`} className="sr-only">
+                    Seleziona {service.name}
+                  </label>
                 </div>
               </div>
             ))}
@@ -139,10 +144,15 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
                 <div className="service-checkbox">
                   <input
                     type="checkbox"
+                    id={`service-comfort-${service.id}`}
                     checked={selectedServices.includes(service.id)}
                     onChange={() => toggleService(service.id)}
                     onClick={(e) => e.stopPropagation()}
+                    aria-label={`Seleziona ${service.name} - €${service.price}/${service.unit}`}
                   />
+                  <label htmlFor={`service-comfort-${service.id}`} className="sr-only">
+                    Seleziona {service.name}
+                  </label>
                 </div>
               </div>
             ))}
@@ -171,10 +181,15 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
                 <div className="service-checkbox">
                   <input
                     type="checkbox"
+                    id={`service-convenience-${service.id}`}
                     checked={selectedServices.includes(service.id)}
                     onChange={() => toggleService(service.id)}
                     onClick={(e) => e.stopPropagation()}
+                    aria-label={`Seleziona ${service.name} - €${service.price}/${service.unit}`}
                   />
+                  <label htmlFor={`service-convenience-${service.id}`} className="sr-only">
+                    Seleziona {service.name}
+                  </label>
                 </div>
               </div>
             ))}
@@ -203,10 +218,15 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
                 <div className="service-checkbox">
                   <input
                     type="checkbox"
+                    id={`service-pets-${service.id}`}
                     checked={selectedServices.includes(service.id)}
                     onChange={() => toggleService(service.id)}
                     onClick={(e) => e.stopPropagation()}
+                    aria-label={`Seleziona ${service.name} - €${service.price}/${service.unit}`}
                   />
+                  <label htmlFor={`service-pets-${service.id}`} className="sr-only">
+                    Seleziona {service.name}
+                  </label>
                 </div>
               </div>
             ))}
