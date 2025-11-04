@@ -22,17 +22,24 @@ export const useDynamicPricing = (): PricingData => {
     error: null
   });
 
-  useEffect(() => {
-    const fetchPricing = async () => {
+  const fetchPricing = async () => {
+    setPricing(prev => ({ ...prev, loading: true }));
       try {
-        console.log('🔄 Caricamento prezzi dinamici dal server...');
+        console.log('🔄 DYNAMIC PRICING: Caricamento prezzi dal server...');
         
-        // Prima prova l'API quote per ottenere i prezzi
-        const response = await fetch('/api/quote?checkIn=2025-12-01&checkOut=2025-12-02&guests=2&includeParking=false');
+        // Aggiungi timestamp per evitare cache
+        const timestamp = new Date().getTime();
+        const response = await fetch(`/api/quote?checkIn=2025-12-01&checkOut=2025-12-02&guests=2&includeParking=false&_t=${timestamp}`);
         
         if (response.ok) {
           const data = await response.json();
-          console.log('💰 Risposta API quote:', data);
+          console.log('💰 DYNAMIC PRICING: Risposta API quote ricevuta:', data);
+          console.log('🔍 DYNAMIC PRICING: Struttura dati:', {
+            success: data.success,
+            parkingPerNight: data.parkingPerNight,
+            cleaningFee: data.cleaningFee,
+            pricingConfig: data.pricingConfig
+          });
           
           if (data.success && data.pricingConfig) {
             setPricing(prev => ({
@@ -62,7 +69,17 @@ export const useDynamicPricing = (): PricingData => {
       }
     };
 
+  useEffect(() => {
+    // Carica inizialmente
     fetchPricing();
+    
+    // 🔄 Ricarica ogni 10 secondi per test
+    const interval = setInterval(() => {
+      console.log('🔄 DYNAMIC PRICING: Auto-refresh prezzi...');
+      fetchPricing();
+    }, 10000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   return pricing;
