@@ -7,9 +7,11 @@ import '../styles/Propriety.desktop.css';
 import '../styles/Propriety.mobile.css';
 import LemonDivider from '../components/LemonDivider';
 import { Helmet } from 'react-helmet';
+import useDynamicPricing from '../hooks/useDynamicPricing';
 
 const Propriety: React.FC = () => {
   const { t } = useTranslation();
+  const pricing = useDynamicPricing(); // 🔥 Hook per prezzi dinamici
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [lightboxImages, setLightboxImages] = useState<GalleryImage[]>([]);
@@ -202,19 +204,43 @@ const Propriety: React.FC = () => {
             <tbody>
               <tr>
                 <td>{t('propriety.rates.table.persons1to2')}</td>
-                <td>{t('propriety.rates.table.price1to2')}</td>
+                <td>
+                  {pricing.loading ? (
+                    <span>Caricamento...</span>
+                  ) : (
+                    <span>€ {pricing.basePrice} a persona</span>
+                  )}
+                </td>
               </tr>
               <tr>
                 <td>{t('propriety.rates.table.persons3to4')}</td>
-                <td>{t('propriety.rates.table.price3to4')}</td>
+                <td>
+                  {pricing.loading ? (
+                    <span>Caricamento...</span>
+                  ) : (
+                    <span>€ {pricing.additionalGuestPrice} a persona</span>
+                  )}
+                </td>
               </tr>
               <tr>
                 <td>{t('propriety.rates.table.persons5to6')}</td>
-                <td>{t('propriety.rates.table.price5to6')}</td>
+                <td>
+                  {pricing.loading ? (
+                    <span>Caricamento...</span>
+                  ) : (
+                    <span>€ {pricing.additionalGuestPrice} a persona</span>
+                  )}
+                </td>
               </tr>
               <tr>
                 <td>{t('propriety.rates.table.persons7to8')}</td>
-                <td>{t('propriety.rates.table.price7to8')}</td>
+                <td>
+                  {pricing.loading ? (
+                    <span>Caricamento...</span>
+                  ) : (
+                    <span>€ {pricing.additionalGuestPrice} a persona</span>
+                  )}
+                </td>
               </tr>
             </tbody>
           </table>
