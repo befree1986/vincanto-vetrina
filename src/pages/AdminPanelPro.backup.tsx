@@ -3377,21 +3377,17 @@ const AdminPanelPro: React.FC = () => {
           </div>
         )}
 
-        {/* Sezione Sistema Professionale - SOLO CONFIGURAZIONI TECNICHE */}
+        {/* Sezione Sistema Professionale */}
         {activeTab === 'sistema' && (
           <div className="admin-sistema">
-            <h2>⚙️ Configurazione Sistema e Database</h2>
-            <div className="admin-notice" style={{backgroundColor: '#fff3cd', padding: '15px', marginBottom: '20px', borderRadius: '8px', border: '1px solid #ffeaa7'}}>
-              <strong>💡 Nota:</strong> Per modificare prezzi, tariffe e configurazioni di prenotazione, utilizza la tab <strong>"🏷️ Prezzi"</strong>.
-              Questa sezione è dedicata solo alle impostazioni tecniche del sistema.
-            </div>
+            <h2>⚙️ Configurazione Sistema Avanzata</h2>
             
-            {/* Database e Sistema Status */}
+            {/* Impostazioni Backend Reali */}
             <div className="admin-pricing-section">
-              <h3>�️ Stato Database e Applicazione</h3>
+              <h3>🔥 Impostazioni Backend Live</h3>
               <div className="admin-pricing-grid">
                 <div className="admin-pricing-card">
-                  <h4>📊 Statistiche Sistema</h4>
+                  <h4>Configurazioni Sistema</h4>
                   <div className="pricing-controls">
                     {systemSettings.length > 0 ? (
                       systemSettings.map((setting) => (
