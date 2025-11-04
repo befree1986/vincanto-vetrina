@@ -45,9 +45,9 @@ export const useDynamicPricing = (): PricingData => {
             setPricing(prev => ({
               ...prev,
               basePrice: data.pricingConfig.basePrice || prev.basePrice,
-              parkingFee: data.parkingPerNight || prev.parkingFee,
-              cleaningFee: data.cleaningFee || prev.cleaningFee,
-              touristTax: data.touristTaxPerPersonPerNight || prev.touristTax,
+              parkingFee: data.pricingConfig.parkingFee || prev.parkingFee,
+              cleaningFee: data.pricingConfig.cleaningFee || prev.cleaningFee,
+              touristTax: data.pricingConfig.touristTax || prev.touristTax,
               additionalGuestPrice: data.pricingConfig.additionalGuestPrice || prev.additionalGuestPrice,
               loading: false,
               error: null
