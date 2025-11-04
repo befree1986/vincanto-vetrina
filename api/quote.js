@@ -42,8 +42,20 @@ export default async function handler(req, res) {
     const startDate = new Date(checkIn);
     const endDate = new Date(checkOut);
     const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset ora a mezzanotte per confronto corretto
     
-    if (startDate <= today) {
+    console.log('🗓️ DATE VALIDATION:', {
+      checkIn,
+      checkOut,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      today: today.toISOString(),
+      startDateTimestamp: startDate.getTime(),
+      todayTimestamp: today.getTime(),
+      isStartDateValid: startDate >= today
+    });
+    
+    if (startDate < today) {
       return res.status(400).json({ 
         success: false, 
         error: 'Data di check-in non può essere nel passato' 
