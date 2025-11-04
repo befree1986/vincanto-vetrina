@@ -3,7 +3,7 @@
  * API per analizzare la struttura completa del database
  */
 
-const { Pool } = require('pg');
+import { Pool } from 'pg';
 
 // Crea pool di connessioni come nelle API esistenti
 const pool = new Pool({

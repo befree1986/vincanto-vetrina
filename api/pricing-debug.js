@@ -1,5 +1,5 @@
 // Debug API per verificare prezzi nel database
-const { Pool } = require('pg');
+import { Pool } from 'pg';
 
 // 🔗 Configurazione database
 const pool = new Pool({

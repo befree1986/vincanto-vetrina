@@ -1,5 +1,5 @@
-const { Pool } = require('pg');
-const https = require('https');
+import { Pool } from 'pg';
+import https from 'https';
 
 // Database connection
 const pool = new Pool({
@@ -91,7 +91,7 @@ async function syncExternalCalendars() {
   }
 }
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');

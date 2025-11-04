@@ -1,5 +1,5 @@
-const { Pool } = require('pg');
-const nodemailer = require('nodemailer');
+import { Pool } from 'pg';
+import nodemailer from 'nodemailer';
 
 // Database connection
 const pool = new Pool({
@@ -162,7 +162,7 @@ async function sendBookingEmails(bookingDetails) {
   }
 }
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');

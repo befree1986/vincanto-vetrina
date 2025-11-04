@@ -1,5 +1,5 @@
 // API Quote Semplificata - Compatibile con frontend esistente
-const { Pool } = require('pg');
+import { Pool } from 'pg';
 
 // Database connection
 const pool = new Pool({
@@ -7,7 +7,7 @@ const pool = new Pool({
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
