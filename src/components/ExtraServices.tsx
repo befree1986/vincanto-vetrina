@@ -68,10 +68,12 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
     );
   }
 
+  const parkingServices = getServicesByCategory('parcheggio');
   const childrenServices = getServicesByCategory('bambini');
   const comfortServices = getServicesByCategory('comfort');
   const convenenceServices = getServicesByCategory('comodita');
   const petServices = getServicesByCategory('animali');
+  const customServices = getServicesByCategory('custom');
 
   return (
     <div className="extra-services">
@@ -85,6 +87,43 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
       {getTotalCost() > 0 && (
         <div className="total-cost">
           <strong>💰 Totale servizi extra: €{getTotalCost()}</strong>
+        </div>
+      )}
+
+      {/* Servizi parcheggio */}
+      {parkingServices.length > 0 && (
+        <div className="service-category">
+          <h4>🚗 Parcheggio</h4>
+          <div className="services-grid">
+            {parkingServices.map(service => (
+              <div 
+                key={service.id} 
+                className={`service-card parking-service ${selectedServices.includes(service.id) ? 'selected' : ''}`}
+                onClick={() => toggleService(service.id)}
+              >
+                <div className="service-header">
+                  <h5>{service.name}</h5>
+                  <span className="service-price">€{service.price}/{service.unit}</span>
+                </div>
+                {service.description && (
+                  <p className="service-description">{service.description}</p>
+                )}
+                <div className="service-checkbox">
+                  <input
+                    type="checkbox"
+                    id={`service-parking-${service.id}`}
+                    checked={selectedServices.includes(service.id)}
+                    onChange={() => toggleService(service.id)}
+                    onClick={(e) => e.stopPropagation()}
+                    aria-label={`Seleziona ${service.name} - €${service.price}/${service.unit}`}
+                  />
+                  <label htmlFor={`service-parking-${service.id}`} className="sr-only">
+                    Seleziona {service.name}
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -230,6 +269,43 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
                     aria-label={`Seleziona ${service.name} - €${service.price}/${service.unit}`}
                   />
                   <label htmlFor={`service-pets-${service.id}`} className="sr-only">
+                    Seleziona {service.name}
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Servizi personalizzati */}
+      {customServices.length > 0 && (
+        <div className="service-category">
+          <h4>⚙️ Servizi Personalizzati</h4>
+          <div className="services-grid">
+            {customServices.map(service => (
+              <div 
+                key={service.id} 
+                className={`service-card custom-service ${selectedServices.includes(service.id) ? 'selected' : ''}`}
+                onClick={() => toggleService(service.id)}
+              >
+                <div className="service-header">
+                  <h5>{service.name}</h5>
+                  <span className="service-price">€{service.price}/{service.unit}</span>
+                </div>
+                {service.description && (
+                  <p className="service-description">{service.description}</p>
+                )}
+                <div className="service-checkbox">
+                  <input
+                    type="checkbox"
+                    id={`service-custom-${service.id}`}
+                    checked={selectedServices.includes(service.id)}
+                    onChange={() => toggleService(service.id)}
+                    onClick={(e) => e.stopPropagation()}
+                    aria-label={`Seleziona ${service.name} - €${service.price}/${service.unit}`}
+                  />
+                  <label htmlFor={`service-custom-${service.id}`} className="sr-only">
                     Seleziona {service.name}
                   </label>
                 </div>

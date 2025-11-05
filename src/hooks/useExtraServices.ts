@@ -7,10 +7,11 @@ export interface ExtraService {
   price: number;
   unit: 'soggiorno' | 'notte' | 'persona';
   description?: string;
-  category: 'bambini' | 'animali' | 'comfort' | 'comodita';
+  category: 'bambini' | 'animali' | 'comfort' | 'comodita' | 'parcheggio' | 'custom';
   available: boolean;
   minAge?: number;
   maxAge?: number;
+  isParking?: boolean; // Flag per identificare servizi di parcheggio
 }
 
 interface ExtraServicesData {
@@ -21,6 +22,10 @@ interface ExtraServicesData {
   toggleService: (serviceId: number) => void;
   getTotalCost: () => number;
   getSelectedServices: () => ExtraService[];
+  // Funzioni specifiche per parcheggio
+  getParkingService: () => ExtraService | undefined;
+  isParkingSelected: () => boolean;
+  toggleParking: (enable: boolean) => void;
 }
 
 export const useExtraServices = (): ExtraServicesData => {
@@ -144,6 +149,27 @@ export const useExtraServices = (): ExtraServicesData => {
     return services.filter(service => selectedServices.includes(service.id));
   };
 
+  // Funzioni specifiche per il parcheggio
+  const getParkingService = () => {
+    return services.find(service => service.isParking || service.category === 'parcheggio');
+  };
+
+  const isParkingSelected = () => {
+    const parkingService = getParkingService();
+    return parkingService ? selectedServices.includes(parkingService.id) : false;
+  };
+
+  const toggleParking = (enable: boolean) => {
+    const parkingService = getParkingService();
+    if (parkingService) {
+      if (enable && !selectedServices.includes(parkingService.id)) {
+        setSelectedServices(prev => [...prev, parkingService.id]);
+      } else if (!enable && selectedServices.includes(parkingService.id)) {
+        setSelectedServices(prev => prev.filter(id => id !== parkingService.id));
+      }
+    }
+  };
+
   useEffect(() => {
     fetchServices();
   }, []);
@@ -161,6 +187,10 @@ export const useExtraServices = (): ExtraServicesData => {
     selectedServices,
     toggleService,
     getTotalCost,
-    getSelectedServices
+    getSelectedServices,
+    // Funzioni specifiche per parcheggio
+    getParkingService,
+    isParkingSelected,
+    toggleParking
   };
 };

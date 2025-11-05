@@ -266,3 +266,37 @@
     font-size: 1rem;
   }
 }
+
+/* Stili specifici per categoria parcheggio */
+.service-card.parking-service {
+  border-left: 4px solid #3498db;
+  background: linear-gradient(135deg, #f8f9ff 0%, #e8f4f8 100%);
+}
+
+.service-card.parking-service.selected {
+  border-left-color: #2980b9;
+  background: linear-gradient(135deg, #e8f4f8 0%, #d4edda 100%);
+}
+
+/* Stili specifici per servizi personalizzati */
+.service-card.custom-service {
+  border-left: 4px solid #9b59b6;
+  background: linear-gradient(135deg, #faf8ff 0%, #f3e8ff 100%);
+}
+
+.service-card.custom-service.selected {
+  border-left-color: #8e44ad;
+  background: linear-gradient(135deg, #f3e8ff 0%, #e8d5ff 100%);
+}
+
+/* Icona distintiva per servizi custom */
+.service-card.custom-service .service-header::before {
+  content: "⚙️ ";
+  margin-right: 0.25rem;
+}
+
+/* Icona distintiva per parcheggio */
+.service-card.parking-service .service-header::before {
+  content: "🚗 ";
+  margin-right: 0.25rem;
+}
