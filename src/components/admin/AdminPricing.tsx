@@ -105,8 +105,8 @@ const AdminPricing: React.FC<AdminPricingProps> = ({
               
               <NumericInput
                 id="touristTax"
-                label="Tassa di soggiorno per persona"
-                value={pricingConfig.touristTax}
+                label="Tassa di soggiorno per persona per notte"
+                value={pricingConfig.touristTax || pricingConfig.touristTaxAdult || 3}
                 onChange={(value) => updatePricingField('touristTax', value)}
                 min={0}
                 max={50}
