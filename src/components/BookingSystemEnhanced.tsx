@@ -403,7 +403,7 @@ const BookingSystemEnhanced: React.FC = () => {
                                     />
                                     <span className="radio-label">
                                         <span className="icon">🅿️</span>
-                                        {getSafeTranslation(t, 'booking.parking.private', 'Parcheggio privato (+€15/notte)')}
+                                        {getSafeTranslation(t, 'booking.parking.private', 'Parcheggio privato (+€20/notte)')}
                                     </span>
                                 </label>
                             </div>

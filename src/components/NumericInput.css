@@ -1,0 +1,70 @@
+/* Stili per NumericInput migliorato */
+.numeric-input-container {
+  margin-bottom: 1rem;
+}
+
+.numeric-input-container .admin-label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-weight: 500;
+  color: var(--admin-text);
+}
+
+.required-asterisk {
+  color: var(--admin-danger);
+}
+
+.input-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.input-wrapper .admin-input-small {
+  width: 100%;
+  padding-right: 2rem; /* Spazio per il suffisso */
+}
+
+.input-suffix {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--admin-text-muted);
+  font-weight: 500;
+  pointer-events: none;
+}
+
+.input-hint {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--admin-text-muted);
+  font-size: 0.875rem;
+}
+
+.admin-input-small.disabled {
+  background-color: var(--admin-border-light);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Miglioramenti per input numerici */
+.admin-input-small[type="number"] {
+  text-align: right;
+}
+
+.admin-input-small[type="number"]:focus {
+  text-align: left;
+}
+
+/* Nascondi le frecce sui browser che le supportano */
+.admin-input-small[type="number"]::-webkit-outer-spin-button,
+.admin-input-small[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.admin-input-small[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}

@@ -66,7 +66,7 @@ const AdminPanelPro: React.FC = () => {
     weekendSurcharge: 20,
     monthlyDiscount: 15,
     weeklyDiscount: 10,
-    parkingFee: 15,          // 🅿️ AGGIUNTO: €15 parcheggio per notte
+    parkingFee: 20,          // 🅿️ AGGIORNATO: €20 parcheggio per notte
     minStay: 2,
     maxStay: 14,
     advanceBookingDiscount: 0,

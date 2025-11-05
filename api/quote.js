@@ -92,7 +92,7 @@ export default async function handler(req, res) {
     let basePrice = 75.00;           // €75 per persona per notte (aggiornato)
     let additionalGuestPrice = 75.00; // €75 per ospite aggiuntivo per notte (stesso prezzo per persona)
     let cleaningFee = 50.00;         // €50 pulizia finale
-    let parkingFeePerNight = 15.00;  // €15 parcheggio per notte (aggiornato)
+    let parkingFeePerNight = 20.00;  // €20 parcheggio per notte (aggiornato)
     let touristTaxPerPersonPerNight = 2.00; // €2 tassa soggiorno per persona per notte
 
     console.log('🎯 PARAMETRI RICEVUTI:', { checkIn, checkOut, guests: parseInt(guests), nights });
