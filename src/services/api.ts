@@ -171,7 +171,6 @@ export async function getBookingQuote(data: BookingQuoteRequest): Promise<Bookin
         console.log('💰 PRICING USED:', { pricePerPerson, parkingPerNight, cleaningPrice, touristTaxRate, isDynamic: !!dynamicPricing });
         
         const basePrice = nights * guests * pricePerPerson; // Per PERSONA per notte
-        const additionalGuestPrice = 0; // Non serve più calcolo separato  
         const parkingCost = data.includeParking ? nights * parkingPerNight : 0; // Parcheggio dinamico
         const cleaningFee = cleaningPrice;
         const touristTax = guests * nights * touristTaxRate;

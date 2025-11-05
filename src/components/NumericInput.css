@@ -57,6 +57,66 @@
   text-align: left;
 }
 
+/* Stili per servizi extra */
+.service-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background-color: #f8fafc;
+}
+
+.service-price-container {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.service-row input {
+  flex: 1;
+}
+
+.service-row .admin-input-small {
+  width: 80px;
+}
+
+.custom-service-add {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.custom-service-add input[type="number"] {
+  flex: 1;
+}
+
+.service-empty-state {
+  text-align: center;
+  color: #64748b;
+  font-style: italic;
+  padding: 2rem;
+}
+
+.service-delete-btn {
+  padding: 0.5rem;
+  min-width: 40px;
+  background-color: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.add-service-btn {
+  padding: 0.5rem;
+  min-width: 40px;
+}
+
+.pricing-note-services {
+  margin-top: 1rem;
+}
+
 /* Nascondi le frecce sui browser che le supportano */
 .admin-input-small[type="number"]::-webkit-outer-spin-button,
 .admin-input-small[type="number"]::-webkit-inner-spin-button {

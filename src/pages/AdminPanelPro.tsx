@@ -1407,11 +1407,19 @@ const AdminPanelPro: React.FC = () => {
                 maxStay: 14
               };
               Object.keys(defaultConfig).forEach(key => {
-                updatePricingField(key, defaultConfig[key]);
+                updatePricingField(key, defaultConfig[key as keyof typeof defaultConfig]);
               });
             }}
             isUpdatingPricing={isUpdatingPricing}
             showSuccessMessage={false}
+            customServices={customServices}
+            newServiceName={newServiceName}
+            setNewServiceName={setNewServiceName}
+            newServicePrice={newServicePrice}
+            setNewServicePrice={setNewServicePrice}
+            addCustomService={addCustomService}
+            updateCustomService={updateCustomService}
+            deleteCustomService={deleteCustomService}
           />
         )}
 

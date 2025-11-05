@@ -9,6 +9,15 @@ interface AdminPricingProps {
   resetPricingConfig: () => void;
   isUpdatingPricing: boolean;
   showSuccessMessage: boolean;
+  // Nuove props per servizi extra
+  customServices: any[];
+  newServiceName: string;
+  setNewServiceName: (name: string) => void;
+  newServicePrice: number;
+  setNewServicePrice: (price: number) => void;
+  addCustomService: () => void;
+  updateCustomService: (id: number, field: string, value: any) => void;
+  deleteCustomService: (id: number) => void;
 }
 
 /**
@@ -21,6 +30,14 @@ const AdminPricing: React.FC<AdminPricingProps> = ({
   resetPricingConfig,
   isUpdatingPricing,
   showSuccessMessage,
+  customServices,
+  newServiceName,
+  setNewServiceName,
+  newServicePrice,
+  setNewServicePrice,
+  addCustomService,
+  updateCustomService,
+  deleteCustomService,
 }) => {
   return (
     <div className="admin-prezzi">
@@ -196,6 +213,98 @@ const AdminPricing: React.FC<AdminPricingProps> = ({
         </div>
       </div>
 
+      {/* Servizi Extra Personalizzabili */}
+      <div className="admin-pricing-section">
+        <h3>🛎️ Servizi Extra Personalizzabili</h3>
+        <div className="admin-pricing-grid">
+          <div className="admin-pricing-card">
+            <h4>Aggiungi Nuovo Servizio</h4>
+            <div className="pricing-controls">
+              <div className="custom-service-item">
+                <input 
+                  type="text" 
+                  placeholder="Nome servizio (es. Culla per bambini)" 
+                  className="admin-input" 
+                  value={newServiceName}
+                  onChange={(e) => setNewServiceName(e.target.value)}
+                />
+                <div className="custom-service-add">
+                  <span>€</span>
+                  <input 
+                    type="number" 
+                    placeholder="Prezzo" 
+                    className="admin-input-small" 
+                    value={newServicePrice}
+                    onChange={(e) => setNewServicePrice(Number(e.target.value))}
+                    min="0"
+                  />
+                  <span>/soggiorno</span>
+                  <button 
+                    className="admin-btn-small add-service-btn"
+                    onClick={addCustomService}
+                    title="Aggiungi servizio"
+                    disabled={!newServiceName || newServicePrice <= 0}
+                  >
+                    ➕
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="admin-pricing-card">
+            <h4>Servizi Configurati ({customServices.length})</h4>
+            <div className="pricing-controls">
+              <div className="existing-services">
+                {customServices.map((service) => (
+                  <div key={service.id} className="service-row">
+                    <input 
+                      type="text"
+                      value={service.name}
+                      onChange={(e) => updateCustomService(service.id, 'name', e.target.value)}
+                      className="admin-input-small"
+                      placeholder="Nome servizio"
+                      title={`Nome servizio ${service.id}`}
+                    />
+                    <div className="service-price-container">
+                      <span>€</span>
+                      <input 
+                        type="number"
+                        value={service.price}
+                        onChange={(e) => updateCustomService(service.id, 'price', Number(e.target.value))}
+                        className="admin-input-small"
+                        min="0"
+                        title={`Prezzo servizio ${service.id}`}
+                      />
+                      <span>/{service.unit}</span>
+                    </div>
+                    <button 
+                      className="admin-btn-small service-delete-btn"
+                      onClick={() => deleteCustomService(service.id)}
+                      title="Elimina servizio"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                ))}
+                
+                {customServices.length === 0 && (
+                  <div className="service-empty-state">
+                    Nessun servizio extra configurato.<br/>
+                    Aggiungi servizi come culla, seggiolone, etc.
+                  </div>
+                )}
+              </div>
+              
+              <div className="pricing-note pricing-note-services">
+                💡 <strong>Servizi suggeriti:</strong> Culla (0-3 anni), Seggiolone, Animali domestici, 
+                Check-in anticipato, Colazione, Transfer aeroporto
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Anteprima Configurazione */}
       <div className="admin-pricing-section">
         <h3>👁️ Anteprima Configurazione Attuale</h3>
@@ -219,6 +328,9 @@ const AdminPricing: React.FC<AdminPricingProps> = ({
               </div>
               <div className="preview-item">
                 <strong>Soggiorno:</strong> {pricingConfig.minStay}-{pricingConfig.maxStay} notti
+              </div>
+              <div className="preview-item">
+                <strong>Servizi extra:</strong> {customServices.length} configurati
               </div>
             </div>
           </div>

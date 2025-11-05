@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useTranslation, Trans } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 import { galleryData } from '../data/galleryData';
 import type { GalleryImage } from '../data/galleryData';
 import '../styles/Propriety.base.css';
