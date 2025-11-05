@@ -1,28 +1,59 @@
-/* Stili per DynamicPricingSections */
+/* Stili Eleganti per DynamicPricingSections - Vincanto */
 .dynamic-pricing-sections {
   width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: var(--body-font, 'Montserrat', sans-serif);
 }
 
-/* Servizi Inclusi */
+/* Servizi Inclusi - Design Professionale */
 .included-services {
-  background: linear-gradient(135deg, #e8f5e8 0%, #f0f8ff 100%);
-  padding: 3rem 2rem;
-  margin: 2rem 0;
-  border-radius: 16px;
-  border: 1px solid #d4edda;
-  box-shadow: 0 4px 16px rgba(0, 100, 0, 0.1);
+  position: relative;
+  background: linear-gradient(135deg, 
+    rgba(72, 166, 154, 0.08) 0%, 
+    rgba(144, 205, 244, 0.12) 50%,
+    rgba(255, 255, 255, 0.95) 100%
+  );
+  padding: 4rem 3rem;
+  margin: 3rem 0;
+  border-radius: 20px;
+  border: none;
+  box-shadow: 
+    0 8px 32px rgba(26, 54, 93, 0.12),
+    0 4px 16px rgba(72, 166, 154, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+
+.included-services::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, 
+    var(--seafoam, #48a69a) 0%, 
+    var(--blue-medium, #2c5282) 50%,
+    var(--terracotta, #e67e22) 100%
+  );
 }
 
 .included-services .section-title {
-  color: #2d5a2d;
+  color: var(--blue-dark, #1a365d);
   text-align: center;
-  margin-bottom: 2.5rem;
-  font-size: 2rem;
-  font-weight: 700;
+  margin-bottom: 3rem;
+  font-size: 2.5rem;
+  font-weight: 300;
+  font-family: var(--heading-font, 'Cormorant Garamond', serif);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
 .included-group {
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
 }
 
 .included-group:last-child {
@@ -30,69 +61,131 @@
 }
 
 .included-services .section-subtitle {
-  color: #2d5a2d;
-  font-size: 1.4rem;
-  margin-bottom: 1rem;
-  padding-left: 1rem;
-  border-left: 4px solid #28a745;
-  background: rgba(40, 167, 69, 0.1);
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
+  color: var(--blue-dark, #1a365d);
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, 
+    rgba(72, 166, 154, 0.15) 0%, 
+    rgba(144, 205, 244, 0.1) 100%
+  );
+  border-radius: 12px;
+  border-left: 4px solid var(--seafoam, #48a69a);
+  font-family: var(--heading-font, 'Cormorant Garamond', serif);
+  position: relative;
+  overflow: hidden;
+}
+
+.included-services .section-subtitle::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 80px;
+  height: 100%;
+  background: linear-gradient(90deg, transparent 0%, rgba(72, 166, 154, 0.1) 100%);
 }
 
 .included-services .section-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1rem;
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
 .included-services .section-list li {
-  background: white;
-  padding: 1rem 1.25rem;
-  border-radius: 10px;
-  border: 1px solid #c3e6cb;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 1.25rem 1.5rem;
+  border-radius: 12px;
+  border: 1px solid rgba(72, 166, 154, 0.2);
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-}
-
-.included-services .section-list li:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  background: #f8fff8;
+  gap: 1rem;
+  box-shadow: 
+    0 2px 12px rgba(26, 54, 93, 0.08),
+    0 1px 3px rgba(72, 166, 154, 0.1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--gray-dark, #2d3748);
+  position: relative;
+  overflow: hidden;
 }
 
 .included-services .section-list li::before {
-  content: '✅';
-  font-size: 1.2rem;
+  content: '✓';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--seafoam, #48a69a) 0%, var(--blue-medium, #2c5282) 100%);
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border-radius: 50%;
   flex-shrink: 0;
 }
 
-/* Costi Extra */
+.included-services .section-list li:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 8px 25px rgba(26, 54, 93, 0.15),
+    0 4px 12px rgba(72, 166, 154, 0.2);
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(72, 166, 154, 0.4);
+}
+
+/* Costi Extra - Design Sofisticato */
 .extra-costs {
-  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-  padding: 3rem 2rem;
-  margin: 2rem 0;
-  border-radius: 16px;
-  border: 1px solid #ffeaa7;
-  box-shadow: 0 4px 16px rgba(255, 193, 7, 0.2);
+  position: relative;
+  background: linear-gradient(135deg, 
+    rgba(230, 126, 34, 0.08) 0%, 
+    rgba(249, 212, 35, 0.12) 50%,
+    rgba(255, 255, 255, 0.95) 100%
+  );
+  padding: 4rem 3rem;
+  margin: 3rem 0;
+  border-radius: 20px;
+  border: none;
+  box-shadow: 
+    0 8px 32px rgba(230, 126, 34, 0.12),
+    0 4px 16px rgba(249, 212, 35, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+
+.extra-costs::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, 
+    var(--terracotta, #e67e22) 0%, 
+    var(--yellow, #f9d423) 100%
+  );
 }
 
 .extra-costs .section-title {
-  color: #856404;
+  color: var(--blue-dark, #1a365d);
   text-align: center;
-  margin-bottom: 2.5rem;
-  font-size: 2rem;
-  font-weight: 700;
+  margin-bottom: 3rem;
+  font-size: 2.5rem;
+  font-weight: 300;
+  font-family: var(--heading-font, 'Cormorant Garamond', serif);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
 .cost-group {
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
 }
 
 .cost-group:last-child {
@@ -100,14 +193,30 @@
 }
 
 .extra-costs .section-subtitle {
-  color: #856404;
-  font-size: 1.4rem;
-  margin-bottom: 1rem;
-  padding-left: 1rem;
-  border-left: 4px solid #ffc107;
-  background: rgba(255, 193, 7, 0.15);
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
+  color: var(--blue-dark, #1a365d);
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, 
+    rgba(230, 126, 34, 0.15) 0%, 
+    rgba(249, 212, 35, 0.1) 100%
+  );
+  border-radius: 12px;
+  border-left: 4px solid var(--terracotta, #e67e22);
+  font-family: var(--heading-font, 'Cormorant Garamond', serif);
+  position: relative;
+  overflow: hidden;
+}
+
+.extra-costs .section-subtitle::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 80px;
+  height: 100%;
+  background: linear-gradient(90deg, transparent 0%, rgba(230, 126, 34, 0.1) 100%);
 }
 
 .extra-costs .section-list {
@@ -116,82 +225,150 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
 .extra-costs .section-list li {
-  background: white;
-  padding: 1.25rem 1.5rem;
-  border-radius: 10px;
-  border: 1px solid #ffc107;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  border: 1px solid rgba(230, 126, 34, 0.2);
   display: flex;
   align-items: center;
-  gap: 1rem;
-  box-shadow: 0 2px 8px rgba(255, 193, 7, 0.1);
-  transition: all 0.3s ease;
+  gap: 1.25rem;
+  box-shadow: 
+    0 2px 12px rgba(230, 126, 34, 0.08),
+    0 1px 3px rgba(249, 212, 35, 0.1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   font-size: 1.1rem;
-}
-
-.extra-costs .section-list li:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.25);
-  background: #fffbf0;
+  font-weight: 500;
+  color: var(--gray-dark, #2d3748);
+  position: relative;
+  overflow: hidden;
 }
 
 .extra-costs .section-list li::before {
-  content: '💰';
-  font-size: 1.4rem;
+  content: '€';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, var(--terracotta, #e67e22) 0%, var(--yellow, #f9d423) 100%);
+  color: white;
+  font-size: 1.3rem;
+  font-weight: 700;
+  border-radius: 50%;
   flex-shrink: 0;
 }
 
-/* Dynamic Price Components */
+.extra-costs .section-list li:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 8px 25px rgba(230, 126, 34, 0.15),
+    0 4px 12px rgba(249, 212, 35, 0.2);
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(230, 126, 34, 0.4);
+}
+
+/* Dynamic Price Components - Design Elegante */
 .dynamic-price {
-  font-weight: 700;
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
-  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 1rem;
+  letter-spacing: 0.02em;
 }
 
 .dynamic-price.loading {
-  background: #e3f2fd;
-  color: #1976d2;
-  animation: pulse 1.5s ease-in-out infinite alternate;
+  background: linear-gradient(135deg, 
+    rgba(144, 205, 244, 0.2) 0%, 
+    rgba(72, 166, 154, 0.15) 100%
+  );
+  color: var(--blue-medium, #2c5282);
+  animation: elegantPulse 1.8s ease-in-out infinite;
 }
 
 .dynamic-price.error {
-  background: #ffebee;
-  color: #c62828;
+  background: linear-gradient(135deg, 
+    rgba(220, 38, 38, 0.1) 0%, 
+    rgba(239, 68, 68, 0.08) 100%
+  );
+  color: #dc2626;
+  border: 1px solid rgba(220, 38, 38, 0.2);
 }
 
 .dynamic-price.loaded {
-  background: linear-gradient(135deg, #4caf50, #45a049);
+  background: linear-gradient(135deg, 
+    var(--seafoam, #48a69a) 0%, 
+    var(--blue-medium, #2c5282) 100%
+  );
   color: white;
-  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
+  box-shadow: 
+    0 2px 8px rgba(72, 166, 154, 0.3),
+    0 1px 3px rgba(44, 82, 130, 0.2);
 }
 
 .dynamic-price.loaded:hover {
-  transform: scale(1.05);
-  box-shadow: 0 3px 8px rgba(76, 175, 80, 0.4);
+  transform: scale(1.05) translateY(-1px);
+  box-shadow: 
+    0 4px 12px rgba(72, 166, 154, 0.4),
+    0 2px 6px rgba(44, 82, 130, 0.3);
 }
 
-@keyframes pulse {
-  from { opacity: 0.6; }
-  to { opacity: 1; }
+@keyframes elegantPulse {
+  0%, 100% { 
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 1;
+    transform: scale(1.02);
+  }
 }
 
-/* Tariffe Note */
+/* Tariffe Note - Design Raffinato */
 .tariffe-note {
-  background: #f8f9fa;
-  padding: 2rem;
-  border-radius: 12px;
-  border: 1px solid #dee2e6;
-  margin: 2rem 0;
-  line-height: 1.6;
+  position: relative;
+  background: linear-gradient(135deg, 
+    rgba(248, 249, 250, 0.95) 0%, 
+    rgba(255, 255, 255, 0.9) 100%
+  );
+  padding: 3rem;
+  border-radius: 16px;
+  border: 1px solid rgba(26, 54, 93, 0.1);
+  margin: 3rem 0;
+  line-height: 1.7;
+  box-shadow: 
+    0 4px 20px rgba(26, 54, 93, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.04);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+
+.tariffe-note::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, 
+    var(--blue-dark, #1a365d) 0%, 
+    var(--seafoam, #48a69a) 50%,
+    var(--terracotta, #e67e22) 100%
+  );
 }
 
 .tariffe-note p {
-  margin-bottom: 1rem;
-  color: #495057;
+  margin-bottom: 1.25rem;
+  color: var(--gray-dark, #2d3748);
+  font-size: 1rem;
+  font-weight: 500;
 }
 
 .tariffe-note p:last-child {
@@ -199,96 +376,222 @@
 }
 
 .tariffe-note .text-link {
-  color: #007bff;
+  color: var(--blue-medium, #2c5282);
   text-decoration: none;
   font-weight: 600;
-  transition: color 0.2s;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.tariffe-note .text-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--seafoam, #48a69a), var(--terracotta, #e67e22));
+  transition: width 0.3s ease;
 }
 
 .tariffe-note .text-link:hover {
-  color: #0056b3;
-  text-decoration: underline;
+  color: var(--blue-dark, #1a365d);
 }
 
-/* Status Messages */
+.tariffe-note .text-link:hover::after {
+  width: 100%;
+}
+
+/* Status Messages - Design Moderno */
 .pricing-loading {
-  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
-  border: 1px solid #2196f3;
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin: 1.5rem 0;
+  background: linear-gradient(135deg, 
+    rgba(144, 205, 244, 0.15) 0%, 
+    rgba(72, 166, 154, 0.1) 100%
+  );
+  border: 1px solid rgba(44, 82, 130, 0.2);
+  border-radius: 16px;
+  padding: 2rem;
+  margin: 2rem 0;
   text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.pricing-loading::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(144, 205, 244, 0.1) 50%, 
+    transparent 100%
+  );
+  animation: shimmer 2s infinite;
 }
 
 .loading-message {
-  color: #1976d2;
+  color: var(--blue-medium, #2c5282);
   font-weight: 600;
   font-size: 1.1rem;
+  font-family: var(--body-font, 'Montserrat', sans-serif);
 }
 
 .pricing-error {
-  background: linear-gradient(135deg, #ffebee, #ffcdd2);
-  border: 1px solid #f44336;
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin: 1.5rem 0;
+  background: linear-gradient(135deg, 
+    rgba(220, 38, 38, 0.1) 0%, 
+    rgba(248, 113, 113, 0.08) 100%
+  );
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  border-radius: 16px;
+  padding: 2rem;
+  margin: 2rem 0;
   text-align: center;
+  position: relative;
 }
 
 .error-message {
-  color: #c62828;
+  color: #dc2626;
   font-weight: 600;
-  line-height: 1.5;
+  line-height: 1.6;
+  font-family: var(--body-font, 'Montserrat', sans-serif);
 }
 
-/* Responsive Design */
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* Responsive Design - Elegante e Fluido */
+@media (max-width: 1024px) {
+  .dynamic-pricing-sections {
+    max-width: 90%;
+  }
+  
+  .included-services,
+  .extra-costs {
+    padding: 3rem 2rem;
+  }
+  
+  .included-services .section-list {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+
 @media (max-width: 768px) {
   .included-services,
   .extra-costs {
-    padding: 2rem 1rem;
-    margin: 1rem 0;
+    padding: 2.5rem 1.5rem;
+    margin: 2rem 0;
+    border-radius: 16px;
   }
 
   .included-services .section-list {
     grid-template-columns: 1fr;
-    gap: 0.5rem;
+    gap: 0.75rem;
+  }
+
+  .included-services .section-list li,
+  .extra-costs .section-list li {
+    padding: 1rem 1.25rem;
+    font-size: 0.95rem;
+  }
+
+  .section-title {
+    font-size: 2rem !important;
+    margin-bottom: 2rem !important;
+  }
+
+  .section-subtitle {
+    font-size: 1.3rem !important;
+    padding: 0.8rem 1.2rem !important;
+    margin-bottom: 1.25rem !important;
+  }
+
+  .tariffe-note {
+    padding: 2rem 1.5rem;
+    margin: 2rem 0;
+  }
+  
+  .extra-costs .section-list li::before,
+  .included-services .section-list li::before {
+    width: 28px;
+    height: 28px;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dynamic-pricing-sections {
+    max-width: 95%;
+  }
+  
+  .included-services,
+  .extra-costs {
+    padding: 2rem 1rem;
+    margin: 1.5rem 0;
+    border-radius: 12px;
+  }
+
+  .section-title {
+    font-size: 1.7rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+  .section-subtitle {
+    font-size: 1.2rem !important;
+    padding: 0.75rem 1rem !important;
+    margin-bottom: 1rem !important;
   }
 
   .included-services .section-list li,
   .extra-costs .section-list li {
     padding: 1rem;
-    font-size: 1rem;
+    gap: 0.8rem;
+    font-size: 0.9rem;
   }
 
-  .section-title {
-    font-size: 1.5rem !important;
-  }
-
-  .section-subtitle {
-    font-size: 1.2rem !important;
-  }
-
-  .tariffe-note {
-    padding: 1.5rem 1rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .included-services,
-  .extra-costs {
-    padding: 1.5rem 0.75rem;
-  }
-
-  .section-title {
-    font-size: 1.3rem !important;
-  }
-
-  .section-subtitle {
-    font-size: 1.1rem !important;
-    padding: 0.5rem 0.75rem;
+  .extra-costs .section-list li::before,
+  .included-services .section-list li::before {
+    width: 24px;
+    height: 24px;
+    font-size: 0.9rem;
   }
 
   .dynamic-price {
     font-size: 0.9rem;
+    padding: 0.3rem 0.6rem;
+  }
+  
+  .tariffe-note {
+    padding: 1.5rem 1rem;
+    margin: 1.5rem 0;
+  }
+  
+  .tariffe-note p {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .included-services,
+  .extra-costs {
+    padding: 1.5rem 0.75rem;
+  }
+  
+  .section-title {
+    font-size: 1.5rem !important;
+  }
+  
+  .section-subtitle {
+    font-size: 1.1rem !important;
+  }
+  
+  .included-services .section-list li,
+  .extra-costs .section-list li {
+    padding: 0.75rem;
+    font-size: 0.85rem;
   }
 }
