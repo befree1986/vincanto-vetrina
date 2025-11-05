@@ -34,12 +34,12 @@ export default async function handler(req, res) {
       
       // Salva nel database usando la tabella admin_settings
       await pool.query(`
-        INSERT INTO admin_settings (setting_key, setting_value, category, description)
+        INSERT INTO admin_settings (setting_key, setting_value, setting_type, category, description, created_at, updated_at)
         VALUES 
-          ($1, $2, 'custom_services', $3),
-          ($4, $5, 'custom_services', $6),
-          ($7, $8, 'custom_services', $9),
-          ($10, $11, 'custom_services', $12)
+          ($1, $2, 'string', 'custom_services', $3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+          ($4, $5, 'number', 'custom_services', $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+          ($7, $8, 'string', 'custom_services', $9, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+          ($10, $11, 'string', 'custom_services', $12, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       `, [
         `custom_service_${serviceId}_name`, name, `Nome servizio personalizzato ${serviceId}`,
         `custom_service_${serviceId}_price`, price.toString(), `Prezzo servizio personalizzato ${serviceId}`,
@@ -83,8 +83,8 @@ export default async function handler(req, res) {
       const updates = [];
       if (name !== undefined) {
         await pool.query(`
-          INSERT INTO admin_settings (setting_key, setting_value, category, description)
-          VALUES ($1, $2, 'custom_services', $3)
+          INSERT INTO admin_settings (setting_key, setting_value, setting_type, category, description, created_at, updated_at)
+          VALUES ($1, $2, 'string', 'custom_services', $3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
           ON CONFLICT (setting_key) DO UPDATE SET 
             setting_value = EXCLUDED.setting_value,
             updated_at = CURRENT_TIMESTAMP
@@ -94,8 +94,8 @@ export default async function handler(req, res) {
 
       if (price !== undefined) {
         await pool.query(`
-          INSERT INTO admin_settings (setting_key, setting_value, category, description)
-          VALUES ($1, $2, 'custom_services', $3)
+          INSERT INTO admin_settings (setting_key, setting_value, setting_type, category, description, created_at, updated_at)
+          VALUES ($1, $2, 'number', 'custom_services', $3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
           ON CONFLICT (setting_key) DO UPDATE SET 
             setting_value = EXCLUDED.setting_value,
             updated_at = CURRENT_TIMESTAMP
@@ -105,8 +105,8 @@ export default async function handler(req, res) {
 
       if (unit !== undefined) {
         await pool.query(`
-          INSERT INTO admin_settings (setting_key, setting_value, category, description)
-          VALUES ($1, $2, 'custom_services', $3)
+          INSERT INTO admin_settings (setting_key, setting_value, setting_type, category, description, created_at, updated_at)
+          VALUES ($1, $2, 'string', 'custom_services', $3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
           ON CONFLICT (setting_key) DO UPDATE SET 
             setting_value = EXCLUDED.setting_value,
             updated_at = CURRENT_TIMESTAMP
@@ -116,8 +116,8 @@ export default async function handler(req, res) {
 
       if (description !== undefined) {
         await pool.query(`
-          INSERT INTO admin_settings (setting_key, setting_value, category, description)
-          VALUES ($1, $2, 'custom_services', $3)
+          INSERT INTO admin_settings (setting_key, setting_value, setting_type, category, description, created_at, updated_at)
+          VALUES ($1, $2, 'string', 'custom_services', $3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
           ON CONFLICT (setting_key) DO UPDATE SET 
             setting_value = EXCLUDED.setting_value,
             updated_at = CURRENT_TIMESTAMP
