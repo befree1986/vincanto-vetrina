@@ -396,57 +396,6 @@ const BookingSystemEnhanced: React.FC = () => {
                             )}
                         </div>
 
-                        <div className="services-section">
-                            <h4>
-                                <span className="icon">🚗</span>
-                                {getSafeTranslation(t, 'booking.additionalServices', 'Servizi Aggiuntivi')}
-                            </h4>
-                            
-                            <div className="parking-options">
-                                <label className="radio-option">
-                                    <input
-                                        type="radio"
-                                        name="parking"
-                                        value="none"
-                                        checked={booking.formData.parking_option === 'none'}
-                                        onChange={(e) => booking.setFormData({ parking_option: e.target.value as any })}
-                                    />
-                                    <span className="radio-label">
-                                        <span className="icon">🚫</span>
-                                        {getSafeTranslation(t, 'booking.parking.none', 'Non necessario')}
-                                    </span>
-                                </label>
-
-                                <label className="radio-option">
-                                    <input
-                                        type="radio"
-                                        name="parking"
-                                        value="street"
-                                        checked={booking.formData.parking_option === 'street'}
-                                        onChange={(e) => booking.setFormData({ parking_option: e.target.value as any })}
-                                    />
-                                    <span className="radio-label">
-                                        <span className="icon">🛣️</span>
-                                        {getSafeTranslation(t, 'booking.parking.street', 'Parcheggio strada (Gratuito)')}
-                                    </span>
-                                </label>
-
-                                <label className="radio-option">
-                                    <input
-                                        type="radio"
-                                        name="parking"
-                                        value="private"
-                                        checked={booking.formData.parking_option === 'private'}
-                                        onChange={(e) => booking.setFormData({ parking_option: e.target.value as any })}
-                                    />
-                                    <span className="radio-label">
-                                        <span className="icon">🅿️</span>
-                                        {getSafeTranslation(t, 'booking.parking.private', 'Parcheggio privato (+€20/notte)')}
-                                    </span>
-                                </label>
-                            </div>
-                        </div>
-
                         <div className="booking-navigation">
                             <button 
                                 type="button"
@@ -488,6 +437,15 @@ const BookingSystemEnhanced: React.FC = () => {
                             onServicesChange={(services, totalCost) => {
                                 setSelectedExtraServices(services);
                                 setExtraServicesCost(totalCost);
+                                
+                                // Sincronizza la selezione del parcheggio con parking_option
+                                const parkingService = services.find(service => service.isParking || service.category === 'parcheggio');
+                                if (parkingService) {
+                                    booking.setFormData({ parking_option: 'private' });
+                                } else {
+                                    // Se non c'è parcheggio selezionato, imposta su "none" per default
+                                    booking.setFormData({ parking_option: 'none' });
+                                }
                             }}
                         />
 
