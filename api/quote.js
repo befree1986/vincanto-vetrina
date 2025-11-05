@@ -126,7 +126,13 @@ export default async function handler(req, res) {
         cleaningFee = parseFloat(settings.cleaningFee || settings.cleaning_fee) || cleaningFee;
         parkingFeePerNight = parseFloat(settings.parkingFee || settings.parking_fee || settings.parkingFeePerNight || settings.parking_fee_per_night) || parkingFeePerNight;
         additionalGuestPrice = parseFloat(settings.additionalGuestPrice || settings.additional_guest_price) || additionalGuestPrice;
-        touristTaxPerPersonPerNight = parseFloat(settings.touristTaxPerPersonPerNight || settings.touristTaxAdult) || touristTaxPerPersonPerNight;
+        // 🎯 FIX: Supporta tutti i possibili nomi per la tassa di soggiorno
+        touristTaxPerPersonPerNight = parseFloat(
+          settings.touristTax || 
+          settings.touristTaxPerPersonPerNight || 
+          settings.touristTaxAdult || 
+          settings.tourist_tax
+        ) || touristTaxPerPersonPerNight;
         
         console.log('✅ Prezzi AGGIORNATI da database admin:', { 
           oldBasePrice, 
