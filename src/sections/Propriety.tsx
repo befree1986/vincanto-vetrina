@@ -208,6 +208,8 @@ const Propriety: React.FC = () => {
                 <td>
                   {pricing.loading ? (
                     <span>Caricamento...</span>
+                  ) : pricing.error ? (
+                    <span>€ 75 a persona</span>
                   ) : (
                     <span>€ {pricing.basePrice} a persona</span>
                   )}
@@ -218,6 +220,8 @@ const Propriety: React.FC = () => {
                 <td>
                   {pricing.loading ? (
                     <span>Caricamento...</span>
+                  ) : pricing.error ? (
+                    <span>€ 20 a persona</span>
                   ) : (
                     <span>€ {pricing.additionalGuestPrice} a persona</span>
                   )}
@@ -228,6 +232,8 @@ const Propriety: React.FC = () => {
                 <td>
                   {pricing.loading ? (
                     <span>Caricamento...</span>
+                  ) : pricing.error ? (
+                    <span>€ 20 a persona</span>
                   ) : (
                     <span>€ {pricing.additionalGuestPrice} a persona</span>
                   )}
@@ -238,6 +244,8 @@ const Propriety: React.FC = () => {
                 <td>
                   {pricing.loading ? (
                     <span>Caricamento...</span>
+                  ) : pricing.error ? (
+                    <span>€ 20 a persona</span>
                   ) : (
                     <span>€ {pricing.additionalGuestPrice} a persona</span>
                   )}

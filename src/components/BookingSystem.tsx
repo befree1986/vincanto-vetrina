@@ -349,7 +349,7 @@ const BookingSystem: React.FC = () => {
                             <label htmlFor="parking-private">
                                 Parcheggio privato riservato e custodito
                                 <span className="service-price highlight">
-                                    +€{dynamicPricing.loading ? '...' : dynamicPricing.parkingFee}/giorno
+                                    +€{dynamicPricing.loading ? '...' : dynamicPricing.error ? '20' : dynamicPricing.parkingFee}/giorno
                                 </span>
                                 <small className="service-note">Prenotazione garantita</small>
                             </label>
