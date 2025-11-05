@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useBooking } from '../hooks/useBooking';
 import BookingCalendar from './BookingCalendar';
 import { BookingStep2, BookingStep3 } from './BookingSteps';
+import ExtraServices from './ExtraServices';
 import './BookingSystemEnhanced.css';
 import { getSafeTranslation } from '../i18n';
 
@@ -10,9 +11,16 @@ import { getSafeTranslation } from '../i18n';
 interface PriceBreakdownProps {
     costs: any;
     loading: boolean;
+    extraServicesCost?: number;
+    selectedExtraServices?: any[];
 }
 
-const PriceBreakdown: React.FC<PriceBreakdownProps> = ({ costs, loading }) => {
+const PriceBreakdown: React.FC<PriceBreakdownProps> = ({ 
+    costs, 
+    loading, 
+    extraServicesCost = 0, 
+    selectedExtraServices = [] 
+}) => {
     const { t } = useTranslation();
     
     if (loading) {
@@ -30,7 +38,9 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({ costs, loading }) => {
     
     if (!costs) return null;
 
-    const remainingAmount = costs.totalAmount - costs.depositAmount;
+    const totalWithExtras = costs.totalAmount + extraServicesCost;
+    const depositWithExtras = totalWithExtras * 0.30;
+    const remainingAmount = totalWithExtras - depositWithExtras;
 
     return (
         <div className="price-breakdown enhanced">
@@ -81,6 +91,25 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({ costs, loading }) => {
                         </span>
                         <span className="item-value">€{costs.touristTax?.toFixed(2) || '0.00'}</span>
                     </div>
+
+                    {/* Servizi Extra */}
+                    {selectedExtraServices.length > 0 && (
+                        <>
+                            <div className="breakdown-subtitle">
+                                <span className="icon">🛎️</span>
+                                Servizi Extra
+                            </div>
+                            {selectedExtraServices.map(service => (
+                                <div key={service.id} className="breakdown-item extra-service">
+                                    <span className="item-label">
+                                        <span className="icon">✨</span>
+                                        {service.name}
+                                    </span>
+                                    <span className="item-value">€{service.price.toFixed(2)}</span>
+                                </div>
+                            ))}
+                        </>
+                    )}
                 </div>
 
                 <div className="breakdown-separator"></div>
@@ -91,7 +120,7 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({ costs, loading }) => {
                             <span className="icon">💰</span>
                             {getSafeTranslation(t, 'booking.total', 'Totale')}
                         </span>
-                        <span className="item-value total-amount">€{costs.totalAmount?.toFixed(2) || '0.00'}</span>
+                        <span className="item-value total-amount">€{totalWithExtras?.toFixed(2) || '0.00'}</span>
                     </div>
 
                     <div className="payment-info">
@@ -100,7 +129,7 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({ costs, loading }) => {
                                 <span className="icon">💳</span>
                                 {getSafeTranslation(t, 'booking.deposit', 'Acconto richiesto (30%)')}
                             </span>
-                            <span className="item-value">€{costs.depositAmount?.toFixed(2) || '0.00'}</span>
+                            <span className="item-value">€{depositWithExtras?.toFixed(2) || '0.00'}</span>
                         </div>
 
                         <div className="breakdown-item">
@@ -128,6 +157,10 @@ const BookingSystemEnhanced: React.FC = () => {
     const { t } = useTranslation();
     const booking = useBooking();
     const [currentStep, setCurrentStep] = useState(1);
+    
+    // 🛎️ Stati per servizi extra
+    const [selectedExtraServices, setSelectedExtraServices] = useState<any[]>([]);
+    const [extraServicesCost, setExtraServicesCost] = useState(0);
 
     // 🔄 Calcolo del numero di notti
     const nights = useMemo(() => {
@@ -163,11 +196,16 @@ const BookingSystemEnhanced: React.FC = () => {
         },
         { 
             id: 2, 
+            title: getSafeTranslation(t, 'booking.extraServices', 'Servizi Extra'), 
+            icon: '🛎️' 
+        },
+        { 
+            id: 3, 
             title: getSafeTranslation(t, 'booking.step2.title', 'Dati Personali'), 
             icon: '📝' 
         },
         { 
-            id: 3, 
+            id: 4, 
             title: getSafeTranslation(t, 'booking.step3.title', 'Pagamento'), 
             icon: '💳' 
         }
@@ -433,18 +471,60 @@ const BookingSystemEnhanced: React.FC = () => {
                     </div>
                 )}
 
-                {/* Step 2: Dati Personali */}
+                {/* Step 2: Servizi Extra */}
                 {currentStep === 2 && (
+                    <div className="booking-step step-services">
+                        <div className="step-header">
+                            <h3>
+                                <span className="step-icon">🛎️</span>
+                                {getSafeTranslation(t, 'booking.extraServices', 'Servizi Extra')}
+                            </h3>
+                            <p>{getSafeTranslation(t, 'booking.extraServicesDesc', 'Personalizza il tuo soggiorno con i nostri servizi aggiuntivi')}</p>
+                        </div>
+
+                        <ExtraServices
+                            childrenAges={booking.formData.children_ages}
+                            showHeader={false}
+                            onServicesChange={(services, totalCost) => {
+                                setSelectedExtraServices(services);
+                                setExtraServicesCost(totalCost);
+                            }}
+                        />
+
+                        <div className="step-navigation">
+                            <button 
+                                type="button"
+                                onClick={() => setCurrentStep(1)}
+                                className="btn btn-secondary"
+                            >
+                                <span className="icon">⬅️</span>
+                                {getSafeTranslation(t, 'booking.navigation.back', 'Indietro')}
+                            </button>
+                            
+                            <button 
+                                type="button"
+                                onClick={() => setCurrentStep(3)}
+                                className="btn btn-primary"
+                            >
+                                {getSafeTranslation(t, 'booking.navigation.next', 'Continua')}
+                                <span className="icon">➡️</span>
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Step 3: Dati Personali */}
+                {currentStep === 3 && (
                     <BookingStep2 
-                        onNext={() => setCurrentStep(3)}
-                        onBack={() => setCurrentStep(1)}
+                        onNext={() => setCurrentStep(4)}
+                        onBack={() => setCurrentStep(2)}
                     />
                 )}
 
-                {/* Step 3: Pagamento */}
-                {currentStep === 3 && (
+                {/* Step 4: Pagamento */}
+                {currentStep === 4 && (
                     <BookingStep3 
-                        onBack={() => setCurrentStep(2)}
+                        onBack={() => setCurrentStep(3)}
                     />
                 )}
 
@@ -453,6 +533,8 @@ const BookingSystemEnhanced: React.FC = () => {
                     <PriceBreakdown 
                         costs={booking.quote} 
                         loading={booking.isLoadingQuote}
+                        extraServicesCost={extraServicesCost}
+                        selectedExtraServices={selectedExtraServices}
                     />
                     
                     {booking.quoteError && (

@@ -112,9 +112,10 @@
 }
 
 /* Classi dinamiche per la larghezza del progresso */
-.progress-fill.step-1 { width: 33.33%; }
-.progress-fill.step-2 { width: 66.66%; }
-.progress-fill.step-3 { width: 100%; }
+.progress-fill.step-1 { width: 25%; }
+.progress-fill.step-2 { width: 50%; }
+.progress-fill.step-3 { width: 75%; }
+.progress-fill.step-4 { width: 100%; }
 
 /* 📝 Contenuto principale */
 .booking-content {
@@ -760,4 +761,168 @@
 
 .step-icon {
   font-size: 16px;
+}
+
+/* 🛎️ Servizi Extra nel breakdown */
+.breakdown-subtitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+  margin: 16px 0 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.breakdown-item.extra-service {
+  font-size: 14px;
+  margin-left: 16px;
+}
+
+.breakdown-item.extra-service .item-label {
+  color: #64748b;
+}
+
+/* 🎨 Override ExtraServices per eleganza coerente */
+.booking-step .extra-services {
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+
+.booking-step .extra-services-header {
+  text-align: left;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.booking-step .extra-services-header h3 {
+  color: #1e293b;
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: none; /* Nascosto perché già nel step header */
+}
+
+.booking-step .extra-services-header p {
+  color: #64748b;
+  font-size: 14px;
+  margin: 0;
+}
+
+.booking-step .total-cost {
+  background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.booking-step .service-category {
+  margin-bottom: 32px;
+}
+
+.booking-step .service-category h4 {
+  color: #1e293b;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  padding: 0;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.booking-step .services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 0;
+}
+
+.booking-step .service-card {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  min-height: 140px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.booking-step .service-card:hover {
+  transform: none;
+  border-color: #0ea5e9;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);
+}
+
+.booking-step .service-card.selected {
+  background: #f0f9ff;
+  border-color: #0ea5e9;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
+}
+
+.booking-step .service-header {
+  margin-bottom: 12px;
+}
+
+.booking-step .service-header h5 {
+  color: #1e293b;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.booking-step .service-price {
+  background: #0ea5e9;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-left: 12px;
+}
+
+.booking-step .service-card.selected .service-price {
+  background: #1e293b;
+}
+
+.booking-step .service-description {
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0 0 8px 0;
+}
+
+.booking-step .service-age {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 500;
+  margin: 0;
+  padding: 4px 8px;
+  background: #f1f5f9;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.booking-step .service-checkbox {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+
+.booking-step .service-checkbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: #0ea5e9;
+  cursor: pointer;
 }

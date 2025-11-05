@@ -5,11 +5,13 @@ import './ExtraServices.css';
 interface ExtraServicesProps {
   onServicesChange?: (services: ExtraService[], totalCost: number) => void;
   childrenAges?: number[];
+  showHeader?: boolean;
 }
 
 const ExtraServices: React.FC<ExtraServicesProps> = ({ 
   onServicesChange, 
-  childrenAges = [] 
+  childrenAges = [],
+  showHeader = true
 }) => {
   const {
     services,
@@ -73,15 +75,18 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
 
   return (
     <div className="extra-services">
-      <div className="extra-services-header">
-        <h3>🛎️ Servizi Extra</h3>
-        <p>Personalizza il tuo soggiorno con i nostri servizi aggiuntivi</p>
-        {getTotalCost() > 0 && (
-          <div className="total-cost">
-            <strong>Totale servizi extra: €{getTotalCost()}</strong>
-          </div>
-        )}
-      </div>
+      {showHeader && (
+        <div className="extra-services-header">
+          <h3>🛎️ Servizi Extra</h3>
+          <p>Personalizza il tuo soggiorno con i nostri servizi aggiuntivi</p>
+        </div>
+      )}
+      
+      {getTotalCost() > 0 && (
+        <div className="total-cost">
+          <strong>💰 Totale servizi extra: €{getTotalCost()}</strong>
+        </div>
+      )}
 
       {/* Servizi per bambini */}
       {childrenServices.length > 0 && (
