@@ -1,4 +1,6 @@
 // AdminApiService - Collegamento alle API Backend Admin
+import { ExtraService } from '../hooks/useExtraServices';
+
 class AdminApiService {
   private readonly baseUrl: string;
 
@@ -581,7 +583,7 @@ class AdminApiService {
   // === EXTRA SERVICES MANAGEMENT ===
 
   // Carica tutti i servizi extra (hardcoded + custom)
-  async getExtraServices() {
+  async getExtraServices(): Promise<ExtraService[]> {
     try {
       const response = await fetch(`${this.baseUrl}/extra-services`);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);

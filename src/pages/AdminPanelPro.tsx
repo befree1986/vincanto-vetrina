@@ -4,6 +4,7 @@ import './AdminPanelPro.css';
 import '../styles/AdminSuperAdmin.css';
 import AdminApiService from '../services/adminApiService';
 import AdminPricing from '../components/admin/AdminPricing';
+import { ExtraService } from '../hooks/useExtraServices';
 
 const AdminPanelPro: React.FC = () => {
   console.log('🚀 AdminPanelPro component rendering...');
@@ -80,11 +81,7 @@ const AdminPanelPro: React.FC = () => {
   const [isUpdatingPricing, setIsUpdatingPricing] = useState(false);
   
   // Stati per servizi personalizzati AGGIORNATI
-  const [customServices, setCustomServices] = useState([
-    { id: 1, name: 'Culla per bambini (0-3 anni)', price: 30, unit: 'soggiorno' },
-    { id: 2, name: 'Seggiolone', price: 15, unit: 'soggiorno' },
-    { id: 3, name: 'Animali domestici', price: 25, unit: 'soggiorno' }
-  ]);
+  const [customServices, setCustomServices] = useState<ExtraService[]>([]);
   const [newServiceName, setNewServiceName] = useState('');
   const [newServicePrice, setNewServicePrice] = useState(0);
   
@@ -347,8 +344,8 @@ const AdminPanelPro: React.FC = () => {
         id,
         name: field === 'name' ? value : currentService.name,
         price: field === 'price' ? value : currentService.price,
-        unit: field === 'unit' ? value : currentService.unit,
-        description: field === 'description' ? value : (currentService.description || ''),
+        unit: field === 'unit' ? value : (currentService.unit || 'soggiorno'),
+        description: field === 'description' ? value : (currentService.description ?? ''),
       };
 
       const result = await adminApiService.updateCustomService(serviceData);
@@ -3110,7 +3107,7 @@ const AdminPanelPro: React.FC = () => {
         {activeTab === 'sistema' && (
           <div className="admin-sistema">
             <h2>⚙️ Configurazione Sistema e Database</h2>
-            <div className="admin-notice" style={{backgroundColor: '#fff3cd', padding: '15px', marginBottom: '20px', borderRadius: '8px', border: '1px solid #ffeaa7'}}>
+            <div className="admin-notice">
               <strong>💡 Nota:</strong> Per modificare prezzi, tariffe e configurazioni di prenotazione, utilizza la tab <strong>"🏷️ Prezzi"</strong>.
               Questa sezione è dedicata solo alle impostazioni tecniche del sistema.
             </div>
