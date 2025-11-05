@@ -16,6 +16,7 @@ import Accessibility from './pages/Accessibility';
 import AdminSetup from './components/AdminSetup';
 import { setupIntelligentPreload, preloadOnIdle } from './utils/preloadComponents';
 import DynamicPricingDebug from './components/DynamicPricingDebug';
+import TouristTaxDebug from './components/TouristTaxDebug';
 
 // Lazy loading per componenti pesanti
 const AdminPanelPro = lazy(() => import('./pages/AdminPanelPro'));
@@ -102,6 +103,7 @@ function App() {
           <Booking />
           <Contact />
           <DynamicPricingDebug />
+          <TouristTaxDebug />
           </>
           }
           />
