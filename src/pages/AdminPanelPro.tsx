@@ -273,35 +273,121 @@ const AdminPanelPro: React.FC = () => {
 
   // === CUSTOM SERVICES FUNCTIONS ===
   
-  const addCustomService = () => {
+  const loadCustomServices = async () => {
+    if (!adminApiService) return;
+    
+    try {
+      console.log('🛎️ Caricamento servizi custom dal database...');
+      
+      const services = await adminApiService.getExtraServices();
+      
+      // Filtra solo i servizi custom (categoria 'custom')
+      const customOnly = services.filter(service => service.category === 'custom');
+      setCustomServices(customOnly);
+      
+      console.log('✅ Servizi custom caricati:', customOnly.length);
+    } catch (error) {
+      console.error('❌ Errore caricamento servizi custom:', error);
+    }
+  };
+
+  const addCustomService = async () => {
     if (!newServiceName.trim() || newServicePrice <= 0) {
       alert('⚠️ Inserisci nome e prezzo validi');
       return;
     }
 
-    const newService = {
-      id: Date.now(),
-      name: newServiceName.trim(),
-      price: newServicePrice,
-      unit: 'notte'
-    };
+    if (!adminApiService) {
+      alert('❌ Servizio API non disponibile');
+      return;
+    }
 
-    setCustomServices(prev => [...prev, newService]);
-    setNewServiceName('');
-    setNewServicePrice(0);
-    console.log('✅ Servizio aggiunto:', newService);
+    try {
+      const serviceData = {
+        name: newServiceName.trim(),
+        price: newServicePrice,
+        unit: 'soggiorno',
+        description: '',
+        category: 'custom'
+      };
+
+      const result = await adminApiService.addCustomService(serviceData);
+      
+      if (result.success) {
+        // Ricarica i servizi dal database
+        await loadCustomServices();
+        
+        setNewServiceName('');
+        setNewServicePrice(0);
+        console.log('✅ Servizio aggiunto e salvato nel database');
+      } else {
+        alert('❌ Errore aggiunta servizio: ' + result.message);
+      }
+    } catch (error) {
+      console.error('❌ Errore aggiunta servizio:', error);
+      alert('❌ Errore aggiunta servizio');
+    }
   };
 
-  const updateCustomService = (id: number, field: string, value: any) => {
-    setCustomServices(prev => prev.map(service => 
-      service.id === id ? { ...service, [field]: value } : service
-    ));
+  const updateCustomService = async (id: number, field: string, value: any) => {
+    if (!adminApiService) return;
+    
+    try {
+      // Aggiorna immediatamente l'interfaccia
+      setCustomServices(prev => prev.map(service => 
+        service.id === id ? { ...service, [field]: value } : service
+      ));
+
+      // Trova il servizio corrente per avere tutti i dati
+      const currentService = customServices.find(s => s.id === id);
+      if (!currentService) return;
+
+      // Prepara i dati completi da inviare
+      const serviceData = {
+        id,
+        name: field === 'name' ? value : currentService.name,
+        price: field === 'price' ? value : currentService.price,
+        unit: field === 'unit' ? value : currentService.unit,
+        description: field === 'description' ? value : (currentService.description || ''),
+      };
+
+      const result = await adminApiService.updateCustomService(serviceData);
+      
+      if (!result.success) {
+        console.warn('⚠️ Errore aggiornamento servizio:', result.message);
+        // Ricarica per sincronizzare
+        await loadCustomServices();
+      }
+    } catch (error) {
+      console.error('❌ Errore aggiornamento servizio:', error);
+      // Ricarica per sincronizzare
+      await loadCustomServices();
+    }
   };
 
-  const deleteCustomService = (id: number) => {
-    if (confirm('⚠️ Sei sicuro di voler eliminare questo servizio?')) {
-      setCustomServices(prev => prev.filter(service => service.id !== id));
-      console.log('🗑️ Servizio eliminato:', id);
+  const deleteCustomService = async (id: number) => {
+    if (!confirm('⚠️ Sei sicuro di voler eliminare questo servizio?')) {
+      return;
+    }
+
+    if (!adminApiService) {
+      alert('❌ Servizio API non disponibile');
+      return;
+    }
+
+    try {
+      const result = await adminApiService.deleteCustomService(id);
+      
+      if (result.success) {
+        // Ricarica i servizi dal database
+        await loadCustomServices();
+        console.log('✅ Servizio eliminato dal database');
+      } else {
+        alert('❌ Errore eliminazione servizio: ' + result.message);
+      }
+    } catch (error) {
+      console.error('❌ Errore eliminazione servizio:', error);
+      alert('❌ Errore eliminazione servizio');
     }
   };
 
@@ -811,6 +897,13 @@ const AdminPanelPro: React.FC = () => {
         console.log('✅ Calendari caricati');
       } catch (err) {
         console.error('❌ Errore calendari:', err);
+      }
+
+      try {
+        await loadCustomServices();
+        console.log('✅ Servizi custom caricati');
+      } catch (err) {
+        console.error('❌ Errore servizi custom:', err);
       }
 
       console.log('✅ Dati API reali caricati completamente');

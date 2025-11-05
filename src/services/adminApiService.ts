@@ -578,6 +578,85 @@ class AdminApiService {
     }
   }
 
+  // === EXTRA SERVICES MANAGEMENT ===
+
+  // Carica tutti i servizi extra (hardcoded + custom)
+  async getExtraServices() {
+    try {
+      const response = await fetch(`${this.baseUrl}/extra-services`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      return data.services || [];
+    } catch (error) {
+      console.error('Error fetching extra services:', error);
+      return [];
+    }
+  }
+
+  // Aggiungi nuovo servizio custom
+  async addCustomService(serviceData: any) {
+    try {
+      console.log('➕ ADMIN API: Aggiunta servizio custom:', serviceData);
+      
+      const response = await fetch(`${this.baseUrl}/extra-services`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(serviceData),
+      });
+      
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const result = await response.json();
+      
+      console.log('✅ SERVIZIO AGGIUNTO:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Errore aggiunta servizio custom:', error);
+      return { success: false, message: 'Errore aggiunta servizio' };
+    }
+  }
+
+  // Aggiorna servizio custom esistente
+  async updateCustomService(serviceData: any) {
+    try {
+      console.log('🔄 ADMIN API: Aggiornamento servizio custom:', serviceData);
+      
+      const response = await fetch(`${this.baseUrl}/extra-services`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(serviceData),
+      });
+      
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const result = await response.json();
+      
+      console.log('✅ SERVIZIO AGGIORNATO:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Errore aggiornamento servizio custom:', error);
+      return { success: false, message: 'Errore aggiornamento servizio' };
+    }
+  }
+
+  // Elimina servizio custom
+  async deleteCustomService(serviceId: number) {
+    try {
+      console.log('🗑️ ADMIN API: Eliminazione servizio custom:', serviceId);
+      
+      const response = await fetch(`${this.baseUrl}/extra-services?id=${serviceId}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const result = await response.json();
+      
+      console.log('✅ SERVIZIO ELIMINATO:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Errore eliminazione servizio custom:', error);
+      return { success: false, message: 'Errore eliminazione servizio' };
+    }
+  }
+
 }
 
 export default AdminApiService;
