@@ -21,15 +21,24 @@ export default async function handler(req, res) {
   
   try {
     // Supporta sia GET che POST
-    let checkIn, checkOut, guests, includeParking;
+    let checkIn, checkOut, guests, includeParking, adults, children, childrenAges;
     
     if (req.method === 'GET') {
-      ({ checkIn, checkOut, guests, includeParking } = req.query);
+      ({ checkIn, checkOut, guests, includeParking, adults, children, childrenAges } = req.query);
     } else if (req.method === 'POST') {
-      ({ checkIn, checkOut, guests, includeParking } = req.body);
+      ({ checkIn, checkOut, guests, includeParking, adults, children, childrenAges } = req.body);
     } else {
       return res.status(405).json({ success: false, error: 'Metodo non consentito' });
     }
+
+    // 🧒 Parsing parametri per gestione bambini
+    adults = parseInt(adults) || parseInt(guests) || 0;
+    children = parseInt(children) || 0;
+    childrenAges = Array.isArray(childrenAges) ? childrenAges.map(age => parseInt(age)) : [];
+    
+    console.log('🎯 PARAMETRI RICEVUTI:', { 
+      checkIn, checkOut, guests: parseInt(guests), adults, children, childrenAges, includeParking 
+    });
 
     if (!checkIn || !checkOut || !guests) {
       return res.status(400).json({ 
@@ -163,7 +172,37 @@ export default async function handler(req, res) {
 
     const additionalGuestsCost = 0; // Non serve più calcolo separato, tutto incluso in baseCost
     const parkingCost = includeParking ? nights * parkingFeePerNight : 0;
-    const touristTax = parseInt(guests) * nights * touristTaxPerPersonPerNight;
+    
+    // 🧒 CALCOLO TASSA SOGGIORNO CORRETTA: solo adulti e bambini ≥12 anni
+    let guestsSubjectToTax = adults; // Tutti gli adulti pagano
+    
+    // Aggiungi bambini ≥12 anni se presente l'array delle età
+    if (childrenAges && childrenAges.length > 0) {
+      const childrenOver12 = childrenAges.filter(age => age >= 12).length;
+      guestsSubjectToTax += childrenOver12;
+      console.log('🧒 BAMBINI ANALISI:', {
+        totalChildren: childrenAges.length,
+        childrenAges,
+        childrenOver12,
+        guestsSubjectToTax
+      });
+    } else if (children > 0) {
+      // Se non abbiamo le età specifiche, assumiamo tutti i bambini ≥12 (comportamento precedente)
+      guestsSubjectToTax += children;
+      console.log('⚠️ Età bambini non specificate, assumendo tutti ≥12 anni');
+    }
+    
+    const touristTax = guestsSubjectToTax * nights * touristTaxPerPersonPerNight;
+    
+    console.log('💰 CALCOLO TASSA SOGGIORNO:', {
+      adults,
+      children,
+      childrenAges,
+      guestsSubjectToTax,
+      touristTaxPerPersonPerNight,
+      nights,
+      totalTouristTax: touristTax
+    });
     
     const subtotal = baseCost + cleaningFee + parkingCost;
     const totalAmount = subtotal + touristTax;

@@ -192,6 +192,9 @@ export function useBooking(): BookingState {
                 checkIn: formatDateForApi(formData.check_in_date),
                 checkOut: formatDateForApi(formData.check_out_date),
                 guests: formData.num_adults + formData.num_children,
+                adults: formData.num_adults,
+                children: formData.num_children,
+                childrenAges: formData.children_ages,
                 includeParking: formData.parking_option === 'private'
             };
             

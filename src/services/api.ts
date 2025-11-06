@@ -42,6 +42,9 @@ export interface BookingQuoteRequest {
     checkIn: string;
     checkOut: string;
     guests: number;
+    adults?: number;
+    children?: number;
+    childrenAges?: number[];
     includeParking?: boolean;
 }
 
