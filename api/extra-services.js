@@ -189,12 +189,14 @@ export default async function handler(req, res) {
     const extraServices = [
       { 
         id: 1, 
-        name: 'Parcheggio privato custodito', 
+        name: 'Parcheggio privato', 
         price: 20, 
         unit: 'notte',
-        description: 'Posto auto riservato e sorvegliato nel nostro parcheggio privato',
+        description: 'Posto auto riservato nel nostro parcheggio privato',
         category: 'parcheggio',
         available: true,
+        active: true, // 🔥 NUOVO: Servizio attivo di default
+        included: false, // 🔥 NUOVO: Non incluso di default
         isParking: true // Flag speciale per identificare il parcheggio
       },
       { 
@@ -205,6 +207,8 @@ export default async function handler(req, res) {
         description: 'Culla sicura e confortevole per i più piccoli',
         category: 'bambini',
         available: true,
+        active: true, // 🔥 NUOVO: Servizio attivo di default
+        included: false, // 🔥 NUOVO: Non incluso di default
         minAge: 0,
         maxAge: 3
       },
@@ -216,6 +220,8 @@ export default async function handler(req, res) {
         description: 'Seggiolone per pasti in sicurezza',
         category: 'bambini', 
         available: true,
+        active: true, // 🔥 NUOVO: Servizio attivo di default
+        included: false, // 🔥 NUOVO: Non incluso di default
         minAge: 0,
         maxAge: 6
       },
@@ -226,7 +232,9 @@ export default async function handler(req, res) {
         unit: 'soggiorno',
         description: 'Benvenuti i tuoi amici a quattro zampe',
         category: 'animali',
-        available: true
+        available: true,
+        active: true, // 🔥 NUOVO: Servizio attivo di default
+        included: false // 🔥 NUOVO: Non incluso di default
       },
       { 
         id: 5, 
@@ -235,7 +243,9 @@ export default async function handler(req, res) {
         unit: 'soggiorno',
         description: 'Set aggiuntivo di lenzuola e asciugamani',
         category: 'comfort',
-        available: true
+        available: true,
+        active: true, // 🔥 NUOVO: Servizio attivo di default
+        included: false // 🔥 NUOVO: Non incluso di default
       },
       { 
         id: 6, 
@@ -244,7 +254,9 @@ export default async function handler(req, res) {
         unit: 'soggiorno',
         description: 'Parti con più calma, check-out posticipato',
         category: 'comodita',
-        available: true
+        available: true,
+        active: true, // 🔥 NUOVO: Servizio attivo di default
+        included: false // 🔥 NUOVO: Non incluso di default
       }
     ];
 
@@ -259,13 +271,32 @@ export default async function handler(req, res) {
       if (result.rows.length > 0) {
         console.log('📊 SERVIZI DAL DATABASE:', result.rows.length, 'configurazioni trovate');
         
-        // 1. Aggiorna prezzi dei servizi hardcoded
+        // 1. Aggiorna prezzi e proprietà dei servizi hardcoded
         result.rows.forEach(row => {
-          const serviceId = row.setting_key.match(/service_(\d+)_price/);
-          if (serviceId) {
-            const service = extraServices.find(s => s.id === parseInt(serviceId[1]));
+          // Prezzi
+          const priceMatch = row.setting_key.match(/service_(\d+)_price/);
+          if (priceMatch) {
+            const service = extraServices.find(s => s.id === parseInt(priceMatch[1]));
             if (service) {
               service.price = parseFloat(row.setting_value) || service.price;
+            }
+          }
+
+          // 🔥 NUOVO: Flag attivo/disattivo
+          const activeMatch = row.setting_key.match(/service_(\d+)_active/);
+          if (activeMatch) {
+            const service = extraServices.find(s => s.id === parseInt(activeMatch[1]));
+            if (service) {
+              service.active = row.setting_value === 'true';
+            }
+          }
+
+          // 🔥 NUOVO: Flag incluso
+          const includedMatch = row.setting_key.match(/service_(\d+)_included/);
+          if (includedMatch) {
+            const service = extraServices.find(s => s.id === parseInt(includedMatch[1]));
+            if (service) {
+              service.included = row.setting_value === 'true';
             }
           }
         });

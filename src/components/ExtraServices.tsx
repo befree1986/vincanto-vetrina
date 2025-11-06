@@ -47,6 +47,22 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
     );
   };
 
+  // 🔥 NUOVO: Helper per formattare prezzo o "INCLUSO"
+  const formatServicePrice = (service: ExtraService) => {
+    if (service.included) {
+      return <span className="service-included">✅ INCLUSO</span>;
+    }
+    return <span className="service-price">€{service.price}/{service.unit}</span>;
+  };
+
+  // 🔥 NUOVO: Helper per aria-label accessibilità
+  const getServiceAriaLabel = (service: ExtraService) => {
+    if (service.included) {
+      return `Seleziona ${service.name} - Incluso nel prezzo`;
+    }
+    return `Seleziona ${service.name} - €${service.price}/${service.unit}`;
+  };
+
   if (loading) {
     return (
       <div className="extra-services loading">
@@ -103,7 +119,7 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
               >
                 <div className="service-header">
                   <h5>{service.name}</h5>
-                  <span className="service-price">€{service.price}/{service.unit}</span>
+                  {formatServicePrice(service)}
                 </div>
                 {service.description && (
                   <p className="service-description">{service.description}</p>
@@ -115,7 +131,7 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
                     checked={selectedServices.includes(service.id)}
                     onChange={() => toggleService(service.id)}
                     onClick={(e) => e.stopPropagation()}
-                    aria-label={`Seleziona ${service.name} - €${service.price}/${service.unit}`}
+                    aria-label={getServiceAriaLabel(service)}
                   />
                   <label htmlFor={`service-parking-${service.id}`} className="sr-only">
                     Seleziona {service.name}
@@ -140,7 +156,7 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
               >
                 <div className="service-header">
                   <h5>{service.name}</h5>
-                  <span className="service-price">€{service.price}/{service.unit}</span>
+                  {formatServicePrice(service)}
                 </div>
                 {service.description && (
                   <p className="service-description">{service.description}</p>
@@ -155,7 +171,7 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
                     checked={selectedServices.includes(service.id)}
                     onChange={() => toggleService(service.id)}
                     onClick={(e) => e.stopPropagation()}
-                    aria-label={`Seleziona ${service.name} - €${service.price}/${service.unit}`}
+                    aria-label={getServiceAriaLabel(service)}
                   />
                   <label htmlFor={`service-children-${service.id}`} className="sr-only">
                     Seleziona {service.name}
@@ -180,7 +196,7 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
               >
                 <div className="service-header">
                   <h5>{service.name}</h5>
-                  <span className="service-price">€{service.price}/{service.unit}</span>
+                  {formatServicePrice(service)}
                 </div>
                 {service.description && (
                   <p className="service-description">{service.description}</p>
@@ -192,7 +208,7 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
                     checked={selectedServices.includes(service.id)}
                     onChange={() => toggleService(service.id)}
                     onClick={(e) => e.stopPropagation()}
-                    aria-label={`Seleziona ${service.name} - €${service.price}/${service.unit}`}
+                    aria-label={getServiceAriaLabel(service)}
                   />
                   <label htmlFor={`service-comfort-${service.id}`} className="sr-only">
                     Seleziona {service.name}
@@ -217,7 +233,7 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
               >
                 <div className="service-header">
                   <h5>{service.name}</h5>
-                  <span className="service-price">€{service.price}/{service.unit}</span>
+                  {formatServicePrice(service)}
                 </div>
                 {service.description && (
                   <p className="service-description">{service.description}</p>
@@ -229,7 +245,7 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
                     checked={selectedServices.includes(service.id)}
                     onChange={() => toggleService(service.id)}
                     onClick={(e) => e.stopPropagation()}
-                    aria-label={`Seleziona ${service.name} - €${service.price}/${service.unit}`}
+                    aria-label={getServiceAriaLabel(service)}
                   />
                   <label htmlFor={`service-convenience-${service.id}`} className="sr-only">
                     Seleziona {service.name}
@@ -254,7 +270,7 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
               >
                 <div className="service-header">
                   <h5>{service.name}</h5>
-                  <span className="service-price">€{service.price}/{service.unit}</span>
+                  {formatServicePrice(service)}
                 </div>
                 {service.description && (
                   <p className="service-description">{service.description}</p>
@@ -266,7 +282,7 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
                     checked={selectedServices.includes(service.id)}
                     onChange={() => toggleService(service.id)}
                     onClick={(e) => e.stopPropagation()}
-                    aria-label={`Seleziona ${service.name} - €${service.price}/${service.unit}`}
+                    aria-label={getServiceAriaLabel(service)}
                   />
                   <label htmlFor={`service-pets-${service.id}`} className="sr-only">
                     Seleziona {service.name}
@@ -291,7 +307,7 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
               >
                 <div className="service-header">
                   <h5>{service.name}</h5>
-                  <span className="service-price">€{service.price}/{service.unit}</span>
+                  {formatServicePrice(service)}
                 </div>
                 {service.description && (
                   <p className="service-description">{service.description}</p>
@@ -303,7 +319,7 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
                     checked={selectedServices.includes(service.id)}
                     onChange={() => toggleService(service.id)}
                     onClick={(e) => e.stopPropagation()}
-                    aria-label={`Seleziona ${service.name} - €${service.price}/${service.unit}`}
+                    aria-label={getServiceAriaLabel(service)}
                   />
                   <label htmlFor={`service-custom-${service.id}`} className="sr-only">
                     Seleziona {service.name}

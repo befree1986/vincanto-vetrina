@@ -128,9 +128,9 @@ export default async function handler(req, res) {
         additionalGuestPrice = parseFloat(settings.additionalGuestPrice || settings.additional_guest_price) || additionalGuestPrice;
         // 🎯 FIX: Supporta tutti i possibili nomi per la tassa di soggiorno
         touristTaxPerPersonPerNight = parseFloat(
+          settings.touristTaxAdult ||      // 🔥 Nome corretto dall'admin panel
           settings.touristTax || 
           settings.touristTaxPerPersonPerNight || 
-          settings.touristTaxAdult || 
           settings.tourist_tax
         ) || touristTaxPerPersonPerNight;
         
@@ -152,8 +152,55 @@ export default async function handler(req, res) {
     }
     const depositPercentage = 0.30;    // 30% acconto
 
+    // 🎯 CARICA SCONTI PER DURATA SOGGIORNO DAL DATABASE
+    let weeklyDiscount = 0;  // Sconto per 7+ notti
+    let monthlyDiscount = 0; // Sconto per 30+ notti
+
+    try {
+      const discountResult = await pool.query(`
+        SELECT setting_key, setting_value
+        FROM admin_settings 
+        WHERE category = 'pricing' AND setting_key IN ('weeklyDiscount', 'monthlyDiscount')
+      `);
+      
+      discountResult.rows.forEach(row => {
+        if (row.setting_key === 'weeklyDiscount') {
+          weeklyDiscount = parseFloat(row.setting_value) || 0;
+        } else if (row.setting_key === 'monthlyDiscount') {
+          monthlyDiscount = parseFloat(row.setting_value) || 0;
+        }
+      });
+      
+      console.log('📊 SCONTI CARICATI:', { weeklyDiscount, monthlyDiscount });
+    } catch (error) {
+      console.error('❌ Errore caricamento sconti:', error);
+    }
+
     // Calcolo totale - €75 PER PERSONA PER NOTTE
-    const baseCost = nights * parseInt(guests) * basePrice; // €75 per OGNI persona per notte
+    let baseCost = nights * parseInt(guests) * basePrice; // €75 per OGNI persona per notte
+    
+    // 🎯 APPLICA SCONTI PER DURATA SOGGIORNO
+    let appliedDiscount = 0;
+    let discountType = '';
+    
+    if (nights >= 30 && monthlyDiscount > 0) {
+      // Sconto mensile per 30+ notti
+      appliedDiscount = monthlyDiscount;
+      discountType = 'Sconto Mensile (30+ notti)';
+    } else if (nights >= 7 && weeklyDiscount > 0) {
+      // Sconto settimanale per 7+ notti
+      appliedDiscount = weeklyDiscount;
+      discountType = 'Sconto Settimanale (7+ notti)';
+    }
+
+    // Applica lo sconto al costo base
+    let discountAmount = 0;
+    if (appliedDiscount > 0) {
+      discountAmount = baseCost * (appliedDiscount / 100);
+      baseCost = baseCost - discountAmount;
+      console.log(`💰 SCONTO APPLICATO: ${discountType} ${appliedDiscount}% = -€${discountAmount.toFixed(2)}`);
+    }
+
     const additionalGuestsCost = 0; // Non serve più calcolo separato, tutto incluso in baseCost
     const parkingCost = includeParking ? nights * parkingFeePerNight : 0;
     const touristTax = parseInt(guests) * nights * touristTaxPerPersonPerNight;
@@ -167,6 +214,10 @@ export default async function handler(req, res) {
       nights,
       guests: parseInt(guests),
       basePrice,
+      originalBaseCost: nights * parseInt(guests) * basePrice,
+      appliedDiscount,
+      discountType,
+      discountAmount,
       baseCost,
       cleaningFee,
       parkingCost,
@@ -189,6 +240,13 @@ export default async function handler(req, res) {
       depositAmount,
       depositPercentage,
       currency: 'EUR',
+      // 🎯 AGGIUNTO: Informazioni sugli sconti applicati
+      discount: appliedDiscount > 0 ? {
+        type: discountType,
+        percentage: appliedDiscount,
+        amount: discountAmount,
+        originalBaseCost: nights * parseInt(guests) * basePrice
+      } : null,
       // ⭐ Aggiunta configurazione prezzi per frontend dinamico
       pricingConfig: {
         basePrice: basePrice, // Prezzo per persona per notte dal database

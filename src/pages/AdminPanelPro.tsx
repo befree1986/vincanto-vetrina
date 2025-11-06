@@ -82,6 +82,7 @@ const AdminPanelPro: React.FC = () => {
   
   // Stati per servizi personalizzati AGGIORNATI
   const [customServices, setCustomServices] = useState<ExtraService[]>([]);
+  const [allServices, setAllServices] = useState<ExtraService[]>([]); // 🔥 TUTTI i servizi (hardcoded + custom)
   const [newServiceName, setNewServiceName] = useState('');
   const [newServicePrice, setNewServicePrice] = useState(0);
   
@@ -274,7 +275,7 @@ const AdminPanelPro: React.FC = () => {
     if (!adminApiService) return;
     
     try {
-      console.log('🛎️ Caricamento servizi custom dal database...');
+      console.log('🛎️ Caricamento servizi dal database...');
       
       const services = await adminApiService.getExtraServices();
       
@@ -282,9 +283,12 @@ const AdminPanelPro: React.FC = () => {
       const customOnly = services.filter(service => service.category === 'custom');
       setCustomServices(customOnly);
       
-      console.log('✅ Servizi custom caricati:', customOnly.length);
+      // 🔥 NUOVO: Carica TUTTI i servizi per permettere modifica di quelli hardcoded
+      setAllServices(services);
+      
+      console.log('✅ Servizi caricati - Custom:', customOnly.length, 'Totali:', services.length);
     } catch (error) {
-      console.error('❌ Errore caricamento servizi custom:', error);
+      console.error('❌ Errore caricamento servizi:', error);
     }
   };
 
@@ -346,6 +350,8 @@ const AdminPanelPro: React.FC = () => {
         price: field === 'price' ? value : currentService.price,
         unit: field === 'unit' ? value : (currentService.unit || 'soggiorno'),
         description: field === 'description' ? value : (currentService.description ?? ''),
+        active: field === 'active' ? value : (currentService.active ?? true),
+        included: field === 'included' ? value : (currentService.included ?? false),
       };
 
       const result = await adminApiService.updateCustomService(serviceData);
@@ -385,6 +391,95 @@ const AdminPanelPro: React.FC = () => {
     } catch (error) {
       console.error('❌ Errore eliminazione servizio:', error);
       alert('❌ Errore eliminazione servizio');
+    }
+  };
+
+  // 🔥 NUOVO: Funzione per aggiornare prezzi servizi hardcoded
+  const updateHardcodedServicePrice = async (serviceId: number, newPrice: number) => {
+    if (!adminApiService) {
+      alert('❌ Servizio API non disponibile');
+      return;
+    }
+
+    try {
+      console.log(`💰 Aggiornamento prezzo servizio ${serviceId}: €${newPrice}`);
+
+      // Usa l'API di pricing-config per aggiornare il prezzo del servizio
+      const result = await adminApiService.updatePricingConfig({
+        [`service_${serviceId}_price`]: newPrice.toString()
+      });
+
+      if (result.success) {
+        // Aggiorna lo stato locale
+        setAllServices(prev => prev.map(service => 
+          service.id === serviceId ? { ...service, price: newPrice } : service
+        ));
+        
+        console.log('✅ Prezzo servizio aggiornato nel database');
+      } else {
+        alert('❌ Errore aggiornamento prezzo: ' + result.message);
+      }
+    } catch (error) {
+      console.error('❌ Errore aggiornamento prezzo servizio:', error);
+      alert('❌ Errore aggiornamento prezzo servizio');
+    }
+  };
+
+  // 🔥 NUOVO: Funzione per attivare/disattivare servizi hardcoded
+  const updateHardcodedServiceActive = async (serviceId: number, active: boolean) => {
+    if (!adminApiService) {
+      alert('❌ Servizio API non disponibile');
+      return;
+    }
+
+    try {
+      console.log(`🔄 ${active ? 'Attivazione' : 'Disattivazione'} servizio ${serviceId}`);
+
+      const result = await adminApiService.updatePricingConfig({
+        [`service_${serviceId}_active`]: active.toString()
+      });
+
+      if (result.success) {
+        setAllServices(prev => prev.map(service => 
+          service.id === serviceId ? { ...service, active } : service
+        ));
+        
+        console.log(`✅ Servizio ${active ? 'attivato' : 'disattivato'} nel database`);
+      } else {
+        alert(`❌ Errore ${active ? 'attivazione' : 'disattivazione'} servizio: ` + result.message);
+      }
+    } catch (error) {
+      console.error(`❌ Errore ${active ? 'attivazione' : 'disattivazione'} servizio:`, error);
+      alert(`❌ Errore ${active ? 'attivazione' : 'disattivazione'} servizio`);
+    }
+  };
+
+  // 🔥 NUOVO: Funzione per impostare servizi come inclusi
+  const updateHardcodedServiceIncluded = async (serviceId: number, included: boolean) => {
+    if (!adminApiService) {
+      alert('❌ Servizio API non disponibile');
+      return;
+    }
+
+    try {
+      console.log(`🎁 ${included ? 'Impostazione come incluso' : 'Rimozione da inclusi'} servizio ${serviceId}`);
+
+      const result = await adminApiService.updatePricingConfig({
+        [`service_${serviceId}_included`]: included.toString()
+      });
+
+      if (result.success) {
+        setAllServices(prev => prev.map(service => 
+          service.id === serviceId ? { ...service, included } : service
+        ));
+        
+        console.log(`✅ Servizio ${included ? 'impostato come incluso' : 'rimosso da inclusi'} nel database`);
+      } else {
+        alert(`❌ Errore modifica servizio incluso: ` + result.message);
+      }
+    } catch (error) {
+      console.error(`❌ Errore modifica servizio incluso:`, error);
+      alert(`❌ Errore modifica servizio incluso`);
     }
   };
 
@@ -1503,6 +1598,10 @@ const AdminPanelPro: React.FC = () => {
             isUpdatingPricing={isUpdatingPricing}
             showSuccessMessage={false}
             customServices={customServices}
+            allServices={allServices}
+            updateHardcodedServicePrice={updateHardcodedServicePrice}
+            updateHardcodedServiceActive={updateHardcodedServiceActive}
+            updateHardcodedServiceIncluded={updateHardcodedServiceIncluded}
             newServiceName={newServiceName}
             setNewServiceName={setNewServiceName}
             newServicePrice={newServicePrice}

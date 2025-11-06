@@ -9,6 +9,8 @@ export interface ExtraService {
   description?: string;
   category: 'bambini' | 'animali' | 'comfort' | 'comodita' | 'parcheggio' | 'custom';
   available: boolean;
+  active?: boolean; // 🔥 NUOVO: Flag per attivare/disattivare il servizio
+  included?: boolean; // 🔥 NUOVO: Flag per servizi inclusi (prezzo 0)
   minAge?: number;
   maxAge?: number;
   isParking?: boolean; // Flag per identificare servizi di parcheggio
@@ -22,6 +24,7 @@ interface ExtraServicesData {
   toggleService: (serviceId: number) => void;
   getTotalCost: () => number;
   getSelectedServices: () => ExtraService[];
+  refreshServices: () => void; // 🔥 NUOVO: Funzione per ricaricare servizi
   // Funzioni specifiche per parcheggio
   getParkingService: () => ExtraService | undefined;
   isParkingSelected: () => boolean;
@@ -141,6 +144,8 @@ export const useExtraServices = (): ExtraServicesData => {
   const getTotalCost = () => {
     return selectedServices.reduce((total, serviceId) => {
       const service = services.find(s => s.id === serviceId);
+      // 🔥 NUOVO: Non aggiungere costo se il servizio è incluso
+      if (service?.included) return total;
       return total + (service ? service.price : 0);
     }, 0);
   };
@@ -180,14 +185,18 @@ export const useExtraServices = (): ExtraServicesData => {
     return () => clearInterval(interval);
   }, []);
 
+  // 🔥 NUOVO: Filtra solo servizi attivi per il frontend
+  const activeServices = services.filter(service => service.active !== false);
+
   return {
-    services,
+    services: activeServices, // 🔥 Restituisce solo servizi attivi
     loading,
     error,
     selectedServices,
     toggleService,
     getTotalCost,
     getSelectedServices,
+    refreshServices: fetchServices, // 🔥 NUOVO: Funzione per refresh manuale
     // Funzioni specifiche per parcheggio
     getParkingService,
     isParkingSelected,

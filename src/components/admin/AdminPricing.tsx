@@ -11,6 +11,10 @@ interface AdminPricingProps {
   showSuccessMessage: boolean;
   // Nuove props per servizi extra
   customServices: any[];
+  allServices: any[]; // 🔥 NUOVO: Tutti i servizi (hardcoded + custom)
+  updateHardcodedServicePrice: (serviceId: number, newPrice: number) => void; // 🔥 NUOVO: Aggiorna prezzi hardcoded
+  updateHardcodedServiceActive: (serviceId: number, active: boolean) => void; // 🔥 NUOVO: Attiva/disattiva servizio
+  updateHardcodedServiceIncluded: (serviceId: number, included: boolean) => void; // 🔥 NUOVO: Imposta incluso
   newServiceName: string;
   setNewServiceName: (name: string) => void;
   newServicePrice: number;
@@ -31,6 +35,10 @@ const AdminPricing: React.FC<AdminPricingProps> = ({
   isUpdatingPricing,
   showSuccessMessage,
   customServices,
+  allServices, // 🔥 NUOVO: Tutti i servizi
+  updateHardcodedServicePrice, // 🔥 NUOVO: Aggiorna prezzi hardcoded
+  updateHardcodedServiceActive, // 🔥 NUOVO: Attiva/disattiva servizio
+  updateHardcodedServiceIncluded, // 🔥 NUOVO: Imposta incluso
   newServiceName,
   setNewServiceName,
   newServicePrice,
@@ -40,8 +48,199 @@ const AdminPricing: React.FC<AdminPricingProps> = ({
   deleteCustomService,
 }) => {
   return (
-    <div className="admin-prezzi">
-      <div className="admin-header">
+    <>
+      <style>{`
+        .service-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1rem;
+        }
+        
+        .service-controls {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+        
+        .toggle-switch {
+          position: relative;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          cursor: pointer;
+        }
+        
+        .toggle-switch input {
+          opacity: 0;
+          width: 0;
+          height: 0;
+        }
+        
+        .toggle-slider {
+          position: relative;
+          width: 40px;
+          height: 20px;
+          background-color: #ccc;
+          border-radius: 20px;
+          transition: 0.4s;
+        }
+        
+        .toggle-slider:before {
+          position: absolute;
+          content: "";
+          height: 16px;
+          width: 16px;
+          left: 2px;
+          top: 2px;
+          background-color: white;
+          border-radius: 50%;
+          transition: 0.4s;
+        }
+        
+        .toggle-switch input:checked + .toggle-slider {
+          background-color: #2196F3;
+        }
+        
+        .toggle-switch input:checked + .toggle-slider:before {
+          transform: translateX(20px);
+        }
+        
+        .service-pricing {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          align-items: flex-end;
+        }
+        
+        .included-toggle {
+          margin-bottom: 0.5rem;
+        }
+        
+        .included-label {
+          font-weight: bold;
+          margin-left: 0.5rem;
+        }
+        
+        .service-price-container input:disabled {
+          background-color: #f5f5f5;
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+        
+        /* 🔥 NUOVO: Stili per sezione servizi unificata */
+        .unified-services-list {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          margin-bottom: 2rem;
+        }
+        
+        .unified-service-card {
+          background: #f9f9f9;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          padding: 1rem;
+        }
+        
+        .service-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 0.5rem;
+        }
+        
+        .service-icon {
+          margin-right: 0.5rem;
+        }
+        
+        .service-name-input {
+          border: none;
+          background: transparent;
+          font-size: inherit;
+          font-weight: bold;
+          min-width: 200px;
+        }
+        
+        .service-actions {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+        
+        .delete-service-btn {
+          background: #ff4444;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          padding: 0.25rem 0.5rem;
+          cursor: pointer;
+          font-size: 0.9rem;
+        }
+        
+        .service-content {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        
+        .service-description {
+          color: #666;
+          font-size: 0.9rem;
+          flex: 1;
+        }
+        
+        .service-pricing {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+        
+        .price-input {
+          display: flex;
+          align-items: center;
+          gap: 0.25rem;
+        }
+        
+        .price-field {
+          width: 80px;
+          padding: 0.25rem;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+        }
+        
+        .add-service-form {
+          background: #e8f4fd;
+          border: 2px dashed #2196F3;
+          border-radius: 8px;
+          padding: 1rem;
+          margin-bottom: 1rem;
+        }
+        
+        .form-row {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+        
+        .add-btn {
+          background: #2196F3;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          padding: 0.5rem 1rem;
+          cursor: pointer;
+          font-weight: bold;
+        }
+        
+        .add-btn:disabled {
+          background: #ccc;
+          cursor: not-allowed;
+        }
+      `}</style>
+      
+      <div className="admin-prezzi">
+        <div className="admin-header">
         <h2>⚙️ Configurazione Prezzi e Sistema</h2>
         <div className="header-actions">
           <button 
@@ -213,95 +412,146 @@ const AdminPricing: React.FC<AdminPricingProps> = ({
         </div>
       </div>
 
-      {/* Servizi Extra Personalizzabili */}
+      {/* 🔥 NUOVO: Servizi Aggiuntivi Unificati */}
       <div className="admin-pricing-section">
-        <h3>🛎️ Servizi Extra Personalizzabili</h3>
-        <div className="admin-pricing-grid">
-          <div className="admin-pricing-card">
-            <h4>Aggiungi Nuovo Servizio</h4>
-            <div className="pricing-controls">
-              <div className="custom-service-item">
-                <input 
-                  type="text" 
-                  placeholder="Nome servizio (es. Culla per bambini)" 
-                  className="admin-input" 
-                  value={newServiceName}
-                  onChange={(e) => setNewServiceName(e.target.value)}
-                />
-                <div className="custom-service-add">
-                  <span>€</span>
-                  <input 
-                    type="number" 
-                    placeholder="Prezzo" 
-                    className="admin-input-small" 
-                    value={newServicePrice}
-                    onChange={(e) => setNewServicePrice(Number(e.target.value))}
-                    min="0"
-                  />
-                  <span>/soggiorno</span>
-                  <button 
-                    className="admin-btn-small add-service-btn"
-                    onClick={addCustomService}
-                    title="Aggiungi servizio"
-                    disabled={!newServiceName || newServicePrice <= 0}
-                  >
-                    ➕
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="admin-pricing-card">
-            <h4>Servizi Configurati ({customServices.length})</h4>
-            <div className="pricing-controls">
-              <div className="existing-services">
-                {customServices.map((service) => (
-                  <div key={service.id} className="service-row">
+        <h3>🛎️ Servizi Aggiuntivi</h3>
+        
+        {/* Lista unificata di tutti i servizi */}
+        <div className="unified-services-list">
+          {allServices.map((service) => (
+            <div key={service.id} className="unified-service-card">
+              <div className="service-header">
+                <h4>
+                  <span className="service-icon">
+                    {service.category === 'parcheggio' ? '🚗' : 
+                     service.category === 'bambini' ? '👶' :
+                     service.category === 'animali' ? '🐕' :
+                     service.category === 'comfort' ? '🛏️' :
+                     service.category === 'comodita' ? '⏰' : 
+                     service.category === 'custom' ? '⚙️' : '🛎️'}
+                  </span>
+                  {service.category === 'custom' ? (
                     <input 
                       type="text"
                       value={service.name}
                       onChange={(e) => updateCustomService(service.id, 'name', e.target.value)}
-                      className="admin-input-small"
-                      placeholder="Nome servizio"
-                      title={`Nome servizio ${service.id}`}
+                      className="service-name-input"
+                      title="Modifica nome servizio"
                     />
-                    <div className="service-price-container">
-                      <span>€</span>
-                      <input 
-                        type="number"
-                        value={service.price}
-                        onChange={(e) => updateCustomService(service.id, 'price', Number(e.target.value))}
-                        className="admin-input-small"
-                        min="0"
-                        title={`Prezzo servizio ${service.id}`}
-                      />
-                      <span>/{service.unit}</span>
-                    </div>
+                  ) : (
+                    service.name
+                  )}
+                </h4>
+                
+                <div className="service-actions">
+                  {/* Toggle Attivo/Disattivo */}
+                  <label className="toggle-switch" title="Attiva/Disattiva servizio">
+                    <input 
+                      type="checkbox"
+                      checked={service.active !== false}
+                      onChange={(e) => service.category === 'custom' 
+                        ? updateCustomService(service.id, 'active', e.target.checked)
+                        : updateHardcodedServiceActive(service.id, e.target.checked)}
+                    />
+                    <span className="toggle-slider"></span>
+                    <span className="toggle-label">{service.active !== false ? 'Attivo' : 'Disattivo'}</span>
+                  </label>
+                  
+                  {/* Elimina (solo per servizi custom) */}
+                  {service.category === 'custom' && (
                     <button 
-                      className="admin-btn-small service-delete-btn"
+                      className="delete-service-btn"
                       onClick={() => deleteCustomService(service.id)}
                       title="Elimina servizio"
                     >
                       🗑️
                     </button>
-                  </div>
-                ))}
-                
-                {customServices.length === 0 && (
-                  <div className="service-empty-state">
-                    Nessun servizio extra configurato.<br/>
-                    Aggiungi servizi come culla, seggiolone, etc.
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
               
-              <div className="pricing-note pricing-note-services">
-                💡 <strong>Servizi suggeriti:</strong> Culla (0-3 anni), Seggiolone, Animali domestici, 
-                Check-in anticipato, Colazione, Transfer aeroporto
+              <div className="service-content">
+                <div className="service-description">
+                  {service.description}
+                </div>
+                
+                <div className="service-pricing">
+                  {/* Toggle Incluso */}
+                  <div className="included-toggle">
+                    <label>
+                      <input 
+                        type="checkbox"
+                        checked={service.included === true}
+                        onChange={(e) => service.category === 'custom'
+                          ? updateCustomService(service.id, 'included', e.target.checked)
+                          : updateHardcodedServiceIncluded(service.id, e.target.checked)}
+                      />
+                      <span className="included-label">
+                        {service.included ? '✅ INCLUSO' : '💰 A pagamento'}
+                      </span>
+                    </label>
+                  </div>
+                  
+                  {/* Prezzo */}
+                  <div className="price-input">
+                    <span>€</span>
+                    <input 
+                      type="number"
+                      value={service.price}
+                      onChange={(e) => service.category === 'custom'
+                        ? updateCustomService(service.id, 'price', Number(e.target.value))
+                        : updateHardcodedServicePrice(service.id, Number(e.target.value))}
+                      className="price-field"
+                      min="0"
+                      disabled={service.included === true}
+                      title={service.included ? 'Prezzo non applicabile (servizio incluso)' : `Prezzo ${service.name}`}
+                    />
+                    <span>/{service.unit}</span>
+                  </div>
+                </div>
               </div>
             </div>
+          ))}
+        </div>
+        
+        {/* Form per aggiungere nuovo servizio */}
+        <div className="add-service-form">
+          <h4>➕ Aggiungi Nuovo Servizio</h4>
+          <div className="form-row">
+            <input 
+              type="text" 
+              placeholder="Nome servizio (es. Transfer aeroporto)" 
+              className="service-name-input" 
+              value={newServiceName}
+              onChange={(e) => setNewServiceName(e.target.value)}
+            />
+            <div className="price-input">
+              <span>€</span>
+              <input 
+                type="number" 
+                placeholder="0" 
+                className="price-field" 
+                value={newServicePrice}
+                onChange={(e) => setNewServicePrice(Number(e.target.value))}
+                min="0"
+              />
+              <span>/soggiorno</span>
+            </div>
+            <button 
+              className="add-btn"
+              onClick={addCustomService}
+              disabled={!newServiceName || newServicePrice < 0}
+            >
+              Aggiungi
+            </button>
           </div>
+        </div>
+        
+        <div className="pricing-note">
+          💡 <strong>Info:</strong> Gestisci tutti i servizi aggiuntivi da qui.<br/>
+          • <strong>Attivo/Disattivo:</strong> Controlla la visibilità nel frontend<br/>
+          • <strong>Incluso/A pagamento:</strong> Servizi inclusi sono gratuiti<br/>
+          • <strong>Servizi custom:</strong> Completamente personalizzabili ed eliminabili
         </div>
       </div>
 
@@ -337,6 +587,7 @@ const AdminPricing: React.FC<AdminPricingProps> = ({
         </div>
       </div>
     </div>
+    </>
   );
 };
 

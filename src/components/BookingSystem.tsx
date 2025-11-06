@@ -36,8 +36,16 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
             <div className="breakdown-items">
                 <div className="breakdown-item">
                     <span>{getSafeTranslation(t, 'booking.accommodationBase', 'Soggiorno base')}</span>
-                    <span>€{costs.basePrice.toFixed(2)}</span>
+                    <span>€{costs.baseCost?.toFixed(2) || costs.basePrice?.toFixed(2)}</span>
                 </div>
+                
+                {/* 🎯 MOSTRA SCONTO SE APPLICATO */}
+                {costs.discount && (
+                    <div className="breakdown-item discount">
+                        <span>🎉 {costs.discount.type} (-{costs.discount.percentage}%)</span>
+                        <span className="discount-amount">-€{costs.discount.amount.toFixed(2)}</span>
+                    </div>
+                )}
                 
                 {costs.parkingCost > 0 && (
                     <div className="breakdown-item">
@@ -216,17 +224,31 @@ const BookingSystem: React.FC = () => {
         <div className="booking-step-content">
             <h2>Dettagli Prenotazione</h2>
             
-            {/* Loading indicator per calcolo prezzi */}
+            {/* Loading indicator per calcolo prezzi - Design Professionale */}
             {isLoadingQuote && (
-                <div className="quote-loading">
-                    <p>🔄 Calcolando prezzi...</p>
+                <div className="quote-loading-modern">
+                    <div className="loading-spinner"></div>
+                    <div className="loading-content">
+                        <h4>Calcolando il tuo preventivo...</h4>
+                        <p>Stiamo applicando le migliori tariffe disponibili</p>
+                    </div>
                 </div>
             )}
             
-            {/* Errore nel calcolo prezzi */}
+            {/* Errore nel calcolo prezzi - Design Professionale */}
             {quoteError && (
-                <div className="quote-error">
-                    <p>❌ {quoteError}</p>
+                <div className="quote-error-modern">
+                    <div className="error-icon">⚠️</div>
+                    <div className="error-content">
+                        <h4>Problema nel calcolo del preventivo</h4>
+                        <p>{quoteError}</p>
+                        <button 
+                            onClick={() => booking.requestQuote()} 
+                            className="retry-btn"
+                        >
+                            🔄 Riprova
+                        </button>
+                    </div>
                 </div>
             )}
             

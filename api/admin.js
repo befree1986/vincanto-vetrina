@@ -209,7 +209,8 @@ export default async function handler(req, res) {
               minStay, 
               maxStay, 
               advanceBookingDiscount, 
-              lastMinuteDiscount 
+              lastMinuteDiscount,
+              ...otherFields // 🔥 NUOVO: Accetta tutti gli altri campi dinamicamente
             } = req.body;
             
             const updates = [
@@ -222,7 +223,12 @@ export default async function handler(req, res) {
               { key: 'minimum_nights', value: (minStay || 2).toString() },
               { key: 'maximum_nights', value: (maxStay || 14).toString() },
               { key: 'advance_booking_discount', value: (advanceBookingDiscount || 0).toString() },
-              { key: 'last_minute_discount', value: (lastMinuteDiscount || 0).toString() }
+              { key: 'last_minute_discount', value: (lastMinuteDiscount || 0).toString() },
+              // 🔥 NUOVO: Aggiungi tutti gli altri campi dinamicamente (es. service_1_price)
+              ...Object.keys(otherFields).map(key => ({
+                key: key,
+                value: otherFields[key].toString()
+              }))
             ];
             
             console.log('📊 Updates da applicare:', updates);
@@ -351,7 +357,11 @@ export default async function handler(req, res) {
               minStay: parseInt(settings.minimum_nights) || 2,
               maxStay: parseInt(settings.maximum_nights) || 14,
               advanceBookingDiscount: parseFloat(settings.advance_booking_discount) || 0.00,
-              lastMinuteDiscount: parseFloat(settings.last_minute_discount) || 0.00
+              lastMinuteDiscount: parseFloat(settings.last_minute_discount) || 0.00,
+              // 🔥 FIX: Aggiunti campi mancanti
+              additionalGuestPrice: parseFloat(settings.additionalGuestPrice) || 75.00,
+              touristTaxAdult: parseFloat(settings.touristTaxAdult) || 3.00,
+              touristTaxChild: parseFloat(settings.touristTaxChild) || 0.00
             }
           });
         } catch (dbError) {

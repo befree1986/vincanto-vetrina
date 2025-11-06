@@ -1,16 +1,34 @@
 /* 📝 BookingSteps - Step 2 e 3 del sistema di prenotazione */
 
-/* 📋 Form dati personali */
+/* 📋 Form dati personali - Design Moderno */
 .personal-data-form {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 28px;
+  background: white;
+  padding: 32px;
+  border-radius: 16px;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f1f5f9;
 }
 
 .form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+/* 📱 Responsive: Mobile */
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .personal-data-form {
+    padding: 20px;
+    gap: 20px;
+  }
 }
 
 .form-group {
@@ -34,19 +52,28 @@
 
 .form-group input,
 .form-group textarea {
-  padding: 12px 16px;
+  padding: 14px 18px;
   border: 2px solid #e2e8f0;
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 16px;
+  background: #fafbfc;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 500;
+}
+
+.form-group input:hover,
+.form-group textarea:hover {
+  border-color: #cbd5e1;
   background: white;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #0ea5e9;
-  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+  border-color: #3b82f6;
+  background: white;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
 }
 
 .form-group input.error,
@@ -94,12 +121,25 @@
   gap: 32px;
 }
 
-/* 📋 Riepilogo prenotazione */
+/* 📋 Riepilogo prenotazione - Design Professionale */
 .booking-summary {
-  background: #f8fafc;
-  border-radius: 12px;
-  padding: 24px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 16px;
+  padding: 28px;
   border: 1px solid #e2e8f0;
+  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.booking-summary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #06b6d4 100%);
 }
 
 .booking-summary h4 {
@@ -122,8 +162,16 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid #e2e8f0;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background-color 0.2s ease;
+}
+
+.summary-item:hover {
+  background-color: #f8fafc;
+  margin: 0 -16px;
+  padding: 12px 16px;
+  border-radius: 8px;
 }
 
 .summary-item:last-child {
@@ -459,4 +507,66 @@
 
 .security-badge .icon {
   font-size: 14px;
+}
+
+/* 📱 RESPONSIVE MODERNO - BOOKING STEPS */
+@media (max-width: 768px) {
+  .booking-summary {
+    padding: 20px;
+    margin: 0 -8px;
+  }
+  
+  .payment-section {
+    gap: 24px;
+  }
+  
+  .summary-item:hover {
+    margin: 0 -12px;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .personal-data-form {
+    padding: 16px;
+    gap: 16px;
+  }
+  
+  .booking-summary {
+    padding: 16px;
+    border-radius: 12px;
+  }
+  
+  .booking-summary h4 {
+    font-size: 16px;
+  }
+  
+  .summary-item {
+    padding: 10px 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .summary-item .label,
+  .summary-item .value {
+    font-size: 13px;
+  }
+  
+  .summary-item.total {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 15px;
+    padding: 10px;
+  }
+  
+  .summary-error {
+    padding: 12px;
+  }
+  
+  .summary-error ul {
+    margin: 8px 0;
+    padding-left: 16px;
+  }
 }
