@@ -73,10 +73,10 @@ const AdminPanelPro: React.FC = () => {
     maxStay: 14,
     advanceBookingDiscount: 0,
     lastMinuteDiscount: 0,
-    // Nuovi campi per gestione bambini e tasse
+    // Nuovi campi per gestione bambini e tasse  
     additionalGuestPrice: 75,  // €75 per persona aggiuntiva (stesso prezzo per persona)
-    touristTaxAdult: 3,       // Tassa di soggiorno per adulti (€/notte)
-    touristTaxChild: 0        // Tassa di soggiorno per bambini 12+ (€/notte)
+    touristTaxAdult: 2.00,    // 🏛️ €2.00 tassa soggiorno reale Maiori (EDITABILE)
+    touristTaxChild: 0        // Bambini <12 anni gratuiti
   });
   const [isUpdatingPricing, setIsUpdatingPricing] = useState(false);
   
@@ -209,7 +209,7 @@ const AdminPanelPro: React.FC = () => {
           advanceBookingDiscount: config.advanceBookingDiscount || 0,
           lastMinuteDiscount: config.lastMinuteDiscount || 0,
           additionalGuestPrice: config.additionalGuestPrice || 75,
-          touristTaxAdult: config.touristTaxAdult || 3,
+          touristTaxAdult: config.touristTaxAdult || 2.00, // €2.00 reale
           touristTaxChild: config.touristTaxChild || 0
         });
         console.log('✅ Configurazione prezzi caricata dal database:', config);
@@ -274,6 +274,78 @@ const AdminPanelPro: React.FC = () => {
       console.log('💰 Nuova configurazione prezzi:', updated);
       return updated;
     });
+  };
+
+  // === TASSA SOGGIORNO FUNCTIONS ===
+  const [touristTaxConfig, setTouristTaxConfig] = useState({
+    amount_per_person_per_night: 2.00,
+    max_nights: 7,
+    children_age_limit: 12,
+    children_exempt: true,
+    season_high_rate: 2.50,
+    season_high_start: '2025-06-01',
+    season_high_end: '2025-09-30',
+    municipality: 'Maiori',
+    region: 'Campania',
+    enabled: true
+  });
+
+  const loadTouristTaxConfig = async () => {
+    try {
+      const response = await fetch('/api/tourist-tax?action=get-config');
+      const data = await response.json();
+      
+      if (data.success && data.config) {
+        setTouristTaxConfig(data.config);
+        // Sincronizza con pricingConfig per compatibilità
+        setPricingConfig(prev => ({
+          ...prev,
+          touristTaxAdult: data.config.amount_per_person_per_night
+        }));
+        console.log('🏛️ Configurazione tassa soggiorno caricata:', data.config);
+      }
+    } catch (error) {
+      console.error('❌ Errore caricamento tassa soggiorno:', error);
+    }
+  };
+
+  const saveTouristTaxConfig = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/tourist-tax?action=update-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...touristTaxConfig,
+          updated_at: new Date().toISOString()
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        alert('✅ Configurazione tassa soggiorno salvata!');
+        // Aggiorna anche pricingConfig
+        setPricingConfig(prev => ({
+          ...prev,
+          touristTaxAdult: touristTaxConfig.amount_per_person_per_night
+        }));
+      } else {
+        alert('❌ Errore salvataggio: ' + result.error);
+      }
+    } catch (error) {
+      console.error('❌ Errore salvataggio tassa soggiorno:', error);
+      alert('❌ Errore nel salvataggio');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateTouristTaxField = (field: string, value: any) => {
+    setTouristTaxConfig(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   // === CUSTOM SERVICES FUNCTIONS ===
@@ -1001,6 +1073,13 @@ const AdminPanelPro: React.FC = () => {
         console.error('❌ Errore servizi custom:', err);
       }
 
+      try {
+        await loadTouristTaxConfig();
+        console.log('✅ Tassa soggiorno caricata');
+      } catch (err) {
+        console.error('❌ Errore tassa soggiorno:', err);
+      }
+
       console.log('✅ Dati API reali caricati completamente');
     } catch (error) {
       console.error('❌ Errore nel caricamento dati API:', error);
@@ -1586,7 +1665,7 @@ const AdminPanelPro: React.FC = () => {
                 additionalGuestPrice: 20,
                 parkingFee: 20,
                 cleaningFee: 50,
-                touristTax: 3,
+                touristTax: 2.00, // €2.00 tassa soggiorno reale
                 weekendSurcharge: 0,
                 weeklyDiscount: 0,
                 monthlyDiscount: 0,

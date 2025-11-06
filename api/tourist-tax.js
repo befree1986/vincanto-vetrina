@@ -29,13 +29,13 @@ export default async function handler(req, res) {
       `;
 
       if (config.length === 0) {
-        // Configurazione default per Maiori (Costiera Amalfitana)
+        // 🏛️ CONFIGURAZIONE REALE MAIORI - EDITABILE DALL'ADMIN
         const defaultConfig = {
-          amount_per_person_per_night: 2.50,
+          amount_per_person_per_night: 2.00, // €2.00 = tariffa reale attuale
           max_nights: 7,
           children_age_limit: 12,
           children_exempt: true,
-          season_high_rate: 3.00,
+          season_high_rate: 2.50, // €2.50 in alta stagione
           season_high_start: '2025-06-01',
           season_high_end: '2025-09-30',
           municipality: 'Maiori',
@@ -69,12 +69,13 @@ export default async function handler(req, res) {
         LIMIT 1
       `;
 
+      // Usa configurazione DB o fallback con valori reali
       let taxConfig = config[0] || {
-        amount_per_person_per_night: 2.50,
+        amount_per_person_per_night: 2.00, // €2.00 tariffa base corretta
         max_nights: 7,
         children_age_limit: 12,
         children_exempt: true,
-        season_high_rate: 3.00,
+        season_high_rate: 2.50, // €2.50 alta stagione
         season_high_start: '2025-06-01',
         season_high_end: '2025-09-30'
       };
