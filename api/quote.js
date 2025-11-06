@@ -160,13 +160,16 @@ export default async function handler(req, res) {
       const discountResult = await pool.query(`
         SELECT setting_key, setting_value
         FROM admin_settings 
-        WHERE category = 'pricing' AND setting_key IN ('weeklyDiscount', 'monthlyDiscount')
+        WHERE category = 'pricing' 
+        AND (setting_key LIKE '%discount%' OR setting_key LIKE '%Discount%')
       `);
       
       discountResult.rows.forEach(row => {
-        if (row.setting_key === 'weeklyDiscount') {
+        console.log(`🔍 Sconto trovato: ${row.setting_key} = ${row.setting_value}`);
+        
+        if (row.setting_key === 'weeklyDiscount' || row.setting_key === 'weekly_discount') {
           weeklyDiscount = parseFloat(row.setting_value) || 0;
-        } else if (row.setting_key === 'monthlyDiscount') {
+        } else if (row.setting_key === 'monthlyDiscount' || row.setting_key === 'monthly_discount') {
           monthlyDiscount = parseFloat(row.setting_value) || 0;
         }
       });

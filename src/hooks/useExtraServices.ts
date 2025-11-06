@@ -179,9 +179,9 @@ export const useExtraServices = (): ExtraServicesData => {
     fetchServices();
   }, []);
 
-  // Ricarica servizi ogni 30 secondi per aggiornamenti admin
+  // Ricarica servizi ogni 10 secondi per aggiornamenti admin più rapidi
   useEffect(() => {
-    const interval = setInterval(fetchServices, 30000);
+    const interval = setInterval(fetchServices, 10000);
     return () => clearInterval(interval);
   }, []);
 

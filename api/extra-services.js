@@ -265,38 +265,51 @@ export default async function handler(req, res) {
       const result = await pool.query(`
         SELECT setting_key, setting_value
         FROM admin_settings 
-        WHERE category = 'services' OR category = 'custom_services' OR setting_key LIKE '%_service_%'
+        WHERE category = 'pricing' OR category = 'services' OR category = 'custom_services' OR setting_key LIKE '%service%'
       `);
       
+      console.log('📊 QUERY RISULTATI:', result.rows.length, 'configurazioni dal database');
+      
       if (result.rows.length > 0) {
-        console.log('📊 SERVIZI DAL DATABASE:', result.rows.length, 'configurazioni trovate');
+        console.log('� CONFIGURAZIONI TROVATE:', result.rows);
         
         // 1. Aggiorna prezzi e proprietà dei servizi hardcoded
         result.rows.forEach(row => {
+          console.log(`🔍 Processando: ${row.setting_key} = ${row.setting_value}`);
+          
           // Prezzi
           const priceMatch = row.setting_key.match(/service_(\d+)_price/);
           if (priceMatch) {
-            const service = extraServices.find(s => s.id === parseInt(priceMatch[1]));
+            const serviceId = parseInt(priceMatch[1]);
+            const service = extraServices.find(s => s.id === serviceId);
             if (service) {
-              service.price = parseFloat(row.setting_value) || service.price;
+              const newPrice = parseFloat(row.setting_value);
+              console.log(`💰 Aggiornamento prezzo servizio ${serviceId}: €${service.price} → €${newPrice}`);
+              service.price = newPrice || service.price;
             }
           }
 
-          // 🔥 NUOVO: Flag attivo/disattivo
+          // 🔥 Flag attivo/disattivo
           const activeMatch = row.setting_key.match(/service_(\d+)_active/);
           if (activeMatch) {
-            const service = extraServices.find(s => s.id === parseInt(activeMatch[1]));
+            const serviceId = parseInt(activeMatch[1]);
+            const service = extraServices.find(s => s.id === serviceId);
             if (service) {
-              service.active = row.setting_value === 'true';
+              const isActive = row.setting_value === 'true';
+              console.log(`🔄 Aggiornamento stato servizio ${serviceId}: ${service.active} → ${isActive}`);
+              service.active = isActive;
             }
           }
 
-          // 🔥 NUOVO: Flag incluso
+          // 🔥 Flag incluso
           const includedMatch = row.setting_key.match(/service_(\d+)_included/);
           if (includedMatch) {
-            const service = extraServices.find(s => s.id === parseInt(includedMatch[1]));
+            const serviceId = parseInt(includedMatch[1]);
+            const service = extraServices.find(s => s.id === serviceId);
             if (service) {
-              service.included = row.setting_value === 'true';
+              const isIncluded = row.setting_value === 'true';
+              console.log(`🎁 Aggiornamento incluso servizio ${serviceId}: ${service.included} → ${isIncluded}`);
+              service.included = isIncluded;
             }
           }
         });

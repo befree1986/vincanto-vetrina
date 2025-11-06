@@ -243,7 +243,7 @@ const BookingSystem: React.FC = () => {
                         <h4>Problema nel calcolo del preventivo</h4>
                         <p>{quoteError}</p>
                         <button 
-                            onClick={() => booking.requestQuote()} 
+                            onClick={() => window.location.reload()} 
                             className="retry-btn"
                         >
                             🔄 Riprova
