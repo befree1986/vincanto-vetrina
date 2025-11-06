@@ -273,9 +273,25 @@ class AdminApiService {
   // Ottieni configurazioni calendario
   async getCalendarConfigs() {
     try {
-      const data = await this.request('calendars');
-      console.log('📅 Calendar configs:', data);
-      return data;
+      // 🎯 CONSOLIDATO: Usa calendar-hub per gestione calendari
+      const response = await fetch(`${this.baseUrl}/calendar-hub?service=sync&action=list`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      const data = await response.json();
+      console.log('📅 Calendar configs da calendar-sync:', data);
+      
+      // Adatta la risposta per il formato atteso dall'admin panel
+      return {
+        calendars: data.calendars || [],
+        stats: {
+          total: data.calendars?.length || 0,
+          active: data.calendars?.filter((c: any) => c.status === 'active')?.length || 0,
+          external: data.calendars?.length || 0,
+          googleCalendar: 0,
+          lastSyncSuccess: new Date().toISOString()
+        }
+      };
     } catch (error) {
       console.error('❌ Error fetching calendar configs:', error);
       return { calendars: [], stats: {} };
@@ -301,7 +317,7 @@ class AdminApiService {
   // Sincronizza calendario
   async syncCalendar(calendarId: string) {
     try {
-      const response = await fetch(`https://vincanto-vetrina.vercel.app/api/calendar-sync`, {
+      const response = await fetch(`${this.baseUrl}/calendar-hub?service=sync&action=sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ calendarId })

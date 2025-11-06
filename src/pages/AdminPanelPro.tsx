@@ -93,7 +93,7 @@ const AdminPanelPro: React.FC = () => {
     active: 0,
     googleCalendar: 0,
     external: 0,
-    lastSyncSuccess: null
+    lastSyncSuccess: null as string | null
   });
   const [isLoadingCalendars, setIsLoadingCalendars] = useState(false);
   const [showNewCalendarForm, setShowNewCalendarForm] = useState(false);
@@ -501,11 +501,15 @@ const AdminPanelPro: React.FC = () => {
       
       const result = await adminApiService.getCalendarConfigs();
       
-      if (result.success !== false) {
-        setCalendarConfigs(result.calendars || []);
-        setCalendarStats(result.stats || {});
-        console.log('✅ Calendari caricati:', result);
-      }
+      setCalendarConfigs(result.calendars || []);
+      setCalendarStats({
+        total: result.stats?.total || 0,
+        active: result.stats?.active || 0,
+        googleCalendar: result.stats?.googleCalendar || 0,
+        external: result.stats?.external || 0,
+        lastSyncSuccess: result.stats?.lastSyncSuccess || null
+      });
+      console.log('✅ Calendari caricati:', result);
     } catch (error) {
       console.error('❌ Errore caricamento calendari:', error);
     } finally {
@@ -850,14 +854,6 @@ const AdminPanelPro: React.FC = () => {
     soundEnabled: true,
     notificationEmail: 'admin@vincantomaori.it'
   });
-
-  const [mockNotifications] = useState([
-    { id: 1, type: 'booking', title: 'Nuova Prenotazione', message: 'Cliente Marco R. ha prenotato per il 15-17 Marzo', timestamp: '2 minuti fa', priority: 'high', read: false },
-    { id: 2, type: 'payment', title: 'Pagamento Ricevuto', message: 'Pagamento di €450 ricevuto per prenotazione #1234', timestamp: '15 minuti fa', priority: 'medium', read: false },
-    { id: 3, type: 'system', title: 'Backup Completato', message: 'Backup automatico del sistema completato con successo', timestamp: '1 ora fa', priority: 'low', read: true },
-    { id: 4, type: 'review', title: 'Nuova Recensione', message: 'Recensione 5 stelle ricevuta da cliente precedente', timestamp: '3 ore fa', priority: 'medium', read: true },
-    { id: 5, type: 'booking', title: 'Check-in Oggi', message: 'Cliente Sara M. effettuerà il check-in alle 15:00', timestamp: '1 giorno fa', priority: 'high', read: true }
-  ]);
 
   const saveNotificationSettings = async () => {
     setLoading(true);
@@ -2013,7 +2009,7 @@ const AdminPanelPro: React.FC = () => {
                   <div className={`sync-indicator ${isGoogleAuthenticated ? 'success' : 'warning'}`} id="calendar-connection-status">
                     {isGoogleAuthenticated 
                       ? '✅ Autenticato - Sincronizzazione attiva' 
-                      : '🟡 Non autenticato - Usando dati demo'}
+                      : '� Richiesta autenticazione Google Calendar'}
                   </div>
                 </div>
                 <div className="calendar-controls">
@@ -3519,7 +3515,7 @@ const AdminPanelPro: React.FC = () => {
                 </button>
               </div>
               
-              {mockNotifications.length > 0 ? (
+              {notifications.length > 0 ? (
                 <div className="bookings-table-container">
                   <table className="bookings-table">
                     <thead>
@@ -3534,7 +3530,7 @@ const AdminPanelPro: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {mockNotifications.map((notif) => (
+                      {notifications.map((notif) => (
                         <tr key={notif.id} className={`booking-row ${!notif.read ? 'unread' : ''}`}>
                           <td>
                             <span className={`status ${notif.type}`}>

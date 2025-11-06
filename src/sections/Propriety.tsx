@@ -78,8 +78,7 @@ const Propriety: React.FC = () => {
       <div className="container">
         {/* Titolo galleria */}
         <h2
-          className="section-title underline-title"
-          style={{ marginTop: '2rem' }}
+          className="section-title underline-title gallery-main-title"
         >
           {t('propriety.gallery.mainTitle')}
         </h2>
@@ -189,8 +188,7 @@ const Propriety: React.FC = () => {
         )}
                 {/* Tabella Tariffe */}
         <h2
-          className="section-title underline-title titolo-sezione"
-          style={{ marginTop: '2rem' }}
+          className="section-title underline-title titolo-sezione rates-title"
         >
           {t('propriety.rates.title')}
         </h2>

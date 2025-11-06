@@ -94,7 +94,7 @@ const AdminPanelPro: React.FC = () => {
     active: 0,
     googleCalendar: 0,
     external: 0,
-    lastSyncSuccess: null
+    lastSyncSuccess: null as string | null
   });
   const [isLoadingCalendars, setIsLoadingCalendars] = useState(false);
   const [showNewCalendarForm, setShowNewCalendarForm] = useState(false);
@@ -315,11 +315,15 @@ const AdminPanelPro: React.FC = () => {
       
       const result = await adminApiService.getCalendarConfigs();
       
-      if (result.success !== false) {
-        setCalendarConfigs(result.calendars || []);
-        setCalendarStats(result.stats || {});
-        console.log('✅ Calendari caricati:', result);
-      }
+      setCalendarConfigs(result.calendars || []);
+      setCalendarStats({
+        total: result.stats?.total || 0,
+        active: result.stats?.active || 0,
+        googleCalendar: result.stats?.googleCalendar || 0,
+        external: result.stats?.external || 0,
+        lastSyncSuccess: result.stats?.lastSyncSuccess || null
+      });
+      console.log('✅ Calendari caricati:', result);
     } catch (error) {
       console.error('❌ Errore caricamento calendari:', error);
     } finally {
@@ -3398,7 +3402,7 @@ const AdminPanelPro: React.FC = () => {
         {activeTab === 'sistema' && (
           <div className="admin-sistema">
             <h2>⚙️ Configurazione Sistema e Database</h2>
-            <div className="admin-notice" style={{backgroundColor: '#fff3cd', padding: '15px', marginBottom: '20px', borderRadius: '8px', border: '1px solid #ffeaa7'}}>
+            <div className="admin-notice admin-system-notice">
               <strong>💡 Nota:</strong> Per modificare prezzi, tariffe e configurazioni di prenotazione, utilizza la tab <strong>"🏷️ Prezzi"</strong>.
               Questa sezione è dedicata solo alle impostazioni tecniche del sistema.
             </div>

@@ -289,5 +289,56 @@ a:hover {
   background-color: #fdd76e;
   color: #000;
   border-color: #fcbf3d;
+}
 
- }
+/* Nuovi stili per inline rimossi */
+.gallery-main-title,
+.rates-title {
+  margin-top: 2rem;
+}
+
+.booking-debug-info {
+  margin-top: 15px;
+  padding: 10px;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.booking-back-btn {
+  margin-top: 10px;
+}
+
+.dynamic-pricing-debug {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background-color: #f0f0f0;
+  border: 2px solid #666;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 12px;
+  font-family: monospace;
+  z-index: 9999;
+  max-width: 300px;
+}
+
+.debug-title {
+  margin: 0 0 8px 0;
+  color: #333;
+}
+
+.debug-timestamp {
+  margin-top: 8px;
+  font-size: 10px;
+  color: #666;
+}
+
+.admin-system-notice {
+  background-color: #fff3cd;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  border: 1px solid #ffeaa7;
+}

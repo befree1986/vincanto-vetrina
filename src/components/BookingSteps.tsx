@@ -236,7 +236,7 @@ export const BookingStep3: React.FC<BookingStep3Props> = ({ onBack }) => {
                 {!booking.formData.check_in_date && <li>Data check-in mancante</li>}
                 {!booking.formData.check_out_date && <li>Data check-out mancante</li>}
               </ul>
-              <div className="debug-data" style={{marginTop: '15px', padding: '10px', background: '#f8f9fa', border: '1px solid #dee2e6', borderRadius: '4px', fontSize: '0.85rem'}}>
+              <div className="debug-data booking-debug-info">
                 <strong>🔍 Debug Info:</strong><br/>
                 Nome: "{booking.formData.guest_name}"<br/>
                 Cognome: "{booking.formData.guest_surname}"<br/>
@@ -246,7 +246,7 @@ export const BookingStep3: React.FC<BookingStep3Props> = ({ onBack }) => {
                 Check-out: {booking.formData.check_out_date?.toString() || 'null'}<br/>
                 Quote disponibile: {!!booking.quote ? 'Sì' : 'No'}
               </div>
-              <button onClick={onBack} className="btn-secondary" style={{marginTop: '10px'}}>
+              <button onClick={onBack} className="btn-secondary booking-back-btn">
                 ← Torna Indietro
               </button>
             </div>
