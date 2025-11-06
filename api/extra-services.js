@@ -18,7 +18,7 @@ export default async function handler(req, res) {
   // 🔄 POST: Aggiungi nuovo servizio custom
   if (req.method === 'POST') {
     try {
-      const { name, price, unit, description, category } = req.body;
+      const { name, price, unit, description, category, active, included } = req.body;
       
       if (!name || !price) {
         return res.status(400).json({
@@ -27,7 +27,7 @@ export default async function handler(req, res) {
         });
       }
 
-      console.log('➕ AGGIUNTA SERVIZIO:', { name, price, unit, description, category });
+      console.log('➕ AGGIUNTA SERVIZIO:', { name, price, unit, description, category, active, included });
 
       // Genera un ID univoco per il nuovo servizio
       const serviceId = Date.now();
@@ -39,19 +39,32 @@ export default async function handler(req, res) {
           ($1, $2, 'string', 'custom_services', $3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
           ($4, $5, 'number', 'custom_services', $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
           ($7, $8, 'string', 'custom_services', $9, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-          ($10, $11, 'string', 'custom_services', $12, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+          ($10, $11, 'string', 'custom_services', $12, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+          ($13, $14, 'boolean', 'custom_services', $15, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+          ($16, $17, 'boolean', 'custom_services', $18, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       `, [
         `custom_service_${serviceId}_name`, name, `Nome servizio personalizzato ${serviceId}`,
         `custom_service_${serviceId}_price`, price.toString(), `Prezzo servizio personalizzato ${serviceId}`,
         `custom_service_${serviceId}_unit`, unit || 'soggiorno', `Unità servizio personalizzato ${serviceId}`,
-        `custom_service_${serviceId}_description`, description || '', `Descrizione servizio personalizzato ${serviceId}`
+        `custom_service_${serviceId}_description`, description || '', `Descrizione servizio personalizzato ${serviceId}`,
+        `custom_service_${serviceId}_active`, (active !== undefined ? active : true).toString(), `Attivazione servizio personalizzato ${serviceId}`,
+        `custom_service_${serviceId}_included`, (included !== undefined ? included : false).toString(), `Inclusione servizio personalizzato ${serviceId}`
       ]);
 
       console.log('✅ SERVIZIO SALVATO NEL DATABASE:', serviceId);
 
       return res.status(200).json({
         success: true,
-        service: { id: serviceId, name, price, unit: unit || 'soggiorno', description: description || '', category: category || 'custom' },
+        service: { 
+          id: serviceId, 
+          name, 
+          price, 
+          unit: unit || 'soggiorno', 
+          description: description || '', 
+          category: category || 'custom',
+          active: active !== undefined ? active : true,
+          included: included !== undefined ? included : false
+        },
         message: 'Servizio aggiunto con successo'
       });
 
@@ -123,6 +136,32 @@ export default async function handler(req, res) {
             updated_at = CURRENT_TIMESTAMP
         `, [`custom_service_${id}_description`, description, `Descrizione servizio personalizzato ${id}`]);
         updates.push('description');
+      }
+
+      // 🔥 NUOVO: Gestione attivazione/disattivazione servizio
+      if (req.body.hasOwnProperty('active')) {
+        const active = req.body.active;
+        await pool.query(`
+          INSERT INTO admin_settings (setting_key, setting_value, setting_type, category, description, created_at, updated_at)
+          VALUES ($1, $2, 'boolean', 'custom_services', $3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+          ON CONFLICT (setting_key) DO UPDATE SET 
+            setting_value = EXCLUDED.setting_value,
+            updated_at = CURRENT_TIMESTAMP
+        `, [`custom_service_${id}_active`, active.toString(), `Attivazione servizio personalizzato ${id}`]);
+        updates.push('active');
+      }
+
+      // 🔥 NUOVO: Gestione "incluso nel prezzo"
+      if (req.body.hasOwnProperty('included')) {
+        const included = req.body.included;
+        await pool.query(`
+          INSERT INTO admin_settings (setting_key, setting_value, setting_type, category, description, created_at, updated_at)
+          VALUES ($1, $2, 'boolean', 'custom_services', $3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+          ON CONFLICT (setting_key) DO UPDATE SET 
+            setting_value = EXCLUDED.setting_value,
+            updated_at = CURRENT_TIMESTAMP
+        `, [`custom_service_${id}_included`, included.toString(), `Inclusione servizio personalizzato ${id}`]);
+        updates.push('included');
       }
 
       console.log('✅ SERVIZIO AGGIORNATO:', updates);
@@ -317,6 +356,8 @@ export default async function handler(req, res) {
             
             if (field === 'price') {
               customServices[serviceId][field] = parseFloat(row.setting_value) || 0;
+            } else if (field === 'active' || field === 'included') {
+              customServices[serviceId][field] = row.setting_value === 'true';
             } else {
               customServices[serviceId][field] = row.setting_value || '';
             }
@@ -325,11 +366,13 @@ export default async function handler(req, res) {
 
         // Aggiungi servizi custom completi alla lista
         Object.values(customServices).forEach(service => {
-          if (service.name && service.price) {
+          if (service.name && service.price !== undefined) {
             extraServices.push({
               ...service,
               category: 'custom',
               available: true,
+              active: service.active !== undefined ? service.active : true, // Default: attivo
+              included: service.included !== undefined ? service.included : false, // Default: non incluso
               unit: service.unit || 'soggiorno',
               description: service.description || ''
             });

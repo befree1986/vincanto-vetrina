@@ -119,8 +119,11 @@ const AdminPanelPro: React.FC = () => {
   //   }
   // });
   
-  // Stati autenticazione admin
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // Stati autenticazione admin con persistenza
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    // Controlla se c'è una sessione salvata
+    return localStorage.getItem('vincanto_admin_session') === 'authenticated';
+  });
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
@@ -168,15 +171,24 @@ const AdminPanelPro: React.FC = () => {
     console.log('🔐 Tentativo di login...');
     if (password === 'vincanto2025') {
       console.log('✅ Login riuscito, imposto autenticazione...');
+      // Salva sessione in localStorage
+      localStorage.setItem('vincanto_admin_session', 'authenticated');
       setIsAuthenticated(true);
       setError('');
-      console.log('🎯 Stato autenticazione impostato');
+      console.log('🎯 Stato autenticazione impostato e salvato');
       // Carica tutti i dati reali dal backend
       loadRealApiData();
     } else {
       console.log('❌ Password errata');
       setError('Password non corretta');
     }
+  };
+
+  // Funzione logout per pulire la sessione
+  const handleLogout = () => {
+    localStorage.removeItem('vincanto_admin_session');
+    setIsAuthenticated(false);
+    console.log('🚪 Logout eseguito');
   };
 
 
