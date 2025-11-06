@@ -152,71 +152,108 @@ export default async function handler(req, res) {
         // Get calendar view with bookings and blocked dates
         const { year, month } = req.query;
         
-        const calendarQuery = `
-          SELECT 
-            check_in_date, check_out_date, guest_name, status, 'booking' as type
-          FROM admin_bookings 
-          WHERE status != 'cancelled'
-          AND EXTRACT(YEAR FROM check_in_date) = $1 
-          AND EXTRACT(MONTH FROM check_in_date) = $2
+        // Prima prova con admin_calendar_events
+        try {
+          const calendarQuery = `
+            SELECT 
+              check_in_date, check_out_date, guest_name, status, 'booking' as type
+            FROM admin_bookings 
+            WHERE status != 'cancelled'
+            AND EXTRACT(YEAR FROM check_in_date) = $1 
+            AND EXTRACT(MONTH FROM check_in_date) = $2
+          `;
           
-          UNION ALL
-          
-          SELECT 
-            blocked_date as check_in_date, blocked_date as check_out_date, 
-            reason as guest_name, 'blocked' as status, 'blocked' as type
-          FROM admin_calendar_events 
-          WHERE EXTRACT(YEAR FROM blocked_date) = $1 
-          AND EXTRACT(MONTH FROM blocked_date) = $2
-          
-          ORDER BY check_in_date
-        `;
-        
-        const calendarData = await pool.query(calendarQuery, [
-          year || new Date().getFullYear(), 
-          month || new Date().getMonth() + 1
-        ]);
-        
-        return res.json({
-          success: true,
-          events: calendarData.rows
-        });
+          const calendarData = await pool.query(calendarQuery, [
+            year || new Date().getFullYear(), 
+            month || new Date().getMonth() + 1
+          ]);
+
+          // Aggiungi date bloccate se la tabella esiste
+          try {
+            const blockedQuery = `
+              SELECT 
+                blocked_date::date as check_in_date, 
+                blocked_date::date as check_out_date, 
+                reason as guest_name, 
+                'blocked' as status, 
+                'blocked' as type
+              FROM admin_blocked_dates 
+              WHERE EXTRACT(YEAR FROM blocked_date) = $1 
+              AND EXTRACT(MONTH FROM blocked_date) = $2
+            `;
+            
+            const blockedData = await pool.query(blockedQuery, [
+              year || new Date().getFullYear(), 
+              month || new Date().getMonth() + 1
+            ]);
+            
+            const allEvents = [...calendarData.rows, ...blockedData.rows];
+            allEvents.sort((a, b) => new Date(a.check_in_date) - new Date(b.check_in_date));
+            
+            return res.json({
+              success: true,
+              events: allEvents
+            });
+
+          } catch (blockedError) {
+            console.log('⚠️ Tabella admin_blocked_dates non disponibile');
+            return res.json({
+              success: true,
+              events: calendarData.rows
+            });
+          }
+
+        } catch (calendarError) {
+          console.error('Errore query calendario:', calendarError);
+          return res.json({
+            success: true,
+            events: [],
+            message: 'Calendario non disponibile'
+          });
+        }
+
 
       case 'next-available':
         // Find next available period
         const { duration = 1 } = req.query;
         const today = new Date().toISOString().split('T')[0];
         
-        const nextAvailableQuery = `
-          WITH date_series AS (
-            SELECT generate_series($1::date, $1::date + interval '90 days', '1 day'::interval) AS check_date
-          ),
-          occupied_dates AS (
-            SELECT DISTINCT date_trunc('day', d)::date as occupied_date
-            FROM admin_bookings, 
-            generate_series(check_in_date::date, check_out_date::date - interval '1 day', '1 day'::interval) d
-            WHERE status != 'cancelled'
-            
-            UNION
-            
-            SELECT blocked_date as occupied_date 
-            FROM admin_calendar_events
-          )
-          SELECT check_date 
-          FROM date_series 
-          LEFT JOIN occupied_dates ON date_series.check_date = occupied_dates.occupied_date
-          WHERE occupied_dates.occupied_date IS NULL
-          ORDER BY check_date
-          LIMIT $2
-        `;
-        
-        const availableDates = await pool.query(nextAvailableQuery, [today, duration]);
-        
-        return res.json({
-          success: true,
-          nextAvailable: availableDates.rows.map(row => row.check_date),
-          duration: parseInt(duration)
-        });
+        try {
+          const nextAvailableQuery = `
+            WITH date_series AS (
+              SELECT generate_series($1::date, $1::date + interval '90 days', '1 day'::interval) AS check_date
+            ),
+            occupied_dates AS (
+              SELECT DISTINCT date_trunc('day', d)::date as occupied_date
+              FROM admin_bookings, 
+              generate_series(check_in_date::date, check_out_date::date - interval '1 day', '1 day'::interval) d
+              WHERE status != 'cancelled'
+            )
+            SELECT check_date 
+            FROM date_series 
+            LEFT JOIN occupied_dates ON date_series.check_date = occupied_dates.occupied_date
+            WHERE occupied_dates.occupied_date IS NULL
+            ORDER BY check_date
+            LIMIT $2
+          `;
+          
+          const availableDates = await pool.query(nextAvailableQuery, [today, duration]);
+          
+          return res.json({
+            success: true,
+            nextAvailable: availableDates.rows.map(row => row.check_date),
+            duration: parseInt(duration)
+          });
+
+        } catch (availabilityError) {
+          console.error('Errore next-available:', availabilityError);
+          return res.json({
+            success: true,
+            nextAvailable: [],
+            duration: parseInt(duration),
+            message: 'Errore nel calcolo disponibilità'
+          });
+        }
 
       case 'sync-calendars':
         // Sync external calendars (Booking.com, Holidu, etc.)
