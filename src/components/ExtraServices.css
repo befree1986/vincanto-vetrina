@@ -228,7 +228,7 @@
   
   .service-card {
     padding: 1rem;
-    min-height: auto;
+    min-height: 0;
   }
   
   .service-header {

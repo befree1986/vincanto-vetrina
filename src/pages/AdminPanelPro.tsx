@@ -184,12 +184,7 @@ const AdminPanelPro: React.FC = () => {
     }
   };
 
-  // Funzione logout per pulire la sessione
-  const handleLogout = () => {
-    localStorage.removeItem('vincanto_admin_session');
-    setIsAuthenticated(false);
-    console.log('🚪 Logout eseguito');
-  };
+  // Logout gestito direttamente nel bottone
 
 
 

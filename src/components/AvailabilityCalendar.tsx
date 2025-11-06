@@ -6,6 +6,8 @@ interface CalendarEvent {
   reason?: string;
   type: 'booking' | 'blocked';
   source?: string;
+  check_in_date?: string; // Per compatibilità legacy
+  check_out_date?: string; // Per compatibilità legacy
 }
 
 interface AvailabilityCalendarProps {
@@ -45,31 +47,75 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
     try {
       const year = currentMonth.getFullYear();
       const month = currentMonth.getMonth() + 1;
+      
+      // Calcola range del mese corrente
+      const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
+      const endDate = `${year}-${month.toString().padStart(2, '0')}-${new Date(year, month, 0).getDate()}`;
 
-      // Carica date bloccate
-      const blockedResponse = await fetch('/api/blocked-dates');
-      if (blockedResponse.ok) {
-        const blockedData = await blockedResponse.json();
-        if (blockedData.success) {
-          const dates = blockedData.blocked_dates.map((item: any) => 
-            new Date(item.date).toISOString().split('T')[0]
-          );
-          setBlockedDates(dates);
-        }
+      // 🔄 NUOVA INTEGRAZIONE: Usa availability-sync per aggregare tutte le fonti
+      console.log(`📅 Caricamento disponibilità per ${year}-${month}...`);
+      
+      const availabilityResponse = await fetch(`/api/availability-sync?action=check&startDate=${startDate}&endDate=${endDate}`);
+      
+      if (!availabilityResponse.ok) {
+        throw new Error('Errore caricamento disponibilità');
       }
-
-      // Carica calendario con prenotazioni
-      const calendarResponse = await fetch(`/api/availability?action=calendar&year=${year}&month=${month}`);
-      if (calendarResponse.ok) {
-        const calendarData = await calendarResponse.json();
-        if (calendarData.success) {
-          setBookings(calendarData.events || []);
-        }
+      
+      const availabilityData = await availabilityResponse.json();
+      
+      if (availabilityData.success) {
+        // Imposta date bloccate da TUTTE le fonti (Google, Booking, Holidu, DB interno)
+        setBlockedDates(availabilityData.blockedDates || []);
+        
+        // Converti in eventi calendario con source info
+        const calendarEvents: CalendarEvent[] = availabilityData.blockedDates.map((date: string) => ({
+          date,
+          type: 'blocked' as const,
+          reason: 'Occupato',
+          source: 'sync'
+        }));
+        
+        setBookings(calendarEvents);
+        
+        console.log(`✅ ${availabilityData.blockedDates.length} date bloccate caricate da ${availabilityData.calendarsChecked?.length || 0} calendari`);
+      } else {
+        throw new Error(availabilityData.error || 'Errore disponibilità');
       }
-
+      
     } catch (err) {
-      console.error('Errore caricamento calendario:', err);
-      setError('Errore nel caricamento del calendario');
+      console.error('❌ Errore caricamento calendario:', err);
+      setError('Errore caricamento disponibilità. Modalità offline.');
+      
+      // Fallback: usa API legacy se disponibile
+      try {
+        // Ri-definisci le variabili per il fallback
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth() + 1;
+        
+        const blockedResponse = await fetch('/api/blocked-dates');
+        if (blockedResponse.ok) {
+          const blockedData = await blockedResponse.json();
+          if (blockedData.success) {
+            const dates = blockedData.blocked_dates.map((item: any) => 
+              new Date(item.date).toISOString().split('T')[0]
+            );
+            setBlockedDates(dates);
+          }
+        }
+
+        // Carica calendario con prenotazioni
+        const calendarResponse = await fetch(`/api/availability?action=calendar&year=${year}&month=${month}`);
+        if (calendarResponse.ok) {
+          const calendarData = await calendarResponse.json();
+          if (calendarData.success) {
+            setBookings(calendarData.events || []);
+          }
+        }
+      } catch (fallbackError) {
+        console.error('Fallback API failed:', fallbackError);
+        setBlockedDates([]);
+        setBookings([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -103,10 +149,22 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
 
   const isDateBooked = (date: Date): boolean => {
     const dateStr = date.toISOString().split('T')[0];
+    
+    // 🔄 NUOVO: Controlla sia nel formato nuovo (singola data) che legacy (range)
     return bookings.some(booking => {
-      const checkIn = new Date(booking.date || booking.check_in_date);
-      const checkOut = new Date(booking.check_out_date || booking.date);
-      return date >= checkIn && date < checkOut;
+      // Formato nuovo: singola data bloccata
+      if (booking.date === dateStr) {
+        return true;
+      }
+      
+      // Formato legacy: range check-in/check-out
+      if (booking.check_in_date && booking.check_out_date) {
+        const checkIn = new Date(booking.check_in_date);
+        const checkOut = new Date(booking.check_out_date);
+        return date >= checkIn && date < checkOut;
+      }
+      
+      return false;
     });
   };
 

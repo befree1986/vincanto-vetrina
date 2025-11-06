@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useBooking } from '../hooks/useBooking';
-import BookingCalendar from './BookingCalendar';
 import AvailabilityCalendar from './AvailabilityCalendar';
 import { BookingStep2, BookingStep3 } from './BookingSteps';
 import ExtraServices from './ExtraServices';
@@ -251,13 +250,13 @@ const BookingSystemEnhanced: React.FC = () => {
                         <div className="dates-section">
                             {/* Nuovo calendario con disponibilità */}
                             <AvailabilityCalendar 
-                                selectedDate={booking.formData.check_in_date}
+                                selectedDate={booking.formData.check_in_date ? booking.formData.check_in_date.toISOString().split('T')[0] : undefined}
                                 onDateSelect={(date) => {
                                     if (!booking.formData.check_in_date || booking.formData.check_out_date) {
                                         // Seleziona check-in
                                         booking.setFormData({
-                                            check_in_date: date,
-                                            check_out_date: ''
+                                            check_in_date: new Date(date),
+                                            check_out_date: null
                                         });
                                     } else {
                                         // Seleziona check-out
@@ -266,13 +265,13 @@ const BookingSystemEnhanced: React.FC = () => {
                                         
                                         if (checkOut > checkIn) {
                                             booking.setFormData({
-                                                check_out_date: date
+                                                check_out_date: new Date(date)
                                             });
                                         } else {
                                             // Se la data è prima del check-in, resetta
                                             booking.setFormData({
-                                                check_in_date: date,
-                                                check_out_date: ''
+                                                check_in_date: new Date(date),
+                                                check_out_date: null
                                             });
                                         }
                                     }
