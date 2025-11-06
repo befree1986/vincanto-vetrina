@@ -16,6 +16,53 @@
   border: 1px solid #e2e8f0;
 }
 
+/* 📅 Calendario integrato */
+.dates-section .booking-calendar {
+  max-width: 100%;
+  margin: 0 auto 2rem;
+}
+
+.selected-dates-summary {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  align-items: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #e8f5e8 0%, #d5eddb 100%);
+  border-radius: 12px;
+  border: 2px solid #27ae60;
+  margin-top: 1rem;
+}
+
+.date-selection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.date-selection .label {
+  font-size: 0.875rem;
+  color: #666;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.date-selection .date {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #27ae60;
+}
+
+@media (max-width: 768px) {
+  .selected-dates-summary {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
+
 .progress-steps {
   display: flex;
   justify-content: space-between;

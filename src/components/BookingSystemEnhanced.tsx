@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useBooking } from '../hooks/useBooking';
 import BookingCalendar from './BookingCalendar';
+import AvailabilityCalendar from './AvailabilityCalendar';
 import { BookingStep2, BookingStep3 } from './BookingSteps';
 import ExtraServices from './ExtraServices';
 import './BookingSystemEnhanced.css';
@@ -248,17 +249,54 @@ const BookingSystemEnhanced: React.FC = () => {
                         </div>
 
                         <div className="dates-section">
-                            <BookingCalendar 
-                                selectedCheckIn={booking.formData.check_in_date}
-                                selectedCheckOut={booking.formData.check_out_date}
-                                onDateChange={(checkIn, checkOut) => {
-                                    booking.setFormData({
-                                        check_in_date: checkIn,
-                                        check_out_date: checkOut
-                                    });
+                            {/* Nuovo calendario con disponibilità */}
+                            <AvailabilityCalendar 
+                                selectedDate={booking.formData.check_in_date}
+                                onDateSelect={(date) => {
+                                    if (!booking.formData.check_in_date || booking.formData.check_out_date) {
+                                        // Seleziona check-in
+                                        booking.setFormData({
+                                            check_in_date: date,
+                                            check_out_date: ''
+                                        });
+                                    } else {
+                                        // Seleziona check-out
+                                        const checkIn = new Date(booking.formData.check_in_date);
+                                        const checkOut = new Date(date);
+                                        
+                                        if (checkOut > checkIn) {
+                                            booking.setFormData({
+                                                check_out_date: date
+                                            });
+                                        } else {
+                                            // Se la data è prima del check-in, resetta
+                                            booking.setFormData({
+                                                check_in_date: date,
+                                                check_out_date: ''
+                                            });
+                                        }
+                                    }
                                 }}
-                                occupiedDates={[]}
+                                minDate={new Date().toISOString().split('T')[0]}
+                                maxDate={new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]}
+                                className="booking-calendar"
                             />
+
+                            {/* Riepilogo date selezionate */}
+                            {booking.formData.check_in_date && (
+                                <div className="selected-dates-summary">
+                                    <div className="date-selection">
+                                        <span className="label">Check-in:</span>
+                                        <span className="date">{new Date(booking.formData.check_in_date).toLocaleDateString('it-IT')}</span>
+                                    </div>
+                                    {booking.formData.check_out_date && (
+                                        <div className="date-selection">
+                                            <span className="label">Check-out:</span>
+                                            <span className="date">{new Date(booking.formData.check_out_date).toLocaleDateString('it-IT')}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         {/* Avviso soggiorno minimo */}
