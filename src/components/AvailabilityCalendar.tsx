@@ -52,10 +52,10 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
       const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
       const endDate = `${year}-${month.toString().padStart(2, '0')}-${new Date(year, month, 0).getDate()}`;
 
-      // 🔄 NUOVA INTEGRAZIONE: Usa availability-sync per aggregare tutte le fonti
+      // 🔄 INTEGRAZIONE: Usa availability-simple per controllo base
       console.log(`📅 Caricamento disponibilità per ${year}-${month}...`);
       
-      const availabilityResponse = await fetch(`/api/availability-sync?action=check&startDate=${startDate}&endDate=${endDate}`);
+      const availabilityResponse = await fetch(`/api/availability-simple?action=check&startDate=${startDate}&endDate=${endDate}`);
       
       if (!availabilityResponse.ok) {
         throw new Error('Errore caricamento disponibilità');
