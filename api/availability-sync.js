@@ -142,11 +142,25 @@ async function aggregateAvailabilityFromAllSources(client, startDate, endDate) {
 
   try {
     // 1. Calendari esterni (iCal: Booking, Holidu, etc.)
-    const externalCalendars = await client.query(`
-      SELECT id, calendar_name, platform, ical_url, last_sync_at
-      FROM admin_calendar_configs 
-      WHERE is_active = true AND ical_url IS NOT NULL
-    `);
+    // Prova prima admin_calendar_configs, poi fallback su calendars
+    let externalCalendars;
+    
+    try {
+      externalCalendars = await client.query(`
+        SELECT id, name as calendar_name, platform, ical_url, last_sync as last_sync_at
+        FROM calendars 
+        WHERE status = 'active' AND ical_url IS NOT NULL
+      `);
+      
+      if (externalCalendars.rows.length === 0) {
+        // Fallback: crea calendario predefinito se non esiste
+        console.log('📅 Nessun calendario trovato, usando configurazione base');
+        externalCalendars = { rows: [] };
+      }
+    } catch (error) {
+      console.log('⚠️ Tabella calendars non trovata, usando fallback');
+      externalCalendars = { rows: [] };
+    }
 
     for (const calendar of externalCalendars.rows) {
       try {
