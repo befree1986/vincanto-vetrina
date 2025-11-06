@@ -104,7 +104,22 @@ export default async function handler(req, res) {
   const { action } = req.query;
 
   try {
-    switch (action) {
+    switch (action || 'status') {
+      
+      case 'status':
+        // Default: Return availability status
+        return res.json({
+          success: true,
+          message: 'API Availability attiva',
+          endpoints: [
+            'GET ?action=check&startDate=YYYY-MM-DD&endDate=YYYY-MM-DD - Verifica disponibilità',
+            'GET ?action=calendar&year=YYYY&month=MM - Vista calendario mensile',
+            'GET ?action=next-available&duration=N - Trova prossime date disponibili',
+            'POST ?action=sync - Sincronizza calendari esterni'
+          ]
+        });
+        
+      case 'check':
       case 'check':
         // Check availability for specific dates
         const { startDate, endDate } = req.query;

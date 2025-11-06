@@ -108,33 +108,75 @@ export default async function handler(req, res) {
 
     if (req.method === 'GET') {
       // Ottieni tutte le date bloccate
-      const result = await client.query(`
-        SELECT 
-          id,
-          event_date::date as blocked_date,
-          event_title as reason,
-          event_type as type,
-          created_at
-        FROM admin_calendar_events 
-        WHERE event_type = 'blocked'
-        ORDER BY event_date ASC
-      `);
+      try {
+        // Prima prova con admin_calendar_events
+        const result = await client.query(`
+          SELECT 
+            blocked_date,
+            reason,
+            source,
+            created_at
+          FROM admin_calendar_events 
+          ORDER BY blocked_date ASC
+        `);
 
-      const blockedDates = result.rows.map(row => ({
-        id: row.id,
-        date: row.blocked_date.toISOString().split('T')[0],
-        reason: row.reason || 'Data bloccata',
-        type: row.type,
-        created_at: row.created_at
-      }));
+        const blockedDates = result.rows.map(row => ({
+          date: row.blocked_date,
+          reason: row.reason || 'Data bloccata',
+          source: row.source || 'manual',
+          created_at: row.created_at
+        }));
 
-      console.log('📅 Caricate', blockedDates.length, 'date bloccate');
+        console.log('📅 Caricate', blockedDates.length, 'date bloccate da admin_calendar_events');
 
-      return res.status(200).json({
-        success: true,
-        blocked_dates: blockedDates,
-        count: blockedDates.length
-      });
+        return res.status(200).json({
+          success: true,
+          blocked_dates: blockedDates,
+          count: blockedDates.length
+        });
+
+      } catch (calendarError) {
+        console.log('⚠️ Tabella admin_calendar_events non disponibile, provo admin_blocked_dates');
+        
+        // Fallback: prova con admin_blocked_dates  
+        try {
+          const result = await client.query(`
+            SELECT 
+              blocked_date,
+              reason,
+              block_type,
+              created_at
+            FROM admin_blocked_dates 
+            WHERE is_active = true
+            ORDER BY blocked_date ASC
+          `);
+
+          const blockedDates = result.rows.map(row => ({
+            date: row.blocked_date,
+            reason: row.reason || 'Data bloccata',
+            type: row.block_type || 'manual',
+            created_at: row.created_at
+          }));
+
+          console.log('📅 Caricate', blockedDates.length, 'date bloccate da admin_blocked_dates');
+
+          return res.status(200).json({
+            success: true,
+            blocked_dates: blockedDates,
+            count: blockedDates.length
+          });
+
+        } catch (blockedError) {
+          console.log('⚠️ Nessuna tabella date bloccate disponibile');
+          return res.status(200).json({
+            success: true,
+            blocked_dates: [],
+            count: 0,
+            message: 'Nessuna data bloccata configurata'
+          });
+        }
+      }
+
     }
 
     if (req.method === 'DELETE') {
