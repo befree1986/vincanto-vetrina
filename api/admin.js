@@ -81,39 +81,32 @@ export default async function handler(req, res) {
             };
           }
 
-          // Ottieni dati dalle tabelle admin che esistono
-          const settingsCount = await client.query('SELECT COUNT(*) as total FROM admin_settings');
-          const calendarsResult = await client.query('SELECT COUNT(*) as active_calendars FROM admin_calendar_configs WHERE is_active = true');
+          // 🔥 QUERY OTTIMIZZATA: Una sola chiamata per tutte le statistiche
+          const statsResult = await client.query(`
+            SELECT 
+              (SELECT COUNT(*) FROM admin_settings) as settings_count,
+              (SELECT COUNT(*) FROM admin_calendar_configs WHERE is_active = true) as active_calendars,
+              CASE 
+                WHEN (SELECT COUNT(*) FROM admin_bookings WHERE check_in_date >= CURRENT_DATE AND check_in_date <= CURRENT_DATE + INTERVAL '30 days') > 0 
+                THEN (SELECT COUNT(CASE WHEN status = 'confirmed' THEN 1 END)::float / COUNT(*)::float * 100 FROM admin_bookings WHERE check_in_date >= CURRENT_DATE AND check_in_date <= CURRENT_DATE + INTERVAL '30 days')
+                ELSE 0 
+              END as occupancy_rate
+          `);
           
-          // Calcola occupancy rate reale
-          let occupancyRate = 0;
-          try {
-            const occupancyResult = await client.query(`
-              SELECT 
-                CASE 
-                  WHEN COUNT(*) > 0 THEN 
-                    (COUNT(CASE WHEN status = 'confirmed' THEN 1 END)::float / COUNT(*)::float * 100)
-                  ELSE 0 
-                END as occupancy_rate
-              FROM admin_bookings 
-              WHERE check_in_date >= CURRENT_DATE AND check_in_date <= CURRENT_DATE + INTERVAL '30 days'
-            `);
-            occupancyRate = parseFloat(occupancyResult.rows[0].occupancy_rate) || 0;
-          } catch (err) {
-            occupancyRate = 0;
-          }
+          const stats = statsResult.rows[0];
+          const occupancyRate = parseFloat(stats.occupancy_rate) || 0;
           
           return res.status(200).json({
             success: true,
             stats: {
               totalBookings: parseInt(bookingStats.total_bookings) || 0,
-              activeCalendars: parseInt(calendarsResult.rows[0]?.active_calendars) || 0,
+              activeCalendars: parseInt(stats.active_calendars) || 0,
               totalRevenue: parseFloat(bookingStats.total_revenue) || 0,
               confirmedBookings: parseInt(bookingStats.confirmed_bookings) || 0,
               pendingBookings: parseInt(bookingStats.pending_bookings) || 0,
               averageStay: parseFloat(bookingStats.average_stay) || 0,
               occupancyRate: occupancyRate,
-              settingsCount: parseInt(settingsCount.rows[0]?.total) || 0
+              settingsCount: parseInt(stats.settings_count) || 0
             }
           });
         } catch (dbError) {

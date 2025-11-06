@@ -265,51 +265,40 @@ export default async function handler(req, res) {
       const result = await pool.query(`
         SELECT setting_key, setting_value
         FROM admin_settings 
-        WHERE category = 'pricing' OR category = 'services' OR category = 'custom_services' OR setting_key LIKE '%service%'
+        WHERE category IN ('pricing', 'services', 'custom_services') OR setting_key LIKE '%service%'
       `);
       
-      console.log('📊 QUERY RISULTATI:', result.rows.length, 'configurazioni dal database');
-      
       if (result.rows.length > 0) {
-        console.log('� CONFIGURAZIONI TROVATE:', result.rows);
         
         // 1. Aggiorna prezzi e proprietà dei servizi hardcoded
         result.rows.forEach(row => {
-          console.log(`🔍 Processando: ${row.setting_key} = ${row.setting_value}`);
-          
-          // Prezzi
+          // Aggiorna prezzi servizi
           const priceMatch = row.setting_key.match(/service_(\d+)_price/);
           if (priceMatch) {
             const serviceId = parseInt(priceMatch[1]);
             const service = extraServices.find(s => s.id === serviceId);
             if (service) {
-              const newPrice = parseFloat(row.setting_value);
-              console.log(`💰 Aggiornamento prezzo servizio ${serviceId}: €${service.price} → €${newPrice}`);
-              service.price = newPrice || service.price;
+              service.price = parseFloat(row.setting_value) || service.price;
             }
           }
 
-          // 🔥 Flag attivo/disattivo
+          // Aggiorna flag attivo/disattivo
           const activeMatch = row.setting_key.match(/service_(\d+)_active/);
           if (activeMatch) {
             const serviceId = parseInt(activeMatch[1]);
             const service = extraServices.find(s => s.id === serviceId);
             if (service) {
-              const isActive = row.setting_value === 'true';
-              console.log(`🔄 Aggiornamento stato servizio ${serviceId}: ${service.active} → ${isActive}`);
-              service.active = isActive;
+              service.active = row.setting_value === 'true';
             }
           }
 
-          // 🔥 Flag incluso
+          // Aggiorna flag incluso
           const includedMatch = row.setting_key.match(/service_(\d+)_included/);
           if (includedMatch) {
             const serviceId = parseInt(includedMatch[1]);
             const service = extraServices.find(s => s.id === serviceId);
             if (service) {
-              const isIncluded = row.setting_value === 'true';
-              console.log(`🎁 Aggiornamento incluso servizio ${serviceId}: ${service.included} → ${isIncluded}`);
-              service.included = isIncluded;
+              service.included = row.setting_value === 'true';
             }
           }
         });

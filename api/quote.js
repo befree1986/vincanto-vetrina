@@ -98,17 +98,18 @@ export default async function handler(req, res) {
     console.log('🎯 PARAMETRI RICEVUTI:', { checkIn, checkOut, guests: parseInt(guests), nights });
     console.log('💰 PREZZI INIZIALI HARDCODED:', { basePrice, cleaningFee, parkingFeePerNight });
 
+    // 🎯 CARICA TUTTE LE CONFIGURAZIONI PRICING IN UNA SOLA QUERY
+    let weeklyDiscount = 0;
+    let monthlyDiscount = 0;
+    const depositPercentage = 0.30;
+
     try {
-      // Usa la connessione pool già configurata
-      
-      console.log('🔄 Caricamento prezzi dal database admin per quote...');
+      // 🔥 QUERY OTTIMIZZATA: Una sola chiamata per tutti i dati pricing
       const result = await pool.query(`
         SELECT setting_key, setting_value
         FROM admin_settings 
         WHERE category = 'pricing'
       `);
-      
-      console.log('📊 RISULTATO DATABASE ROWS:', result.rows.length, result.rows);
       
       if (result.rows.length > 0) {
         const settings = {};
@@ -116,67 +117,23 @@ export default async function handler(req, res) {
           settings[row.setting_key] = row.setting_value;
         });
         
-        console.log('⚙️ SETTINGS ESTRATTE DAL DB:', settings);
-        
-        // 🔥 Aggiorna TUTTI i prezzi con valori dal database admin
-        const oldBasePrice = basePrice;
-        
-        // Mappa sia camelCase che snake_case (admin salva entrambi)
+        // Aggiorna prezzi base
         basePrice = parseFloat(settings.basePrice || settings.base_price) || basePrice;
         cleaningFee = parseFloat(settings.cleaningFee || settings.cleaning_fee) || cleaningFee;
-        parkingFeePerNight = parseFloat(settings.parkingFee || settings.parking_fee || settings.parkingFeePerNight || settings.parking_fee_per_night) || parkingFeePerNight;
+        parkingFeePerNight = parseFloat(settings.parkingFee || settings.parking_fee) || parkingFeePerNight;
         additionalGuestPrice = parseFloat(settings.additionalGuestPrice || settings.additional_guest_price) || additionalGuestPrice;
-        // 🎯 FIX: Supporta tutti i possibili nomi per la tassa di soggiorno
         touristTaxPerPersonPerNight = parseFloat(
-          settings.touristTaxAdult ||      // 🔥 Nome corretto dall'admin panel
-          settings.touristTax || 
-          settings.touristTaxPerPersonPerNight || 
-          settings.tourist_tax
+          settings.touristTaxAdult || settings.touristTax || settings.tourist_tax
         ) || touristTaxPerPersonPerNight;
         
-        console.log('✅ Prezzi AGGIORNATI da database admin:', { 
-          oldBasePrice, 
-          newBasePrice: basePrice, 
-          cleaningFee, 
-          parkingFeePerNight,
-          additionalGuestPrice,
-          touristTaxPerPersonPerNight,
-          'database_fields_found': Object.keys(settings)
-        });
-      } else {
-        console.log('⚠️ Nessuna configurazione prezzi nel database, uso valori predefiniti');
+        // Carica sconti dalla stessa query
+        weeklyDiscount = parseFloat(settings.weeklyDiscount || settings.weekly_discount) || 0;
+        monthlyDiscount = parseFloat(settings.monthlyDiscount || settings.monthly_discount) || 0;
+        
+        console.log('� Configurazione pricing caricata:', { basePrice, weeklyDiscount, monthlyDiscount });
       }
     } catch (dbError) {
-      console.error('❌ Errore caricamento prezzi dal database:', dbError);
-      console.log('🔄 Usando prezzi predefiniti');
-    }
-    const depositPercentage = 0.30;    // 30% acconto
-
-    // 🎯 CARICA SCONTI PER DURATA SOGGIORNO DAL DATABASE
-    let weeklyDiscount = 0;  // Sconto per 7+ notti
-    let monthlyDiscount = 0; // Sconto per 30+ notti
-
-    try {
-      const discountResult = await pool.query(`
-        SELECT setting_key, setting_value
-        FROM admin_settings 
-        WHERE category = 'pricing' 
-        AND (setting_key LIKE '%discount%' OR setting_key LIKE '%Discount%')
-      `);
-      
-      discountResult.rows.forEach(row => {
-        console.log(`🔍 Sconto trovato: ${row.setting_key} = ${row.setting_value}`);
-        
-        if (row.setting_key === 'weeklyDiscount' || row.setting_key === 'weekly_discount') {
-          weeklyDiscount = parseFloat(row.setting_value) || 0;
-        } else if (row.setting_key === 'monthlyDiscount' || row.setting_key === 'monthly_discount') {
-          monthlyDiscount = parseFloat(row.setting_value) || 0;
-        }
-      });
-      
-      console.log('📊 SCONTI CARICATI:', { weeklyDiscount, monthlyDiscount });
-    } catch (error) {
-      console.error('❌ Errore caricamento sconti:', error);
+      console.error('❌ Errore database pricing:', dbError.message);
     }
 
     // Calcolo totale - €75 PER PERSONA PER NOTTE
