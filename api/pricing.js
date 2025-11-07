@@ -1,213 +1,344 @@
-// API endpoint per i prezzi Vincanto - SISTEMA GRUPPI
+// API UNIFICATA PREZZI - Gestisce tutti i servizi di pricing
 import { Pool } from 'pg';
 
+// Database connection
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
+
 /**
- * Funzione per calcolare il prezzo in base al numero di ospiti (sistema gruppi)
- * @param {number} guests - Numero di ospiti
- * @param {Object} config - Configurazione prezzi
- * @returns {number} - Prezzo per notte
+ * Funzione per calcolare il prezzo con sistema BASE + AGGIUNTIVE
  */
 function calculateGroupPrice(guests, config) {
-  if (guests <= 2) return config.priceGroup1to2 || 75;
-  if (guests <= 4) return config.priceGroup3to4 || 95;
-  if (guests <= 6) return config.priceGroup5to6 || 115;
-  if (guests <= 8) return config.priceGroup7to8 || 135;
+  const basePrice = (config.basePrice || config.priceGroup1to2 || 75) * 2;
+  let additionalCost = 0;
+  let breakdown = `Base 2 persone: €${basePrice}`;
   
-  // Per più di 8 ospiti, usa il prezzo del gruppo 7-8 + sovrapprezzo
-  return (config.priceGroup7to8 || 135) + ((guests - 8) * 20);
+  if (guests <= 2) {
+    return {
+      totalPerNight: basePrice,
+      basePrice: basePrice,
+      additionalCost: 0,
+      breakdown: breakdown
+    };
+  }
+  
+  let remainingGuests = guests - 2;
+  
+  // 3-4 persone
+  if (remainingGuests > 0) {
+    const guestsInRange = Math.min(remainingGuests, 2);
+    const costPerGuest = config.additionalGuest3to4 || config.priceGroup3to4 || 30;
+    const rangeCost = guestsInRange * costPerGuest;
+    additionalCost += rangeCost;
+    breakdown += ` + 3-4 persone: €${rangeCost} (${guestsInRange}×€${costPerGuest})`;
+    remainingGuests -= guestsInRange;
+  }
+  
+  // 5-6 persone
+  if (remainingGuests > 0) {
+    const guestsInRange = Math.min(remainingGuests, 2);
+    const costPerGuest = config.additionalGuest5to6 || config.priceGroup5to6 || 25;
+    const rangeCost = guestsInRange * costPerGuest;
+    additionalCost += rangeCost;
+    breakdown += ` + 5-6 persone: €${rangeCost} (${guestsInRange}×€${costPerGuest})`;
+    remainingGuests -= guestsInRange;
+  }
+  
+  // 7-8 persone
+  if (remainingGuests > 0) {
+    const guestsInRange = Math.min(remainingGuests, 2);
+    const costPerGuest = config.additionalGuest7to8 || config.priceGroup7to8 || 20;
+    const rangeCost = guestsInRange * costPerGuest;
+    additionalCost += rangeCost;
+    breakdown += ` + 7-8 persone: €${rangeCost} (${guestsInRange}×€${costPerGuest})`;
+    remainingGuests -= guestsInRange;
+  }
+  
+  return {
+    totalPerNight: basePrice + additionalCost,
+    basePrice: basePrice,
+    additionalCost: additionalCost,
+    breakdown: breakdown
+  };
+}
+
+/**
+ * Calcola il costo totale del soggiorno
+ */
+function calculateStayTotal(params, config) {
+  const { guests, nights, includeParking = false, children = 0 } = params;
+  
+  const priceCalculation = calculateGroupPrice(guests, config);
+  const pricePerNight = priceCalculation.totalPerNight;
+  const subtotal = pricePerNight * nights;
+  const cleaningFee = config.cleaningFee || 50;
+  const parkingFee = includeParking ? (config.parkingFee || 20) * nights : 0;
+  
+  const adults = Math.max(1, guests - children);
+  const touristTax = adults * (config.touristTaxAdult || 2.00) * Math.min(nights, 7);
+  
+  const total = subtotal + cleaningFee + parkingFee + touristTax;
+  
+  return {
+    pricePerNight,
+    basePrice: priceCalculation.basePrice,
+    additionalCost: priceCalculation.additionalCost,
+    subtotal,
+    cleaningFee,
+    parkingFee,
+    touristTax,
+    total,
+    breakdown: {
+      pricePerNight: pricePerNight,
+      basePrice: priceCalculation.basePrice,
+      additionalCost: priceCalculation.additionalCost,
+      priceBreakdown: priceCalculation.breakdown,
+      nights,
+      guests,
+      adults
+    }
+  };
+}
+
+/**
+ * Carica configurazione prezzi dal database
+ */
+async function loadPricingConfig() {
+  const defaultConfig = {
+    basePrice: 75,
+    additionalGuest3to4: 30,
+    additionalGuest5to6: 25,
+    additionalGuest7to8: 20,
+    cleaningFee: 50,
+    parkingFee: 20,
+    touristTaxAdult: 2.00,
+    weeklyDiscount: 10,
+    monthlyDiscount: 15
+  };
+
+  try {
+    const result = await pool.query(`
+      SELECT setting_key, setting_value
+      FROM admin_settings 
+      WHERE category = 'pricing'
+    `);
+    
+    if (result.rows.length > 0) {
+      const settings = {};
+      result.rows.forEach(row => {
+        settings[row.setting_key] = row.setting_value;
+      });
+      
+      return {
+        basePrice: parseFloat(settings.base_price) || parseFloat(settings.price_group_1to2) || defaultConfig.basePrice,
+        additionalGuest3to4: parseFloat(settings.additional_guest_3to4) || parseFloat(settings.price_group_3to4) || defaultConfig.additionalGuest3to4,
+        additionalGuest5to6: parseFloat(settings.additional_guest_5to6) || parseFloat(settings.price_group_5to6) || defaultConfig.additionalGuest5to6,
+        additionalGuest7to8: parseFloat(settings.additional_guest_7to8) || parseFloat(settings.price_group_7to8) || defaultConfig.additionalGuest7to8,
+        cleaningFee: parseFloat(settings.cleaning_fee) || defaultConfig.cleaningFee,
+        parkingFee: parseFloat(settings.parking_fee) || defaultConfig.parkingFee,
+        touristTaxAdult: parseFloat(settings.tourist_tax_adult) || defaultConfig.touristTaxAdult,
+        weeklyDiscount: parseFloat(settings.weekly_discount) || defaultConfig.weeklyDiscount,
+        monthlyDiscount: parseFloat(settings.monthly_discount) || defaultConfig.monthlyDiscount
+      };
+    }
+    
+    return defaultConfig;
+  } catch (error) {
+    console.error('❌ Errore caricamento pricing:', error.message);
+    return defaultConfig;
+  }
 }
 
 export default async function handler(req, res) {
-  console.log('📊 API Pricing (Sistema Gruppi) chiamata:', req.method, req.url);
-
-  // Headers CORS
+  // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  let client;
-
+  const { action } = req.query;
+  
   try {
-    if (req.method === 'GET') {
-      // 🔥 CARICA CONFIGURAZIONE PREZZI PER GRUPPI DAL DATABASE
-      let pricingConfig = {
-        // Sistema gruppi
-        priceGroup1to2: 75,
-        priceGroup3to4: 95,
-        priceGroup5to6: 115,
-        priceGroup7to8: 135,
-        
-        // Costi aggiuntivi
-        cleaningFee: 50,
-        parkingFee: 20,
-        touristTaxAdult: 2.00,
-        touristTaxChild: 0,
-        
-        // Sconti
-        weekendSurcharge: 0,
-        weeklyDiscount: 10,
-        monthlyDiscount: 15,
-        
-        // Limiti
-        minStay: 2,
-        maxStay: 14,
-        maxGuests: 8,
-        
-        // Meta
-        currency: 'EUR',
-        lastUpdated: new Date().toISOString()
-      };
-
-      try {
-        const pool = new Pool({
-          connectionString: process.env.POSTGRES_URL
-        });
-        client = await pool.connect();
-        
-        console.log('🔄 Caricamento configurazione prezzi gruppi dal database...');
-        const result = await client.query(`
-          SELECT setting_key, setting_value
-          FROM admin_settings 
-          WHERE category = 'pricing'
-        `);
-        
-        console.log('📊 Query result from database:', result.rows.length, 'settings');
-        
-        if (result.rows.length > 0) {
-          const settings = {};
-          result.rows.forEach(row => {
-            settings[row.setting_key] = row.setting_value;
-            console.log(`🔧 Setting: ${row.setting_key} = ${row.setting_value}`);
-          });
-          
-          // 🔥 NUOVO: Aggiorna config con valori gruppi dal database
-          pricingConfig = {
-            ...pricingConfig,
-            // Prezzi per gruppi
-            priceGroup1to2: parseFloat(settings.price_group_1to2) || parseFloat(settings.base_price) || 75,
-            priceGroup3to4: parseFloat(settings.price_group_3to4) || 95,
-            priceGroup5to6: parseFloat(settings.price_group_5to6) || 115,
-            priceGroup7to8: parseFloat(settings.price_group_7to8) || 135,
-            
-            // Altri costi
-            cleaningFee: parseFloat(settings.cleaning_fee) || 50,
-            parkingFee: parseFloat(settings.parking_fee) || 20,
-            touristTaxAdult: parseFloat(settings.tourist_tax_adult) || 2.00,
-            touristTaxChild: parseFloat(settings.tourist_tax_child) || 0,
-            
-            // Sconti
-            weekendSurcharge: parseFloat(settings.weekend_surcharge) || 0,
-            weeklyDiscount: parseFloat(settings.weekly_discount) || 10,
-            monthlyDiscount: parseFloat(settings.monthly_discount) || 15,
-            
-            // Limiti
-            minStay: parseInt(settings.min_stay) || 2,
-            maxStay: parseInt(settings.max_stay) || 14,
-            maxGuests: parseInt(settings.max_guests) || 8,
-            
-            lastUpdated: new Date().toISOString()
-          };
-          
-          console.log('✅ Configurazione prezzi gruppi aggiornata dal database:', pricingConfig);
-        } else {
-          console.log('⚠️ Nessuna configurazione prezzi nel database, creo configurazione di default per gruppi');
-          
-          // 🔥 AUTO-INIZIALIZZAZIONE per gruppi
-          const defaultGroupSettings = [
-            { key: 'price_group_1to2', value: '75' },
-            { key: 'price_group_3to4', value: '95' },
-            { key: 'price_group_5to6', value: '115' },
-            { key: 'price_group_7to8', value: '135' },
-            { key: 'cleaning_fee', value: '50' },
-            { key: 'parking_fee', value: '20' },
-            { key: 'tourist_tax_adult', value: '2.00' },
-            { key: 'tourist_tax_child', value: '0' },
-            { key: 'weekly_discount', value: '10' },
-            { key: 'monthly_discount', value: '15' },
-            { key: 'min_stay', value: '2' },
-            { key: 'max_stay', value: '14' },
-            { key: 'max_guests', value: '8' }
-          ];
-          
-          for (const setting of defaultGroupSettings) {
-            try {
-              await client.query(`
-                INSERT INTO admin_settings (setting_key, setting_value, category, type, created_at, updated_at)
-                VALUES ($1, $2, 'pricing', 'config', NOW(), NOW())
-                ON CONFLICT (setting_key) DO UPDATE SET
-                  setting_value = EXCLUDED.setting_value,
-                  updated_at = NOW()
-              `, [setting.key, setting.value]);
-              console.log(`✅ Inizializzato gruppo: ${setting.key} = ${setting.value}`);
-            } catch (insertError) {
-              console.error(`❌ Errore inizializzazione ${setting.key}:`, insertError);
-            }
-          }
-          
-          console.log('🎯 Inizializzazione gruppi completata');
+    switch (action) {
+      case 'config':
+        // GET /api/pricing?action=config - Ritorna configurazione prezzi
+        if (req.method !== 'GET') {
+          return res.status(405).json({ success: false, error: 'Metodo non consentito' });
         }
-      } catch (dbError) {
-        console.error('❌ Errore caricamento prezzi gruppi dal database:', dbError);
-        console.log('🔄 Usando configurazione prezzi gruppi predefinita');
-      }
-
-      // Se viene richiesto un calcolo specifico (con parametri guests)
-      const { guests } = req.query;
-      if (guests) {
-        const guestCount = parseInt(guests);
-        const pricePerNight = calculateGroupPrice(guestCount, pricingConfig);
         
-        console.log(`💰 Calcolo prezzo per ${guestCount} ospiti: €${pricePerNight}/notte`);
-        
+        const config = await loadPricingConfig();
         return res.status(200).json({
           success: true,
-          data: {
-            ...pricingConfig,
-            calculatedPrice: pricePerNight,
-            guests: guestCount,
-            priceBreakdown: {
-              basePrice: pricePerNight,
-              cleaningFee: pricingConfig.cleaningFee,
-              parkingFee: pricingConfig.parkingFee,
-              touristTaxAdult: pricingConfig.touristTaxAdult,
-              touristTaxChild: pricingConfig.touristTaxChild
-            }
-          },
-          message: `Prezzo calcolato per ${guestCount} ospiti: €${pricePerNight}/notte`
+          config: config
         });
-      }
 
-      console.log('✅ Configurazione prezzi gruppi finale:', pricingConfig);
-      return res.status(200).json({
-        success: true,
-        data: pricingConfig,
-        message: 'Configurazione prezzi gruppi caricata dal database'
-      });
+      case 'calculate':
+        // GET/POST /api/pricing?action=calculate - Calcola prezzo per parametri
+        const { guests, nights, includeParking, children } = req.method === 'GET' ? req.query : req.body;
+        
+        if (!guests || !nights) {
+          return res.status(400).json({ 
+            success: false, 
+            error: 'Parametri richiesti: guests, nights' 
+          });
+        }
+
+        const pricing = await loadPricingConfig();
+        const calculation = calculateStayTotal({
+          guests: parseInt(guests),
+          nights: parseInt(nights),
+          includeParking: includeParking === 'true' || includeParking === true,
+          children: parseInt(children) || 0
+        }, pricing);
+
+        return res.status(200).json({
+          success: true,
+          pricing: calculation
+        });
+
+      case 'quote':
+        // GET/POST /api/pricing?action=quote - Genera preventivo completo
+        let { checkIn, checkOut, guests: qGuests, includeParking: qParking, adults, children: qChildren, childrenAges } = req.method === 'GET' ? req.query : req.body;
+        
+        qGuests = parseInt(qGuests) || 0;
+        adults = parseInt(adults) || qGuests;
+        qChildren = parseInt(qChildren) || 0;
+        childrenAges = Array.isArray(childrenAges) ? childrenAges.map(age => parseInt(age)) : [];
+        qParking = qParking === 'true' || qParking === true;
+
+        if (!checkIn || !checkOut || !qGuests) {
+          return res.status(400).json({ 
+            success: false, 
+            error: 'Parametri richiesti: checkIn, checkOut, guests' 
+          });
+        }
+
+        // Validazione date
+        const startDate = new Date(checkIn);
+        const endDate = new Date(checkOut);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (startDate < today) {
+          return res.status(400).json({ 
+            success: false, 
+            error: 'Data di check-in non può essere nel passato' 
+          });
+        }
+
+        if (endDate <= startDate) {
+          return res.status(400).json({ 
+            success: false, 
+            error: 'Data di check-out deve essere successiva al check-in' 
+          });
+        }
+
+        // Calcolo notti
+        const diffTime = Math.abs(endDate - startDate);
+        const nights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (nights < 1) {
+          return res.status(400).json({ 
+            success: false, 
+            error: 'Almeno 1 notte richiesta' 
+          });
+        }
+
+        const quotePricing = await loadPricingConfig();
+        
+        // Calcola con sconti durata
+        const priceCalculation = calculateGroupPrice(qGuests, quotePricing);
+        const pricePerNight = priceCalculation.totalPerNight;
+        let baseCost = nights * pricePerNight;
+        
+        let appliedDiscount = 0;
+        let discountType = '';
+        let discountAmount = 0;
+        
+        if (nights >= 30 && quotePricing.monthlyDiscount > 0) {
+          appliedDiscount = quotePricing.monthlyDiscount;
+          discountType = 'Sconto Mensile (30+ notti)';
+        } else if (nights >= 7 && quotePricing.weeklyDiscount > 0) {
+          appliedDiscount = quotePricing.weeklyDiscount;
+          discountType = 'Sconto Settimanale (7+ notti)';
+        }
+        
+        if (appliedDiscount > 0) {
+          discountAmount = baseCost * (appliedDiscount / 100);
+          baseCost = baseCost - discountAmount;
+        }
+        
+        const cleaningCost = quotePricing.cleaningFee;
+        const parkingCost = qParking ? nights * quotePricing.parkingFee : 0;
+        
+        // Tassa di soggiorno
+        let guestsSubjectToTax = adults || qGuests;
+        if (childrenAges && childrenAges.length > 0) {
+          const childrenOver12 = childrenAges.filter(age => age >= 12).length;
+          guestsSubjectToTax = (adults || qGuests - qChildren) + childrenOver12;
+        }
+        
+        const touristTax = guestsSubjectToTax * Math.min(nights, 7) * quotePricing.touristTaxAdult;
+        const totalAmount = baseCost + cleaningCost + parkingCost + touristTax;
+        const depositAmount = totalAmount * 0.30;
+
+        return res.status(200).json({
+          success: true,
+          quote: {
+            checkIn,
+            checkOut,
+            nights,
+            guests: qGuests,
+            adults: adults || qGuests,
+            children: qChildren || 0,
+            priceGroup: qGuests <= 2 ? '1-2' : qGuests <= 4 ? '3-4' : qGuests <= 6 ? '5-6' : '7-8',
+            pricePerNight,
+            basePrice: priceCalculation.basePrice,
+            additionalCost: priceCalculation.additionalCost,
+            priceBreakdown: priceCalculation.breakdown,
+            accommodationCost: baseCost,
+            cleaningFee: cleaningCost,
+            parkingFee: parkingCost,
+            touristTax: touristTax,
+            discountAmount: discountAmount,
+            discountType: discountType || null,
+            totalAmount: totalAmount,
+            depositAmount: depositAmount,
+            remainingAmount: totalAmount - depositAmount,
+            available: true,
+            currency: 'EUR',
+            system: 'base-plus-additional',
+            version: '3.0'
+          },
+          pricing: {
+            config: quotePricing,
+            breakdown: {
+              accommodationCost: baseCost,
+              cleaningFee: cleaningCost,
+              parkingFee: parkingCost,
+              touristTax: touristTax,
+              discount: discountAmount > 0 ? `-€${discountAmount.toFixed(2)} (${discountType})` : null
+            }
+          }
+        });
+
+      default:
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Azione non riconosciuta. Usa: config, calculate, quote' 
+        });
     }
-
-    return res.status(405).json({
-      success: false,
-      message: 'Metodo non supportato'
-    });
-
   } catch (error) {
-    console.error('❌ Errore API Pricing Gruppi:', error);
+    console.error('❌ Errore API Pricing Unificata:', error);
     return res.status(500).json({
       success: false,
-      message: 'Errore interno del server',
-      error: error.message
+      error: 'Errore interno del server',
+      message: error.message
     });
-  } finally {
-    if (client) {
-      try {
-        client.release();
-      } catch (releaseError) {
-        console.error('❌ Errore chiusura connessione database:', releaseError);
-      }
-    }
   }
 }

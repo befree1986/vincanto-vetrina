@@ -1,5 +1,5 @@
+// API UNIFICATA BOOKING - Gestisce tutte le operazioni di prenotazione
 import { Pool } from 'pg';
-import nodemailer from 'nodemailer';
 
 // Database connection
 const pool = new Pool({
@@ -7,318 +7,239 @@ const pool = new Pool({
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
-// Email transporter (Register.it SMTP)
-const transporter = nodemailer.createTransporter({
-  host: 'smtps.register.it',
-  port: 465,
-  secure: true, // SSL
-  auth: {
-    user: process.env.EMAIL_USER, // info@vincantomaiori.it
-    pass: process.env.EMAIL_PASS
-  }
-});
-
-// Email templates
-const generateBookingConfirmationHTML = (bookingDetails) => {
-  return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: #f9f9f9; padding: 30px; border-radius: 10px; }
-        .header { background: #2563eb; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-        .content { background: white; padding: 20px; margin: 0; }
-        .booking-details { background: #f8fafc; padding: 15px; border-left: 4px solid #2563eb; margin: 20px 0; }
-        .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <h1>✅ Prenotazione Confermata - Vincanto Maiori</h1>
-        </div>
-        <div class="content">
-          <p>Gentile ${bookingDetails.guestName},</p>
-          <p>La sua prenotazione è stata confermata con successo!</p>
-          
-          <div class="booking-details">
-            <h3>📋 Dettagli Prenotazione:</h3>
-            <p><strong>Nome:</strong> ${bookingDetails.guestName}</p>
-            <p><strong>Email:</strong> ${bookingDetails.guestEmail}</p>
-            <p><strong>Telefono:</strong> ${bookingDetails.guestPhone}</p>
-            <p><strong>Check-in:</strong> ${bookingDetails.checkInDate}</p>
-            <p><strong>Check-out:</strong> ${bookingDetails.checkOutDate}</p>
-            <p><strong>Ospiti:</strong> ${bookingDetails.guests}</p>
-            <p><strong>Parcheggio:</strong> ${bookingDetails.parking ? 'Sì' : 'No'}</p>
-            <p><strong>Totale:</strong> €${bookingDetails.totalPrice}</p>
-            <p><strong>Codice Prenotazione:</strong> <code>${bookingDetails.bookingId}</code></p>
-          </div>
-          
-          <p>Riceverà ulteriori informazioni via email prima del check-in.</p>
-          <p>Per qualsiasi domanda, non esiti a contattarci.</p>
-          
-          <p>Cordiali saluti,<br>
-          <strong>Team Vincanto Maiori</strong></p>
-        </div>
-        <div class="footer">
-          <p>📍 Via Nuova Chiunzi, 44 - 84010 Maiori (SA)<br>
-          📧 info@vincantomaiori.it | 🌐 www.vincantomaori.it</p>
-        </div>
-      </div>
-    </body>
-    </html>
-  `;
-};
-
-const generateAdminNotificationHTML = (bookingDetails) => {
-  return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: #fff3cd; padding: 30px; border-radius: 10px; }
-        .header { background: #856404; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-        .content { background: white; padding: 20px; margin: 0; }
-        .booking-details { background: #fff3cd; padding: 15px; border-left: 4px solid #856404; margin: 20px 0; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <h1>🔔 NUOVA PRENOTAZIONE - Admin Alert</h1>
-        </div>
-        <div class="content">
-          <p><strong>È stata ricevuta una nuova prenotazione!</strong></p>
-          
-          <div class="booking-details">
-            <h3>📋 Dettagli Cliente:</h3>
-            <p><strong>Nome:</strong> ${bookingDetails.guestName}</p>
-            <p><strong>Email:</strong> ${bookingDetails.guestEmail}</p>
-            <p><strong>Telefono:</strong> ${bookingDetails.guestPhone}</p>
-            <p><strong>Check-in:</strong> ${bookingDetails.checkInDate}</p>
-            <p><strong>Check-out:</strong> ${bookingDetails.checkOutDate}</p>
-            <p><strong>Ospiti:</strong> ${bookingDetails.guests}</p>
-            <p><strong>Parcheggio:</strong> ${bookingDetails.parking ? 'Sì' : 'No'}</p>
-            <p><strong>Totale:</strong> €${bookingDetails.totalPrice}</p>
-            <p><strong>ID Prenotazione:</strong> <code>${bookingDetails.bookingId}</code></p>
-            <p><strong>Data Prenotazione:</strong> ${new Date().toLocaleString('it-IT')}</p>
-          </div>
-          
-          <p>⚡ Azione richiesta: Confermare disponibilità e preparare accoglienza ospite.</p>
-        </div>
-      </div>
-    </body>
-    </html>
-  `;
-};
-
-// Send emails function
-async function sendBookingEmails(bookingDetails) {
-  try {
-    // Send confirmation to guest
-    const guestEmailOptions = {
-      from: process.env.EMAIL_USER,
-      to: bookingDetails.guestEmail,
-      subject: '✅ Prenotazione Confermata - Vincanto Maiori',
-      html: generateBookingConfirmationHTML(bookingDetails)
-    };
-    
-    await transporter.sendMail(guestEmailOptions);
-    console.log('✅ Email confermata inviata a:', bookingDetails.guestEmail);
-    
-    // Send notification to admin
-    const adminEmailOptions = {
-      from: process.env.EMAIL_USER,
-      to: process.env.ADMIN_EMAIL,
-      subject: `🔔 NUOVA PRENOTAZIONE - ${bookingDetails.guestName}`,
-      html: generateAdminNotificationHTML(bookingDetails)
-    };
-    
-    await transporter.sendMail(adminEmailOptions);
-    console.log('✅ Notifica admin inviata a:', process.env.ADMIN_EMAIL);
-    
-    // Log emails sent
-    await pool.query(`
-      INSERT INTO admin_email_logs (type, recipient, subject, sent_at, booking_id)
-      VALUES 
-        ('confirmation', $1, $2, NOW(), $3),
-        ('admin_notification', $4, $5, NOW(), $3)
-    `, [
-      bookingDetails.guestEmail,
-      'Prenotazione Confermata - Vincanto Maiori',
-      bookingDetails.bookingId,
-      process.env.ADMIN_EMAIL,
-      `NUOVA PRENOTAZIONE - ${bookingDetails.guestName}`
-    ]);
-    
-    return { success: true, message: 'Email inviate con successo' };
-  } catch (error) {
-    console.error('❌ Errore invio email:', error);
-    throw error;
-  }
-}
-
 export default async function handler(req, res) {
-  // Set CORS headers
+  // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
   const { action } = req.query;
-
+  
   try {
     switch (action) {
+      case 'availability':
+        // GET /api/booking-unified?action=availability&checkIn=X&checkOut=Y
+        if (req.method !== 'GET') {
+          return res.status(405).json({ success: false, error: 'Metodo non consentito' });
+        }
+
+        const { checkIn, checkOut } = req.query;
+        
+        if (!checkIn || !checkOut) {
+          return res.status(400).json({
+            success: false,
+            error: 'Date checkIn e checkOut richieste'
+          });
+        }
+
+        // Verifica disponibilità nel database
+        const availability = await pool.query(`
+          SELECT * FROM blocked_dates 
+          WHERE date_blocked BETWEEN $1 AND $2
+        `, [checkIn, checkOut]);
+
+        const isAvailable = availability.rows.length === 0;
+
+        return res.status(200).json({
+          success: true,
+          available: isAvailable,
+          checkIn,
+          checkOut,
+          blockedDates: availability.rows.map(row => row.date_blocked)
+        });
+
+      case 'blocked-dates':
+        // GET /api/booking-unified?action=blocked-dates - Lista date bloccate
+        // POST /api/booking-unified?action=blocked-dates - Aggiungi date bloccate
+        // DELETE /api/booking-unified?action=blocked-dates&date=X - Rimuovi data bloccata
+        
+        if (req.method === 'GET') {
+          const result = await pool.query('SELECT * FROM blocked_dates ORDER BY date_blocked');
+          
+          return res.status(200).json({
+            success: true,
+            blockedDates: result.rows
+          });
+        }
+        
+        if (req.method === 'POST') {
+          const { dates, reason } = req.body;
+          
+          if (!dates || !Array.isArray(dates)) {
+            return res.status(400).json({
+              success: false,
+              error: 'Array di date richiesto'
+            });
+          }
+
+          for (const date of dates) {
+            await pool.query(`
+              INSERT INTO blocked_dates (date_blocked, reason, created_at)
+              VALUES ($1, $2, NOW())
+              ON CONFLICT (date_blocked) DO NOTHING
+            `, [date, reason || 'Bloccato da admin']);
+          }
+
+          return res.status(200).json({
+            success: true,
+            message: `${dates.length} date bloccate con successo`
+          });
+        }
+        
+        if (req.method === 'DELETE') {
+          const { date } = req.query;
+          
+          if (!date) {
+            return res.status(400).json({
+              success: false,
+              error: 'Data da sbloccare richiesta'
+            });
+          }
+
+          await pool.query('DELETE FROM blocked_dates WHERE date_blocked = $1', [date]);
+
+          return res.status(200).json({
+            success: true,
+            message: 'Data sbloccata con successo'
+          });
+        }
+
+        return res.status(405).json({ success: false, error: 'Metodo non consentito' });
+
       case 'create':
+        // POST /api/booking-unified?action=create - Crea nuova prenotazione
         if (req.method !== 'POST') {
-          return res.status(405).json({ error: 'Method not allowed' });
+          return res.status(405).json({ success: false, error: 'Metodo non consentito' });
         }
 
         const {
-          guestName, guestEmail, guestPhone,
-          checkInDate, checkOutDate, guests,
-          parking, totalPrice, notes
+          checkIn: bookingCheckIn,
+          checkOut: bookingCheckOut,
+          guests,
+          adults,
+          children,
+          firstName,
+          lastName,
+          email,
+          phone,
+          totalAmount,
+          depositAmount,
+          notes
         } = req.body;
 
-        // Validate required fields
-        if (!guestName || !guestEmail || !checkInDate || !checkOutDate || !guests) {
-          return res.status(400).json({ 
-            error: 'Campi obbligatori mancanti',
-            required: ['guestName', 'guestEmail', 'checkInDate', 'checkOutDate', 'guests']
+        if (!bookingCheckIn || !bookingCheckOut || !guests || !firstName || !lastName || !email) {
+          return res.status(400).json({
+            success: false,
+            error: 'Campi obbligatori: checkIn, checkOut, guests, firstName, lastName, email'
           });
         }
 
-        // Check availability
-        const availabilityQuery = `
-          SELECT COUNT(*) as conflicts FROM admin_bookings 
-          WHERE status != 'cancelled' 
-          AND (
-            (check_in_date <= $1 AND check_out_date > $1) OR
-            (check_in_date < $2 AND check_out_date >= $2) OR
-            (check_in_date >= $1 AND check_out_date <= $2)
+        // Verifica disponibilità
+        const availabilityCheck = await pool.query(`
+          SELECT * FROM blocked_dates 
+          WHERE date_blocked BETWEEN $1 AND $2
+        `, [bookingCheckIn, bookingCheckOut]);
+
+        if (availabilityCheck.rows.length > 0) {
+          return res.status(400).json({
+            success: false,
+            error: 'Date non disponibili'
+          });
+        }
+
+        // Crea prenotazione
+        const newBookingId = `VIN${Date.now()}`;
+        
+        await pool.query(`
+          INSERT INTO bookings (
+            booking_id, check_in, check_out, guests, adults, children,
+            first_name, last_name, email, phone, total_amount, deposit_amount,
+            notes, status, created_at
+          ) VALUES (
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'pending', NOW()
           )
-        `;
-        
-        const conflicts = await pool.query(availabilityQuery, [checkInDate, checkOutDate]);
-        
-        if (parseInt(conflicts.rows[0].conflicts) > 0) {
-          return res.status(409).json({
-            error: 'Date non disponibili',
-            message: 'Le date selezionate non sono disponibili'
-          });
-        }
-
-        // Generate booking ID
-        const bookingId = `VIN${Date.now()}${Math.floor(Math.random() * 1000)}`;
-
-        // Insert booking
-        const insertQuery = `
-          INSERT INTO admin_bookings (
-            booking_id, guest_name, guest_email, guest_phone,
-            check_in_date, check_out_date, guests, parking,
-            total_price, notes, status, created_at
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'confirmed', NOW())
-          RETURNING *
-        `;
-
-        const newBooking = await pool.query(insertQuery, [
-          bookingId, guestName, guestEmail, guestPhone,
-          checkInDate, checkOutDate, guests, parking || false,
-          totalPrice, notes || '', 'confirmed'
+        `, [
+          newBookingId, bookingCheckIn, bookingCheckOut, guests, adults || guests, children || 0,
+          firstName, lastName, email, phone, totalAmount, depositAmount, notes
         ]);
 
-        // Prepare booking details for emails
-        const bookingDetails = {
-          bookingId,
-          guestName,
-          guestEmail,
-          guestPhone: guestPhone || 'Non fornito',
-          checkInDate: new Date(checkInDate).toLocaleDateString('it-IT'),
-          checkOutDate: new Date(checkOutDate).toLocaleDateString('it-IT'),
-          guests,
-          parking: parking || false,
-          totalPrice,
-          notes: notes || ''
-        };
-
-        // Send emails
-        try {
-          await sendBookingEmails(bookingDetails);
-        } catch (emailError) {
-          console.error('⚠️ Errore invio email (prenotazione comunque creata):', emailError);
+        // Blocca le date
+        const startDate = new Date(bookingCheckIn);
+        const endDate = new Date(bookingCheckOut);
+        
+        for (let d = new Date(startDate); d < endDate; d.setDate(d.getDate() + 1)) {
+          const dateStr = d.toISOString().split('T')[0];
+          await pool.query(`
+            INSERT INTO blocked_dates (date_blocked, reason, booking_id, created_at)
+            VALUES ($1, $2, $3, NOW())
+            ON CONFLICT (date_blocked) DO NOTHING
+          `, [dateStr, `Prenotazione ${newBookingId}`, newBookingId]);
         }
 
-        return res.status(201).json({
+        return res.status(200).json({
           success: true,
           message: 'Prenotazione creata con successo',
-          booking: newBooking.rows[0],
-          emailSent: true
+          bookingId: newBookingId
         });
 
       case 'list':
+        // GET /api/booking-unified?action=list - Lista tutte le prenotazioni
         if (req.method !== 'GET') {
-          return res.status(405).json({ error: 'Method not allowed' });
+          return res.status(405).json({ success: false, error: 'Metodo non consentito' });
         }
 
         const bookings = await pool.query(`
-          SELECT * FROM admin_bookings 
+          SELECT * FROM bookings 
           ORDER BY created_at DESC
         `);
 
-        return res.json({
+        return res.status(200).json({
           success: true,
           bookings: bookings.rows
         });
 
-      case 'availability':
-        if (req.method !== 'GET') {
-          return res.status(405).json({ error: 'Method not allowed' });
+      case 'update-status':
+        // POST /api/booking-unified?action=update-status
+        if (req.method !== 'POST') {
+          return res.status(405).json({ success: false, error: 'Metodo non consentito' });
         }
 
-        const { startDate, endDate } = req.query;
+        const { bookingId: updateBookingId, status } = req.body;
         
-        if (!startDate || !endDate) {
+        if (!updateBookingId || !status) {
           return res.status(400).json({
-            error: 'Date richieste',
-            required: ['startDate', 'endDate']
+            success: false,
+            error: 'ID prenotazione e status richiesti'
           });
         }
 
-        const availQuery = `
-          SELECT 
-            check_in_date, check_out_date, guest_name, status
-          FROM admin_bookings 
-          WHERE status != 'cancelled'
-          AND (
-            (check_in_date <= $2 AND check_out_date > $1)
-          )
-          ORDER BY check_in_date
-        `;
+        await pool.query(`
+          UPDATE bookings 
+          SET status = $1, updated_at = NOW()
+          WHERE booking_id = $2
+        `, [status, updateBookingId]);
 
-        const bookingsInRange = await pool.query(availQuery, [startDate, endDate]);
-
-        return res.json({
+        return res.status(200).json({
           success: true,
-          available: bookingsInRange.rows.length === 0,
-          conflictingBookings: bookingsInRange.rows
+          message: 'Status prenotazione aggiornato'
         });
 
       default:
-        return res.status(400).json({ error: 'Azione non valida' });
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Azione non riconosciuta. Usa: availability, blocked-dates, create, list, update-status' 
+        });
     }
-
   } catch (error) {
-    console.error('❌ Errore API booking:', error);
-    return res.status(500).json({ 
-      error: 'Errore del server',
-      message: error.message 
+    console.error('❌ Errore API Booking Unificata:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Errore interno del server',
+      message: error.message
     });
   }
-};
+}
