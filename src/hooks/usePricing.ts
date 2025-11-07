@@ -54,11 +54,6 @@ export const usePricing = () => {
         console.log('🔍 basePrice:', apiData.basePrice);
         console.log('🔍 additionalGuestPrice:', apiData.additionalGuestPrice);
         
-        // Test visivo - mostra un alert con i dati per debug
-        if (typeof window !== 'undefined') {
-          alert(`API Data: basePrice=${apiData.basePrice}, additionalGuestPrice=${apiData.additionalGuestPrice}`);
-        }
-        
         // Valori con fallback più robusti
         const basePrice = Number(apiData.basePrice) || 85;
         const additionalGuestPrice = Number(apiData.additionalGuestPrice) || 25;
