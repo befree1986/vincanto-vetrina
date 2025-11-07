@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Sistema Base + Aggiuntive</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .test-result { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        code { background-color: #f8f9fa; padding: 2px 4px; border-radius: 4px; }
+        .formula { background-color: #fff3cd; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .breakdown { font-size: 0.9em; color: #666; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🧮 Test Sistema BASE + AGGIUNTIVE</h1>
+    
+    <div class="formula">
+        <h3>📝 Formula:</h3>
+        <strong>Base 2 persone: €75/persona × 2 = €150</strong><br>
+        <strong>+ Aggiuntive 3-4: €30/persona × numero extra</strong><br>
+        <strong>+ Aggiuntive 5-6: €25/persona × numero extra</strong><br>
+        <strong>+ Aggiuntive 7-8: €20/persona × numero extra</strong><br>
+        <strong>= Totale per notte × Notti + Pulizie + Tassa Soggiorno</strong>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        // Simuliamo la logica delle API corrette
+        function calculateGroupPrice(guests, config) {
+            const basePrice = (config.basePrice || 75) * 2;
+            let additionalCost = 0;
+            let breakdown = `Base 2 persone: €${basePrice}`;
+            
+            if (guests <= 2) {
+                return {
+                    totalPerNight: basePrice,
+                    basePrice: basePrice,
+                    additionalCost: 0,
+                    breakdown: breakdown
+                };
+            }
+            
+            let remainingGuests = guests - 2;
+            
+            // 3-4 persone
+            if (remainingGuests > 0) {
+                const guestsInRange = Math.min(remainingGuests, 2);
+                const costPerGuest = config.additionalGuest3to4 || 30;
+                const rangeCost = guestsInRange * costPerGuest;
+                additionalCost += rangeCost;
+                breakdown += ` + 3-4 persone: €${rangeCost} (${guestsInRange}×€${costPerGuest})`;
+                remainingGuests -= guestsInRange;
+            }
+            
+            // 5-6 persone
+            if (remainingGuests > 0) {
+                const guestsInRange = Math.min(remainingGuests, 2);
+                const costPerGuest = config.additionalGuest5to6 || 25;
+                const rangeCost = guestsInRange * costPerGuest;
+                additionalCost += rangeCost;
+                breakdown += ` + 5-6 persone: €${rangeCost} (${guestsInRange}×€${costPerGuest})`;
+                remainingGuests -= guestsInRange;
+            }
+            
+            // 7-8 persone
+            if (remainingGuests > 0) {
+                const guestsInRange = Math.min(remainingGuests, 2);
+                const costPerGuest = config.additionalGuest7to8 || 20;
+                const rangeCost = guestsInRange * costPerGuest;
+                additionalCost += rangeCost;
+                breakdown += ` + 7-8 persone: €${rangeCost} (${guestsInRange}×€${costPerGuest})`;
+                remainingGuests -= guestsInRange;
+            }
+            
+            return {
+                totalPerNight: basePrice + additionalCost,
+                basePrice: basePrice,
+                additionalCost: additionalCost,
+                breakdown: breakdown
+            };
+        }
+
+        function calculateStayTotal(params, config) {
+            const { guests, nights, includeParking = false, children = 0 } = params;
+            
+            const priceCalculation = calculateGroupPrice(guests, config);
+            const pricePerNight = priceCalculation.totalPerNight;
+            const subtotal = pricePerNight * nights;
+            const cleaningFee = config.cleaningFee || 50;
+            const parkingFee = includeParking ? (config.parkingFee || 20) * nights : 0;
+            
+            const adults = Math.max(1, guests - children);
+            const touristTax = adults * (config.touristTaxAdult || 2.00) * Math.min(nights, 7);
+            
+            const total = subtotal + cleaningFee + parkingFee + touristTax;
+            
+            return {
+                pricePerNight,
+                basePrice: priceCalculation.basePrice,
+                additionalCost: priceCalculation.additionalCost,
+                subtotal,
+                cleaningFee,
+                parkingFee,
+                touristTax,
+                total,
+                breakdown: priceCalculation.breakdown
+            };
+        }
+
+        // Configurazione prezzi di test (i tuoi esempi)
+        const config = {
+            basePrice: 75,
+            additionalGuest3to4: 30,
+            additionalGuest5to6: 25,
+            additionalGuest7to8: 20,
+            cleaningFee: 50,
+            parkingFee: 20,
+            touristTaxAdult: 2.00
+        };
+
+        // Test cases
+        const testCases = [
+            { name: "2 persone × 3 notti", params: { guests: 2, nights: 3 } },
+            { name: "4 persone × 3 notti (TUO ESEMPIO)", params: { guests: 4, nights: 3 } },
+            { name: "6 persone × 3 notti", params: { guests: 6, nights: 3 } },
+            { name: "8 persone × 3 notti", params: { guests: 8, nights: 3 } }
+        ];
+
+        let resultsHTML = '';
+
+        testCases.forEach(testCase => {
+            const result = calculateStayTotal(testCase.params, config);
+            
+            resultsHTML += `
+                <div class="test-result success">
+                    <h3>🔥 ${testCase.name}</h3>
+                    <p><strong>Prezzo per notte:</strong> €${result.pricePerNight}</p>
+                    <div class="breakdown">${result.breakdown}</div>
+                    <p><strong>Costo alloggio:</strong> €${result.subtotal} (€${result.pricePerNight} × ${testCase.params.nights} notti)</p>
+                    <p><strong>Pulizie:</strong> €${result.cleaningFee}</p>
+                    <p><strong>Tassa soggiorno:</strong> €${result.touristTax} (€2 × ${testCase.params.guests} persone × ${Math.min(testCase.params.nights, 7)} notti)</p>
+                    <p><strong>🎯 TOTALE:</strong> <code>€${result.total.toFixed(2)}</code></p>
+                </div>
+            `;
+        });
+
+        // Aggiungiamo il tuo esempio specifico
+        const yourExample = calculateStayTotal({ guests: 4, nights: 3 }, config);
+        resultsHTML += `
+            <div class="test-result info">
+                <h3>✅ VERIFICA TUO ESEMPIO</h3>
+                <p><strong>4 persone × 3 notti:</strong></p>
+                <p>• Base 2 persone: €${config.basePrice} × 2 = €${config.basePrice * 2}</p>
+                <p>• 3-4 persone aggiuntive: 2 persone × €${config.additionalGuest3to4} = €${2 * config.additionalGuest3to4}</p>
+                <p>• <strong>Totale per notte:</strong> €${config.basePrice * 2} + €${2 * config.additionalGuest3to4} = €${yourExample.pricePerNight}</p>
+                <p>• <strong>3 notti:</strong> €${yourExample.pricePerNight} × 3 = €${yourExample.subtotal}</p>
+                <p>• <strong>+ Tassa soggiorno:</strong> €${yourExample.touristTax}</p>
+                <p>• <strong>+ Pulizie:</strong> €${yourExample.cleaningFee}</p>
+                <p>• <strong>🎯 TOTALE FINALE:</strong> <code>€${yourExample.total}</code></p>
+            </div>
+        `;
+
+        document.getElementById('results').innerHTML = resultsHTML;
+    </script>
+</body>
+</html>

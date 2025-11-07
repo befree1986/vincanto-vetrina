@@ -8,27 +8,73 @@ const pool = new Pool({
 });
 
 /**
- * Calcola il prezzo per persona per notte basato sul numero di ospiti (sistema per persona)
+ * Calcola il prezzo con sistema BASE + AGGIUNTIVE
  */
 function calculateGroupPrice(guests, pricing) {
-  if (guests <= 2) return pricing.priceGroup1to2;
-  if (guests <= 4) return pricing.priceGroup3to4;
-  if (guests <= 6) return pricing.priceGroup5to6;
-  if (guests <= 8) return pricing.priceGroup7to8;
+  // Prezzo base per 2 persone
+  const basePrice = (pricing.basePrice || pricing.priceGroup1to2 || 75) * 2;
+  let additionalCost = 0;
+  let breakdown = `Base 2 persone: €${basePrice}`;
   
-  // Per più di 8 ospiti, usa prezzo gruppo 7-8 + sovrapprezzo
-  return pricing.priceGroup7to8 + ((guests - 8) * 20);
+  if (guests <= 2) {
+    return {
+      totalPerNight: basePrice,
+      basePrice: basePrice,
+      additionalCost: 0,
+      breakdown: breakdown
+    };
+  }
+  
+  // Calcola costi aggiuntivi
+  let remainingGuests = guests - 2;
+  
+  // 3-4 persone
+  if (remainingGuests > 0) {
+    const guestsInRange = Math.min(remainingGuests, 2);
+    const costPerGuest = pricing.additionalGuest3to4 || pricing.priceGroup3to4 || 30;
+    const rangeCost = guestsInRange * costPerGuest;
+    additionalCost += rangeCost;
+    breakdown += ` + 3-4: €${rangeCost}`;
+    remainingGuests -= guestsInRange;
+  }
+  
+  // 5-6 persone
+  if (remainingGuests > 0) {
+    const guestsInRange = Math.min(remainingGuests, 2);
+    const costPerGuest = pricing.additionalGuest5to6 || pricing.priceGroup5to6 || 25;
+    const rangeCost = guestsInRange * costPerGuest;
+    additionalCost += rangeCost;
+    breakdown += ` + 5-6: €${rangeCost}`;
+    remainingGuests -= guestsInRange;
+  }
+  
+  // 7-8 persone
+  if (remainingGuests > 0) {
+    const guestsInRange = Math.min(remainingGuests, 2);
+    const costPerGuest = pricing.additionalGuest7to8 || pricing.priceGroup7to8 || 20;
+    const rangeCost = guestsInRange * costPerGuest;
+    additionalCost += rangeCost;
+    breakdown += ` + 7-8: €${rangeCost}`;
+    remainingGuests -= guestsInRange;
+  }
+  
+  return {
+    totalPerNight: basePrice + additionalCost,
+    basePrice: basePrice,
+    additionalCost: additionalCost,
+    breakdown: breakdown
+  };
 }
 
 /**
- * Calcola il totale del soggiorno con il nuovo sistema per persona
+ * Calcola il totale del soggiorno con il nuovo sistema base + aggiuntive
  */
 function calculateStayTotal(params, pricing) {
   const { guests, nights, includeParking, adults, children, childrenAges } = params;
   
-  // Prezzo per persona per notte basato sul gruppo
-  const pricePerPersonPerNight = calculateGroupPrice(guests, pricing);
-  const pricePerNight = pricePerPersonPerNight * guests; // TOTALE = prezzo_per_persona × ospiti
+  // Calcolo prezzo per notte con sistema base + aggiuntive
+  const priceCalculation = calculateGroupPrice(guests, pricing);
+  const pricePerNight = priceCalculation.totalPerNight;
   let baseCost = nights * pricePerNight;
   
   // Applica sconti per durata soggiorno
@@ -67,7 +113,9 @@ function calculateStayTotal(params, pricing) {
   
   return {
     pricePerNight,
-    pricePerPersonPerNight, // AGGIUNTO: prezzo per persona
+    basePrice: priceCalculation.basePrice,
+    additionalCost: priceCalculation.additionalCost,
+    priceBreakdown: priceCalculation.breakdown,
     baseCost,
     discountAmount,
     discountType,
@@ -161,12 +209,12 @@ export default async function handler(req, res) {
     
     console.log('🛏️ CALCOLO NOTTI:', { checkIn, checkOut, nights });
 
-    // 🔥 CARICA CONFIGURAZIONE PREZZI GRUPPI DAL DATABASE
+    // 🔥 CARICA CONFIGURAZIONE PREZZI BASE + AGGIUNTIVE DAL DATABASE
     let pricing = {
-      priceGroup1to2: 75,
-      priceGroup3to4: 95,
-      priceGroup5to6: 115,
-      priceGroup7to8: 135,
+      basePrice: 75, // Prezzo base per persona (2 persone = 150)
+      additionalGuest3to4: 30,
+      additionalGuest5to6: 25,
+      additionalGuest7to8: 20,
       cleaningFee: 50,
       parkingFeePerNight: 20,
       touristTaxPerPersonPerNight: 2.00,
@@ -187,12 +235,12 @@ export default async function handler(req, res) {
           settings[row.setting_key] = row.setting_value;
         });
         
-        // Aggiorna pricing con valori dal database
+        // Aggiorna pricing con valori dal database (supporta sia nuovo che vecchio formato)
         pricing = {
-          priceGroup1to2: parseFloat(settings.price_group_1to2) || parseFloat(settings.base_price) || pricing.priceGroup1to2,
-          priceGroup3to4: parseFloat(settings.price_group_3to4) || pricing.priceGroup3to4,
-          priceGroup5to6: parseFloat(settings.price_group_5to6) || pricing.priceGroup5to6,
-          priceGroup7to8: parseFloat(settings.price_group_7to8) || pricing.priceGroup7to8,
+          basePrice: parseFloat(settings.base_price) || parseFloat(settings.price_group_1to2) || pricing.basePrice,
+          additionalGuest3to4: parseFloat(settings.additional_guest_3to4) || parseFloat(settings.price_group_3to4) || pricing.additionalGuest3to4,
+          additionalGuest5to6: parseFloat(settings.additional_guest_5to6) || parseFloat(settings.price_group_5to6) || pricing.additionalGuest5to6,
+          additionalGuest7to8: parseFloat(settings.additional_guest_7to8) || parseFloat(settings.price_group_7to8) || pricing.additionalGuest7to8,
           cleaningFee: parseFloat(settings.cleaning_fee) || pricing.cleaningFee,
           parkingFeePerNight: parseFloat(settings.parking_fee) || pricing.parkingFeePerNight,
           touristTaxPerPersonPerNight: parseFloat(settings.tourist_tax_adult) || pricing.touristTaxPerPersonPerNight,
@@ -200,7 +248,7 @@ export default async function handler(req, res) {
           monthlyDiscount: parseFloat(settings.monthly_discount) || pricing.monthlyDiscount
         };
         
-        console.log('✅ Configurazione prezzi gruppi caricata dal database');
+        console.log('✅ Configurazione prezzi base + aggiuntive caricata dal database');
       }
     } catch (dbError) {
       console.error('❌ Errore caricamento pricing gruppi:', dbError.message);
@@ -233,10 +281,12 @@ export default async function handler(req, res) {
         adults: adults || guests,
         children: children || 0,
         
-        // Sistema gruppi
+        // Sistema base + aggiuntive
         priceGroup: guests <= 2 ? '1-2' : guests <= 4 ? '3-4' : guests <= 6 ? '5-6' : '7-8',
         pricePerNight: calculation.pricePerNight,
-        pricePerPersonPerNight: calculation.pricePerPersonPerNight, // AGGIUNTO: prezzo per persona
+        basePrice: calculation.basePrice,
+        additionalCost: calculation.additionalCost,
+        priceBreakdown: calculation.priceBreakdown,
         
         // Costi
         accommodationCost: calculation.baseCost,

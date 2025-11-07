@@ -2,19 +2,73 @@
 import { Pool } from 'pg';
 
 /**
- * Funzione per calcolare il prezzo per persona in base al numero di ospiti (sistema per persona)
+ * Funzione per calcolare il prezzo con sistema BASE + AGGIUNTIVE
  * @param {number} guests - Numero di ospiti
  * @param {Object} config - Configurazione prezzi
- * @returns {number} - Prezzo per persona per notte
+ * @returns {Object} - Dettaglio calcolo prezzo
  */
 function calculateGroupPrice(guests, config) {
-  if (guests <= 2) return config.priceGroup1to2 || 75;
-  if (guests <= 4) return config.priceGroup3to4 || 95;
-  if (guests <= 6) return config.priceGroup5to6 || 115;
-  if (guests <= 8) return config.priceGroup7to8 || 135;
+  // Prezzo base per 2 persone
+  const basePrice = (config.basePrice || config.priceGroup1to2 || 75) * 2;
+  let additionalCost = 0;
+  let breakdown = `Base 2 persone: €${basePrice}`;
   
-  // Per più di 8 ospiti, usa il prezzo del gruppo 7-8 + sovrapprezzo
-  return (config.priceGroup7to8 || 135) + ((guests - 8) * 20);
+  if (guests <= 2) {
+    return {
+      totalPerNight: basePrice,
+      basePrice: basePrice,
+      additionalCost: 0,
+      breakdown: breakdown
+    };
+  }
+  
+  // Calcola costi aggiuntivi
+  let remainingGuests = guests - 2;
+  
+  // 3-4 persone
+  if (remainingGuests > 0) {
+    const guestsInRange = Math.min(remainingGuests, 2);
+    const costPerGuest = config.additionalGuest3to4 || config.priceGroup3to4 || 30;
+    const rangeCost = guestsInRange * costPerGuest;
+    additionalCost += rangeCost;
+    breakdown += ` + 3-4 persone: €${rangeCost} (${guestsInRange}×€${costPerGuest})`;
+    remainingGuests -= guestsInRange;
+  }
+  
+  // 5-6 persone
+  if (remainingGuests > 0) {
+    const guestsInRange = Math.min(remainingGuests, 2);
+    const costPerGuest = config.additionalGuest5to6 || config.priceGroup5to6 || 25;
+    const rangeCost = guestsInRange * costPerGuest;
+    additionalCost += rangeCost;
+    breakdown += ` + 5-6 persone: €${rangeCost} (${guestsInRange}×€${costPerGuest})`;
+    remainingGuests -= guestsInRange;
+  }
+  
+  // 7-8 persone
+  if (remainingGuests > 0) {
+    const guestsInRange = Math.min(remainingGuests, 2);
+    const costPerGuest = config.additionalGuest7to8 || config.priceGroup7to8 || 20;
+    const rangeCost = guestsInRange * costPerGuest;
+    additionalCost += rangeCost;
+    breakdown += ` + 7-8 persone: €${rangeCost} (${guestsInRange}×€${costPerGuest})`;
+    remainingGuests -= guestsInRange;
+  }
+  
+  // Per più di 8 ospiti, usa il prezzo del gruppo 7-8
+  if (remainingGuests > 0) {
+    const costPerGuest = config.additionalGuest7to8 || config.priceGroup7to8 || 20;
+    const rangeCost = remainingGuests * costPerGuest;
+    additionalCost += rangeCost;
+    breakdown += ` + Extra: €${rangeCost} (${remainingGuests}×€${costPerGuest})`;
+  }
+  
+  return {
+    totalPerNight: basePrice + additionalCost,
+    basePrice: basePrice,
+    additionalCost: additionalCost,
+    breakdown: breakdown
+  };
 }
 
 /**
@@ -25,9 +79,9 @@ function calculateGroupPrice(guests, config) {
 function calculateStayTotal(params, config) {
   const { guests, nights, includeParking = false, children = 0 } = params;
   
-  const pricePerPerson = calculateGroupPrice(guests, config);
-  const basePrice = pricePerPerson * guests; // PREZZO TOTALE = prezzo_per_persona × numero_ospiti
-  const subtotal = basePrice * nights;
+  const priceCalculation = calculateGroupPrice(guests, config);
+  const pricePerNight = priceCalculation.totalPerNight;
+  const subtotal = pricePerNight * nights;
   const cleaningFee = config.cleaningFee || 50;
   const parkingFee = includeParking ? (config.parkingFee || 20) * nights : 0;
   
@@ -38,15 +92,19 @@ function calculateStayTotal(params, config) {
   const total = subtotal + cleaningFee + parkingFee + touristTax;
   
   return {
-    basePrice,
+    pricePerNight,
+    basePrice: priceCalculation.basePrice,
+    additionalCost: priceCalculation.additionalCost,
     subtotal,
     cleaningFee,
     parkingFee,
     touristTax,
     total,
     breakdown: {
-      pricePerNight: basePrice,
-      pricePerPersonPerNight: pricePerPerson, // AGGIUNTO: prezzo per persona
+      pricePerNight: pricePerNight,
+      basePrice: priceCalculation.basePrice,
+      additionalCost: priceCalculation.additionalCost,
+      priceBreakdown: priceCalculation.breakdown,
       nights,
       guests,
       adults,

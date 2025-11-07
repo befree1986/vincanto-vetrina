@@ -268,16 +268,32 @@ const AdminPricing: React.FC<AdminPricingProps> = ({
 
       {/* Tariffe per Gruppi di Persone */}
       <div className="admin-pricing-section">
-        <h3>👥 Tariffe per Gruppi di Persone (€ per persona per notte)</h3>
+        <h3>👥 Sistema Prezzi Base + Aggiuntive</h3>
         <div className="admin-pricing-grid">
           <div className="admin-pricing-card">
-            <h4>🔥 Prezzi per Persona per Notte</h4>
+            <h4>🏠 Prezzo Base (1-2 persone)</h4>
             <div className="pricing-controls">
               <NumericInput
-                id="priceGroup1to2"
-                label="1-2 persone (€ per persona/notte)"
-                value={pricingConfig.priceGroup1to2}
-                onChange={(value) => updatePricingField('priceGroup1to2', value)}
+                id="basePrice"
+                label="Prezzo per persona (base 2 persone)"
+                value={pricingConfig.basePrice || pricingConfig.priceGroup1to2}
+                onChange={(value) => updatePricingField('basePrice', value)}
+                min={1}
+                max={999}
+                suffix="€/persona"
+                required
+              />
+            </div>
+          </div>
+          
+          <div className="admin-pricing-card">
+            <h4>➕ Costi Aggiuntivi per Persona Extra</h4>
+            <div className="pricing-controls">
+              <NumericInput
+                id="additionalGuest3to4"
+                label="3-4 persone (costo aggiuntivo/persona)"
+                value={pricingConfig.additionalGuest3to4 || pricingConfig.priceGroup3to4}
+                onChange={(value) => updatePricingField('additionalGuest3to4', value)}
                 min={1}
                 max={999}
                 suffix="€/persona"
@@ -285,10 +301,10 @@ const AdminPricing: React.FC<AdminPricingProps> = ({
               />
               
               <NumericInput
-                id="priceGroup3to4"
-                label="3-4 persone (€ per persona/notte)"
-                value={pricingConfig.priceGroup3to4}
-                onChange={(value) => updatePricingField('priceGroup3to4', value)}
+                id="additionalGuest5to6"
+                label="5-6 persone (costo aggiuntivo/persona)"
+                value={pricingConfig.additionalGuest5to6 || pricingConfig.priceGroup5to6}
+                onChange={(value) => updatePricingField('additionalGuest5to6', value)}
                 min={1}
                 max={999}
                 suffix="€/persona"
@@ -296,21 +312,10 @@ const AdminPricing: React.FC<AdminPricingProps> = ({
               />
               
               <NumericInput
-                id="priceGroup5to6"
-                label="5-6 persone (€ per persona/notte)"
-                value={pricingConfig.priceGroup5to6}
-                onChange={(value) => updatePricingField('priceGroup5to6', value)}
-                min={1}
-                max={999}
-                suffix="€/persona"
-                required
-              />
-              
-              <NumericInput
-                id="priceGroup7to8"
-                label="7-8 persone (€ per persona/notte)"
-                value={pricingConfig.priceGroup7to8}
-                onChange={(value) => updatePricingField('priceGroup7to8', value)}
+                id="additionalGuest7to8"
+                label="7-8 persone (costo aggiuntivo/persona)"
+                value={pricingConfig.additionalGuest7to8 || pricingConfig.priceGroup7to8}
+                onChange={(value) => updatePricingField('additionalGuest7to8', value)}
                 min={1}
                 max={999}
                 suffix="€/persona"
@@ -366,25 +371,25 @@ const AdminPricing: React.FC<AdminPricingProps> = ({
           </div>
         </div>
         
-        {/* Anteprima Calcoli per Persona */}
+        {/* Anteprima Sistema Base + Aggiuntive */}
         <div className="admin-pricing-card">
-          <h4>📊 Anteprima Calcoli per Persona</h4>
+          <h4>📊 Anteprima Sistema Base + Aggiuntive</h4>
           <div className="pricing-preview">
             <div className="preview-item">
               <span className="preview-label">2 persone × 3 notti:</span>
-              <span className="preview-value">€{(pricingConfig.priceGroup1to2 * 2 * 3)} (€{pricingConfig.priceGroup1to2}/persona/notte)</span>
+              <span className="preview-value">€{((pricingConfig.basePrice || pricingConfig.priceGroup1to2 || 75) * 2 * 3)} (Base: €{(pricingConfig.basePrice || pricingConfig.priceGroup1to2 || 75) * 2}/notte)</span>
             </div>
             <div className="preview-item">
               <span className="preview-label">4 persone × 3 notti:</span>
-              <span className="preview-value">€{(pricingConfig.priceGroup3to4 * 4 * 3)} (€{pricingConfig.priceGroup3to4}/persona/notte)</span>
+              <span className="preview-value">€{(((pricingConfig.basePrice || pricingConfig.priceGroup1to2 || 75) * 2) + ((pricingConfig.additionalGuest3to4 || pricingConfig.priceGroup3to4 || 30) * 2)) * 3} (Base: €{(pricingConfig.basePrice || pricingConfig.priceGroup1to2 || 75) * 2} + Agg: €{(pricingConfig.additionalGuest3to4 || pricingConfig.priceGroup3to4 || 30) * 2})</span>
             </div>
             <div className="preview-item">
               <span className="preview-label">6 persone × 3 notti:</span>
-              <span className="preview-value">€{(pricingConfig.priceGroup5to6 * 6 * 3)} (€{pricingConfig.priceGroup5to6}/persona/notte)</span>
+              <span className="preview-value">€{(((pricingConfig.basePrice || pricingConfig.priceGroup1to2 || 75) * 2) + ((pricingConfig.additionalGuest3to4 || pricingConfig.priceGroup3to4 || 30) * 2) + ((pricingConfig.additionalGuest5to6 || pricingConfig.priceGroup5to6 || 25) * 2)) * 3} (Base: €{(pricingConfig.basePrice || pricingConfig.priceGroup1to2 || 75) * 2} + Agg 3-4: €{(pricingConfig.additionalGuest3to4 || pricingConfig.priceGroup3to4 || 30) * 2} + Agg 5-6: €{(pricingConfig.additionalGuest5to6 || pricingConfig.priceGroup5to6 || 25) * 2})</span>
             </div>
             <div className="preview-item">
               <span className="preview-label">8 persone × 3 notti:</span>
-              <span className="preview-value">€{(pricingConfig.priceGroup7to8 * 8 * 3)} (€{pricingConfig.priceGroup7to8}/persona/notte)</span>
+              <span className="preview-value">€{(((pricingConfig.basePrice || pricingConfig.priceGroup1to2 || 75) * 2) + ((pricingConfig.additionalGuest3to4 || pricingConfig.priceGroup3to4 || 30) * 2) + ((pricingConfig.additionalGuest5to6 || pricingConfig.priceGroup5to6 || 25) * 2) + ((pricingConfig.additionalGuest7to8 || pricingConfig.priceGroup7to8 || 20) * 2)) * 3}</span>
             </div>
           </div>
         </div>
