@@ -19,6 +19,10 @@ export const seoContent = {
     title: 'Vincanto | Chi Siamo',
     description: 'Scopri la storia, la filosofia e la posizione di Vincanto. Ospitalità autentica tra i limoni della Costiera Amalfitana, comfort e natura per il tuo soggiorno a Maiori.',
   },
+  property: {
+    title: 'Vincanto | La Proprietà e Tariffe',
+    description: 'Scopri la nostra proprietà immersa nei limoneti di Maiori. Gallery fotografica, tariffe aggiornate e tutti i dettagli per il tuo soggiorno in Costiera Amalfitana.',
+  },
   // Puoi aggiungere altre pagine come "gallery", "about", ecc.
 };
 

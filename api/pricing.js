@@ -80,8 +80,8 @@ export default async function handler(req, res) {
           // 🔥 AUTO-INIZIALIZZAZIONE: Creiamo i record di default nel database
           console.log('🔧 Inizializzazione automatica dei prezzi nel database...');
           const defaultSettings = [
-            { key: 'base_price', value: '85' },
-            { key: 'additional_guest_price', value: '25' },
+            { key: 'base_price', value: '75' },
+            { key: 'additional_guest_price', value: '20' },
             { key: 'cleaning_fee', value: '40' },
             { key: 'weekly_discount', value: '10' },
             { key: 'monthly_discount', value: '15' }

@@ -214,9 +214,9 @@ const Propriety: React.FC = () => {
                   {pricing.loading ? (
                     <span>Caricamento...</span>
                   ) : pricing.error ? (
-                    <span>€ 80</span>
+                    <span>€ 75</span>
                   ) : (
-                    <span>€ {pricing.currentPrice?.priceByGuests?.persons1to2 || pricing.currentPrice?.basePrice || 80}</span>
+                    <span>€ {pricing.currentPrice?.priceByGuests?.persons1to2 || pricing.currentPrice?.basePrice || 75}</span>
                   )}
                 </td>
               </tr>
@@ -226,9 +226,9 @@ const Propriety: React.FC = () => {
                   {pricing.loading ? (
                     <span>Caricamento...</span>
                   ) : pricing.error ? (
-                    <span>€ 100</span>
+                    <span>€ 95</span>
                   ) : (
-                    <span>€ {pricing.currentPrice?.priceByGuests?.persons3to4 || (pricing.currentPrice?.basePrice || 80) + 20}</span>
+                    <span>€ {pricing.currentPrice?.priceByGuests?.persons3to4 || (pricing.currentPrice?.basePrice || 75) + 20}</span>
                   )}
                 </td>
               </tr>
@@ -238,9 +238,9 @@ const Propriety: React.FC = () => {
                   {pricing.loading ? (
                     <span>Caricamento...</span>
                   ) : pricing.error ? (
-                    <span>€ 120</span>
+                    <span>€ 95</span>
                   ) : (
-                    <span>€ {pricing.currentPrice?.priceByGuests?.persons5to6 || (pricing.currentPrice?.basePrice || 80) + 40}</span>
+                    <span>€ {pricing.currentPrice?.priceByGuests?.persons5to6 || (pricing.currentPrice?.basePrice || 75) + 20}</span>
                   )}
                 </td>
               </tr>
@@ -250,9 +250,9 @@ const Propriety: React.FC = () => {
                   {pricing.loading ? (
                     <span>Caricamento...</span>
                   ) : pricing.error ? (
-                    <span>€ 140</span>
+                    <span>€ 95</span>
                   ) : (
-                    <span>€ {pricing.currentPrice?.priceByGuests?.persons7to8 || (pricing.currentPrice?.basePrice || 80) + 60}</span>
+                    <span>€ {pricing.currentPrice?.priceByGuests?.persons7to8 || (pricing.currentPrice?.basePrice || 75) + 20}</span>
                   )}
                 </td>
               </tr>

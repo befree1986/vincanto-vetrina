@@ -56,18 +56,21 @@ export const usePricing = () => {
         console.log('🔍 additionalGuestPrice:', apiData.additionalGuestPrice);
         
         // Valori con fallback più robusti
-        const basePrice = Number(apiData.basePrice) || 85;
-        const additionalGuestPrice = Number(apiData.additionalGuestPrice) || 25;
+        const basePricePerPerson = Number(apiData.basePrice) || 75;
+        const additionalGuestPrice = Number(apiData.additionalGuestPrice) || 20;
         
+        // Calcolo prezzi a persona secondo la logica corretta:
+        // 1-2 persone: €75 a persona
+        // 3+ persone: €75 a persona + €20 per ogni persona aggiuntiva oltre le prime 2
         const transformedData = {
-          basePrice: basePrice,
+          basePrice: basePricePerPerson,
           date: new Date().toISOString().split('T')[0],
           season: 'medium' as const,
           priceByGuests: {
-            persons1to2: basePrice,
-            persons3to4: basePrice + additionalGuestPrice,
-            persons5to6: basePrice + (additionalGuestPrice * 2),
-            persons7to8: basePrice + (additionalGuestPrice * 3)
+            persons1to2: basePricePerPerson, // €75 a persona
+            persons3to4: basePricePerPerson + additionalGuestPrice, // €75 + €20 = €95 a persona  
+            persons5to6: basePricePerPerson + additionalGuestPrice, // €75 + €20 = €95 a persona
+            persons7to8: basePricePerPerson + additionalGuestPrice  // €75 + €20 = €95 a persona
           },
           discounts: {
             weekly: Number(apiData.weeklyDiscount) || 10,
@@ -82,16 +85,16 @@ export const usePricing = () => {
       }
     } catch (err) {
       console.error('Errore fetch prezzi:', err);
-      // Fallback ai prezzi di default
+      // Fallback ai prezzi di default aggiornati
       setCurrentPrice({
         basePrice: 75,
         date: new Date().toISOString().split('T')[0],
         season: 'medium',
         priceByGuests: {
-          persons1to2: 80,
-          persons3to4: 100,
-          persons5to6: 120,
-          persons7to8: 140
+          persons1to2: 75,
+          persons3to4: 95, // 75 + 20
+          persons5to6: 95, // 75 + 20
+          persons7to8: 95  // 75 + 20
         },
         discounts: {
           weekly: 10,
