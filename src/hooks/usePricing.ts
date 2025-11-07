@@ -36,8 +36,9 @@ export const usePricing = () => {
     setError(null);
     
     try {
-      // Chiamata API al server online Vercel
-      const response = await fetch('/api/pricing');
+      // Chiamata API al server online Vercel con cache buster
+      const cacheBuster = new Date().getTime();
+      const response = await fetch(`/api/pricing?_t=${cacheBuster}`);
       
       if (!response.ok) {
         throw new Error('Errore nel caricamento prezzi');
@@ -175,6 +176,7 @@ export const usePricing = () => {
 
   // Carica dati all'avvio
   useEffect(() => {
+    console.log('🚀 usePricing hook montato - chiamando fetchCurrentPrice()');
     fetchCurrentPrice();
     fetchPriceHistory();
   }, []);

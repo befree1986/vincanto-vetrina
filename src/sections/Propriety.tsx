@@ -17,6 +17,14 @@ const Propriety: React.FC = () => {
   const touchStartX = useRef(0);
   const pricing = usePricing();
 
+  // Debug: log dello stato pricing
+  useEffect(() => {
+    console.log('🎯 Stato pricing in Propriety.tsx:', pricing);
+    console.log('🎯 currentPrice:', pricing.currentPrice);
+    console.log('🎯 loading:', pricing.loading);
+    console.log('🎯 error:', pricing.error);
+  }, [pricing]);
+
   const openLightbox = useCallback((images: GalleryImage[], startIndex: number) => {
     if (images.length === 0) return;
     setLightboxImages(images);
