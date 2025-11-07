@@ -1,0 +1,101 @@
+/* 🔍 DEBUG CSS - DynamicPricingDebug Component */
+.debug-container {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 15px;
+  border-radius: 8px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  z-index: 9999;
+  max-width: 400px;
+  max-height: 80vh;
+  overflow: auto;
+  border: 2px solid #00ff00;
+}
+
+.debug-title {
+  margin: 0 0 15px 0;
+  color: #00ff00;
+}
+
+.debug-section {
+  border-bottom: 1px solid #333;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+}
+
+.debug-section-title {
+  margin: 0 0 8px 0;
+}
+
+.debug-section-title.pricing {
+  color: #ffd43b;
+}
+
+.debug-section-title.services {
+  color: #74c0fc;
+}
+
+.debug-section-title.config {
+  color: #ff8cc8;
+}
+
+.debug-section-title.monitoring {
+  color: #d0bfff;
+}
+
+.debug-status-loading {
+  color: #ffd43b;
+}
+
+.debug-status-error {
+  color: #ff6b6b;
+}
+
+.debug-status-success {
+  color: #51cf66;
+}
+
+.debug-services-list {
+  margin-top: 8px;
+}
+
+.debug-services-summary {
+  cursor: pointer;
+  color: #74c0fc;
+}
+
+.debug-services-details {
+  margin-top: 5px;
+  font-size: 11px;
+}
+
+.debug-service-item {
+  padding: 2px 0;
+}
+
+.debug-service-included {
+  color: #51cf66;
+}
+
+.debug-service-paid {
+  color: #ffd43b;
+}
+
+.debug-advanced {
+  margin-top: 10px;
+}
+
+.debug-advanced-summary {
+  cursor: pointer;
+  color: #868e96;
+}
+
+.debug-advanced-details {
+  margin-top: 8px;
+  font-size: 10px;
+  color: #868e96;
+}

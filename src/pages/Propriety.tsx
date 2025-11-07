@@ -15,13 +15,6 @@ const Propriety: React.FC = () => {
     console.log('Data selezionata:', date);
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('it-IT', {
-      style: 'currency',
-      currency: 'EUR'
-    }).format(price);
-  };
-
   return (
     <>
       <SafeSeo
@@ -126,29 +119,97 @@ const Propriety: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Servizi inclusi */}
+                {/* Servizi Inclusi - Versione Originale */}
                 <div className="amenities-section">
                   <h2>
                     <span className="section-icon">✨</span>
-                    {getSafeTranslation(t, 'propriety.amenities.title', 'Servizi Inclusi')}
+                    {getSafeTranslation(t, 'section.includedServices.title', 'Servizi Inclusi')}
                   </h2>
                   
-                  <div className="amenities-grid">
-                    {[
-                      { icon: '🌐', name: 'WiFi gratuito' },
-                      { icon: '🅿️', name: 'Parcheggio privato' },
-                      { icon: '🍳', name: 'Cucina completa' },
-                      { icon: '📺', name: 'TV Smart 55"' },
-                      { icon: '🧺', name: 'Lavatrice' },
-                      { icon: '🌿', name: 'Giardino privato' },
-                      { icon: '🏠', name: 'Ingresso indipendente' },
-                      { icon: '❄️', name: 'Aria condizionata' }
-                    ].map((amenity, index) => (
-                      <div key={index} className="amenity-item">
-                        <span className="amenity-icon">{amenity.icon}</span>
-                        <span className="amenity-name">{amenity.name}</span>
+                  {/* Comfort */}
+                  <div className="amenities-category">
+                    <h3>{getSafeTranslation(t, 'section.includedServices.comfortTitle', 'Comfort')}</h3>
+                    <div className="amenities-grid">
+                      {[
+                        { icon: '🛏️', name: getSafeTranslation(t, 'section.includedServices.comfortList1', 'Biancheria da letto e da bagno') },
+                        { icon: '❄️', name: getSafeTranslation(t, 'section.includedServices.comfortList2', 'Aria condizionata') },
+                        { icon: '🔥', name: getSafeTranslation(t, 'section.includedServices.comfortList3', 'Riscaldamento') },
+                        { icon: '�', name: getSafeTranslation(t, 'section.includedServices.comfortList4', 'Asciugacapelli') },
+                        { icon: '👔', name: getSafeTranslation(t, 'section.includedServices.comfortList5', 'Asse e ferro da stiro') },
+                        { icon: '🧴', name: getSafeTranslation(t, 'section.includedServices.comfortList6', 'Prodotti da bagno') },
+                        { icon: '🚑', name: getSafeTranslation(t, 'section.includedServices.comfortList7', 'Kit di pronto soccorso') },
+                        { icon: '☕', name: getSafeTranslation(t, 'section.includedServices.comfortList8', 'Macchina da caffè') },
+                        { icon: '🧊', name: getSafeTranslation(t, 'section.includedServices.comfortList9', 'Frigorifero') },
+                        { icon: '📱', name: getSafeTranslation(t, 'section.includedServices.comfortList10', 'Forno a microonde') },
+                        { icon: '🍽️', name: getSafeTranslation(t, 'section.includedServices.comfortList11', 'Stoviglie e posate') },
+                        { icon: '🍽️', name: getSafeTranslation(t, 'section.includedServices.comfortList12', 'Lavastoviglie') }
+                      ].map((amenity, index) => (
+                        <div key={index} className="amenity-item">
+                          <span className="amenity-icon">{amenity.icon}</span>
+                          <span className="amenity-name">{amenity.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Connettività */}
+                  <div className="amenities-category">
+                    <h3>{getSafeTranslation(t, 'section.includedServices.connectivityTitle', 'Connettività')}</h3>
+                    <div className="amenities-grid">
+                      {[
+                        { icon: '🌐', name: getSafeTranslation(t, 'section.includedServices.connectivityList1', 'Wi-Fi gratuito') },
+                        { icon: '🔗', name: getSafeTranslation(t, 'section.includedServices.connectivityList2', 'Connessione Ethernet LAN in tutte le stanze') }
+                      ].map((amenity, index) => (
+                        <div key={index} className="amenity-item">
+                          <span className="amenity-icon">{amenity.icon}</span>
+                          <span className="amenity-name">{amenity.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Costi Extra - Versione Originale */}
+                <div className="extra-costs-section">
+                  <h2>
+                    <span className="section-icon">💰</span>
+                    {getSafeTranslation(t, 'section.extraCosts.title', 'Costi Extra (non inclusi)')}
+                  </h2>
+                  
+                  {/* Obbligatori */}
+                  <div className="extra-costs-category">
+                    <h3>{getSafeTranslation(t, 'section.extraCosts.mandatoryTitle', 'Obbligatori')}</h3>
+                    <div className="extra-costs-list">
+                      <div className="extra-cost-item">
+                        <span className="cost-icon">🧽</span>
+                        <div className="cost-details">
+                          <span className="cost-name">{getSafeTranslation(t, 'section.extraCosts.mandatoryList1', 'Pulizia finale obbligatoria: 40€')}</span>
+                        </div>
                       </div>
-                    ))}
+                      <div className="extra-cost-item">
+                        <span className="cost-icon">�️</span>
+                        <div className="cost-details">
+                          <span className="cost-name">{getSafeTranslation(t, 'section.extraCosts.mandatoryList2', 'Tassa di soggiorno secondo normativa comunale')}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Su richiesta */}
+                  <div className="extra-costs-category">
+                    <h3>{getSafeTranslation(t, 'section.extraCosts.onRequestTitle', 'Su richiesta')}</h3>
+                    <div className="extra-costs-list">
+                      <div className="extra-cost-item">
+                        <span className="cost-icon">�</span>
+                        <div className="cost-details">
+                          <span className="cost-name">{getSafeTranslation(t, 'section.extraCosts.onRequestList1', 'Posto auto riservato e custodito a 20€/giorno')}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="extra-costs-note">
+                    <p><strong>Nota:</strong> I costi extra sono da pagare in loco al momento del check-in.</p>
                   </div>
                 </div>
               </div>
@@ -156,10 +217,10 @@ const Propriety: React.FC = () => {
 
             {/* Sidebar con calendario e prenotazione */}
             <div className="sidebar">
-              {/* Prezzi */}
+              {/* Prezzi - Versione Statica */}
               <div className="pricing-card">
                 <div className="price-display">
-                  <span className="price">{formatPrice(75)}</span>
+                  <span className="price">€75</span>
                   <span className="price-unit">
                     {getSafeTranslation(t, 'propriety.pricing.perNight', 'a persona/notte')}
                   </span>
@@ -171,6 +232,9 @@ const Propriety: React.FC = () => {
                   </div>
                   <div className="discount-info">
                     🎯 Sconto 15% per soggiorni di 30+ giorni
+                  </div>
+                  <div className="pricing-note">
+                    <small>*I prezzi variano in base al periodo e alla durata del soggiorno</small>
                   </div>
                 </div>
               </div>
