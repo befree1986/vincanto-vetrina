@@ -284,8 +284,8 @@
 .tariffe-note a {
   color: var(--accent-color, #007bff);
   text-decoration: underline;
-  
 }
+
 /* === TITOLO + SOTTO LINEA CENTRATA === */
 .section-title,
 .gallery-section-title {

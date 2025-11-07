@@ -7,12 +7,9 @@ import '../styles/Propriety.desktop.css';
 import '../styles/Propriety.mobile.css';
 import LemonDivider from '../components/LemonDivider';
 import { Helmet } from 'react-helmet';
-import PricingTable from '../components/PricingTable';
-import { usePricing } from '../hooks/usePricing';
 
 const Propriety: React.FC = () => {
   const { t } = useTranslation();
-  const pricing = usePricing(); // Hook per prezzi dinamici
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [lightboxImages, setLightboxImages] = useState<GalleryImage[]>([]);
@@ -69,8 +66,7 @@ const Propriety: React.FC = () => {
     images.forEach((img) => observer.observe(img));
     return () => observer.disconnect();
   }, []);
-
-  return (
+    return (
     <section id="proprieta" className="proprieta-section">
       <Helmet>
         <title>{t('seo.propriety.title')}</title>
@@ -78,7 +74,10 @@ const Propriety: React.FC = () => {
       </Helmet>
       <div className="container">
         {/* Titolo galleria */}
-        <h2 className="section-title underline-title gallery-main-title">
+        <h2
+          className="section-title underline-title"
+          style={{ marginTop: '2rem' }}
+        >
           {t('propriety.gallery.mainTitle')}
         </h2>
 
@@ -130,58 +129,62 @@ const Propriety: React.FC = () => {
               className="lightbox-content"
               onClick={(e) => e.stopPropagation()}
               onTouchStart={(e) => {
-                touchStartX.current = e.touches[0].clientX;
-              }}
-              onTouchEnd={(e) => {
-                const touchEndX = e.changedTouches[0].clientX;
-                const diff = touchStartX.current - touchEndX;
-                if (Math.abs(diff) > 50) {
-                  if (diff > 0) showNextImage();
-                  else showPrevImage();
-                }
-              }}
-            >
+               touchStartX.current = e.changedTouches[0].clientX;
+  }}
+               onTouchEnd={(e) => {
+                const delta = e.changedTouches[0].clientX - touchStartX.current;
+                if (Math.abs(delta) > 50) {
+                if (delta > 0) showPrevImage();
+                else showNextImage();
+    }
+  }}
+>
               <button
                 className="lightbox-close"
                 onClick={closeLightbox}
               >
                 &times;
               </button>
-              
               {lightboxImages.length > 1 && (
                 <>
                   <button
                     className="lightbox-prev"
                     onClick={showPrevImage}
                   >
-                    &#8249;
+                    &#10094;
                   </button>
-                  
                   <button
                     className="lightbox-next"
                     onClick={showNextImage}
                   >
-                    &#8250;
+                    &#10095;
                   </button>
                 </>
               )}
-              
               <img
-                src={lightboxImages[currentImageIndex]?.src}
-                alt={lightboxImages[currentImageIndex]?.altKey ? t(lightboxImages[currentImageIndex].altKey) : ''}
+                src={lightboxImages[currentImageIndex].src}
+                alt={t(lightboxImages[currentImageIndex].altKey)}
                 className="lightbox-img"
               />
-              
-              <div className="lightbox-counter">
-                {currentImageIndex + 1} / {lightboxImages.length}
+              {lightboxImages.length > 1 && (
+              <div className="lightbox-indicator">
+               {currentImageIndex + 1} / {lightboxImages.length}
               </div>
+)}
+              {(lightboxImages[currentImageIndex].captionKey ||
+                lightboxImages[currentImageIndex].captionText) && (
+                <div className="lightbox-caption">
+                  {lightboxImages[currentImageIndex].captionText ||
+                    t(
+                      lightboxImages[currentImageIndex]
+                        .captionKey!
+                    )}
+                </div>
+              )}
             </div>
           </div>
         )}
-
-        <LemonDivider position="left" />
-
-        {/* Tabella Tariffe */}
+                {/* Tabella Tariffe */}
         <h2
           className="section-title underline-title titolo-sezione"
           style={{ marginTop: '2rem' }}
@@ -257,9 +260,6 @@ const Propriety: React.FC = () => {
             </ul>
           </div>
         </section>
-
-        <LemonDivider position="right" />
-
 
         {/* Servizi Inclusi */}
         <section className="included-services">
@@ -340,18 +340,8 @@ const Propriety: React.FC = () => {
           </p>
         </div>
 
+        {/* Divider finale */}
         <LemonDivider position="left" />
-
-        {/* Tabella prezzi dinamica */}
-        <div className="pricing-section">
-          <h2 className="section-title underline-title">
-            {t('propriety.pricing.title')}
-          </h2>
-          <PricingTable 
-            priceHistory={pricing.priceHistory} 
-            loading={pricing.loading}
-          />
-        </div>
       </div>
     </section>
   );
