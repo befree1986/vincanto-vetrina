@@ -606,3 +606,116 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* === STILI COSTI EXTRA === */
+.extra-costs-section {
+  margin-top: 3rem;
+  padding: 2rem;
+  background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+  border-radius: 12px;
+  border: 1px solid #f56565;
+  box-shadow: 0 4px 12px rgba(245, 101, 101, 0.1);
+}
+
+.extra-costs-section h2 {
+  display: flex;
+  align-items: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #c53030;
+  margin-bottom: 1.5rem;
+}
+
+.extra-costs-section .section-icon {
+  margin-right: 0.5rem;
+  font-size: 1.25rem;
+}
+
+.extra-costs-category {
+  margin-bottom: 2rem;
+}
+
+.extra-costs-category h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0.5rem;
+}
+
+.extra-costs-list {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.extra-cost-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  border: 1px solid #fed7d7;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.extra-cost-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(245, 101, 101, 0.15);
+}
+
+.cost-icon {
+  font-size: 1.5rem;
+  margin-right: 1rem;
+  flex-shrink: 0;
+}
+
+.cost-details {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cost-name {
+  font-weight: 500;
+  color: #2d3748;
+}
+
+.cost-price {
+  font-weight: 600;
+  color: #c53030;
+  font-size: 1rem;
+}
+
+.extra-costs-note {
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  border-left: 4px solid #f56565;
+}
+
+.extra-costs-note p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #4a5568;
+}
+
+/* Responsive per costi extra */
+@media (max-width: 768px) {
+  .extra-costs-section {
+    padding: 1.5rem;
+    margin-top: 2rem;
+  }
+  
+  .cost-details {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  
+  .cost-price {
+    font-size: 0.875rem;
+  }
+}
