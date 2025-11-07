@@ -206,30 +206,36 @@ const AdminPanelPro: React.FC = () => {
       console.log('💰 Caricamento configurazione prezzi per gruppi...');
       const result = await adminApiService.getPricingConfig();
       
-      if (result.success && result.config) {
-        const config = result.config;
+      if (result.success && result.settings?.pricing) {
+        const config = result.settings.pricing;
         setPricingConfig({
-          // 🔥 NUOVO: Prezzi per gruppi specifici con fallback intelligente
-          priceGroup1to2: config.priceGroup1to2 || config.basePrice || 75,
-          priceGroup3to4: config.priceGroup3to4 || ((config.basePrice || 75) + (config.additionalGuestPrice || 20)) || 95,
-          priceGroup5to6: config.priceGroup5to6 || ((config.basePrice || 75) + (config.additionalGuestPrice || 20) * 3) || 115,
-          priceGroup7to8: config.priceGroup7to8 || ((config.basePrice || 75) + (config.additionalGuestPrice || 20) * 5) || 135,
+          // 🔥 NUOVO: Sistema base + aggiuntive con mapping corretto
+          basePrice: parseFloat(config.base_price) || 75,
+          additionalGuest3to4: parseFloat(config.additional_guest_3to4) || 30,
+          additionalGuest5to6: parseFloat(config.additional_guest_5to6) || 25,
+          additionalGuest7to8: parseFloat(config.additional_guest_7to8) || 20,
+          
+          // Compatibilità con vecchio sistema (fallback)
+          priceGroup1to2: parseFloat(config.base_price) || 75,
+          priceGroup3to4: parseFloat(config.additional_guest_3to4) || 30,
+          priceGroup5to6: parseFloat(config.additional_guest_5to6) || 25,
+          priceGroup7to8: parseFloat(config.additional_guest_7to8) || 20,
           
           // Costi e configurazioni
-          cleaningFee: config.cleaningFee || 50,
-          parkingFee: config.parkingFee || 20,
-          touristTaxAdult: config.touristTaxAdult || 2.00,
-          touristTaxChild: config.touristTaxChild || 0,
+          cleaningFee: parseFloat(config.cleaning_fee) || 50,
+          parkingFee: parseFloat(config.parking_fee) || 20,
+          touristTaxAdult: parseFloat(config.tourist_tax_adult) || 2.00,
+          touristTaxChild: parseFloat(config.tourist_tax_child) || 0,
           
           // Sconti e maggiorazioni
-          weekendSurcharge: config.weekendSurcharge || 0,
-          weeklyDiscount: config.weeklyDiscount || 10,
-          monthlyDiscount: config.monthlyDiscount || 15,
+          weekendSurcharge: parseFloat(config.weekend_surcharge) || 0,
+          weeklyDiscount: parseFloat(config.weekly_discount) || 10,
+          monthlyDiscount: parseFloat(config.monthly_discount) || 15,
           
           // Limiti
-          minStay: config.minStay || 2,
-          maxStay: config.maxStay || 14,
-          maxGuests: config.maxGuests || 8,
+          minStay: parseInt(config.min_stay) || 2,
+          maxStay: parseInt(config.max_stay) || 14,
+          maxGuests: parseInt(config.max_guests) || 8,
           
           // Sconti avanzati
           advanceBookingDiscount: config.advanceBookingDiscount || 0,

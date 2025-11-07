@@ -117,8 +117,8 @@ class AdminApiService {
   // Pricing Management
   async getPricingConfig() {
     try {
-      const data = await this.request('pricing-config');
-      return data.config || {};
+      const data = await this.request('settings');
+      return data.settings?.pricing || {};
     } catch (error) {
       console.error('Error fetching pricing config:', error);
       return { success: false, data: [] };
@@ -127,10 +127,18 @@ class AdminApiService {
 
   async updatePricingConfig(pricingData: any) {
     try {
-      const response = await fetch(`${this.baseUrl}/admin?action=pricing-config`, {
-        method: 'PUT',
+      const response = await fetch(`${this.baseUrl}/admin?action=update-pricing`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(pricingData),
+        body: JSON.stringify({
+          basePrice: pricingData.basePrice || pricingData.priceGroup1to2,
+          additionalGuest3to4: pricingData.additionalGuest3to4 || pricingData.priceGroup3to4,
+          additionalGuest5to6: pricingData.additionalGuest5to6 || pricingData.priceGroup5to6,
+          additionalGuest7to8: pricingData.additionalGuest7to8 || pricingData.priceGroup7to8,
+          cleaningFee: pricingData.cleaningFee,
+          parkingFee: pricingData.parkingFee,
+          touristTaxAdult: pricingData.touristTaxAdult
+        }),
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
