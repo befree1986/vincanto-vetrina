@@ -23,6 +23,11 @@
   margin-bottom: 1.5rem;
 }
 
+/* Margine top per i titoli di sezione */
+.section-title-margin-top {
+  margin-top: 2rem;
+}
+
 /* === GALLERY CARDS E IMMAGINI === */
 .gallery-main-image-card,
 .gallery-main-image-card {

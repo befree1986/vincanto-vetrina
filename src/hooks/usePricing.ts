@@ -4,6 +4,12 @@ export interface PriceData {
   basePrice: number;
   date: string;
   season: 'low' | 'medium' | 'high';
+  priceByGuests?: {
+    persons1to2: number;
+    persons3to4: number;
+    persons5to6: number;
+    persons7to8: number;
+  };
   discounts?: {
     weekly?: number;
     monthly?: number;
@@ -30,15 +36,37 @@ export const usePricing = () => {
     setError(null);
     
     try {
-      // Simula chiamata API - sostituire con vera chiamata al backend
-      const response = await fetch('/api/pricing/current');
+      // Chiamata API al server online Vercel
+      const response = await fetch('/api/pricing');
       
       if (!response.ok) {
         throw new Error('Errore nel caricamento prezzi');
       }
       
-      const data = await response.json();
-      setCurrentPrice(data);
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        // Trasforma i dati dall'API nel formato atteso dall'hook
+        const apiData = result.data;
+        const transformedData = {
+          basePrice: apiData.basePrice || 85,
+          date: new Date().toISOString().split('T')[0],
+          season: 'medium' as const,
+          priceByGuests: {
+            persons1to2: apiData.basePrice || 80,
+            persons3to4: (apiData.basePrice || 80) + (apiData.additionalGuestPrice || 20),
+            persons5to6: (apiData.basePrice || 80) + (apiData.additionalGuestPrice || 20) * 2,
+            persons7to8: (apiData.basePrice || 80) + (apiData.additionalGuestPrice || 20) * 3
+          },
+          discounts: {
+            weekly: apiData.weeklyDiscount || 10,
+            monthly: apiData.monthlyDiscount || 15
+          }
+        };
+        setCurrentPrice(transformedData);
+      } else {
+        throw new Error('Formato dati API non valido');
+      }
     } catch (err) {
       console.error('Errore fetch prezzi:', err);
       // Fallback ai prezzi di default
@@ -46,6 +74,12 @@ export const usePricing = () => {
         basePrice: 75,
         date: new Date().toISOString().split('T')[0],
         season: 'medium',
+        priceByGuests: {
+          persons1to2: 80,
+          persons3to4: 100,
+          persons5to6: 120,
+          persons7to8: 140
+        },
         discounts: {
           weekly: 10,
           monthly: 15
@@ -60,37 +94,33 @@ export const usePricing = () => {
   // Fetch storico prezzi
   const fetchPriceHistory = async () => {
     try {
-      const response = await fetch('/api/pricing/history');
+      // Temporaneamente disabilitato per evitare limite API Vercel
+      // const response = await fetch('/api/pricing/history');
       
-      if (response.ok) {
-        const data = await response.json();
-        setPriceHistory(data);
-      } else {
-        // Fallback con dati di esempio
-        setPriceHistory([
-          {
-            id: '1',
-            date: '2024-01-01',
-            price: 65,
-            season: 'Bassa stagione',
-            createdAt: new Date().toISOString()
-          },
-          {
-            id: '2',
-            date: '2024-06-01',
-            price: 75,
-            season: 'Media stagione',
-            createdAt: new Date().toISOString()
-          },
-          {
-            id: '3',
-            date: '2024-08-01',
-            price: 85,
-            season: 'Alta stagione',
-            createdAt: new Date().toISOString()
-          }
-        ]);
-      }
+      // Usa sempre dati di fallback per ora
+      setPriceHistory([
+        {
+          id: '1',
+          date: '2024-01-01',
+          price: 65,
+          season: 'Bassa stagione',
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: '2',
+          date: '2024-06-01',
+          price: 75,
+          season: 'Media stagione',
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: '3',
+          date: '2024-08-01',
+          price: 85,
+          season: 'Alta stagione',
+          createdAt: new Date().toISOString()
+        }
+      ]);
     } catch (err) {
       console.error('Errore fetch storico prezzi:', err);
       // Usa dati di fallback
