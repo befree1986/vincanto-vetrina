@@ -74,7 +74,7 @@ const AdminPanelPro: React.FC = () => {
     advanceBookingDiscount: 0,
     lastMinuteDiscount: 0,
     // Nuovi campi per gestione bambini e tasse  
-    additionalGuestPrice: 75,  // €75 per persona aggiuntiva (stesso prezzo per persona)
+    additionalGuestPrice: 20,  // €20 per persona aggiuntiva (prezzo corretto)
     touristTaxAdult: 2.00,    // 🏛️ €2.00 tassa soggiorno reale Maiori (EDITABILE)
     touristTaxChild: 0        // Bambini <12 anni gratuiti
   });
@@ -208,7 +208,7 @@ const AdminPanelPro: React.FC = () => {
           maxStay: config.maxStay || 14,
           advanceBookingDiscount: config.advanceBookingDiscount || 0,
           lastMinuteDiscount: config.lastMinuteDiscount || 0,
-          additionalGuestPrice: config.additionalGuestPrice || 75,
+          additionalGuestPrice: config.additionalGuestPrice || 20, // ✅ Corretto a 20
           touristTaxAdult: config.touristTaxAdult || 2.00, // €2.00 reale
           touristTaxChild: config.touristTaxChild || 0
         });
