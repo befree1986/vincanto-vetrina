@@ -6,7 +6,6 @@ import '../styles/Propriety.base.css';
 import '../styles/Propriety.desktop.css';
 import '../styles/Propriety.mobile.css';
 import LemonDivider from '../components/LemonDivider';
-import DynamicPricingSections from '../components/DynamicPricingSections';
 import { Helmet } from 'react-helmet';
 import useDynamicPricing from '../hooks/useDynamicPricing';
 
@@ -293,9 +292,6 @@ const Propriety: React.FC = () => {
             </ul>
           </div>
         </section>
-
-        {/* 🎯 SEZIONI DINAMICHE: Prezzi aggiornati dal pannello admin */}
-        <DynamicPricingSections />
 
         {/* Divider finale */}
         <LemonDivider position="left" />
