@@ -8,7 +8,7 @@ const pool = new Pool({
 });
 
 /**
- * Calcola il prezzo per notte basato sul numero di ospiti (sistema gruppi)
+ * Calcola il prezzo per persona per notte basato sul numero di ospiti (sistema per persona)
  */
 function calculateGroupPrice(guests, pricing) {
   if (guests <= 2) return pricing.priceGroup1to2;
@@ -21,13 +21,14 @@ function calculateGroupPrice(guests, pricing) {
 }
 
 /**
- * Calcola il totale del soggiorno con il nuovo sistema gruppi
+ * Calcola il totale del soggiorno con il nuovo sistema per persona
  */
 function calculateStayTotal(params, pricing) {
   const { guests, nights, includeParking, adults, children, childrenAges } = params;
   
-  // Prezzo base per notte basato sul gruppo
-  const pricePerNight = calculateGroupPrice(guests, pricing);
+  // Prezzo per persona per notte basato sul gruppo
+  const pricePerPersonPerNight = calculateGroupPrice(guests, pricing);
+  const pricePerNight = pricePerPersonPerNight * guests; // TOTALE = prezzo_per_persona × ospiti
   let baseCost = nights * pricePerNight;
   
   // Applica sconti per durata soggiorno
@@ -66,6 +67,7 @@ function calculateStayTotal(params, pricing) {
   
   return {
     pricePerNight,
+    pricePerPersonPerNight, // AGGIUNTO: prezzo per persona
     baseCost,
     discountAmount,
     discountType,
@@ -234,6 +236,7 @@ export default async function handler(req, res) {
         // Sistema gruppi
         priceGroup: guests <= 2 ? '1-2' : guests <= 4 ? '3-4' : guests <= 6 ? '5-6' : '7-8',
         pricePerNight: calculation.pricePerNight,
+        pricePerPersonPerNight: calculation.pricePerPersonPerNight, // AGGIUNTO: prezzo per persona
         
         // Costi
         accommodationCost: calculation.baseCost,

@@ -2,10 +2,10 @@
 import { Pool } from 'pg';
 
 /**
- * Funzione per calcolare il prezzo in base al numero di ospiti (sistema gruppi)
+ * Funzione per calcolare il prezzo per persona in base al numero di ospiti (sistema per persona)
  * @param {number} guests - Numero di ospiti
  * @param {Object} config - Configurazione prezzi
- * @returns {number} - Prezzo per notte
+ * @returns {number} - Prezzo per persona per notte
  */
 function calculateGroupPrice(guests, config) {
   if (guests <= 2) return config.priceGroup1to2 || 75;
@@ -25,7 +25,8 @@ function calculateGroupPrice(guests, config) {
 function calculateStayTotal(params, config) {
   const { guests, nights, includeParking = false, children = 0 } = params;
   
-  const basePrice = calculateGroupPrice(guests, config);
+  const pricePerPerson = calculateGroupPrice(guests, config);
+  const basePrice = pricePerPerson * guests; // PREZZO TOTALE = prezzo_per_persona × numero_ospiti
   const subtotal = basePrice * nights;
   const cleaningFee = config.cleaningFee || 50;
   const parkingFee = includeParking ? (config.parkingFee || 20) * nights : 0;
@@ -45,6 +46,7 @@ function calculateStayTotal(params, config) {
     total,
     breakdown: {
       pricePerNight: basePrice,
+      pricePerPersonPerNight: pricePerPerson, // AGGIUNTO: prezzo per persona
       nights,
       guests,
       adults,
