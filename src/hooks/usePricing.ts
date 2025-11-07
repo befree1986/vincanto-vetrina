@@ -54,6 +54,11 @@ export const usePricing = () => {
         console.log('🔍 basePrice:', apiData.basePrice);
         console.log('🔍 additionalGuestPrice:', apiData.additionalGuestPrice);
         
+        // Test visivo - mostra un alert con i dati per debug
+        if (typeof window !== 'undefined') {
+          alert(`API Data: basePrice=${apiData.basePrice}, additionalGuestPrice=${apiData.additionalGuestPrice}`);
+        }
+        
         const transformedData = {
           basePrice: apiData.basePrice || 85,
           date: new Date().toISOString().split('T')[0],
