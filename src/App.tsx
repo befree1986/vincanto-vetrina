@@ -2,6 +2,7 @@ import React, { useEffect, useState, Suspense, lazy } from 'react';
 import Navbar from './components/Navbar';
 import Home from './sections/Home';
 import About from './sections/About';
+import Propriety from './sections/Propriety';
 import Booking from './sections/Booking';
 import Contact from './sections/Contact';
 import Footer from './components/Footer';
@@ -109,6 +110,16 @@ function App() {
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-conditions" element={<TermsConditions />} />
         <Route path="/accessibility" element={<Accessibility />} />
+        <Route path="/property" element={
+          <>
+            <SafeSeo
+              page="property"
+              ogImage="/logo.svg"
+              canonical="https://www.vincantomaori.it/property"
+            />
+            <Propriety />
+          </>
+        } />
       </Routes>
 
       {showBanner && (
