@@ -48,10 +48,14 @@ export default async function handler(req, res) {
           WHERE category = 'pricing'
         `);
         
+        console.log('📊 Query result from database:', result.rows);
+        console.log('📊 Number of pricing settings found:', result.rows.length);
+        
         if (result.rows.length > 0) {
           const settings = {};
           result.rows.forEach(row => {
             settings[row.setting_key] = row.setting_value;
+            console.log(`🔧 Setting: ${row.setting_key} = ${row.setting_value}`);
           });
           
           // Aggiorna config con valori dal database admin
@@ -71,13 +75,47 @@ export default async function handler(req, res) {
           console.log('✅ Configurazione prezzi aggiornata dal database admin:', pricingConfig);
         } else {
           console.log('⚠️ Nessuna configurazione prezzi nel database, uso valori predefiniti');
+          console.log('⚠️ Questo significa che la tabella admin_settings è vuota o non contiene category=pricing');
+          
+          // 🔥 AUTO-INIZIALIZZAZIONE: Creiamo i record di default nel database
+          console.log('🔧 Inizializzazione automatica dei prezzi nel database...');
+          const defaultSettings = [
+            { key: 'base_price', value: '85' },
+            { key: 'additional_guest_price', value: '25' },
+            { key: 'cleaning_fee', value: '40' },
+            { key: 'weekly_discount', value: '10' },
+            { key: 'monthly_discount', value: '15' }
+          ];
+          
+          for (const setting of defaultSettings) {
+            try {
+              await client.query(`
+                INSERT INTO admin_settings (setting_key, setting_value, category, type, created_at, updated_at)
+                VALUES ($1, $2, 'pricing', 'config', NOW(), NOW())
+                ON CONFLICT (setting_key) DO UPDATE SET
+                  setting_value = EXCLUDED.setting_value,
+                  updated_at = NOW()
+              `, [setting.key, setting.value]);
+              console.log(`✅ Inizializzato: ${setting.key} = ${setting.value}`);
+            } catch (insertError) {
+              console.error(`❌ Errore inizializzazione ${setting.key}:`, insertError);
+            }
+          }
+          
+          console.log('🎯 Inizializzazione completata, usando i valori appena inseriti');
+          // Aggiorna la configurazione con i valori inseriti
+          pricingConfig.basePrice = 85;
+          pricingConfig.additionalGuestPrice = 25;
+          pricingConfig.cleaningFee = 40;
+          pricingConfig.weeklyDiscount = 10;
+          pricingConfig.monthlyDiscount = 15;
         }
       } catch (dbError) {
         console.error('❌ Errore caricamento prezzi dal database:', dbError);
         console.log('🔄 Usando configurazione prezzi predefinita');
       }
 
-      console.log('✅ Configurazione prezzi restituita');
+      console.log('✅ Configurazione prezzi finale che verrà restituita:', pricingConfig);
       return res.status(200).json({
         success: true,
         data: pricingConfig,
