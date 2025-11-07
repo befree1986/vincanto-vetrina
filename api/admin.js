@@ -211,7 +211,7 @@ export default async function handler(req, res) {
             
             const updates = [
               { key: 'base_price', value: (basePrice || 75).toString() },
-              { key: 'additional_guest_price', value: (additionalGuestPrice || 25).toString() },
+              { key: 'additional_guest_price', value: (additionalGuestPrice || 20).toString() },
               { key: 'cleaning_fee', value: (cleaningFee || 50).toString() },
               { key: 'weekend_surcharge', value: (weekendSurcharge || 20).toString() },
               { key: 'monthly_discount', value: (monthlyDiscount || 15).toString() },
