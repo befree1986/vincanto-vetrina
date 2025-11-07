@@ -59,19 +59,23 @@ export const usePricing = () => {
           alert(`API Data: basePrice=${apiData.basePrice}, additionalGuestPrice=${apiData.additionalGuestPrice}`);
         }
         
+        // Valori con fallback più robusti
+        const basePrice = Number(apiData.basePrice) || 85;
+        const additionalGuestPrice = Number(apiData.additionalGuestPrice) || 25;
+        
         const transformedData = {
-          basePrice: apiData.basePrice || 85,
+          basePrice: basePrice,
           date: new Date().toISOString().split('T')[0],
           season: 'medium' as const,
           priceByGuests: {
-            persons1to2: apiData.basePrice || 80,
-            persons3to4: (apiData.basePrice || 80) + (apiData.additionalGuestPrice || 20),
-            persons5to6: (apiData.basePrice || 80) + (apiData.additionalGuestPrice || 20) * 2,
-            persons7to8: (apiData.basePrice || 80) + (apiData.additionalGuestPrice || 20) * 3
+            persons1to2: basePrice,
+            persons3to4: basePrice + additionalGuestPrice,
+            persons5to6: basePrice + (additionalGuestPrice * 2),
+            persons7to8: basePrice + (additionalGuestPrice * 3)
           },
           discounts: {
-            weekly: apiData.weeklyDiscount || 10,
-            monthly: apiData.monthlyDiscount || 15
+            weekly: Number(apiData.weeklyDiscount) || 10,
+            monthly: Number(apiData.monthlyDiscount) || 15
           }
         };
         
