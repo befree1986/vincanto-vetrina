@@ -48,6 +48,12 @@ export const usePricing = () => {
       if (result.success && result.data) {
         // Trasforma i dati dall'API nel formato atteso dall'hook
         const apiData = result.data;
+        
+        // Debug: log dei dati ricevuti dall'API
+        console.log('🔍 Dati ricevuti dall\'API pricing:', apiData);
+        console.log('🔍 basePrice:', apiData.basePrice);
+        console.log('🔍 additionalGuestPrice:', apiData.additionalGuestPrice);
+        
         const transformedData = {
           basePrice: apiData.basePrice || 85,
           date: new Date().toISOString().split('T')[0],
@@ -63,6 +69,8 @@ export const usePricing = () => {
             monthly: apiData.monthlyDiscount || 15
           }
         };
+        
+        console.log('🎯 Dati trasformati per la tabella:', transformedData);
         setCurrentPrice(transformedData);
       } else {
         throw new Error('Formato dati API non valido');
