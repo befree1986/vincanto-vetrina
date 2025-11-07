@@ -309,6 +309,7 @@ const AdminPanelPro: React.FC = () => {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const saveTouristTaxConfig = async () => {
     try {
       setLoading(true);
@@ -341,6 +342,7 @@ const AdminPanelPro: React.FC = () => {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const updateTouristTaxField = (field: string, value: any) => {
     setTouristTaxConfig(prev => ({
       ...prev,

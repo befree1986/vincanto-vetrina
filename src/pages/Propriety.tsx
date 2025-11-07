@@ -3,12 +3,17 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import SafeSeo from '../Seo';
 import AvailabilityCalendar from '../components/AvailabilityCalendar';
+import PricingTable from '../components/PricingTable.tsx';
 import { getSafeTranslation } from '../i18n';
+import { usePricing } from '../hooks/usePricing.ts';
 import './Propriety.css';
 
 const Propriety: React.FC = () => {
   const { t } = useTranslation();
   const [selectedDate, setSelectedDate] = useState<string>('');
+  
+  // Hook per pricing dinamico
+  const { currentPrice, priceHistory, loading: priceLoading } = usePricing();
 
   const handleDateSelect = (date: string) => {
     setSelectedDate(date);
@@ -122,33 +127,49 @@ const Propriety: React.FC = () => {
                 {/* Servizi Inclusi - Versione Originale */}
                 <div className="amenities-section">
                   <h2>
-                    <span className="section-icon">✨</span>
-                    {getSafeTranslation(t, 'section.includedServices.title', 'Servizi Inclusi')}
+                    {getSafeTranslation(t, 'section.includedServices.title', '🛎️ Servizi Inclusi')}
                   </h2>
                   
                   {/* Comfort */}
                   <div className="amenities-category">
                     <h3>{getSafeTranslation(t, 'section.includedServices.comfortTitle', 'Comfort')}</h3>
                     <div className="amenities-grid">
-                      {[
-                        { icon: '🛏️', name: getSafeTranslation(t, 'section.includedServices.comfortList1', 'Biancheria da letto e da bagno') },
-                        { icon: '❄️', name: getSafeTranslation(t, 'section.includedServices.comfortList2', 'Aria condizionata') },
-                        { icon: '🔥', name: getSafeTranslation(t, 'section.includedServices.comfortList3', 'Riscaldamento') },
-                        { icon: '�', name: getSafeTranslation(t, 'section.includedServices.comfortList4', 'Asciugacapelli') },
-                        { icon: '👔', name: getSafeTranslation(t, 'section.includedServices.comfortList5', 'Asse e ferro da stiro') },
-                        { icon: '🧴', name: getSafeTranslation(t, 'section.includedServices.comfortList6', 'Prodotti da bagno') },
-                        { icon: '🚑', name: getSafeTranslation(t, 'section.includedServices.comfortList7', 'Kit di pronto soccorso') },
-                        { icon: '☕', name: getSafeTranslation(t, 'section.includedServices.comfortList8', 'Macchina da caffè') },
-                        { icon: '🧊', name: getSafeTranslation(t, 'section.includedServices.comfortList9', 'Frigorifero') },
-                        { icon: '📱', name: getSafeTranslation(t, 'section.includedServices.comfortList10', 'Forno a microonde') },
-                        { icon: '🍽️', name: getSafeTranslation(t, 'section.includedServices.comfortList11', 'Stoviglie e posate') },
-                        { icon: '🍽️', name: getSafeTranslation(t, 'section.includedServices.comfortList12', 'Lavastoviglie') }
-                      ].map((amenity, index) => (
-                        <div key={index} className="amenity-item">
-                          <span className="amenity-icon">{amenity.icon}</span>
-                          <span className="amenity-name">{amenity.name}</span>
-                        </div>
-                      ))}
+                      <div className="amenity-item">
+                        <span className="amenity-name">{getSafeTranslation(t, 'section.includedServices.comfortList1', 'Biancheria da letto e da bagno')}</span>
+                      </div>
+                      <div className="amenity-item">
+                        <span className="amenity-name">{getSafeTranslation(t, 'section.includedServices.comfortList2', 'Aria condizionata')}</span>
+                      </div>
+                      <div className="amenity-item">
+                        <span className="amenity-name">{getSafeTranslation(t, 'section.includedServices.comfortList3', 'Riscaldamento')}</span>
+                      </div>
+                      <div className="amenity-item">
+                        <span className="amenity-name">{getSafeTranslation(t, 'section.includedServices.comfortList4', 'Asciugacapelli')}</span>
+                      </div>
+                      <div className="amenity-item">
+                        <span className="amenity-name">{getSafeTranslation(t, 'section.includedServices.comfortList5', 'Asse e ferro da stiro')}</span>
+                      </div>
+                      <div className="amenity-item">
+                        <span className="amenity-name">{getSafeTranslation(t, 'section.includedServices.comfortList6', 'Prodotti da bagno')}</span>
+                      </div>
+                      <div className="amenity-item">
+                        <span className="amenity-name">{getSafeTranslation(t, 'section.includedServices.comfortList7', 'Kit di pronto soccorso')}</span>
+                      </div>
+                      <div className="amenity-item">
+                        <span className="amenity-name">{getSafeTranslation(t, 'section.includedServices.comfortList8', 'Macchina da caffè')}</span>
+                      </div>
+                      <div className="amenity-item">
+                        <span className="amenity-name">{getSafeTranslation(t, 'section.includedServices.comfortList9', 'Frigorifero')}</span>
+                      </div>
+                      <div className="amenity-item">
+                        <span className="amenity-name">{getSafeTranslation(t, 'section.includedServices.comfortList10', 'Forno a microonde')}</span>
+                      </div>
+                      <div className="amenity-item">
+                        <span className="amenity-name">{getSafeTranslation(t, 'section.includedServices.comfortList11', 'Stoviglie e posate')}</span>
+                      </div>
+                      <div className="amenity-item">
+                        <span className="amenity-name">{getSafeTranslation(t, 'section.includedServices.comfortList12', 'Lavastoviglie')}</span>
+                      </div>
                     </div>
                   </div>
 
@@ -156,60 +177,13 @@ const Propriety: React.FC = () => {
                   <div className="amenities-category">
                     <h3>{getSafeTranslation(t, 'section.includedServices.connectivityTitle', 'Connettività')}</h3>
                     <div className="amenities-grid">
-                      {[
-                        { icon: '🌐', name: getSafeTranslation(t, 'section.includedServices.connectivityList1', 'Wi-Fi gratuito') },
-                        { icon: '🔗', name: getSafeTranslation(t, 'section.includedServices.connectivityList2', 'Connessione Ethernet LAN in tutte le stanze') }
-                      ].map((amenity, index) => (
-                        <div key={index} className="amenity-item">
-                          <span className="amenity-icon">{amenity.icon}</span>
-                          <span className="amenity-name">{amenity.name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Costi Extra - Versione Originale */}
-                <div className="extra-costs-section">
-                  <h2>
-                    <span className="section-icon">💰</span>
-                    {getSafeTranslation(t, 'section.extraCosts.title', 'Costi Extra (non inclusi)')}
-                  </h2>
-                  
-                  {/* Obbligatori */}
-                  <div className="extra-costs-category">
-                    <h3>{getSafeTranslation(t, 'section.extraCosts.mandatoryTitle', 'Obbligatori')}</h3>
-                    <div className="extra-costs-list">
-                      <div className="extra-cost-item">
-                        <span className="cost-icon">🧽</span>
-                        <div className="cost-details">
-                          <span className="cost-name">{getSafeTranslation(t, 'section.extraCosts.mandatoryList1', 'Pulizia finale obbligatoria: 40€')}</span>
-                        </div>
+                      <div className="amenity-item">
+                        <span className="amenity-name">{getSafeTranslation(t, 'section.includedServices.connectivityList1', 'Wi-Fi gratuito')}</span>
                       </div>
-                      <div className="extra-cost-item">
-                        <span className="cost-icon">�️</span>
-                        <div className="cost-details">
-                          <span className="cost-name">{getSafeTranslation(t, 'section.extraCosts.mandatoryList2', 'Tassa di soggiorno secondo normativa comunale')}</span>
-                        </div>
+                      <div className="amenity-item">
+                        <span className="amenity-name">{getSafeTranslation(t, 'section.includedServices.connectivityList2', 'Connessione Ethernet LAN in tutte le stanze')}</span>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Su richiesta */}
-                  <div className="extra-costs-category">
-                    <h3>{getSafeTranslation(t, 'section.extraCosts.onRequestTitle', 'Su richiesta')}</h3>
-                    <div className="extra-costs-list">
-                      <div className="extra-cost-item">
-                        <span className="cost-icon">�</span>
-                        <div className="cost-details">
-                          <span className="cost-name">{getSafeTranslation(t, 'section.extraCosts.onRequestList1', 'Posto auto riservato e custodito a 20€/giorno')}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="extra-costs-note">
-                    <p><strong>Nota:</strong> I costi extra sono da pagare in loco al momento del check-in.</p>
                   </div>
                 </div>
               </div>
@@ -217,14 +191,23 @@ const Propriety: React.FC = () => {
 
             {/* Sidebar con calendario e prenotazione */}
             <div className="sidebar">
-              {/* Prezzi - Versione Statica */}
+              {/* Prezzi - Versione Dinamica */}
               <div className="pricing-card">
                 <div className="price-display">
-                  <span className="price">€75</span>
+                  <span className="price">
+                    {priceLoading ? 'Caricamento...' : `€${currentPrice?.basePrice || 75}`}
+                  </span>
                   <span className="price-unit">
                     {getSafeTranslation(t, 'propriety.pricing.perNight', 'a persona/notte')}
                   </span>
                 </div>
+                
+                {/* Tabella prezzi dinamici */}
+                <PricingTable 
+                  priceHistory={priceHistory}
+                  loading={priceLoading}
+                  selectedDate={selectedDate}
+                />
                 
                 <div className="price-notes">
                   <div className="discount-info">

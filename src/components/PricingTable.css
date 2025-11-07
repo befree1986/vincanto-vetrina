@@ -1,0 +1,42 @@
+/* PricingTable Component Styles */
+.pricing-table-loading,
+.pricing-table-empty {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+
+.pricing-table-title {
+  text-align: center;
+  margin-bottom: 1rem;
+  color: #333;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.selected-row {
+  background-color: #e8f5e8 !important;
+  border: 2px solid #27ae60 !important;
+}
+
+.pricing-table-season-info {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.pricing-table-price {
+  font-weight: 600;
+  color: #333;
+  font-size: 1rem;
+}
+
+.pricing-table-price.selected {
+  color: #27ae60;
+  font-size: 1.1rem;
+}
+
+.pricing-table-unit {
+  display: block;
+  color: #666;
+  font-size: 0.8rem;
+}
