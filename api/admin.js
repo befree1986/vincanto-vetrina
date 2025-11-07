@@ -196,6 +196,7 @@ export default async function handler(req, res) {
             
             const { 
               basePrice, 
+              additionalGuestPrice,
               cleaningFee, 
               weekendSurcharge, 
               monthlyDiscount, 
@@ -210,6 +211,7 @@ export default async function handler(req, res) {
             
             const updates = [
               { key: 'base_price', value: (basePrice || 75).toString() },
+              { key: 'additional_guest_price', value: (additionalGuestPrice || 25).toString() },
               { key: 'cleaning_fee', value: (cleaningFee || 50).toString() },
               { key: 'weekend_surcharge', value: (weekendSurcharge || 20).toString() },
               { key: 'monthly_discount', value: (monthlyDiscount || 15).toString() },
@@ -964,13 +966,14 @@ export default async function handler(req, res) {
               { id: 1, key: 'min_nights', value: '2', label: 'Notti Minime', category: 'booking' },
               { id: 2, key: 'max_nights', value: '30', label: 'Notti Massime', category: 'booking' },
               { id: 3, key: 'base_price', value: '75', label: 'Prezzo Base (€/persona/notte)', category: 'pricing' },
-              { id: 4, key: 'cleaning_fee', value: '40', label: 'Costo Pulizia', category: 'pricing' },
-              { id: 5, key: 'parking_fee', value: '15', label: 'Costo Parcheggio', category: 'pricing' },
-              { id: 6, key: 'deposit_percent', value: '30', label: 'Deposito %', category: 'pricing' },
-              { id: 7, key: 'auto_confirm', value: 'false', label: 'Auto Conferma', category: 'booking' },
-              { id: 8, key: 'email_notifications', value: 'true', label: 'Email Notifiche', category: 'system' },
-              { id: 9, key: 'currency', value: 'EUR', label: 'Valuta', category: 'system' },
-              { id: 10, key: 'timezone', value: 'Europe/Rome', label: 'Fuso Orario', category: 'system' }
+              { id: 4, key: 'additional_guest_price', value: '25', label: 'Prezzo Ospite Aggiuntivo (€)', category: 'pricing' },
+              { id: 5, key: 'cleaning_fee', value: '40', label: 'Costo Pulizia', category: 'pricing' },
+              { id: 6, key: 'parking_fee', value: '15', label: 'Costo Parcheggio', category: 'pricing' },
+              { id: 7, key: 'deposit_percent', value: '30', label: 'Deposito %', category: 'pricing' },
+              { id: 8, key: 'auto_confirm', value: 'false', label: 'Auto Conferma', category: 'booking' },
+              { id: 9, key: 'email_notifications', value: 'true', label: 'Email Notifiche', category: 'system' },
+              { id: 10, key: 'currency', value: 'EUR', label: 'Valuta', category: 'system' },
+              { id: 11, key: 'timezone', value: 'Europe/Rome', label: 'Fuso Orario', category: 'system' }
             ];
             
             return res.status(200).json({

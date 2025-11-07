@@ -20,11 +20,11 @@ export default async function handler(req, res) {
       // 🔥 CARICA CONFIGURAZIONE PREZZI DAL DATABASE ADMIN IN TEMPO REALE
       let pricingConfig = {
         basePrice: 85,
+        additionalGuestPrice: 25,
         cleaningFee: 40,
         weekendSurcharge: 20,
         weeklyDiscount: 15,
         monthlyDiscount: 25,
-        additionalGuestPrice: 25,
         maxGuests: 8,
         minStay: 2,
         maxStay: 30,
@@ -58,6 +58,7 @@ export default async function handler(req, res) {
           pricingConfig = {
             ...pricingConfig,
             basePrice: parseFloat(settings.base_price) || pricingConfig.basePrice,
+            additionalGuestPrice: parseFloat(settings.additional_guest_price) || 25,
             cleaningFee: parseFloat(settings.cleaning_fee) || pricingConfig.cleaningFee,
             weekendSurcharge: parseFloat(settings.weekend_surcharge) || pricingConfig.weekendSurcharge,
             weeklyDiscount: parseFloat(settings.weekly_discount) || pricingConfig.weeklyDiscount,
