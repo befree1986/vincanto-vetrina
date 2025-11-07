@@ -1,4 +1,4 @@
-// API endpoint per i prezzi Vincanto - SISTEMA GRUPPI
+// API endpoint per i prezzi Vincanto - SISTEMA GRUPPI COMPLETAMENTE NUOVO
 import { Pool } from 'pg';
 
 /**
@@ -17,8 +17,44 @@ function calculateGroupPrice(guests, config) {
   return (config.priceGroup7to8 || 135) + ((guests - 8) * 20);
 }
 
+/**
+ * Calcola il costo totale del soggiorno
+ * @param {Object} params - Parametri del soggiorno
+ * @returns {Object} - Dettaglio del calcolo
+ */
+function calculateStayTotal(params, config) {
+  const { guests, nights, includeParking = false, children = 0 } = params;
+  
+  const basePrice = calculateGroupPrice(guests, config);
+  const subtotal = basePrice * nights;
+  const cleaningFee = config.cleaningFee || 50;
+  const parkingFee = includeParking ? (config.parkingFee || 20) * nights : 0;
+  
+  // Tassa di soggiorno (solo adulti)
+  const adults = Math.max(1, guests - children);
+  const touristTax = adults * (config.touristTaxAdult || 2.00) * Math.min(nights, 7); // Max 7 notti
+  
+  const total = subtotal + cleaningFee + parkingFee + touristTax;
+  
+  return {
+    basePrice,
+    subtotal,
+    cleaningFee,
+    parkingFee,
+    touristTax,
+    total,
+    breakdown: {
+      pricePerNight: basePrice,
+      nights,
+      guests,
+      adults,
+      children
+    }
+  };
+}
+
 export default async function handler(req, res) {
-  console.log('📊 API Pricing (Sistema Gruppi) chiamata:', req.method, req.url);
+  console.log('🔥 API Pricing Groups chiamata:', req.method, req.url);
 
   // Headers CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -75,7 +111,7 @@ export default async function handler(req, res) {
           WHERE category = 'pricing'
         `);
         
-        console.log('📊 Query result from database:', result.rows.length, 'settings');
+        console.log('📊 Impostazioni pricing dal database:', result.rows.length);
         
         if (result.rows.length > 0) {
           const settings = {};
@@ -87,7 +123,7 @@ export default async function handler(req, res) {
           // 🔥 NUOVO: Aggiorna config con valori gruppi dal database
           pricingConfig = {
             ...pricingConfig,
-            // Prezzi per gruppi
+            // Prezzi per gruppi (con fallback ai valori legacy)
             priceGroup1to2: parseFloat(settings.price_group_1to2) || parseFloat(settings.base_price) || 75,
             priceGroup3to4: parseFloat(settings.price_group_3to4) || 95,
             priceGroup5to6: parseFloat(settings.price_group_5to6) || 115,
@@ -112,56 +148,43 @@ export default async function handler(req, res) {
             lastUpdated: new Date().toISOString()
           };
           
-          console.log('✅ Configurazione prezzi gruppi aggiornata dal database:', pricingConfig);
+          console.log('✅ Configurazione prezzi gruppi caricata dal database');
         } else {
-          console.log('⚠️ Nessuna configurazione prezzi nel database, creo configurazione di default per gruppi');
-          
-          // 🔥 AUTO-INIZIALIZZAZIONE per gruppi
-          const defaultGroupSettings = [
-            { key: 'price_group_1to2', value: '75' },
-            { key: 'price_group_3to4', value: '95' },
-            { key: 'price_group_5to6', value: '115' },
-            { key: 'price_group_7to8', value: '135' },
-            { key: 'cleaning_fee', value: '50' },
-            { key: 'parking_fee', value: '20' },
-            { key: 'tourist_tax_adult', value: '2.00' },
-            { key: 'tourist_tax_child', value: '0' },
-            { key: 'weekly_discount', value: '10' },
-            { key: 'monthly_discount', value: '15' },
-            { key: 'min_stay', value: '2' },
-            { key: 'max_stay', value: '14' },
-            { key: 'max_guests', value: '8' }
-          ];
-          
-          for (const setting of defaultGroupSettings) {
-            try {
-              await client.query(`
-                INSERT INTO admin_settings (setting_key, setting_value, category, type, created_at, updated_at)
-                VALUES ($1, $2, 'pricing', 'config', NOW(), NOW())
-                ON CONFLICT (setting_key) DO UPDATE SET
-                  setting_value = EXCLUDED.setting_value,
-                  updated_at = NOW()
-              `, [setting.key, setting.value]);
-              console.log(`✅ Inizializzato gruppo: ${setting.key} = ${setting.value}`);
-            } catch (insertError) {
-              console.error(`❌ Errore inizializzazione ${setting.key}:`, insertError);
-            }
-          }
-          
-          console.log('🎯 Inizializzazione gruppi completata');
+          console.log('⚠️ Nessuna configurazione nel database, uso valori predefiniti gruppi');
         }
       } catch (dbError) {
         console.error('❌ Errore caricamento prezzi gruppi dal database:', dbError);
         console.log('🔄 Usando configurazione prezzi gruppi predefinita');
       }
 
-      // Se viene richiesto un calcolo specifico (con parametri guests)
-      const { guests } = req.query;
+      // Se viene richiesto un calcolo specifico
+      const { guests, nights, includeParking, children } = req.query;
+      if (guests && nights) {
+        const calculation = calculateStayTotal({
+          guests: parseInt(guests),
+          nights: parseInt(nights),
+          includeParking: includeParking === 'true',
+          children: parseInt(children) || 0
+        }, pricingConfig);
+        
+        console.log(`💰 Calcolo soggiorno: ${guests} ospiti x ${nights} notti = €${calculation.total}`);
+        
+        return res.status(200).json({
+          success: true,
+          data: {
+            ...pricingConfig,
+            calculation
+          },
+          message: `Calcolo completato: €${calculation.total} totale`
+        });
+      }
+
+      // Se viene richiesto solo il prezzo per un numero di ospiti
       if (guests) {
         const guestCount = parseInt(guests);
         const pricePerNight = calculateGroupPrice(guestCount, pricingConfig);
         
-        console.log(`💰 Calcolo prezzo per ${guestCount} ospiti: €${pricePerNight}/notte`);
+        console.log(`💰 Prezzo per ${guestCount} ospiti: €${pricePerNight}/notte`);
         
         return res.status(200).json({
           success: true,
@@ -173,19 +196,73 @@ export default async function handler(req, res) {
               basePrice: pricePerNight,
               cleaningFee: pricingConfig.cleaningFee,
               parkingFee: pricingConfig.parkingFee,
-              touristTaxAdult: pricingConfig.touristTaxAdult,
-              touristTaxChild: pricingConfig.touristTaxChild
+              touristTaxAdult: pricingConfig.touristTaxAdult
             }
           },
-          message: `Prezzo calcolato per ${guestCount} ospiti: €${pricePerNight}/notte`
+          message: `Prezzo per ${guestCount} ospiti: €${pricePerNight}/notte`
         });
       }
 
-      console.log('✅ Configurazione prezzi gruppi finale:', pricingConfig);
+      console.log('✅ Configurazione prezzi gruppi completa');
       return res.status(200).json({
         success: true,
         data: pricingConfig,
-        message: 'Configurazione prezzi gruppi caricata dal database'
+        message: 'Configurazione prezzi gruppi caricata',
+        system: 'groups',
+        version: '2.0'
+      });
+    }
+
+    if (req.method === 'POST') {
+      // Calcolo prezzi on-demand
+      const { guests, nights, includeParking, children } = req.body;
+      
+      if (!guests || !nights) {
+        return res.status(400).json({
+          success: false,
+          message: 'Parametri mancanti: guests e nights sono obbligatori'
+        });
+      }
+
+      // Carica configurazione prezzi dal database
+      const pool = new Pool({
+        connectionString: process.env.POSTGRES_URL
+      });
+      client = await pool.connect();
+      
+      const result = await client.query(`
+        SELECT setting_key, setting_value
+        FROM admin_settings 
+        WHERE category = 'pricing'
+      `);
+      
+      const settings = {};
+      result.rows.forEach(row => {
+        settings[row.setting_key] = row.setting_value;
+      });
+      
+      const pricingConfig = {
+        priceGroup1to2: parseFloat(settings.price_group_1to2) || 75,
+        priceGroup3to4: parseFloat(settings.price_group_3to4) || 95,
+        priceGroup5to6: parseFloat(settings.price_group_5to6) || 115,
+        priceGroup7to8: parseFloat(settings.price_group_7to8) || 135,
+        cleaningFee: parseFloat(settings.cleaning_fee) || 50,
+        parkingFee: parseFloat(settings.parking_fee) || 20,
+        touristTaxAdult: parseFloat(settings.tourist_tax_adult) || 2.00,
+        touristTaxChild: parseFloat(settings.tourist_tax_child) || 0
+      };
+      
+      const calculation = calculateStayTotal({
+        guests: parseInt(guests),
+        nights: parseInt(nights),
+        includeParking: includeParking || false,
+        children: parseInt(children) || 0
+      }, pricingConfig);
+      
+      return res.status(200).json({
+        success: true,
+        data: calculation,
+        message: 'Calcolo prezzi completato'
       });
     }
 
@@ -195,7 +272,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('❌ Errore API Pricing Gruppi:', error);
+    console.error('❌ Errore API Pricing Groups:', error);
     return res.status(500).json({
       success: false,
       message: 'Errore interno del server',

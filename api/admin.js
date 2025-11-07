@@ -184,7 +184,7 @@ export default async function handler(req, res) {
       case 'pricing-config':
         console.log('🔍 Metodo HTTP ricevuto:', req.method);
         if (req.method === 'PUT') {
-          console.log('🔍 Body ricevuto per aggiornamento prezzi');
+          console.log('🔍 Body ricevuto per aggiornamento prezzi gruppi');
         }
         
         if (req.method === 'PUT') {

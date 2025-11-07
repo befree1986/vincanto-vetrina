@@ -266,18 +266,18 @@ const AdminPricing: React.FC<AdminPricingProps> = ({
         </div>
       )}
 
-      {/* Tariffe Base */}
+      {/* Tariffe per Gruppi di Persone */}
       <div className="admin-pricing-section">
-        <h3>🏠 Tariffe Base</h3>
+        <h3>👥 Tariffe per Gruppi di Persone</h3>
         <div className="admin-pricing-grid">
           <div className="admin-pricing-card">
-            <h4>Prezzi Principali</h4>
+            <h4>🔥 Prezzi per Gruppi Specifici</h4>
             <div className="pricing-controls">
               <NumericInput
-                id="basePrice"
-                label="Prezzo base per notte"
-                value={pricingConfig.basePrice}
-                onChange={(value) => updatePricingField('basePrice', value)}
+                id="priceGroup1to2"
+                label="1-2 persone per notte"
+                value={pricingConfig.priceGroup1to2}
+                onChange={(value) => updatePricingField('priceGroup1to2', value)}
                 min={1}
                 max={999}
                 suffix="€"
@@ -285,15 +285,43 @@ const AdminPricing: React.FC<AdminPricingProps> = ({
               />
               
               <NumericInput
-                id="additionalGuestPrice"
-                label="Prezzo persona aggiuntiva"
-                value={pricingConfig.additionalGuestPrice}
-                onChange={(value) => updatePricingField('additionalGuestPrice', value)}
-                min={0}
-                max={500}
+                id="priceGroup3to4"
+                label="3-4 persone per notte"
+                value={pricingConfig.priceGroup3to4}
+                onChange={(value) => updatePricingField('priceGroup3to4', value)}
+                min={1}
+                max={999}
                 suffix="€"
+                required
               />
               
+              <NumericInput
+                id="priceGroup5to6"
+                label="5-6 persone per notte"
+                value={pricingConfig.priceGroup5to6}
+                onChange={(value) => updatePricingField('priceGroup5to6', value)}
+                min={1}
+                max={999}
+                suffix="€"
+                required
+              />
+              
+              <NumericInput
+                id="priceGroup7to8"
+                label="7-8 persone per notte"
+                value={pricingConfig.priceGroup7to8}
+                onChange={(value) => updatePricingField('priceGroup7to8', value)}
+                min={1}
+                max={999}
+                suffix="€"
+                required
+              />
+            </div>
+          </div>
+          
+          <div className="admin-pricing-card">
+            <h4>Servizi e Tasse</h4>
+            <div className="pricing-controls">
               <NumericInput
                 id="cleaningFee"
                 label="Tassa di pulizia finale"
@@ -303,12 +331,7 @@ const AdminPricing: React.FC<AdminPricingProps> = ({
                 max={200}
                 suffix="€"
               />
-            </div>
-          </div>
-          
-          <div className="admin-pricing-card">
-            <h4>Servizi e Tasse</h4>
-            <div className="pricing-controls">
+              
               <NumericInput
                 id="parkingFee"
                 label="Parcheggio privato per notte"
@@ -320,24 +343,48 @@ const AdminPricing: React.FC<AdminPricingProps> = ({
               />
               
               <NumericInput
-                id="touristTax"
-                label="Tassa di soggiorno per persona per notte"
-                value={pricingConfig.touristTax || pricingConfig.touristTaxAdult || 3}
-                onChange={(value) => updatePricingField('touristTax', value)}
+                id="touristTaxAdult"
+                label="Tassa di soggiorno adulti per notte"
+                value={pricingConfig.touristTaxAdult}
+                onChange={(value) => updatePricingField('touristTaxAdult', value)}
                 min={0}
                 max={50}
                 suffix="€"
+                step={0.1}
               />
               
               <NumericInput
-                id="weekendSurcharge"
-                label="Supplemento Weekend"
-                value={pricingConfig.weekendSurcharge}
-                onChange={(value) => updatePricingField('weekendSurcharge', value)}
-                min={0}
-                max={100}
-                suffix="%"
+                id="maxGuests"
+                label="Massimo numero ospiti"
+                value={pricingConfig.maxGuests}
+                onChange={(value) => updatePricingField('maxGuests', value)}
+                min={1}
+                max={20}
+                suffix="ospiti"
               />
+            </div>
+          </div>
+        </div>
+        
+        {/* Anteprima Prezzi per Gruppi */}
+        <div className="admin-pricing-card">
+          <h4>📊 Anteprima Prezzi per Gruppi</h4>
+          <div className="pricing-preview">
+            <div className="preview-item">
+              <span className="preview-label">1-2 persone:</span>
+              <span className="preview-value">€{pricingConfig.priceGroup1to2}/notte</span>
+            </div>
+            <div className="preview-item">
+              <span className="preview-label">3-4 persone:</span>
+              <span className="preview-value">€{pricingConfig.priceGroup3to4}/notte</span>
+            </div>
+            <div className="preview-item">
+              <span className="preview-label">5-6 persone:</span>
+              <span className="preview-value">€{pricingConfig.priceGroup5to6}/notte</span>
+            </div>
+            <div className="preview-item">
+              <span className="preview-label">7-8 persone:</span>
+              <span className="preview-value">€{pricingConfig.priceGroup7to8}/notte</span>
             </div>
           </div>
         </div>

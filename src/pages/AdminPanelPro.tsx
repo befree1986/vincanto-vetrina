@@ -61,22 +61,33 @@ const AdminPanelPro: React.FC = () => {
     reason: 'maintenance'
   });
 
-  // Stati per gestione prezzi AGGIORNATI secondo specifiche
+  // Stati per gestione prezzi PER GRUPPI SPECIFICI
   const [pricingConfig, setPricingConfig] = useState({
-    basePrice: 75,            // €75 per persona per notte
+    // 🔥 NUOVO: Prezzi per gruppi specifici
+    priceGroup1to2: 75,       // €75 per 1-2 persone
+    priceGroup3to4: 95,       // €95 per 3-4 persone
+    priceGroup5to6: 115,      // €115 per 5-6 persone
+    priceGroup7to8: 135,      // €135 per 7-8 persone
+    
+    // Costi aggiuntivi
     cleaningFee: 50,
-    weekendSurcharge: 20,
-    monthlyDiscount: 15,
-    weeklyDiscount: 10,
-    parkingFee: 20,          // 🅿️ AGGIORNATO: €20 parcheggio per notte
+    parkingFee: 20,          // €20 parcheggio per notte
+    touristTaxAdult: 2.00,   // €2.00 tassa soggiorno adulti
+    touristTaxChild: 0,      // Bambini <12 anni gratuiti
+    
+    // Sconti e maggiorazioni
+    weekendSurcharge: 0,     // Nessuna maggiorazione weekend
+    weeklyDiscount: 10,      // 10% sconto settimanale
+    monthlyDiscount: 15,     // 15% sconto mensile
+    
+    // Limiti soggiorno
     minStay: 2,
     maxStay: 14,
+    maxGuests: 8,            // Massimo 8 ospiti
+    
+    // Sconti avanzati (opzionali)
     advanceBookingDiscount: 0,
-    lastMinuteDiscount: 0,
-    // Nuovi campi per gestione bambini e tasse  
-    additionalGuestPrice: 20,  // €20 per persona aggiuntiva (prezzo corretto)
-    touristTaxAdult: 2.00,    // 🏛️ €2.00 tassa soggiorno reale Maiori (EDITABILE)
-    touristTaxChild: 0        // Bambini <12 anni gratuiti
+    lastMinuteDiscount: 0
   });
   const [isUpdatingPricing, setIsUpdatingPricing] = useState(false);
   
@@ -192,29 +203,41 @@ const AdminPanelPro: React.FC = () => {
   const loadPricingConfig = async () => {
     try {
       if (!adminApiService) return;
-      console.log('💰 Caricamento configurazione prezzi...');
+      console.log('💰 Caricamento configurazione prezzi per gruppi...');
       const result = await adminApiService.getPricingConfig();
       
       if (result.success && result.config) {
         const config = result.config;
         setPricingConfig({
-          basePrice: config.basePrice || 75,
+          // 🔥 NUOVO: Prezzi per gruppi specifici con fallback intelligente
+          priceGroup1to2: config.priceGroup1to2 || config.basePrice || 75,
+          priceGroup3to4: config.priceGroup3to4 || ((config.basePrice || 75) + (config.additionalGuestPrice || 20)) || 95,
+          priceGroup5to6: config.priceGroup5to6 || ((config.basePrice || 75) + (config.additionalGuestPrice || 20) * 3) || 115,
+          priceGroup7to8: config.priceGroup7to8 || ((config.basePrice || 75) + (config.additionalGuestPrice || 20) * 5) || 135,
+          
+          // Costi e configurazioni
           cleaningFee: config.cleaningFee || 50,
-          weekendSurcharge: config.weekendSurcharge || 20,
-          monthlyDiscount: config.monthlyDiscount || 15,
+          parkingFee: config.parkingFee || 20,
+          touristTaxAdult: config.touristTaxAdult || 2.00,
+          touristTaxChild: config.touristTaxChild || 0,
+          
+          // Sconti e maggiorazioni
+          weekendSurcharge: config.weekendSurcharge || 0,
           weeklyDiscount: config.weeklyDiscount || 10,
-          parkingFee: config.parkingFee || 15, // 🅿️ AGGIUNTO
+          monthlyDiscount: config.monthlyDiscount || 15,
+          
+          // Limiti
           minStay: config.minStay || 2,
           maxStay: config.maxStay || 14,
+          maxGuests: config.maxGuests || 8,
+          
+          // Sconti avanzati
           advanceBookingDiscount: config.advanceBookingDiscount || 0,
-          lastMinuteDiscount: config.lastMinuteDiscount || 0,
-          additionalGuestPrice: config.additionalGuestPrice || 20, // ✅ Corretto a 20
-          touristTaxAdult: config.touristTaxAdult || 2.00, // €2.00 reale
-          touristTaxChild: config.touristTaxChild || 0
+          lastMinuteDiscount: config.lastMinuteDiscount || 0
         });
-        console.log('✅ Configurazione prezzi caricata dal database:', config);
+        console.log('✅ Configurazione prezzi per gruppi caricata:', config);
       } else {
-        console.log('⚠️ Nessuna configurazione trovata, uso valori predefiniti');
+        console.log('⚠️ Nessuna configurazione trovata, uso valori predefiniti per gruppi');
       }
     } catch (error) {
       console.error('❌ Errore caricamento prezzi:', error);
@@ -1661,19 +1684,24 @@ const AdminPanelPro: React.FC = () => {
             updatePricingField={updatePricingField}
             savePricingConfig={savePricingConfig}
             resetPricingConfig={() => {
-              // Reset alla configurazione di default
+              // Reset alla configurazione di default per gruppi
               const defaultConfig = {
-                basePrice: 75,
-                additionalGuestPrice: 20,
-                parkingFee: 20,
+                priceGroup1to2: 75,
+                priceGroup3to4: 95,
+                priceGroup5to6: 115,
+                priceGroup7to8: 135,
                 cleaningFee: 50,
-                touristTax: 2.00, // €2.00 tassa soggiorno reale
+                parkingFee: 20,
+                touristTaxAdult: 2.00,
+                touristTaxChild: 0,
                 weekendSurcharge: 0,
-                weeklyDiscount: 0,
-                monthlyDiscount: 0,
-                seasonalMultiplier: 1,
-                minStay: 1,
-                maxStay: 14
+                weeklyDiscount: 10,
+                monthlyDiscount: 15,
+                minStay: 2,
+                maxStay: 14,
+                maxGuests: 8,
+                advanceBookingDiscount: 0,
+                lastMinuteDiscount: 0
               };
               Object.keys(defaultConfig).forEach(key => {
                 updatePricingField(key, defaultConfig[key as keyof typeof defaultConfig]);
