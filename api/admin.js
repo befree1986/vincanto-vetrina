@@ -337,7 +337,9 @@ export default async function handler(req, res) {
               date_blocked DATE NOT NULL UNIQUE,
               reason VARCHAR(255),
               booking_id VARCHAR(50),
-              created_at TIMESTAMP DEFAULT NOW()
+              source VARCHAR(50) DEFAULT 'manual',
+              created_at TIMESTAMP DEFAULT NOW(),
+              updated_at TIMESTAMP DEFAULT NOW()
             )
           `);
 

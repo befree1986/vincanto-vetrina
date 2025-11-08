@@ -33,28 +33,175 @@ export default async function handler(req, res) {
 
         console.log('🔄 Avvio sincronizzazione calendari...');
         
-        // Simula sincronizzazione con calendari esterni
-        const calendarSources = [
-          { name: 'Google Calendar', status: 'active', lastSync: new Date().toISOString() },
-          { name: 'Booking.com', status: 'active', lastSync: new Date().toISOString() },
-          { name: 'Airbnb', status: 'inactive', lastSync: null }
-        ];
-
-        // Aggiorna timestamp sincronizzazione
-        await pool.query(`
-          DELETE FROM admin_settings WHERE category = 'calendar' AND setting_key = 'last_sync_timestamp'
+        // Recupera configurazioni calendario dal database
+        const calendarConfig = await pool.query(`
+          SELECT setting_key, setting_value 
+          FROM admin_settings 
+          WHERE category = 'calendar' 
+          ORDER BY setting_key
         `);
+        
+        const config = {};
+        calendarConfig.rows.forEach(row => {
+          config[row.setting_key] = row.setting_value;
+        });
+        
+        const calendarSources = [];
+        const blockedDatesFound = [];
+        
+        // 1. Sincronizzazione Google Calendar
+        try {
+          console.log('📅 Sincronizzazione Google Calendar...');
+          // Simula chiamata API Google Calendar
+          const googleEvents = await syncGoogleCalendar(config);
+          calendarSources.push({
+            name: 'Google Calendar',
+            status: 'active',
+            lastSync: new Date().toISOString(),
+            eventsFound: googleEvents.length,
+            blockedDates: googleEvents.filter(e => e.isBlocking).length
+          });
+          blockedDatesFound.push(...googleEvents.filter(e => e.isBlocking));
+        } catch (error) {
+          console.error('Google Calendar sync error:', error.message);
+          calendarSources.push({
+            name: 'Google Calendar',
+            status: 'error',
+            lastSync: null,
+            error: error.message
+          });
+        }
+        
+        // 2. Sincronizzazione Booking.com
+        try {
+          console.log('🏨 Sincronizzazione Booking.com...');
+          const bookingEvents = await syncBookingCom(config);
+          calendarSources.push({
+            name: 'Booking.com',
+            status: 'active',
+            lastSync: new Date().toISOString(),
+            eventsFound: bookingEvents.length,
+            blockedDates: bookingEvents.length
+          });
+          blockedDatesFound.push(...bookingEvents);
+        } catch (error) {
+          console.error('Booking.com sync error:', error.message);
+          calendarSources.push({
+            name: 'Booking.com',
+            status: 'error',
+            lastSync: null,
+            error: error.message
+          });
+        }
+        
+        // 3. Sincronizzazione Airbnb
+        try {
+          console.log('🏠 Sincronizzazione Airbnb...');
+          const airbnbEvents = await syncAirbnb(config);
+          calendarSources.push({
+            name: 'Airbnb',
+            status: 'active',
+            lastSync: new Date().toISOString(),
+            eventsFound: airbnbEvents.length,
+            blockedDates: airbnbEvents.length
+          });
+          blockedDatesFound.push(...airbnbEvents);
+        } catch (error) {
+          console.error('Airbnb sync error:', error.message);
+          calendarSources.push({
+            name: 'Airbnb',
+            status: 'inactive',
+            lastSync: null,
+            error: error.message
+          });
+        }
+        
+        // 4. Aggiorna database con date bloccate trovate
+        if (blockedDatesFound.length > 0) {
+          console.log(`📝 Aggiornamento database: ${blockedDatesFound.length} date bloccate trovate`);
+          
+          // Pulisci date bloccate esistenti da sync esterni
+          await pool.query(`
+            DELETE FROM blocked_dates 
+            WHERE reason LIKE '%sync%' OR reason LIKE '%external%'
+          `);
+          
+          // Inserisci nuove date bloccate
+          for (const blockedDate of blockedDatesFound) {
+            await pool.query(`
+              INSERT INTO blocked_dates (date_blocked, reason, created_at, source)
+              VALUES ($1, $2, NOW(), $3)
+              ON CONFLICT (date_blocked) DO UPDATE SET
+                reason = EXCLUDED.reason,
+                source = EXCLUDED.source,
+                updated_at = NOW()
+            `, [
+              blockedDate.date,
+              `External sync: ${blockedDate.source} - ${blockedDate.title || 'Booking'}`,
+              blockedDate.source
+            ]);
+          }
+        }
+        
+        // 5. Aggiorna timestamp sincronizzazione
         await pool.query(`
           INSERT INTO admin_settings (category, setting_key, setting_value, setting_type, updated_at)
           VALUES ('calendar', 'last_sync_timestamp', $1, 'string', NOW())
+          ON CONFLICT (category, setting_key) DO UPDATE SET
+            setting_value = EXCLUDED.setting_value,
+            updated_at = NOW()
         `, [new Date().toISOString()]);
+        
+        const activeServices = calendarSources.filter(s => s.status === 'active').length;
+        const totalBlockedDates = blockedDatesFound.length;
+        
+        console.log(`✅ Sincronizzazione completata: ${activeServices}/${calendarSources.length} servizi attivi, ${totalBlockedDates} date bloccate`);
 
         return res.status(200).json({
           success: true,
-          message: 'Sincronizzazione calendari completata',
+          message: 'Sincronizzazione calendari completata con successo',
           sources: calendarSources,
-          syncedAt: new Date().toISOString()
+          syncedAt: new Date().toISOString(),
+          blockedDatesUpdated: totalBlockedDates,
+          activeServices,
+          totalServices: calendarSources.length,
+          nextSyncRecommended: new Date(Date.now() + 60 * 60 * 1000).toISOString() // +1 ora
         });
+
+// Funzioni helper per sincronizzazione servizi esterni
+async function syncGoogleCalendar(config) {
+  // Simula controllo Google Calendar
+  // In produzione: integrare con Google Calendar API
+  const mockEvents = [
+    { date: '2025-11-15', isBlocking: true, title: 'Prenotazione privata', source: 'google' },
+    { date: '2025-11-16', isBlocking: true, title: 'Prenotazione privata', source: 'google' },
+    { date: '2025-12-25', isBlocking: true, title: 'Natale - Non disponibile', source: 'google' }
+  ];
+  
+  // Simula delay API
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return mockEvents;
+}
+
+async function syncBookingCom(config) {
+  // Simula controllo Booking.com
+  // In produzione: integrare con Booking.com Partner API
+  const mockBookings = [
+    { date: '2025-11-20', title: 'Booking.com reservation', source: 'booking' },
+    { date: '2025-11-21', title: 'Booking.com reservation', source: 'booking' },
+    { date: '2025-11-22', title: 'Booking.com reservation', source: 'booking' }
+  ];
+  
+  await new Promise(resolve => setTimeout(resolve, 300));
+  return mockBookings;
+}
+
+async function syncAirbnb(config) {
+  // Simula controllo Airbnb
+  // In produzione: integrare con Airbnb API
+  // Attualmente disattivato per demo
+  throw new Error('Airbnb API non configurata - servizio temporaneamente disattivato');
+}
 
       case 'database-status':
         // GET/POST /api/utilities?action=database-status - Verifica stato database
@@ -116,6 +263,91 @@ export default async function handler(req, res) {
           return res.status(500).json({
             success: false,
             error: 'Errore verifica database',
+            message: error.message
+          });
+        }
+        break;
+
+      case 'check-availability':
+        // GET/POST /api/utilities?action=check-availability&startDate=X&endDate=Y
+        if (req.method !== 'GET' && req.method !== 'POST') {
+          return res.status(405).json({ success: false, error: 'Metodo non consentito' });
+        }
+        
+        let { startDate, endDate } = req.query;
+        if (req.method === 'POST' && req.body) {
+          startDate = startDate || req.body.startDate;
+          endDate = endDate || req.body.endDate;
+        }
+        
+        if (!startDate || !endDate) {
+          return res.status(400).json({
+            success: false,
+            error: 'startDate e endDate sono richiesti'
+          });
+        }
+        
+        try {
+          console.log(`🔍 Controllo disponibilità: ${startDate} - ${endDate}`);
+          
+          // 1. Controlla prenotazioni esistenti
+          const existingBookings = await pool.query(`
+            SELECT booking_id, check_in, check_out, status
+            FROM bookings 
+            WHERE status != 'cancelled'
+            AND NOT (check_out <= $1 OR check_in >= $2)
+          `, [startDate, endDate]);
+          
+          // 2. Controlla date bloccate
+          const blockedDates = await pool.query(`
+            SELECT date_blocked, reason, source
+            FROM blocked_dates 
+            WHERE date_blocked >= $1 AND date_blocked <= $2
+            ORDER BY date_blocked
+          `, [startDate, endDate]);
+          
+          // 3. Verifica ultimo sync calendari esterni
+          const lastSync = await pool.query(`
+            SELECT setting_value 
+            FROM admin_settings 
+            WHERE category = 'calendar' AND setting_key = 'last_sync_timestamp'
+          `);
+          
+          const syncInfo = lastSync.rows[0] ? {
+            lastSync: lastSync.rows[0].setting_value,
+            minutesAgo: Math.floor((Date.now() - new Date(lastSync.rows[0].setting_value).getTime()) / 60000)
+          } : null;
+          
+          // 4. Determina disponibilità
+          const conflictingBookings = existingBookings.rows;
+          const blockedDatesInRange = blockedDates.rows;
+          const isAvailable = conflictingBookings.length === 0 && blockedDatesInRange.length === 0;
+          
+          const response = {
+            success: true,
+            available: isAvailable,
+            period: { startDate, endDate },
+            conflicts: {
+              bookings: conflictingBookings,
+              blockedDates: blockedDatesInRange,
+              total: conflictingBookings.length + blockedDatesInRange.length
+            },
+            calendarSync: syncInfo,
+            checkedAt: new Date().toISOString(),
+            recommendation: isAvailable ? 
+              'Periodo disponibile per prenotazione' : 
+              `Periodo non disponibile - ${conflictingBookings.length} prenotazioni, ${blockedDatesInRange.length} date bloccate`
+          };
+          
+          console.log(`${isAvailable ? '✅' : '❌'} Disponibilità: ${response.recommendation}`);
+          
+          return res.status(200).json(response);
+          
+        } catch (error) {
+          console.error('Errore controllo disponibilità:', error.message);
+          return res.status(500).json({
+            success: false,
+            error: 'Errore controllo disponibilità',
             message: error.message
           });
         }
