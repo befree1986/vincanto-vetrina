@@ -509,10 +509,116 @@ export default async function handler(req, res) {
         }
         break;
 
+      case 'configure-calendars':
+        // POST /api/admin?action=configure-calendars - Configura servizi calendario
+        if (req.method !== 'POST') {
+          return res.status(405).json({ success: false, error: 'Metodo non consentito' });
+        }
+
+        console.log('📅 Configurazione servizi calendario...');
+        
+        try {
+          // Configurazioni calendario predefinite
+          const calendarConfigs = [
+            {
+              category: 'calendar',
+              key: 'google_calendar_enabled',
+              value: 'true',
+              description: 'Google Calendar attivo'
+            },
+            {
+              category: 'calendar',
+              key: 'booking_com_enabled',
+              value: 'true',
+              description: 'Booking.com attivo'
+            },
+            {
+              category: 'calendar',
+              key: 'airbnb_enabled',
+              value: 'false',
+              description: 'Airbnb sospeso (configurabile)'
+            },
+            {
+              category: 'calendar',
+              key: 'airbnb_status',
+              value: 'suspended',
+              description: 'Airbnb temporaneamente sospeso'
+            },
+            {
+              category: 'calendar',
+              key: 'holidu_enabled',
+              value: 'true',
+              description: 'Holidu iCal attivo'
+            },
+            {
+              category: 'calendar',
+              key: 'holidu_ical_url',
+              value: 'https://api.host.holidu.com/pmc/rest/apartments/65376863/ical.ics?key=72d27a56f3e8836f690500877301d000',
+              description: 'URL iCal Holidu'
+            },
+            {
+              category: 'calendar',
+              key: 'sync_frequency_minutes',
+              value: '60',
+              description: 'Frequenza sincronizzazione (minuti)'
+            }
+          ];
+          
+          let configuredCount = 0;
+          
+          for (const config of calendarConfigs) {
+            try {
+              await pool.query(`
+                INSERT INTO admin_settings (category, setting_key, setting_value, setting_type, updated_at)
+                VALUES ($1, $2, $3, 'string', NOW())
+              `, [config.category, config.key, config.value]);
+              configuredCount++;
+            } catch (error) {
+              if (error.code === '23505') { // unique violation - aggiorna
+                await pool.query(`
+                  UPDATE admin_settings 
+                  SET setting_value = $3, updated_at = NOW()
+                  WHERE category = $1 AND setting_key = $2
+                `, [config.category, config.key, config.value]);
+                configuredCount++;
+              }
+            }
+          }
+          
+          console.log(`✅ ${configuredCount} configurazioni calendario salvate`);
+          
+          return res.status(200).json({
+            success: true,
+            message: 'Configurazioni calendario salvate con successo',
+            configured: configuredCount,
+            services: {
+              google_calendar: 'active',
+              booking_com: 'active', 
+              airbnb: 'suspended (configurable)',
+              holidu: 'active (iCal)'
+            },
+            next_steps: [
+              'Sistema pronto per sincronizzazione automatica',
+              'Airbnb configurabile per riattivazione futura',
+              'Holidu sincronizzato via iCal feed',
+              'Frequenza sync: ogni ora'
+            ]
+          });
+          
+        } catch (error) {
+          console.error('Errore configurazione calendari:', error.message);
+          return res.status(500).json({
+            success: false,
+            error: 'Errore configurazione calendari',
+            message: error.message
+          });
+        }
+        break;
+
       default:
         return res.status(400).json({ 
           success: false, 
-          error: 'Azione non riconosciuta. Usa: login, settings, update-pricing, reset-pricing, cleanup-database, complete-cleanup, init-database, upgrade-database, extra-services' 
+          error: 'Azione non riconosciuta. Usa: login, settings, update-pricing, reset-pricing, cleanup-database, complete-cleanup, init-database, upgrade-database, configure-calendars, extra-services' 
         });
     }
   } catch (error) {
