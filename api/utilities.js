@@ -157,13 +157,20 @@ export default async function handler(req, res) {
         }
         
         // 5. Aggiorna timestamp sincronizzazione
-        await pool.query(`
-          INSERT INTO admin_settings (category, setting_key, setting_value, setting_type, updated_at)
-          VALUES ('calendar', 'last_sync_timestamp', $1, 'string', NOW())
-          ON CONFLICT (category, setting_key) DO UPDATE SET
-            setting_value = EXCLUDED.setting_value,
-            updated_at = NOW()
-        `, [new Date().toISOString()]);
+        try {
+          await pool.query(`
+            INSERT INTO admin_settings (category, setting_key, setting_value, setting_type, updated_at)
+            VALUES ('calendar', 'last_sync_timestamp', $1, 'string', NOW())
+          `, [new Date().toISOString()]);
+        } catch (error) {
+          if (error.code === '23505') { // unique violation
+            await pool.query(`
+              UPDATE admin_settings 
+              SET setting_value = $1, updated_at = NOW()
+              WHERE category = 'calendar' AND setting_key = 'last_sync_timestamp'
+            `, [new Date().toISOString()]);
+          }
+        }
         
         const activeServices = calendarSources.filter(s => s.status === 'active').length;
         const totalBlockedDates = blockedDatesFound.length;
@@ -527,16 +534,22 @@ async function syncAirbnb(config) {
             });
           }
 
-          await pool.query(`
-            INSERT INTO calendar_sync (provider, calendar_id, access_token, refresh_token, last_sync)
-            VALUES ('google', $1, $2, $3, NOW())
-            ON CONFLICT (provider, calendar_id)
-            DO UPDATE SET 
-              access_token = $2,
-              refresh_token = $3,
-              last_sync = NOW(),
-              active = true
-          `, [calendarId, accessToken, refreshToken]);
+          try {
+            await pool.query(`
+              INSERT INTO calendar_sync (provider, calendar_id, access_token, refresh_token, last_sync)
+              VALUES ('google', $1, $2, $3, NOW())
+            `, [calendarId, accessToken, refreshToken]);
+          } catch (error) {
+            if (error.code === '23505') { // unique violation
+              await pool.query(`
+                UPDATE calendar_sync 
+                SET access_token = $2, refresh_token = $3, last_sync = NOW(), active = true
+                WHERE provider = 'google' AND calendar_id = $1
+              `, [calendarId, accessToken, refreshToken]);
+            } else {
+              throw error;
+            }
+          }
 
           return res.status(200).json({
             success: true,
