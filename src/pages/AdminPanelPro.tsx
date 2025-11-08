@@ -209,13 +209,8 @@ const AdminPanelPro: React.FC = () => {
       if (result.success && result.settings?.pricing) {
         const config = result.settings.pricing;
         setPricingConfig({
-          // Sistema base + aggiuntive: usa priceGroup1to2 come base price 
+          // Sistema base + aggiuntive mappato sui campi esistenti
           priceGroup1to2: parseFloat(config.base_price) || 75,
-          additionalGuest3to4: parseFloat(config.additional_guest_3to4) || 30,
-          additionalGuest5to6: parseFloat(config.additional_guest_5to6) || 25,
-          additionalGuest7to8: parseFloat(config.additional_guest_7to8) || 20,
-          
-          // Compatibilità con sistema gruppipre-esistente 
           priceGroup3to4: parseFloat(config.additional_guest_3to4) || 30,
           priceGroup5to6: parseFloat(config.additional_guest_5to6) || 25,
           priceGroup7to8: parseFloat(config.additional_guest_7to8) || 20,
@@ -304,38 +299,8 @@ const AdminPanelPro: React.FC = () => {
     });
   };
 
-  // === TASSA SOGGIORNO FUNCTIONS ===
-  const [touristTaxConfig, setTouristTaxConfig] = useState({
-    amount_per_person_per_night: 2.00,
-    max_nights: 7,
-    children_age_limit: 12,
-    children_exempt: true,
-    season_high_rate: 2.50,
-    season_high_start: '2025-06-01',
-    season_high_end: '2025-09-30',
-    municipality: 'Maiori',
-    region: 'Campania',
-    enabled: true
-  });
-
-  const loadTouristTaxConfig = async () => {
-    try {
-      const response = await fetch('/api/tourist-tax?action=get-config');
-      const data = await response.json();
-      
-      if (data.success && data.config) {
-        setTouristTaxConfig(data.config);
-        // Sincronizza con pricingConfig per compatibilità
-        setPricingConfig(prev => ({
-          ...prev,
-          touristTaxAdult: data.config.amount_per_person_per_night
-        }));
-        console.log('🏛️ Configurazione tassa soggiorno caricata:', data.config);
-      }
-    } catch (error) {
-      console.error('❌ Errore caricamento tassa soggiorno:', error);
-    }
-  };
+  // Nota: La tassa di soggiorno è ora gestita tramite i campi in `pricingConfig`.
+  // Se necessario, possiamo ripristinare il caricamento remoto in futuro.
 
   // === CUSTOM SERVICES FUNCTIONS ===
   
@@ -1062,12 +1027,8 @@ const AdminPanelPro: React.FC = () => {
         console.error('❌ Errore servizi custom:', err);
       }
 
-      try {
-        await loadTouristTaxConfig();
-        console.log('✅ Tassa soggiorno caricata');
-      } catch (err) {
-        console.error('❌ Errore tassa soggiorno:', err);
-      }
+      // Tassa soggiorno: caricamento remoto disabilitato (gestita via `pricingConfig`)
+      console.log('ℹ️ Tassa soggiorno gestita tramite pricingConfig (caricamento remoto disabilitato)');
 
       console.log('✅ Dati API reali caricati completamente');
     } catch (error) {
