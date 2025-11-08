@@ -535,14 +535,32 @@ export default async function handler(req, res) {
             {
               category: 'calendar',
               key: 'airbnb_enabled',
-              value: 'false',
-              description: 'Airbnb sospeso (configurabile)'
+              value: 'true',
+              description: 'Airbnb abilitato (con auto-detect sospensione)'
             },
             {
               category: 'calendar',
               key: 'airbnb_status',
-              value: 'suspended',
-              description: 'Airbnb temporaneamente sospeso'
+              value: 'auto_detect',
+              description: 'Airbnb auto-rileva stato piattaforma'
+            },
+            {
+              category: 'calendar',
+              key: 'airbnb_ical_url',
+              value: 'https://calendar.airbnb.com/calendar/ical/YOUR_LISTING_ID.ics?s=YOUR_SECRET_TOKEN',
+              description: 'URL iCal Airbnb (da configurare con dati reali)'
+            },
+            {
+              category: 'calendar',
+              key: 'airbnb_listing_id',
+              value: 'YOUR_LISTING_ID',
+              description: 'ID listing Airbnb'
+            },
+            {
+              category: 'calendar',
+              key: 'airbnb_auto_reactivate',
+              value: 'true',
+              description: 'Riattivazione automatica quando piattaforma torna online'
             },
             {
               category: 'calendar',
@@ -615,10 +633,111 @@ export default async function handler(req, res) {
         }
         break;
 
+      case 'configure-airbnb':
+        // POST /api/admin?action=configure-airbnb - Configura Airbnb con dati reali
+        if (req.method !== 'POST') {
+          return res.status(405).json({ success: false, error: 'Metodo non consentito' });
+        }
+
+        const { listingId, secretToken, apiKey } = req.body;
+        
+        console.log('🏠 Configurazione Airbnb con dati reali...');
+        
+        try {
+          const airbnbConfigs = [];
+          
+          // Configura iCal URL se fornito listing ID e secret
+          if (listingId && secretToken) {
+            const icalUrl = `https://calendar.airbnb.com/calendar/ical/${listingId}.ics?s=${secretToken}`;
+            airbnbConfigs.push({
+              key: 'airbnb_ical_url',
+              value: icalUrl,
+              description: 'URL iCal Airbnb configurato'
+            });
+            airbnbConfigs.push({
+              key: 'airbnb_listing_id',
+              value: listingId,
+              description: 'Listing ID Airbnb'
+            });
+          }
+          
+          // Configura API key se fornita
+          if (apiKey) {
+            airbnbConfigs.push({
+              key: 'airbnb_api_key',
+              value: apiKey,
+              description: 'API key Airbnb'
+            });
+          }
+          
+          // Sempre abilita auto-riattivazione
+          airbnbConfigs.push({
+            key: 'airbnb_enabled',
+            value: 'true',
+            description: 'Airbnb abilitato con auto-riattivazione'
+          });
+          
+          airbnbConfigs.push({
+            key: 'airbnb_auto_reactivate',
+            value: 'true',
+            description: 'Auto-riattivazione quando piattaforma torna online'
+          });
+          
+          // Salva configurazioni
+          let savedCount = 0;
+          for (const config of airbnbConfigs) {
+            try {
+              await pool.query(`
+                INSERT INTO admin_settings (category, setting_key, setting_value, setting_type, updated_at)
+                VALUES ('calendar', $1, $2, 'string', NOW())
+              `, [config.key, config.value]);
+              savedCount++;
+            } catch (error) {
+              if (error.code === '23505') { // unique violation - aggiorna
+                await pool.query(`
+                  UPDATE admin_settings 
+                  SET setting_value = $2, updated_at = NOW()
+                  WHERE category = 'calendar' AND setting_key = $1
+                `, [config.key, config.value]);
+                savedCount++;
+              }
+            }
+          }
+          
+          console.log(`✅ Airbnb configurato: ${savedCount} impostazioni salvate`);
+          
+          return res.status(200).json({
+            success: true,
+            message: 'Airbnb configurato con successo per auto-riattivazione',
+            configured: savedCount,
+            settings: {
+              ical_url: listingId && secretToken ? `Configurato per listing ${listingId}` : 'Non fornito',
+              api_key: apiKey ? 'Configurata' : 'Non fornita',
+              auto_reactivate: 'Abilitato',
+              status: 'Pronto per sincronizzazione automatica'
+            },
+            next_steps: [
+              'Sistema monitorerà automaticamente lo stato Airbnb',
+              'Quando piattaforma si riattiva, sincronizzazione partirà automaticamente',
+              'Configurazione salvata e pronta all\'uso',
+              'Nessuna azione richiesta da parte vostra'
+            ]
+          });
+          
+        } catch (error) {
+          console.error('Errore configurazione Airbnb:', error.message);
+          return res.status(500).json({
+            success: false,
+            error: 'Errore configurazione Airbnb',
+            message: error.message
+          });
+        }
+        break;
+
       default:
         return res.status(400).json({ 
           success: false, 
-          error: 'Azione non riconosciuta. Usa: login, settings, update-pricing, reset-pricing, cleanup-database, complete-cleanup, init-database, upgrade-database, configure-calendars, extra-services' 
+          error: 'Azione non riconosciuta. Usa: login, settings, update-pricing, reset-pricing, cleanup-database, complete-cleanup, init-database, upgrade-database, configure-calendars, configure-airbnb, extra-services' 
         });
     }
   } catch (error) {
