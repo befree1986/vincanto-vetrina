@@ -225,6 +225,73 @@ export default async function handler(req, res) {
           backup: backupResult.rows
         });
 
+      case 'complete-cleanup':
+        // POST /api/admin?action=complete-cleanup - Pulizia completa database
+        if (req.method !== 'POST') {
+          return res.status(405).json({ success: false, error: 'Metodo non consentito' });
+        }
+
+        console.log('🧹 Avvio pulizia completa database...');
+        
+        // 1. Elimina completamente tutte le categorie esistenti
+        await pool.query('DELETE FROM admin_settings');
+        console.log('🗑️ Database svuotato completamente');
+
+        // 2. Inserisce configurazione pulita essenziale
+        const cleanSettings = {
+          general: {
+            site_name: "Vincanto Maori",
+            site_email: "info@vincantomaori.it", 
+            site_phone: "+39 123 456 7890",
+            check_in_time: "15:00",
+            check_out_time: "11:00",
+            auto_confirm_bookings: "false",
+            maintenance_mode: "false"
+          },
+          pricing: {
+            base_price: "75",
+            additional_guest_3to4: "30",
+            additional_guest_5to6: "25", 
+            additional_guest_7to8: "20",
+            cleaning_fee: "50",
+            parking_fee: "20",
+            tourist_tax_adult: "2.00",
+            weekly_discount: "10",
+            monthly_discount: "15",
+            minimum_nights: "2",
+            maximum_nights: "14"
+          },
+          payment: {
+            deposit_percentage: "0.30"
+          },
+          email: {
+            email_notifications_enabled: "true"
+          },
+          calendar: {
+            calendar_sync_frequency: "60"
+          }
+        };
+
+        let totalInserted = 0;
+        for (const [category, settings] of Object.entries(cleanSettings)) {
+          for (const [key, value] of Object.entries(settings)) {
+            await pool.query(`
+              INSERT INTO admin_settings (category, setting_key, setting_value, setting_type, updated_at)
+              VALUES ($1, $2, $3, 'string', NOW())
+            `, [category, key, value]);
+            totalInserted++;
+          }
+        }
+
+        console.log(`✅ ${totalInserted} impostazioni pulite inserite`);
+
+        return res.status(200).json({
+          success: true,
+          message: `Database completamente pulito - ${totalInserted} impostazioni essenziali configurate`,
+          inserted: totalInserted,
+          categories: Object.keys(cleanSettings)
+        });
+
       case 'extra-services':
         // GET /api/admin-unified?action=extra-services - Lista servizi
         // POST /api/admin-unified?action=extra-services - Crea/aggiorna servizio
@@ -294,7 +361,7 @@ export default async function handler(req, res) {
       default:
         return res.status(400).json({ 
           success: false, 
-          error: 'Azione non riconosciuta. Usa: login, settings, update-pricing, reset-pricing, cleanup-database, extra-services' 
+          error: 'Azione non riconosciuta. Usa: login, settings, update-pricing, reset-pricing, cleanup-database, complete-cleanup, extra-services' 
         });
     }
   } catch (error) {
