@@ -264,10 +264,10 @@ class AdminApiService {
     }
   }
 
-  // Quote API
+  // Quote API (API Unificata)
   async getQuote(checkIn: string, checkOut: string, guests: number) {
     try {
-      const url = `https://vincanto-backup.vercel.app/api/quote?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`;
+      const url = `${this.baseUrl}/unified?action=quote&checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`;
       const response = await fetch(url);
       if (!response.ok) throw new Error('Quote API error');
       return await response.json();
