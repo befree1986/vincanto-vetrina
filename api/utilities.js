@@ -119,6 +119,7 @@ export default async function handler(req, res) {
             message: error.message
           });
         }
+        break;
 
       case 'calendar-setup':
         // POST /api/utilities-unified?action=calendar-setup
