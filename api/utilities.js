@@ -128,18 +128,31 @@ export default async function handler(req, res) {
           
           // Inserisci nuove date bloccate
           for (const blockedDate of blockedDatesFound) {
-            await pool.query(`
-              INSERT INTO blocked_dates (date_blocked, reason, created_at, source)
-              VALUES ($1, $2, NOW(), $3)
-              ON CONFLICT (date_blocked) DO UPDATE SET
-                reason = EXCLUDED.reason,
-                source = EXCLUDED.source,
-                updated_at = NOW()
-            `, [
-              blockedDate.date,
-              `External sync: ${blockedDate.source} - ${blockedDate.title || 'Booking'}`,
-              blockedDate.source
-            ]);
+            try {
+              await pool.query(`
+                INSERT INTO blocked_dates (date_blocked, reason, created_at, source)
+                VALUES ($1, $2, NOW(), $3)
+              `, [
+                blockedDate.date,
+                `External sync: ${blockedDate.source} - ${blockedDate.title || 'Booking'}`,
+                blockedDate.source
+              ]);
+            } catch (error) {
+              // Se la data esiste già, aggiornala
+              if (error.code === '23505') { // unique violation
+                await pool.query(`
+                  UPDATE blocked_dates 
+                  SET reason = $2, source = $3, updated_at = NOW()
+                  WHERE date_blocked = $1
+                `, [
+                  blockedDate.date,
+                  `External sync: ${blockedDate.source} - ${blockedDate.title || 'Booking'}`,
+                  blockedDate.source
+                ]);
+              } else {
+                console.error('Errore inserimento data bloccata:', error.message);
+              }
+            }
           }
         }
         
