@@ -54,20 +54,21 @@ async function testDatabaseInitialization() {
         // Analisi dei risultati
         console.log('\n📊 ANALYSIS:');
         if (verifyResult.success) {
-            const { tables } = verifyResult;
-            console.log(`✅ Tables found: ${tables.map(t => t.table_name).join(', ')}`);
+            const { database } = verifyResult;
+            const { existingTables, tableCounts } = database;
+            console.log(`✅ Tables found: ${existingTables.join(', ')}`);
             
-            const bookingsTable = tables.find(t => t.table_name === 'bookings');
-            const blockedDatesTable = tables.find(t => t.table_name === 'blocked_dates');
+            const bookingsTable = existingTables.includes('bookings');
+            const blockedDatesTable = existingTables.includes('blocked_dates');
             
             if (bookingsTable) {
-                console.log(`✅ Bookings table: ${bookingsTable.row_count} rows`);
+                console.log(`✅ Bookings table: ${tableCounts.bookings} rows`);
             } else {
                 console.log('❌ Bookings table missing');
             }
             
             if (blockedDatesTable) {
-                console.log(`✅ Blocked dates table: ${blockedDatesTable.row_count} rows`);
+                console.log(`✅ Blocked dates table: ${tableCounts.blocked_dates} rows`);
             } else {
                 console.log('❌ Blocked dates table missing');
             }
