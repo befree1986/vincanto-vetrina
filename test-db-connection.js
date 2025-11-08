@@ -1,5 +1,6 @@
 // Test database connection
-const { Pool } = require('pg');
+import pkg from 'pg';
+const { Pool } = pkg;
 
 const pool = new Pool({
   connectionString: 'postgresql://neondb_owner:npg_5TBySVaU7Ktf@ep-sweet-glitter-ag53yugd-pooler.c-2.eu-central-1.aws.neon.tech/neondb?sslmode=require',

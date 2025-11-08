@@ -209,14 +209,13 @@ const AdminPanelPro: React.FC = () => {
       if (result.success && result.settings?.pricing) {
         const config = result.settings.pricing;
         setPricingConfig({
-          // 🔥 NUOVO: Sistema base + aggiuntive con mapping corretto
-          basePrice: parseFloat(config.base_price) || 75,
+          // Sistema base + aggiuntive: usa priceGroup1to2 come base price 
+          priceGroup1to2: parseFloat(config.base_price) || 75,
           additionalGuest3to4: parseFloat(config.additional_guest_3to4) || 30,
           additionalGuest5to6: parseFloat(config.additional_guest_5to6) || 25,
           additionalGuest7to8: parseFloat(config.additional_guest_7to8) || 20,
           
-          // Compatibilità con vecchio sistema (fallback)
-          priceGroup1to2: parseFloat(config.base_price) || 75,
+          // Compatibilità con sistema gruppipre-esistente 
           priceGroup3to4: parseFloat(config.additional_guest_3to4) || 30,
           priceGroup5to6: parseFloat(config.additional_guest_5to6) || 25,
           priceGroup7to8: parseFloat(config.additional_guest_7to8) || 20,
@@ -336,47 +335,6 @@ const AdminPanelPro: React.FC = () => {
     } catch (error) {
       console.error('❌ Errore caricamento tassa soggiorno:', error);
     }
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const saveTouristTaxConfig = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/tourist-tax?action=update-config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...touristTaxConfig,
-          updated_at: new Date().toISOString()
-        })
-      });
-
-      const result = await response.json();
-      
-      if (result.success) {
-        alert('✅ Configurazione tassa soggiorno salvata!');
-        // Aggiorna anche pricingConfig
-        setPricingConfig(prev => ({
-          ...prev,
-          touristTaxAdult: touristTaxConfig.amount_per_person_per_night
-        }));
-      } else {
-        alert('❌ Errore salvataggio: ' + result.error);
-      }
-    } catch (error) {
-      console.error('❌ Errore salvataggio tassa soggiorno:', error);
-      alert('❌ Errore nel salvataggio');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const updateTouristTaxField = (field: string, value: any) => {
-    setTouristTaxConfig(prev => ({
-      ...prev,
-      [field]: value
-    }));
   };
 
   // === CUSTOM SERVICES FUNCTIONS ===
