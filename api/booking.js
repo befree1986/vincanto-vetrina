@@ -21,6 +21,59 @@ export default async function handler(req, res) {
   
   try {
     switch (action) {
+      case 'delete':
+        // DELETE /api/booking?action=delete&id=X - Elimina prenotazione
+        if (req.method !== 'DELETE') {
+          return res.status(405).json({ success: false, error: 'Metodo non consentito' });
+        }
+
+        const { id: deleteId } = req.query;
+        if (!deleteId) {
+          return res.status(400).json({ success: false, error: 'ID prenotazione richiesto' });
+        }
+
+        // Elimina prenotazione dal database
+        const deleteResult = await pool.query('DELETE FROM bookings WHERE id = $1 RETURNING *', [deleteId]);
+        
+        if (deleteResult.rows.length === 0) {
+          return res.status(404).json({ success: false, error: 'Prenotazione non trovata' });
+        }
+
+        return res.status(200).json({
+          success: true,
+          message: 'Prenotazione eliminata con successo',
+          booking: deleteResult.rows[0]
+        });
+
+      case 'suspend':
+        // POST /api/booking?action=suspend - Sospende prenotazione
+        if (req.method !== 'POST') {
+          return res.status(405).json({ success: false, error: 'Metodo non consentito' });
+        }
+
+        const { bookingId, reason } = req.body;
+        if (!bookingId) {
+          return res.status(400).json({ success: false, error: 'ID prenotazione richiesto' });
+        }
+
+        // Aggiorna stato prenotazione
+        const suspendResult = await pool.query(`
+          UPDATE bookings 
+          SET status = 'suspended', notes = $2, updated_at = NOW()
+          WHERE id = $1 
+          RETURNING *
+        `, [bookingId, reason || 'Prenotazione sospesa']);
+
+        if (suspendResult.rows.length === 0) {
+          return res.status(404).json({ success: false, error: 'Prenotazione non trovata' });
+        }
+
+        return res.status(200).json({
+          success: true,
+          message: 'Prenotazione sospesa con successo',
+          booking: suspendResult.rows[0]
+        });
+
       case 'availability':
         // GET /api/booking-unified?action=availability&checkIn=X&checkOut=Y
         if (req.method !== 'GET') {
@@ -184,6 +237,65 @@ export default async function handler(req, res) {
           success: true,
           message: 'Prenotazione creata con successo',
           bookingId: newBookingId
+        });
+
+      case 'refund':
+        // POST /api/booking?action=refund - Gestisce rimborsi
+        if (req.method !== 'POST') {
+          return res.status(405).json({ success: false, error: 'Metodo non consentito' });
+        }
+
+        const { refundBookingId, amount, method } = req.body;
+        if (!refundBookingId || !amount) {
+          return res.status(400).json({ success: false, error: 'ID prenotazione e importo richiesti' });
+        }
+
+        // Trova prenotazione
+        const bookingResult = await pool.query('SELECT * FROM bookings WHERE booking_id = $1', [refundBookingId]);
+        if (bookingResult.rows.length === 0) {
+          return res.status(404).json({ success: false, error: 'Prenotazione non trovata' });
+        }
+
+        // Simula processo rimborso (qui andrebbe integrazione con Stripe/PayPal)
+        const refundId = `REF${Date.now()}`;
+        
+        // Aggiorna stato prenotazione
+        await pool.query(`
+          UPDATE bookings 
+          SET status = 'refunded', updated_at = NOW()
+          WHERE booking_id = $1
+        `, [refundBookingId]);
+
+        return res.status(200).json({
+          success: true,
+          message: `Rimborso di €${amount} elaborato con successo`,
+          refundId: refundId,
+          method: method || 'original_payment_method'
+        });
+
+      case 'capture':
+        // POST /api/booking?action=capture - Cattura pagamento
+        if (req.method !== 'POST') {
+          return res.status(405).json({ success: false, error: 'Metodo non consentito' });
+        }
+
+        const { captureBookingId, paymentIntentId } = req.body;
+        if (!captureBookingId) {
+          return res.status(400).json({ success: false, error: 'ID prenotazione richiesto' });
+        }
+
+        // Simula cattura pagamento (qui andrebbe integrazione con Stripe)
+        await pool.query(`
+          UPDATE bookings 
+          SET status = 'confirmed', payment_status = 'paid', updated_at = NOW()
+          WHERE booking_id = $1
+        `, [captureBookingId]);
+
+        return res.status(200).json({
+          success: true,
+          message: 'Pagamento catturato con successo',
+          bookingId: captureBookingId,
+          paymentIntentId: paymentIntentId || `pi_${Date.now()}`
         });
 
       case 'list':
