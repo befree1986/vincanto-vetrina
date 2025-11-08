@@ -57,8 +57,8 @@ export default async function handler(req, res) {
         });
 
       case 'database-status':
-        // GET /api/utilities?action=database-status - Verifica stato database
-        if (req.method !== 'GET') {
+        // GET/POST /api/utilities?action=database-status - Verifica stato database
+        if (req.method !== 'GET' && req.method !== 'POST') {
           return res.status(405).json({ success: false, error: 'Metodo non consentito' });
         }
 
