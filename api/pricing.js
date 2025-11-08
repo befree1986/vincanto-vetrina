@@ -108,14 +108,14 @@ function calculateStayTotal(params, config) {
 async function loadPricingConfig() {
   const defaultConfig = {
     basePrice: 75,
-    additionalGuest3to4: 30,
-    additionalGuest5to6: 25,
+    additionalGuest3to4: 20,
+    additionalGuest5to6: 20,
     additionalGuest7to8: 20,
     cleaningFee: 50,
     parkingFee: 20,
     touristTaxAdult: 2.00,
     weeklyDiscount: 10,
-    monthlyDiscount: 15
+    monthlyDiscount: 0
   };
 
   try {

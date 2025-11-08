@@ -52,16 +52,11 @@ export const usePricing = () => {
     setError(null);
     
     try {
-      console.log('🔥 Caricamento prezzi dal nuovo sistema gruppi...');
+      console.log('🔥 Caricamento prezzi dal nuovo sistema unificato...');
       
-      // Prima prova la nuova API pricing-groups
+      // Usa la nuova API pricing unificata
       const cacheBuster = new Date().getTime();
-      let response = await fetch(`/api/pricing-groups?_t=${cacheBuster}`);
-      
-      if (!response.ok) {
-        console.log('⚠️ API pricing-groups non disponibile, fallback a pricing legacy');
-        response = await fetch(`/api/pricing?_t=${cacheBuster}`);
-      }
+      const response = await fetch(`/api/pricing?action=config&_t=${cacheBuster}`);
       
       if (!response.ok) {
         throw new Error('Errore nel caricamento prezzi');
@@ -69,101 +64,61 @@ export const usePricing = () => {
       
       const result = await response.json();
       
-      if (result.success && result.data) {
-        const apiData = result.data;
+      if (result.success && result.config) {
+        const apiData = result.config;
         console.log('🔍 Dati ricevuti dall\'API:', apiData);
         
-        // 🔥 NUOVO: Gestione dati sistema gruppi
-        if (apiData.priceGroup1to2) {
-          // Sistema gruppi attivo
-          console.log('✅ Sistema gruppi rilevato');
-          
-          const transformedData = {
-            basePrice: apiData.priceGroup1to2,
-            date: new Date().toISOString().split('T')[0],
-            season: 'medium' as const,
-            priceByGuests: {
-              persons1to2: apiData.priceGroup1to2,    // €75
-              persons3to4: apiData.priceGroup3to4,    // €95
-              persons5to6: apiData.priceGroup5to6,    // €115
-              persons7to8: apiData.priceGroup7to8     // €135
-            },
-            groupPricing: {
-              priceGroup1to2: apiData.priceGroup1to2 || 75,
-              priceGroup3to4: apiData.priceGroup3to4 || 95,
-              priceGroup5to6: apiData.priceGroup5to6 || 115,
-              priceGroup7to8: apiData.priceGroup7to8 || 135,
-              cleaningFee: apiData.cleaningFee || 50,
-              parkingFee: apiData.parkingFee || 20,
-              touristTaxAdult: apiData.touristTaxAdult || 2.00,
-              touristTaxChild: apiData.touristTaxChild || 0
-            },
+        // 🔥 NUOVO: Gestione dati sistema base + aggiuntive
+        const transformedData = {
+          basePrice: apiData.basePrice || 75,
+          date: new Date().toISOString().split('T')[0],
+          season: 'medium' as const,
+          priceByGuests: {
+            persons1to2: apiData.basePrice * 2 || 150,                                    // Base: €75 × 2 = €150
+            persons3to4: (apiData.basePrice * 2) + apiData.additionalGuest3to4 || 180,   // €150 + €30 = €180  
+            persons5to6: (apiData.basePrice * 2) + (apiData.additionalGuest3to4 * 2) + apiData.additionalGuest5to6 || 235,  // €150 + €60 + €25 = €235
+            persons7to8: (apiData.basePrice * 2) + (apiData.additionalGuest3to4 * 2) + (apiData.additionalGuest5to6 * 2) + apiData.additionalGuest7to8 || 275   // €150 + €60 + €50 + €20 = €275
+          },
+          groupPricing: {
+            priceGroup1to2: apiData.basePrice || 75,
+            priceGroup3to4: apiData.additionalGuest3to4 || 30,
+            priceGroup5to6: apiData.additionalGuest5to6 || 25,
+            priceGroup7to8: apiData.additionalGuest7to8 || 20,
+            cleaningFee: apiData.cleaningFee || 50,
+            parkingFee: apiData.parkingFee || 20,
+            touristTaxAdult: apiData.touristTaxAdult || 2.00,
+            touristTaxChild: 0
+          },
             discounts: {
               weekly: Number(apiData.weeklyDiscount) || 10,
-              monthly: Number(apiData.monthlyDiscount) || 15
+              monthly: Number(apiData.monthlyDiscount) || 0
             }
           };
           
-          console.log('🎯 Dati gruppi trasformati:', transformedData);
+          console.log('🎯 Dati sistema base + aggiuntive trasformati:', transformedData);
           setCurrentPrice(transformedData);
-        } else {
-          // Sistema legacy - converti al sistema gruppi
-          console.log('⚠️ Sistema legacy rilevato, conversione a gruppi');
-          
-          const basePricePerPerson = Number(apiData.basePrice) || 75;
-          const additionalGuestPrice = Number(apiData.additionalGuestPrice) || 20;
-          
-          const transformedData = {
-            basePrice: basePricePerPerson,
-            date: new Date().toISOString().split('T')[0],
-            season: 'medium' as const,
-            priceByGuests: {
-              persons1to2: basePricePerPerson,                                  // €75
-              persons3to4: basePricePerPerson + additionalGuestPrice,          // €95
-              persons5to6: basePricePerPerson + (additionalGuestPrice * 2),    // €115
-              persons7to8: basePricePerPerson + (additionalGuestPrice * 3)     // €135
-            },
-            groupPricing: {
-              priceGroup1to2: basePricePerPerson,
-              priceGroup3to4: basePricePerPerson + additionalGuestPrice,
-              priceGroup5to6: basePricePerPerson + (additionalGuestPrice * 2),
-              priceGroup7to8: basePricePerPerson + (additionalGuestPrice * 3),
-              cleaningFee: Number(apiData.cleaningFee) || 50,
-              parkingFee: Number(apiData.parkingFee) || 20,
-              touristTaxAdult: Number(apiData.touristTaxAdult) || 2.00,
-              touristTaxChild: Number(apiData.touristTaxChild) || 0
-            },
-            discounts: {
-              weekly: Number(apiData.weeklyDiscount) || 10,
-              monthly: Number(apiData.monthlyDiscount) || 15
-            }
-          };
-          
-          console.log('🔄 Dati legacy convertiti a gruppi:', transformedData);
-          setCurrentPrice(transformedData);
-        }
       } else {
         throw new Error('Formato dati API non valido');
       }
     } catch (err) {
       console.error('❌ Errore fetch prezzi:', err);
       
-      // 🔥 NUOVO: Fallback con sistema gruppi predefinito
+      // 🔥 NUOVO: Fallback con sistema base + aggiuntive predefinito
       setCurrentPrice({
         basePrice: 75,
         date: new Date().toISOString().split('T')[0],
         season: 'medium',
         priceByGuests: {
-          persons1to2: 75,    // €75 per 1-2 persone
-          persons3to4: 95,    // €95 per 3-4 persone
-          persons5to6: 115,   // €115 per 5-6 persone
-          persons7to8: 135    // €135 per 7-8 persone
+          persons1to2: 150,   // €75 × 2 = €150 base
+          persons3to4: 180,   // €150 + €30 = €180
+          persons5to6: 235,   // €150 + €60 + €25 = €235
+          persons7to8: 275    // €150 + €60 + €50 + €20 = €275
         },
         groupPricing: {
           priceGroup1to2: 75,
-          priceGroup3to4: 95,
-          priceGroup5to6: 115,
-          priceGroup7to8: 135,
+          priceGroup3to4: 30,
+          priceGroup5to6: 25,
+          priceGroup7to8: 20,
           cleaningFee: 50,
           parkingFee: 20,
           touristTaxAdult: 2.00,
@@ -171,7 +126,7 @@ export const usePricing = () => {
         },
         discounts: {
           weekly: 10,
-          monthly: 15
+          monthly: 0
         }
       });
       setError(err instanceof Error ? err.message : 'Errore sconosciuto');
@@ -182,15 +137,43 @@ export const usePricing = () => {
 
   // 🔥 NUOVO: Funzione helper per calcolare prezzo per un numero specifico di ospiti
   const calculatePriceForGuests = (guests: number): number => {
-    if (!currentPrice?.groupPricing) return 75;
+    if (!currentPrice?.groupPricing) return 150; // Base fallback
     
-    if (guests <= 2) return currentPrice.groupPricing.priceGroup1to2;
-    if (guests <= 4) return currentPrice.groupPricing.priceGroup3to4;
-    if (guests <= 6) return currentPrice.groupPricing.priceGroup5to6;
-    if (guests <= 8) return currentPrice.groupPricing.priceGroup7to8;
+    const config = currentPrice.groupPricing;
+    const basePrice = config.priceGroup1to2 * 2; // €75 × 2 = €150 base
     
-    // Per più di 8 ospiti, calcola prezzo extra
-    return currentPrice.groupPricing.priceGroup7to8 + ((guests - 8) * 20);
+    if (guests <= 2) return basePrice;
+    
+    let additionalCost = 0;
+    let remainingGuests = guests - 2;
+    
+    // 3-4 persone
+    if (remainingGuests > 0) {
+      const guestsInRange = Math.min(remainingGuests, 2);
+      additionalCost += guestsInRange * config.priceGroup3to4;
+      remainingGuests -= guestsInRange;
+    }
+    
+    // 5-6 persone
+    if (remainingGuests > 0) {
+      const guestsInRange = Math.min(remainingGuests, 2);
+      additionalCost += guestsInRange * config.priceGroup5to6;
+      remainingGuests -= guestsInRange;
+    }
+    
+    // 7-8 persone
+    if (remainingGuests > 0) {
+      const guestsInRange = Math.min(remainingGuests, 2);
+      additionalCost += guestsInRange * config.priceGroup7to8;
+      remainingGuests -= guestsInRange;
+    }
+    
+    // Per più di 8 ospiti, usa il prezzo 7-8
+    if (remainingGuests > 0) {
+      additionalCost += remainingGuests * config.priceGroup7to8;
+    }
+    
+    return basePrice + additionalCost;
   };
 
   // Fetch storico prezzi (mantenuto per compatibilità)
@@ -207,14 +190,14 @@ export const usePricing = () => {
         {
           id: '2',
           date: '2024-06-01',
-          price: 95,
+          price: 20,
           season: 'Sistema gruppi attivo',
           createdAt: new Date().toISOString()
         },
         {
           id: '3',
           date: '2024-08-01',
-          price: 115,
+          price: 20,
           season: 'Prezzi per gruppi aggiornati',
           createdAt: new Date().toISOString()
         }

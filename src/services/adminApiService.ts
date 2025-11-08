@@ -6,7 +6,7 @@ class AdminApiService {
 
   constructor() {
     // 🎯 PRODUZIONE VERCEL - CONFIGURAZIONE PULITA
-    this.baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://vincanto-vetrina.vercel.app/api';
+    this.baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://vincanto-backup.vercel.app/api';
     console.log('🎯 AdminApiService PRODUZIONE:', this.baseUrl);
   }
 
@@ -255,7 +255,7 @@ class AdminApiService {
   // Health Check
   async healthCheck() {
     try {
-      const response = await fetch(`https://vincanto-vetrina.vercel.app/api/admin?action=database-status`);
+      const response = await fetch(`https://vincanto-backup.vercel.app/api/admin?action=database-status`);
       const data = await response.json();
       return data.success || false;
     } catch {
@@ -266,7 +266,7 @@ class AdminApiService {
   // Quote API
   async getQuote(checkIn: string, checkOut: string, guests: number) {
     try {
-      const url = `https://vincanto-vetrina.vercel.app/api/quote?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`;
+      const url = `https://vincanto-backup.vercel.app/api/quote?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`;
       const response = await fetch(url);
       if (!response.ok) throw new Error('Quote API error');
       return await response.json();
