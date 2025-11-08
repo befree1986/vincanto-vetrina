@@ -76,13 +76,16 @@ export default async function handler(req, res) {
 
           // Salva le impostazioni
           for (const [key, value] of Object.entries(newSettings)) {
+            // Prima elimina l'eventuale record esistente
+            await pool.query(`
+              DELETE FROM admin_settings 
+              WHERE category = $1 AND setting_key = $2
+            `, [category, key]);
+            
+            // Poi inserisce il nuovo record
             await pool.query(`
               INSERT INTO admin_settings (category, setting_key, setting_value, updated_at)
               VALUES ($1, $2, $3, NOW())
-              ON CONFLICT (category, setting_key)
-              DO UPDATE SET 
-                setting_value = $3,
-                updated_at = NOW()
             `, [category, key, value]);
           }
 
@@ -114,13 +117,16 @@ export default async function handler(req, res) {
 
         for (const [key, value] of Object.entries(pricingUpdates)) {
           if (value !== undefined) {
+            // Prima elimina l'eventuale record esistente
+            await pool.query(`
+              DELETE FROM admin_settings 
+              WHERE category = 'pricing' AND setting_key = $1
+            `, [key]);
+            
+            // Poi inserisce il nuovo record
             await pool.query(`
               INSERT INTO admin_settings (category, setting_key, setting_value, updated_at)
               VALUES ('pricing', $1, $2, NOW())
-              ON CONFLICT (category, setting_key)
-              DO UPDATE SET 
-                setting_value = $2,
-                updated_at = NOW()
             `, [key, value]);
           }
         }
@@ -149,13 +155,16 @@ export default async function handler(req, res) {
         };
 
         for (const [key, value] of Object.entries(defaultPricing)) {
+          // Prima elimina l'eventuale record esistente
+          await pool.query(`
+            DELETE FROM admin_settings 
+            WHERE category = 'pricing' AND setting_key = $1
+          `, [key]);
+          
+          // Poi inserisce il nuovo record
           await pool.query(`
             INSERT INTO admin_settings (category, setting_key, setting_value, updated_at)
             VALUES ('pricing', $1, $2, NOW())
-            ON CONFLICT (category, setting_key)
-            DO UPDATE SET 
-              setting_value = $2,
-              updated_at = NOW()
           `, [key, value]);
         }
 
@@ -195,11 +204,19 @@ export default async function handler(req, res) {
         };
 
         for (const [key, defaultValue] of Object.entries(requiredSettings)) {
-          await pool.query(`
-            INSERT INTO admin_settings (category, setting_key, setting_value, updated_at)
-            VALUES ('pricing', $1, $2, NOW())
-            ON CONFLICT (category, setting_key) DO NOTHING
-          `, [key, defaultValue]);
+          // Controlla se esiste già
+          const existingResult = await pool.query(`
+            SELECT setting_value FROM admin_settings 
+            WHERE category = 'pricing' AND setting_key = $1
+          `, [key]);
+          
+          // Se non esiste, inseriscilo
+          if (existingResult.rows.length === 0) {
+            await pool.query(`
+              INSERT INTO admin_settings (category, setting_key, setting_value, updated_at)
+              VALUES ('pricing', $1, $2, NOW())
+            `, [key, defaultValue]);
+          }
         }
 
         return res.status(200).json({
