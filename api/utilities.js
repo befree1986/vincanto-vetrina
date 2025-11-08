@@ -17,7 +17,11 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const { action } = req.query;
+  // Ottieni action da query params o body
+  let { action } = req.query;
+  if (req.method === 'POST' && req.body && req.body.action) {
+    action = req.body.action;
+  }
   
     try {
     switch (action) {
