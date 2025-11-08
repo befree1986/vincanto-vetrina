@@ -447,10 +447,64 @@ export default async function handler(req, res) {
 
         return res.status(405).json({ success: false, error: 'Metodo non consentito' });
 
+      case 'upgrade-database':
+        // POST /api/admin?action=upgrade-database - Aggiorna struttura database
+        if (req.method !== 'POST') {
+          return res.status(405).json({ success: false, error: 'Metodo non consentito' });
+        }
+
+        console.log('🔧 Avvio upgrade struttura database...');
+        
+        try {
+          // Aggiungi colonne mancanti alla tabella blocked_dates
+          await pool.query(`
+            ALTER TABLE blocked_dates 
+            ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'manual'
+          `);
+          
+          await pool.query(`
+            ALTER TABLE blocked_dates 
+            ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW()
+          `);
+          
+          // Aggiorna le righe esistenti
+          await pool.query(`
+            UPDATE blocked_dates 
+            SET source = 'manual', updated_at = NOW() 
+            WHERE source IS NULL
+          `);
+          
+          // Verifica struttura aggiornata
+          const tableInfo = await pool.query(`
+            SELECT column_name, data_type, is_nullable, column_default
+            FROM information_schema.columns 
+            WHERE table_name = 'blocked_dates' 
+            ORDER BY ordinal_position
+          `);
+          
+          console.log('✅ Database upgrade completato');
+          
+          return res.status(200).json({
+            success: true,
+            message: 'Database aggiornato con successo',
+            upgrades: ['added source column', 'added updated_at column'],
+            currentStructure: tableInfo.rows
+          });
+          
+        } catch (error) {
+          console.error('Errore upgrade database:', error.message);
+          return res.status(500).json({
+            success: false,
+            error: 'Errore upgrade database',
+            message: error.message
+          });
+        }
+        break;
+
       default:
         return res.status(400).json({ 
           success: false, 
-          error: 'Azione non riconosciuta. Usa: login, settings, update-pricing, reset-pricing, cleanup-database, complete-cleanup, init-database, extra-services' 
+          error: 'Azione non riconosciuta. Usa: login, settings, update-pricing, reset-pricing, cleanup-database, complete-cleanup, init-database, upgrade-database, extra-services' 
         });
     }
   } catch (error) {
