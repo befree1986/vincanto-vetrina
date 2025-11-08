@@ -130,11 +130,16 @@ export default async function handler(req, res) {
           }
 
           for (const date of dates) {
-            await pool.query(`
-              INSERT INTO blocked_dates (date_blocked, reason, created_at)
-              VALUES ($1, $2, NOW())
-              ON CONFLICT (date_blocked) DO NOTHING
-            `, [date, reason || 'Bloccato da admin']);
+            try {
+              await pool.query(`
+                INSERT INTO blocked_dates (date_blocked, reason, created_at)
+                VALUES ($1, $2, NOW())
+              `, [date, reason || 'Bloccato da admin']);
+            } catch (error) {
+              if (error.code !== '23505') { // ignora unique violations, ma logga altri errori
+                console.error('Errore inserimento data bloccata:', error.message);
+              }
+            }
           }
 
           return res.status(200).json({
@@ -226,11 +231,16 @@ export default async function handler(req, res) {
         
         for (let d = new Date(startDate); d < endDate; d.setDate(d.getDate() + 1)) {
           const dateStr = d.toISOString().split('T')[0];
-          await pool.query(`
-            INSERT INTO blocked_dates (date_blocked, reason, booking_id, created_at)
-            VALUES ($1, $2, $3, NOW())
-            ON CONFLICT (date_blocked) DO NOTHING
-          `, [dateStr, `Prenotazione ${newBookingId}`, newBookingId]);
+          try {
+            await pool.query(`
+              INSERT INTO blocked_dates (date_blocked, reason, booking_id, created_at)
+              VALUES ($1, $2, $3, NOW())
+            `, [dateStr, `Prenotazione ${newBookingId}`, newBookingId]);
+          } catch (error) {
+            if (error.code !== '23505') { // ignora unique violations
+              console.error('Errore blocco data prenotazione:', error.message);
+            }
+          }
         }
 
         return res.status(200).json({

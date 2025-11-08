@@ -412,14 +412,22 @@ export default async function handler(req, res) {
             });
           }
 
-          await pool.query(`
-            INSERT INTO admin_settings (category, setting_key, setting_value, updated_at)
-            VALUES ('services', $1, $2, NOW())
-            ON CONFLICT (category, setting_key)
-            DO UPDATE SET 
-              setting_value = $2,
-              updated_at = NOW()
-          `, [serviceName, servicePrice]);
+          try {
+            await pool.query(`
+              INSERT INTO admin_settings (category, setting_key, setting_value, updated_at)
+              VALUES ('services', $1, $2, NOW())
+            `, [serviceName, servicePrice]);
+          } catch (error) {
+            if (error.code === '23505') { // unique violation
+              await pool.query(`
+                UPDATE admin_settings 
+                SET setting_value = $2, updated_at = NOW()
+                WHERE category = 'services' AND setting_key = $1
+              `, [serviceName, servicePrice]);
+            } else {
+              throw error;
+            }
+          }
 
           return res.status(200).json({
             success: true,
