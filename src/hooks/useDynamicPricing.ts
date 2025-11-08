@@ -27,9 +27,9 @@ export const useDynamicPricing = (): PricingData => {
       try {
         console.log('🔄 DYNAMIC PRICING: Caricamento prezzi dal server...');
         
-        // Aggiungi timestamp per evitare cache
+        // 🎯 USA LA NUOVA API UNIFICATA per i prezzi dinamici
         const timestamp = new Date().getTime();
-        const response = await fetch(`/api/quote?checkIn=2025-12-01&checkOut=2025-12-02&guests=2&includeParking=false&_t=${timestamp}`);
+        const response = await fetch(`/api/unified?action=quote&checkIn=2025-12-01&checkOut=2025-12-02&guests=2&includeParking=false&_t=${timestamp}`);
         
         if (response.ok) {
           const data = await response.json();

@@ -54,9 +54,9 @@ export const usePricing = () => {
     try {
       console.log('🔥 Caricamento prezzi dal nuovo sistema unificato...');
       
-      // Usa la nuova API pricing unificata
+      // 🎯 USA LA NUOVA API UNIFICATA
       const cacheBuster = new Date().getTime();
-      const response = await fetch(`/api/pricing?action=config&_t=${cacheBuster}`);
+      const response = await fetch(`/api/unified?action=pricing&_t=${cacheBuster}`);
       
       if (!response.ok) {
         throw new Error('Errore nel caricamento prezzi');
@@ -64,9 +64,9 @@ export const usePricing = () => {
       
       const result = await response.json();
       
-      if (result.success && result.config) {
-        const apiData = result.config;
-        console.log('🔍 Dati ricevuti dall\'API:', apiData);
+      if (result.success && result.pricing && result.pricing.config) {
+        const apiData = result.pricing.config;
+        console.log('🔍 Dati ricevuti dall\'API Unificata:', apiData);
         
         // 🔥 NUOVO: Gestione dati sistema base + aggiuntive
         const transformedData = {
@@ -208,13 +208,13 @@ export const usePricing = () => {
     }
   };
 
-  // Aggiorna prezzo (per admin panel)
+  // Aggiorna prezzo (per admin panel) - API Unificata
   const updatePrice = async (newPrice: Partial<PriceData>) => {
     setLoading(true);
     setError(null);
     
     try {
-      const response = await fetch('/api/pricing/update', {
+      const response = await fetch('/api/unified?action=pricing', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -9,12 +9,32 @@
   },
   "rewrites": [
     {
-      "source": "/api/booking/(.*)",
-      "destination": "/api/booking/$1.js"
+      "source": "/api/unified",
+      "destination": "/api/unified.js"
+    },
+    {
+      "source": "/api/pricing",
+      "destination": "/api/unified.js?action=pricing"
+    },
+    {
+      "source": "/api/booking",
+      "destination": "/api/unified.js?action=booking"
+    },
+    {
+      "source": "/api/quote",
+      "destination": "/api/unified.js?action=quote"
+    },
+    {
+      "source": "/api/admin",
+      "destination": "/api/unified.js?action=settings"
+    },
+    {
+      "source": "/api/utilities",
+      "destination": "/api/unified.js?action=sync-calendars"
     },
     {
       "source": "/api/(.*)",
-      "destination": "/api/$1.js"
+      "destination": "/api/unified.js?action=$1"
     },
     {
       "source": "/(.*)",

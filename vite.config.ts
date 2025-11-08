@@ -38,44 +38,56 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
-  // 🔧 PROXY CONFIGURATION - Routing API unificato per sviluppo
+  // 🔧 PROXY CONFIGURATION - API UNIFICATA (Consolidamento completo)
   server: {
     proxy: {
-      // Express backend locale (pricing, booking core)
-      '/api/pricing': {
-        target: 'http://127.0.0.1:3001',
+      // 🎯 API UNIFICATA - Tutte le chiamate API vanno alla stessa destinazione
+      '/api/unified': {
+        target: 'http://localhost:3000',
         changeOrigin: true,
         secure: false
+      },
+      
+      // 🔄 BACKWARD COMPATIBILITY - Redirect automatico verso API unificata
+      '/api/pricing': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace('/api/pricing', '/api/unified?action=pricing')
       },
       '/api/booking': {
-        target: 'http://127.0.0.1:3001',
-        changeOrigin: true,
-        secure: false
-      },
-      '/health': {
-        target: 'http://127.0.0.1:3001',
-        changeOrigin: true,
-        secure: false
-      },
-      // Altri endpoint Express se necessari
-      '/api/calendar': {
         target: 'http://localhost:3000',
         changeOrigin: true,
-        secure: false
+        secure: false,
+        rewrite: (path) => path.replace('/api/booking', '/api/unified?action=booking')
       },
-      // 💳 Stripe payment endpoints
-      '/api/stripe': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-        secure: false
-      },
-      // 🎛️ Admin panel endpoints (migrati da Vercel a Express)
       '/api/admin': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace('/api/admin', '/api/unified?action=settings')
+      },
+      '/api/quote': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace('/api/quote', '/api/unified?action=quote')
+      },
+      '/api/utilities': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace('/api/utilities', '/api/unified?action=sync-calendars')
+      },
+      
+      // 🏥 Health check endpoint
+      '/health': {
         target: 'http://localhost:3000',
         changeOrigin: true,
         secure: false
       }
-      // Architettura ora UNIFICATA: tutte le API gestite da Express locale
+      
+      // ✅ CONSOLIDAMENTO: 5 API → 1 API unificata con routing intelligente
     }
   }
 });

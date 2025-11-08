@@ -5,15 +5,16 @@ class AdminApiService {
   private readonly baseUrl: string;
 
   constructor() {
-    // 🎯 PRODUZIONE VERCEL - CONFIGURAZIONE PULITA
+    // 🎯 API UNIFICATA - CONFIGURAZIONE CONSOLIDATA
     this.baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://vincanto-backup.vercel.app/api';
-    console.log('🎯 AdminApiService PRODUZIONE:', this.baseUrl);
+    console.log('🎯 AdminApiService PRODUZIONE API UNIFICATA:', this.baseUrl);
   }
 
   private async request(endpoint: string, options: RequestInit = {}) {
     try {
-      const url = `${this.baseUrl}/admin?action=${endpoint}`;
-      console.log('🌐 API Request:', url);
+      // 🔄 NUOVO SISTEMA: tutti gli endpoint vanno verso API unificata
+      const url = `${this.baseUrl}/unified?action=${endpoint}`;
+      console.log('🌐 API Unificata Request:', url);
       
       const response = await fetch(url, {
         headers: {
@@ -28,10 +29,10 @@ class AdminApiService {
       }
 
       const data = await response.json();
-      console.log('✅ API Response:', endpoint, data);
+      console.log('✅ API Unificata Response:', endpoint, data);
       return data;
     } catch (error) {
-      console.error('❌ API Error:', endpoint, error);
+      console.error('❌ API Unificata Error:', endpoint, error);
       throw error;
     }
   }
@@ -53,10 +54,10 @@ class AdminApiService {
     }
   }
 
-  // Bookings Management
+  // Bookings Management (API Unificata)
   async getBookings() {
     try {
-      const data = await this.request('bookings');
+      const data = await this.request('booking');
       return data.bookings || [];
     } catch (error) {
       console.error('Error fetching bookings:', error);
@@ -65,21 +66,21 @@ class AdminApiService {
   }
 
   async createBooking(bookingData: any) {
-    // Mappa i dati frontend ai campi backend corretti
+    // Mappa i dati frontend ai campi backend corretti per API unificata
     const mappedData = {
-      guestName: bookingData.customer_name || '',
-      guestEmail: bookingData.customer_email || '',
-      guestPhone: bookingData.customer_phone || '',
-      checkIn: bookingData.check_in || '',
-      checkOut: bookingData.check_out || '', 
+      checkin: bookingData.check_in || bookingData.checkin || '',
+      checkout: bookingData.check_out || bookingData.checkout || '',
       guests: bookingData.guests || 1,
-      totalAmount: bookingData.total_amount || 0,
-      depositAmount: bookingData.deposit_amount || 0,
-      notes: bookingData.notes || ''
+      totalPrice: bookingData.total_amount || bookingData.totalPrice || 0,
+      customerName: bookingData.customer_name || bookingData.customerName || '',
+      customerEmail: bookingData.customer_email || bookingData.customerEmail || '',
+      customerPhone: bookingData.customer_phone || bookingData.customerPhone || '',
+      specialRequests: bookingData.notes || bookingData.specialRequests || '',
+      paymentMethod: bookingData.payment_method || bookingData.paymentMethod || 'pending'
     };
 
     try {
-      const response = await fetch(`${this.baseUrl}/admin?action=bookings`, {
+      const response = await fetch(`${this.baseUrl}/unified?action=booking`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(mappedData),
@@ -127,7 +128,7 @@ class AdminApiService {
 
   async updatePricingConfig(pricingData: any) {
     try {
-      const response = await fetch(`${this.baseUrl}/admin?action=update-pricing`, {
+      const response = await fetch(`${this.baseUrl}/unified?action=pricing`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -163,11 +164,11 @@ class AdminApiService {
     }
   }
 
-  // Calendar Management
+  // Calendar Management (API Unificata)
   async getCalendarData() {
     try {
-      const data = await this.request('calendars');
-      return data.calendars || [];
+      const data = await this.request('sync-calendars');
+      return data.calendarSources || [];
     } catch (error) {
       console.error('Error fetching calendar data:', error);
       return [];

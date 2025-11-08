@@ -152,8 +152,8 @@ export async function getBookingQuote(data: BookingQuoteRequest): Promise<Bookin
         // 🔄 PREZZI DINAMICI: Carica dal database admin tramite API quote
         let dynamicPricing = null;
         try {
-            // Usa l'API quote che legge i prezzi dal database admin
-            const quoteResponse = await fetch(`/api/quote?checkIn=${formatDateForApi(checkIn)}&checkOut=${formatDateForApi(checkOut)}&guests=${guests}&includeParking=${data.includeParking}`);
+            // 🎯 USA L'API UNIFICATA per il calcolo dei preventivi
+            const quoteResponse = await fetch(`/api/unified?action=quote&checkIn=${formatDateForApi(checkIn)}&checkOut=${formatDateForApi(checkOut)}&guests=${guests}&includeParking=${data.includeParking}`);
             if (quoteResponse.ok) {
                 const quoteData = await quoteResponse.json();
                 if (quoteData.success && quoteData.pricingConfig) {

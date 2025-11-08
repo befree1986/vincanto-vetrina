@@ -108,10 +108,11 @@ export const AdminSetup: React.FC = () => {
   const saveConfiguration = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/admin/setup', {
+      // 🎯 USA L'API UNIFICATA per il setup admin
+      const response = await fetch('/api/unified?action=settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(setupState)
+        body: JSON.stringify({ category: 'admin_setup', settings: setupState })
       });
 
       if (response.ok) {

@@ -253,23 +253,23 @@ const AdminPanelPro: React.FC = () => {
 
       setIsUpdatingPricing(true);
       console.log('� ADMIN SAVE - Dati da salvare:', JSON.stringify(pricingConfig, null, 2));
-      console.log('🔗 URL API chiamata:', `${window.location.origin}/api/admin?action=pricing-config`);
+      console.log('🔗 URL API Unificata chiamata:', `${window.location.origin}/api/unified?action=pricing`);
       
       const result = await adminApiService.updatePricingConfig(pricingConfig);
       
-      console.log('🎯 RISPOSTA API ADMIN:', JSON.stringify(result, null, 2));
+      console.log('🎯 RISPOSTA API UNIFICATA:', JSON.stringify(result, null, 2));
       
       if (result.success) {
         alert('✅ Configurazione prezzi salvata con successo!');
         console.log('✅ Prezzi salvati nel database:', result.saved_data || result.data);
         
-        // 🔥 TEST IMMEDIATO: Verifica che i prezzi siano salvati
+        // 🔥 TEST IMMEDIATO: Verifica che i prezzi siano salvati con API unificata
         console.log('🧪 TEST: Ricarico prezzi dal database per verifica...');
         setTimeout(async () => {
           try {
-            const testResponse = await fetch('/api/quote?checkIn=2025-12-01&checkOut=2025-12-02&guests=2&includeParking=true');
+            const testResponse = await fetch('/api/unified?action=quote&checkIn=2025-12-01&checkOut=2025-12-02&guests=2&includeParking=true');
             const testData = await testResponse.json();
-            console.log('🧪 TEST PREZZI POST-SALVATAGGIO:', testData);
+            console.log('🧪 TEST PREZZI POST-SALVATAGGIO (API Unificata):', testData);
           } catch (testError) {
             console.error('❌ Errore test post-salvataggio:', testError);
           }
