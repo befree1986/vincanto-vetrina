@@ -292,6 +292,88 @@ export default async function handler(req, res) {
           categories: Object.keys(cleanSettings)
         });
 
+      case 'init-database':
+        // POST /api/admin?action=init-database - Inizializza struttura database
+        if (req.method !== 'POST') {
+          return res.status(405).json({ success: false, error: 'Metodo non consentito' });
+        }
+
+        console.log('🏗️ Avvio inizializzazione struttura database...');
+        
+        try {
+          // Crea tabella bookings
+          await pool.query(`
+            CREATE TABLE IF NOT EXISTS bookings (
+              id SERIAL PRIMARY KEY,
+              booking_id VARCHAR(50) UNIQUE NOT NULL,
+              check_in DATE NOT NULL,
+              check_out DATE NOT NULL,
+              guests INTEGER NOT NULL,
+              adults INTEGER,
+              children INTEGER DEFAULT 0,
+              first_name VARCHAR(100),
+              last_name VARCHAR(100),
+              email VARCHAR(255),
+              phone VARCHAR(50),
+              total_amount DECIMAL(10,2),
+              deposit_amount DECIMAL(10,2),
+              notes TEXT,
+              status VARCHAR(50) DEFAULT 'pending',
+              payment_status VARCHAR(50) DEFAULT 'pending',
+              created_at TIMESTAMP DEFAULT NOW(),
+              updated_at TIMESTAMP DEFAULT NOW()
+            )
+          `);
+
+          // Crea tabella blocked_dates
+          await pool.query(`
+            CREATE TABLE IF NOT EXISTS blocked_dates (
+              id SERIAL PRIMARY KEY,
+              date_blocked DATE NOT NULL UNIQUE,
+              reason VARCHAR(255),
+              booking_id VARCHAR(50),
+              created_at TIMESTAMP DEFAULT NOW()
+            )
+          `);
+
+          // Crea indici per performance
+          await pool.query(`
+            CREATE INDEX IF NOT EXISTS idx_bookings_dates ON bookings(check_in, check_out)
+          `);
+          await pool.query(`
+            CREATE INDEX IF NOT EXISTS idx_blocked_dates_date ON blocked_dates(date_blocked)
+          `);
+          await pool.query(`
+            CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status)
+          `);
+
+          // Verifica tabelle create
+          const tablesCheck = await pool.query(`
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_schema = 'public' 
+            AND table_name IN ('bookings', 'blocked_dates', 'admin_settings')
+          `);
+
+          console.log('✅ Struttura database inizializzata');
+
+          return res.status(200).json({
+            success: true,
+            message: 'Database inizializzato con successo',
+            tablesCreated: ['bookings', 'blocked_dates'],
+            indicesCreated: ['idx_bookings_dates', 'idx_blocked_dates_date', 'idx_bookings_status'],
+            existingTables: tablesCheck.rows.map(row => row.table_name)
+          });
+
+        } catch (dbError) {
+          console.error('❌ Errore inizializzazione database:', dbError);
+          return res.status(500).json({
+            success: false,
+            error: 'Errore durante inizializzazione database',
+            message: dbError.message
+          });
+        }
+
       case 'extra-services':
         // GET /api/admin-unified?action=extra-services - Lista servizi
         // POST /api/admin-unified?action=extra-services - Crea/aggiorna servizio
@@ -361,7 +443,7 @@ export default async function handler(req, res) {
       default:
         return res.status(400).json({ 
           success: false, 
-          error: 'Azione non riconosciuta. Usa: login, settings, update-pricing, reset-pricing, cleanup-database, complete-cleanup, extra-services' 
+          error: 'Azione non riconosciuta. Usa: login, settings, update-pricing, reset-pricing, cleanup-database, complete-cleanup, init-database, extra-services' 
         });
     }
   } catch (error) {

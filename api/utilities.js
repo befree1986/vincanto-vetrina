@@ -52,6 +52,70 @@ export default async function handler(req, res) {
           syncedAt: new Date().toISOString()
         });
 
+      case 'database-status':
+        // GET /api/utilities?action=database-status - Verifica stato database
+        if (req.method !== 'GET') {
+          return res.status(405).json({ success: false, error: 'Metodo non consentito' });
+        }
+
+        try {
+          // Verifica esistenza tabelle essenziali
+          const tablesCheck = await pool.query(`
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_schema = 'public' 
+            AND table_name IN ('bookings', 'blocked_dates', 'admin_settings')
+          `);
+
+          const existingTables = tablesCheck.rows.map(row => row.table_name);
+          const requiredTables = ['bookings', 'blocked_dates', 'admin_settings'];
+          const missingTables = requiredTables.filter(table => !existingTables.includes(table));
+
+          // Conta record in ciascuna tabella
+          const tableCounts = {};
+          for (const table of existingTables) {
+            try {
+              const countResult = await pool.query(`SELECT COUNT(*) as count FROM ${table}`);
+              tableCounts[table] = parseInt(countResult.rows[0].count);
+            } catch (error) {
+              tableCounts[table] = 'Error: ' + error.message;
+            }
+          }
+
+          // Verifica configurazioni
+          let configurationsCount = 0;
+          if (existingTables.includes('admin_settings')) {
+            const configResult = await pool.query('SELECT COUNT(*) as count FROM admin_settings');
+            configurationsCount = parseInt(configResult.rows[0].count);
+          }
+
+          const isFullyConfigured = missingTables.length === 0 && configurationsCount > 0;
+
+          return res.status(200).json({
+            success: true,
+            status: isFullyConfigured ? 'ready' : 'incomplete',
+            database: {
+              existingTables,
+              missingTables,
+              tableCounts,
+              configurationsCount,
+              totalTables: existingTables.length,
+              requiredTables: requiredTables.length
+            },
+            ready: isFullyConfigured,
+            recommendations: missingTables.length > 0 ? 
+              ['Eseguire /api/admin?action=init-database per creare tabelle mancanti'] : 
+              ['Database completamente configurato']
+          });
+
+        } catch (error) {
+          return res.status(500).json({
+            success: false,
+            error: 'Errore verifica database',
+            message: error.message
+          });
+        }
+
       case 'calendar-setup':
         // POST /api/utilities-unified?action=calendar-setup
         if (req.method !== 'POST') {
