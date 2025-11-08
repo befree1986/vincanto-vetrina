@@ -84,8 +84,8 @@ export default async function handler(req, res) {
             
             // Poi inserisce il nuovo record
             await pool.query(`
-              INSERT INTO admin_settings (category, setting_key, setting_value, updated_at)
-              VALUES ($1, $2, $3, NOW())
+              INSERT INTO admin_settings (category, setting_key, setting_value, setting_type, updated_at)
+              VALUES ($1, $2, $3, 'string', NOW())
             `, [category, key, value]);
           }
 
@@ -125,8 +125,8 @@ export default async function handler(req, res) {
             
             // Poi inserisce il nuovo record
             await pool.query(`
-              INSERT INTO admin_settings (category, setting_key, setting_value, updated_at)
-              VALUES ('pricing', $1, $2, NOW())
+              INSERT INTO admin_settings (category, setting_key, setting_value, setting_type, updated_at)
+              VALUES ('pricing', $1, $2, 'string', NOW())
             `, [key, value]);
           }
         }
@@ -163,8 +163,8 @@ export default async function handler(req, res) {
           
           // Poi inserisce il nuovo record
           await pool.query(`
-            INSERT INTO admin_settings (category, setting_key, setting_value, updated_at)
-            VALUES ('pricing', $1, $2, NOW())
+            INSERT INTO admin_settings (category, setting_key, setting_value, setting_type, updated_at)
+            VALUES ('pricing', $1, $2, 'number', NOW())
           `, [key, value]);
         }
 
@@ -213,8 +213,8 @@ export default async function handler(req, res) {
           // Se non esiste, inseriscilo
           if (existingResult.rows.length === 0) {
             await pool.query(`
-              INSERT INTO admin_settings (category, setting_key, setting_value, updated_at)
-              VALUES ('pricing', $1, $2, NOW())
+              INSERT INTO admin_settings (category, setting_key, setting_value, setting_type, updated_at)
+              VALUES ('pricing', $1, $2, 'number', NOW())
             `, [key, defaultValue]);
           }
         }
