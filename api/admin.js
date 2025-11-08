@@ -1,6 +1,5 @@
 // API UNIFICATA ADMIN - Gestisce tutte le operazioni amministrative
 import { Pool } from 'pg';
-import bcrypt from 'bcrypt';
 
 // Database connection
 const pool = new Pool({

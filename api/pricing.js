@@ -240,9 +240,9 @@ export default async function handler(req, res) {
 
         // Calcolo notti
         const diffTime = Math.abs(endDate - startDate);
-        const nights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const nightsCount = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-        if (nights < 1) {
+        if (nightsCount < 1) {
           return res.status(400).json({ 
             success: false, 
             error: 'Almeno 1 notte richiesta' 
@@ -254,16 +254,17 @@ export default async function handler(req, res) {
         // Calcola con sconti durata
         const priceCalculation = calculateGroupPrice(qGuests, quotePricing);
         const pricePerNight = priceCalculation.totalPerNight;
-        let baseCost = nights * pricePerNight;
+        // Calculate base cost with per-night pricing
+        let baseCost = nightsCount * pricePerNight;
         
         let appliedDiscount = 0;
         let discountType = '';
         let discountAmount = 0;
         
-        if (nights >= 30 && quotePricing.monthlyDiscount > 0) {
+        if (nightsCount >= 30 && quotePricing.monthlyDiscount > 0) {
           appliedDiscount = quotePricing.monthlyDiscount;
           discountType = 'Sconto Mensile (30+ notti)';
-        } else if (nights >= 7 && quotePricing.weeklyDiscount > 0) {
+        } else if (nightsCount >= 7 && quotePricing.weeklyDiscount > 0) {
           appliedDiscount = quotePricing.weeklyDiscount;
           discountType = 'Sconto Settimanale (7+ notti)';
         }
@@ -274,7 +275,7 @@ export default async function handler(req, res) {
         }
         
         const cleaningCost = quotePricing.cleaningFee;
-        const parkingCost = qParking ? nights * quotePricing.parkingFee : 0;
+        const parkingCost = qParking ? nightsCount * quotePricing.parkingFee : 0;
         
         // Tassa di soggiorno
         let guestsSubjectToTax = adults || qGuests;
@@ -283,7 +284,7 @@ export default async function handler(req, res) {
           guestsSubjectToTax = (adults || qGuests - qChildren) + childrenOver12;
         }
         
-        const touristTax = guestsSubjectToTax * Math.min(nights, 7) * quotePricing.touristTaxAdult;
+        const touristTax = guestsSubjectToTax * Math.min(nightsCount, 7) * quotePricing.touristTaxAdult;
         const totalAmount = baseCost + cleaningCost + parkingCost + touristTax;
         const depositAmount = totalAmount * 0.30;
 
@@ -292,7 +293,7 @@ export default async function handler(req, res) {
           quote: {
             checkIn,
             checkOut,
-            nights,
+            nights: nightsCount,
             guests: qGuests,
             adults: adults || qGuests,
             children: qChildren || 0,
