@@ -295,6 +295,7 @@ export default async function handler(req, res) {
           inserted: totalInserted,
           categories: Object.keys(cleanSettings)
         });
+        break;
 
       case 'init-database':
         // POST /api/admin?action=init-database - Inizializza struttura database
