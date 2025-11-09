@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import './AdminPanelPro.css';
 import '../styles/AdminSuperAdmin.css';
+import '../styles/AdminUXResponsive.css';
 import AdminApiService from '../services/adminApiService';
 import AdminPricing from '../components/admin/AdminPricing';
 import { ExtraService } from '../hooks/useExtraServices';
@@ -1379,31 +1380,38 @@ const AdminPanelPro: React.FC = () => {
   // === RENDER DEBUG PRINCIPALE ===
   console.log('🎯 Rendering main admin panel...');
   
-  // === RENDER ADMIN PANEL SEMPLIFICATO ===
+  // === RENDER ADMIN PANEL RESPONSIVE ===
   return (
-    <div className="admin-panel-pro">
-      {/* Header Professionale */}
+    <div className="admin-panel-pro admin-container">
+      {/* Header Responsive */}
       <header className="admin-header">
         <div className="admin-header-left">
           <h1>🏡 Vincanto Admin</h1>
-          <span className="admin-version">v2.0 Pro</span>
+          <span className="admin-version admin-badge admin-badge-info">v2.0 Pro</span>
         </div>
         
-        <div className="admin-header-right">
-          <div className="admin-user-info">
-            <span>👤 Administrator</span>
+        <div className="admin-header-actions">
+          <div className="admin-flex admin-items-center admin-gap-md">
+            {/* Indicatore Status */}
+            <div className={`admin-badge ${isLoadingData ? 'admin-badge-warning' : 'admin-badge-success'}`}>
+              {isLoadingData ? '⏳ Loading' : '✅ Online'}
+            </div>
             
-            {/* Indicatore SuperAdmin attivo */}
-            <div className="admin-super-indicator" title="Modalità SuperAdmin Attiva">
-              ⚡ SuperAdmin
+            {/* User Info */}
+            <div className="admin-flex admin-items-center admin-gap-sm">
+              <span className="admin-text-muted admin-hidden-mobile">👤 Administrator</span>
+              <div className="admin-badge admin-badge-info" title="Modalità SuperAdmin Attiva">
+                ⚡ SuperAdmin
+              </div>
             </div>
           </div>
           
           <button 
-            className="admin-btn-secondary"
+            className="admin-btn admin-btn-secondary"
             onClick={() => setIsAuthenticated(false)}
           >
-            Logout
+            <span className="admin-hidden-mobile">📤 Logout</span>
+            <span className="admin-visible-mobile">📤</span>
           </button>
         </div>
       </header>
@@ -1491,18 +1499,25 @@ const AdminPanelPro: React.FC = () => {
         </div>
       </nav>
 
-      {/* Contenuto Principale */}
-      <main className="admin-content">
-        {error && <div className="admin-error-banner">{error}</div>}
+      {/* Contenuto Principale Responsive */}
+      <main className="admin-main">
+        {error && (
+          <div className="admin-section admin-text-danger">
+            <div className="admin-card">
+              <h4>⚠️ Errore di Sistema</h4>
+              <p>{error}</p>
+            </div>
+          </div>
+        )}
 
-        {/* Dashboard con SOLO Dati Backend Reali */}
+        {/* Dashboard con Dati Backend Reali */}
         {activeTab === 'dashboard' && (
-          <div className="admin-dashboard">
-            <h2>� Dashboard Backend Reale {isLoadingData && '(Caricamento...)'}</h2>
+          <div className="admin-section admin-animate-fade-in">
+            <h2>📊 Dashboard Live {isLoadingData && <span className="admin-loading"><div className="admin-spinner"></div> Caricamento...</span>}</h2>
             
             {/* Statistiche Principali */}
-            <div className="admin-section">
-              <h3>� Statistiche Live (Database)</h3>
+            <div className="admin-mb-xl">
+              <h3>📊 Statistiche Live (Database)</h3>
               <div className="admin-stats-grid">
                 <div className="admin-stat-card">
                   <h3>Prenotazioni Totali</h3>
@@ -1531,8 +1546,8 @@ const AdminPanelPro: React.FC = () => {
             </div>
 
             {/* Statistiche Aggiuntive */}
-            <div className="admin-section">
-              <h3>� Metriche Avanzate</h3>
+            <div className="admin-mb-xl">
+              <h3>📈 Metriche Avanzate</h3>
               <div className="admin-stats-grid">
                 <div className="admin-stat-card">
                   <h3>Notifiche Attive</h3>
@@ -1561,36 +1576,48 @@ const AdminPanelPro: React.FC = () => {
             </div>
 
             {/* Prossime Prenotazioni */}
-            <div className="admin-pricing-section">
+            <div className="admin-mb-xl">
               <h3>📅 Prossime Prenotazioni</h3>
-              <div className="admin-pricing-card">
-                <div className="existing-services">
-                  {calendarEvents.slice(0, 5).map((event, index) => (
-                    <div key={event.id || index} className="service-row">
-                      <span>{event.title}</span>
-                      <span>{new Date(event.start).toLocaleDateString('it-IT')}</span>
-                      <span className={`platform-badge ${event.source}`}>
-                        {event.source === 'airbnb' && '🏠 Airbnb'}
-                        {event.source === 'booking' && '🏨 Booking.com'}
-                        {event.source === 'expedia' && '✈️ Expedia'}
-                        {event.source === 'direct' && '📞 Diretto'}
-                        {event.source === 'other' && '📅 Altro'}
-                      </span>
-                      <span>€{event.totalPrice}</span>
-                    </div>
-                  ))}
-                  
-                  {calendarEvents.length === 0 && !isLoadingCalendar && (
-                    <div className="service-row">
-                      <span className="no-data-message">
-                        Nessuna prenotazione trovata nel calendario Google
-                      </span>
+              <div className="admin-card">
+                <div className="admin-table-container">
+                  {calendarEvents.length > 0 ? (
+                    <table className="admin-table">
+                      <thead>
+                        <tr>
+                          <th>Evento</th>
+                          <th>Data</th>
+                          <th>Piattaforma</th>
+                          <th>Prezzo</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {calendarEvents.slice(0, 5).map((event, index) => (
+                          <tr key={event.id || index}>
+                            <td><strong>{event.title}</strong></td>
+                            <td>{new Date(event.start).toLocaleDateString('it-IT')}</td>
+                            <td>
+                              <span className={`admin-badge admin-badge-${event.source === 'airbnb' ? 'info' : event.source === 'booking' ? 'success' : 'warning'}`}>
+                                {event.source === 'airbnb' && '🏠 Airbnb'}
+                                {event.source === 'booking' && '🏨 Booking.com'}
+                                {event.source === 'expedia' && '✈️ Expedia'}
+                                {event.source === 'direct' && '📞 Diretto'}
+                                {event.source === 'other' && '📅 Altro'}
+                              </span>
+                            </td>
+                            <td><strong>€{event.totalPrice}</strong></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  ) : (
+                    <div className="admin-text-center admin-text-muted">
+                      <p>📊 Nessuna prenotazione trovata nel calendario Google</p>
                     </div>
                   )}
                 </div>
                 
-                <div className="admin-pricing-actions dashboard-actions">
-                  <button className="admin-btn-secondary" onClick={() => loadCalendarData()}>
+                <div className="admin-flex admin-gap-md admin-mb-0 admin-mt-lg">
+                  <button className="admin-btn admin-btn-secondary" onClick={() => loadCalendarData()}>
                     🔄 Ricarica Calendario
                   </button>
                   <button className="admin-btn-secondary" onClick={() => setActiveTab('calendari')}>
