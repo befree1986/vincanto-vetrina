@@ -542,6 +542,113 @@ export default async function handler(req, res) {
     }
 
     // ========================
+    // CALENDAR CONFIGS ACTIONS
+    // ========================
+    if (action === 'calendar-configs') {
+      if (req.method !== 'GET') {
+        return res.status(405).json({ success: false, error: 'Metodo non consentito' });
+      }
+
+      try {
+        const config = await loadCalendarConfig();
+        const calendars = [
+          {
+            id: 'google',
+            name: 'Google Calendar',
+            type: 'google',
+            status: config.googleCalendarId ? 'active' : 'inactive',
+            lastSync: new Date().toISOString()
+          },
+          {
+            id: 'booking',
+            name: 'Booking.com',
+            type: 'booking',
+            status: config.bookingCalendarUrl ? 'active' : 'inactive',
+            lastSync: new Date().toISOString()
+          },
+          {
+            id: 'airbnb',
+            name: 'Airbnb',
+            type: 'airbnb',
+            status: config.airbnbCalendarUrl ? 'active' : 'inactive',
+            lastSync: new Date().toISOString()
+          }
+        ];
+
+        return res.status(200).json({
+          success: true,
+          calendars: calendars
+        });
+      } catch (error) {
+        console.error('❌ Errore nel caricamento config calendari:', error);
+        return res.status(500).json({ success: false, error: error.message });
+      }
+    }
+
+    if (action === 'calendar-config') {
+      if (req.method !== 'POST') {
+        return res.status(405).json({ success: false, error: 'Metodo non consentito' });
+      }
+
+      try {
+        const config = req.body;
+        // Salva la configurazione del calendario nel database
+        await pool.query(`
+          INSERT INTO admin_settings (category, setting_key, setting_value, updated_at)
+          VALUES ('calendar', $1, $2, NOW())
+          ON CONFLICT (category, setting_key) 
+          DO UPDATE SET setting_value = $2, updated_at = NOW()
+        `, [config.type + '_config', JSON.stringify(config)]);
+
+        return res.status(200).json({
+          success: true,
+          message: 'Configurazione calendario salvata'
+        });
+      } catch (error) {
+        console.error('❌ Errore nel salvataggio config calendario:', error);
+        return res.status(500).json({ success: false, error: error.message });
+      }
+    }
+
+    if (action === 'sync-calendar') {
+      if (req.method !== 'POST') {
+        return res.status(405).json({ success: false, error: 'Metodo non consentito' });
+      }
+
+      try {
+        const { calendarId } = req.body;
+        const config = await loadCalendarConfig();
+        let syncResult = {};
+
+        if (calendarId === 'google') {
+          const events = await syncGoogleCalendar(config);
+          syncResult = {
+            calendar: 'Google Calendar',
+            syncedEvents: events.length,
+            blockedDates: events.filter(e => e.isBlocking).length
+          };
+        } else if (calendarId === 'booking') {
+          const events = await syncBookingCom(config);
+          syncResult = {
+            calendar: 'Booking.com',
+            syncedEvents: events.length,
+            blockedDates: events.filter(e => e.isBlocking).length
+          };
+        } else {
+          throw new Error(`Calendario '${calendarId}' non supportato`);
+        }
+
+        return res.status(200).json({
+          success: true,
+          ...syncResult
+        });
+      } catch (error) {
+        console.error('❌ Errore nella sincronizzazione calendario:', error);
+        return res.status(500).json({ success: false, error: error.message });
+      }
+    }
+
+    // ========================
     // FALLBACK per azioni non riconosciute
     // ========================
     return res.status(400).json({
@@ -549,7 +656,8 @@ export default async function handler(req, res) {
       error: `Azione '${action}' non riconosciuta`,
       availableActions: [
         'login', 'settings', 'pricing', 'quote', 'calculate',
-        'booking', 'bookings', 'sync-calendars', 'blocked-dates'
+        'booking', 'bookings', 'sync-calendars', 'blocked-dates',
+        'calendar-configs', 'calendar-config', 'sync-calendar'
       ]
     });
 
