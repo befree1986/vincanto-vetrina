@@ -41,14 +41,18 @@ export const useDynamicPricing = (): PricingData => {
             pricingConfig: data.pricingConfig
           });
           
-          if (data.success && data.pricingConfig) {
+          if (data.success && data.pricing) {
+            // L'API restituisce i dati in data.pricing.config, non data.pricingConfig
+            const config = data.pricing.config || {};
+            console.log('🔍 DYNAMIC PRICING: Configurazione trovata:', config);
+            
             setPricing(prev => ({
               ...prev,
-              basePrice: data.pricingConfig.basePrice || prev.basePrice,
-              parkingFee: data.pricingConfig.parkingFee || prev.parkingFee,
-              cleaningFee: data.pricingConfig.cleaningFee || prev.cleaningFee,
-              touristTax: data.pricingConfig.touristTax || prev.touristTax,
-              additionalGuestPrice: data.pricingConfig.additionalGuestPrice || prev.additionalGuestPrice,
+              basePrice: parseFloat(config.base_price || config.basePrice) || prev.basePrice,
+              parkingFee: parseFloat(config.parking_fee || config.parkingFee) || prev.parkingFee,
+              cleaningFee: parseFloat(config.cleaning_fee || config.cleaningFee) || prev.cleaningFee,
+              touristTax: parseFloat(config.tourist_tax_adult || config.touristTaxAdult) || prev.touristTax,
+              additionalGuestPrice: parseFloat(config.additional_guest_3to4 || config.additionalGuest3to4) || prev.additionalGuestPrice,
               loading: false,
               error: null
             }));

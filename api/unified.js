@@ -528,16 +528,82 @@ export default async function handler(req, res) {
 
     if (action === 'blocked-dates') {
       if (req.method === 'GET') {
-        const result = await pool.query(`
-          SELECT date, source, updated_at 
-          FROM blocked_dates 
-          ORDER BY date DESC
-        `);
-        
-        return res.status(200).json({
-          success: true,
-          blockedDates: result.rows
-        });
+        try {
+          const result = await pool.query(`
+            SELECT id, start_date, end_date, reason, created_at 
+            FROM blocked_dates 
+            ORDER BY start_date DESC
+          `);
+          
+          return res.status(200).json({
+            success: true,
+            blockedDates: result.rows
+          });
+        } catch (error) {
+          console.error('❌ Errore nel caricamento date bloccate:', error);
+          return res.status(500).json({ 
+            success: false, 
+            error: 'Errore interno del server',
+            details: error.message 
+          });
+        }
+      }
+
+      if (req.method === 'POST') {
+        try {
+          const { start_date, end_date, reason } = req.body;
+          
+          const result = await pool.query(`
+            INSERT INTO blocked_dates (start_date, end_date, reason, created_at)
+            VALUES ($1, $2, $3, NOW())
+            RETURNING *
+          `, [start_date, end_date, reason || 'Blocco manuale']);
+          
+          return res.status(200).json({
+            success: true,
+            message: 'Data bloccata aggiunta con successo',
+            blockedDate: result.rows[0]
+          });
+        } catch (error) {
+          console.error('❌ Errore nell\'aggiunta date bloccate:', error);
+          return res.status(500).json({ 
+            success: false, 
+            error: 'Errore interno del server',
+            details: error.message 
+          });
+        }
+      }
+
+      if (req.method === 'DELETE') {
+        try {
+          const id = req.url.split('/').pop(); // Estrae ID dalla URL
+          
+          const result = await pool.query(`
+            DELETE FROM blocked_dates 
+            WHERE id = $1
+            RETURNING *
+          `, [id]);
+          
+          if (result.rows.length === 0) {
+            return res.status(404).json({
+              success: false,
+              error: 'Data bloccata non trovata'
+            });
+          }
+          
+          return res.status(200).json({
+            success: true,
+            message: 'Data bloccata rimossa con successo',
+            blockedDate: result.rows[0]
+          });
+        } catch (error) {
+          console.error('❌ Errore nella rimozione date bloccate:', error);
+          return res.status(500).json({ 
+            success: false, 
+            error: 'Errore interno del server',
+            details: error.message 
+          });
+        }
       }
     }
 
