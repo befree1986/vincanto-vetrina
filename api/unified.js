@@ -17,7 +17,7 @@ const pool = new Pool({
  * Funzione unificata per calcolare il prezzo con sistema BASE + AGGIUNTIVE
  */
 function calculateGroupPrice(guests, config) {
-  const basePrice = (config.basePrice || config.priceGroup1to2 || 75) * 2;
+  const basePrice = (config.base_price || config.basePrice || config.priceGroup1to2 || 75) * 2;
   let additionalCost = 0;
   let breakdown = `Base 2 persone: €${basePrice}`;
   
@@ -35,7 +35,7 @@ function calculateGroupPrice(guests, config) {
   // 3-4 persone
   if (remainingGuests > 0) {
     const guestsInRange = Math.min(remainingGuests, 2);
-    const costPerGuest = config.additionalGuest3to4 || config.priceGroup3to4 || 30;
+    const costPerGuest = config.additional_guest_3to4 || config.additionalGuest3to4 || config.priceGroup3to4 || 30;
     const rangeCost = guestsInRange * costPerGuest;
     additionalCost += rangeCost;
     breakdown += ` + 3-4 persone: €${rangeCost} (${guestsInRange}×€${costPerGuest})`;
@@ -45,7 +45,7 @@ function calculateGroupPrice(guests, config) {
   // 5-6 persone
   if (remainingGuests > 0) {
     const guestsInRange = Math.min(remainingGuests, 2);
-    const costPerGuest = config.additionalGuest5to6 || config.priceGroup5to6 || 25;
+    const costPerGuest = config.additional_guest_5to6 || config.additionalGuest5to6 || config.priceGroup5to6 || 25;
     const rangeCost = guestsInRange * costPerGuest;
     additionalCost += rangeCost;
     breakdown += ` + 5-6 persone: €${rangeCost} (${guestsInRange}×€${costPerGuest})`;
@@ -55,7 +55,7 @@ function calculateGroupPrice(guests, config) {
   // 7-8 persone
   if (remainingGuests > 0) {
     const guestsInRange = Math.min(remainingGuests, 2);
-    const costPerGuest = config.additionalGuest7to8 || config.priceGroup7to8 || 20;
+    const costPerGuest = config.additional_guest_7to8 || config.additionalGuest7to8 || config.priceGroup7to8 || 20;
     const rangeCost = guestsInRange * costPerGuest;
     additionalCost += rangeCost;
     breakdown += ` + 7-8 persone: €${rangeCost} (${guestsInRange}×€${costPerGuest})`;
