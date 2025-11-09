@@ -529,6 +529,18 @@ export default async function handler(req, res) {
     if (action === 'blocked-dates') {
       if (req.method === 'GET') {
         try {
+          // Verifica se la tabella esiste e creala se necessario
+          await pool.query(`
+            CREATE TABLE IF NOT EXISTS blocked_dates (
+              id SERIAL PRIMARY KEY,
+              start_date DATE NOT NULL,
+              end_date DATE NOT NULL,
+              reason TEXT DEFAULT 'Blocco manuale',
+              created_at TIMESTAMP DEFAULT NOW(),
+              updated_at TIMESTAMP DEFAULT NOW()
+            );
+          `);
+          
           const result = await pool.query(`
             SELECT id, start_date, end_date, reason, created_at 
             FROM blocked_dates 
@@ -537,7 +549,8 @@ export default async function handler(req, res) {
           
           return res.status(200).json({
             success: true,
-            blockedDates: result.rows
+            blockedDates: result.rows,
+            count: result.rows.length
           });
         } catch (error) {
           console.error('❌ Errore nel caricamento date bloccate:', error);
