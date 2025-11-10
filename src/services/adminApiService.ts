@@ -118,8 +118,8 @@ class AdminApiService {
   // Pricing Management
   async getPricingConfig() {
     try {
-      const data = await this.request('settings');
-      return data.settings?.pricing || {};
+      const data = await this.request('pricing-config');
+      return data.config || data.pricing || {};
     } catch (error) {
       console.error('Error fetching pricing config:', error);
       return { success: false, data: [] };
@@ -128,7 +128,7 @@ class AdminApiService {
 
   async updatePricingConfig(pricingData: any) {
     try {
-      const response = await fetch(`${this.baseUrl}/unified?action=pricing`, {
+      const response = await fetch(`${this.baseUrl}/unified?action=pricing-config`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

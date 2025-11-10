@@ -367,13 +367,11 @@ export const BookingStep3: React.FC<BookingStep3Props> = ({ onBack }) => {
                 onChange={(e) => booking.setFormData({ payment_method: e.target.value as any })}
               />
               <div className="payment-method-content">
-                <span className="icon">�</span>
+                <span className="icon">💙</span>
                 <div className="method-info">
-                  <span className="method-name">PayPal - Antonio Guida</span>
+                  <span className="method-name">PayPal</span>
                   <span className="method-description">
-                    Pagamento diretto sicuro e immediato
-                    <br/>
-                    <small>🔗 paypal.me/AntonioGuida320</small>
+                    Pagamento sicuro e immediato
                   </span>
                 </div>
               </div>
@@ -398,38 +396,14 @@ export const BookingStep3: React.FC<BookingStep3Props> = ({ onBack }) => {
           </div>
         </div>
 
-        {/* Informazioni PayPal specifiche */}
+        {/* Informazioni PayPal specifiche - NASCOSTE PER RICHIESTA UTENTE */}
         {booking.formData.payment_method === 'paypal' && (
           <div className="payment-info-section">
             <div className="paypal-info">
-              <h5>
-                <span className="icon">💙</span>
-                Informazioni Pagamento PayPal
-              </h5>
-              <div className="info-content">
-                <p>
-                  <strong>🔗 Link PayPal:</strong> 
-                  <a href="https://www.paypal.me/AntonioGuida320" target="_blank" rel="noopener noreferrer">
-                    paypal.me/AntonioGuida320
-                  </a>
-                </p>
-                <p>
-                  <strong>💰 Importo:</strong> {' '}
-                  {booking.quote && (
-                    booking.formData.payment_type === 'deposit' 
-                      ? `€${(booking.quote.totalAmount * 0.30).toFixed(2)} (Acconto 30%)`
-                      : `€${booking.quote.totalAmount?.toFixed(2)} (Pagamento completo)`
-                  )}
-                </p>
-                <p>
-                  <strong>📧 Dopo il pagamento:</strong> Riceverai conferma via email
-                </p>
-                <div className="paypal-note">
-                  <small>
-                    💡 <strong>Nota:</strong> Il link PayPal si aprirà automaticamente quando confermi la prenotazione.
-                    Completa il pagamento per finalizzare la tua prenotazione.
-                  </small>
-                </div>
+              <div className="paypal-note">
+                <small>
+                  💡 <strong>Nota:</strong> Il pagamento PayPal si aprirà automaticamente quando confermi la prenotazione.
+                </small>
               </div>
             </div>
           </div>
