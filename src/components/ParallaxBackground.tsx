@@ -11,6 +11,12 @@ const ParallaxBackground: React.FC<ParallaxBackgroundProps> = ({ imageUrl, child
     if (typeof window === 'undefined') return;
     const isMobile = window.innerWidth < 769;
 
+    // Set CSS custom property for background image
+    const backgroundElement = document.querySelector('.parallax-background') as HTMLElement;
+    if (backgroundElement) {
+      backgroundElement.style.setProperty('--bg-image', `url(${imageUrl})`);
+    }
+
     if (isMobile) {
       const handleScroll = () => {
         const offset = window.scrollY;
@@ -29,7 +35,6 @@ const ParallaxBackground: React.FC<ParallaxBackgroundProps> = ({ imageUrl, child
     <div className="parallax-wrapper">
       <div
         className="parallax-background"
-        style={{ backgroundImage: `url(${imageUrl})` }}
       ></div>
       <div className="parallax-content">
         {children}

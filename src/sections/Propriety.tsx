@@ -153,7 +153,6 @@ const Propriety: React.FC = () => {
               onTouchStart={handleTouchStart}
               onTouchEnd={handleTouchEnd}
             >
->
               <button
                 className="lightbox-close"
                 onClick={closeLightbox}
