@@ -7,7 +7,7 @@ import '../styles/AdminUXResponsive.css';
 import AdminApiService from '../services/adminApiService';
 import { ExtraService } from '../hooks/useExtraServices';
 
-const AdminPanelPro = () => {
+const AdminPanelPro = (): JSX.Element => {
   console.log('🚀 AdminPanelPro component rendering...');
   
   // Stati principali
@@ -1295,7 +1295,6 @@ const AdminPanelPro = () => {
       console.error('Errore caricamento eventi Google:', error);
       alert('❌ Errore nel caricamento eventi Google Calendar');
       return [];
-    }
     }
   };
 
@@ -3917,10 +3916,11 @@ const AdminPanelPro = () => {
             </div>
           </div>
         )}
+
+        {/* Fine sezioni amministrative */}
       </main>
     </div>
   );
 };
 
-// Fine del componente
 export default AdminPanelPro;
