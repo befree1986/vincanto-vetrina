@@ -227,6 +227,7 @@ export default async function handler(req, res) {
             success: true,
             bookings: result.rows.map(booking => ({
               ...booking,
+              total_amount: parseFloat(booking.total_amount), // Converti stringa in numero
               platform: 'direct', // Default platform
               created_at: booking.created_at.toISOString()
             }))
