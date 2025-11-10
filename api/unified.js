@@ -652,25 +652,142 @@ export default async function handler(req, res) {
     // PRICING CONFIGURATION SECTION
     // ========================================
     if (action === 'pricing-config') {
-      return res.status(200).json({
-        success: true,
-        pricing: {
-          priceGroup1to2: 75,
-          priceGroup3to4: 95,
-          priceGroup5to6: 115,
-          priceGroup7to8: 135,
-          cleaningFee: 50,
-          parkingFee: 20,
-          touristTaxAdult: 2.00,
-          touristTaxChild: 0,
-          weekendSurcharge: 0,
-          weeklyDiscount: 10,
-          monthlyDiscount: 15,
-          minStay: 2,
-          maxStay: 14,
-          maxGuests: 8
+      if (req.method === 'GET') {
+        try {
+          // Ottieni configurazione prezzi dal database
+          const result = await pool.query('SELECT * FROM pricing_config ORDER BY id DESC LIMIT 1');
+          
+          if (result.rows.length > 0) {
+            const pricing = result.rows[0];
+            return res.status(200).json({
+              success: true,
+              pricing: {
+                priceGroup1to2: parseFloat(pricing.price_group_1to2) || 75,
+                priceGroup3to4: parseFloat(pricing.price_group_3to4) || 95,
+                priceGroup5to6: parseFloat(pricing.price_group_5to6) || 115,
+                priceGroup7to8: parseFloat(pricing.price_group_7to8) || 135,
+                cleaningFee: parseFloat(pricing.cleaning_fee) || 50,
+                parkingFee: parseFloat(pricing.parking_fee) || 20,
+                touristTaxAdult: parseFloat(pricing.tourist_tax_adult) || 2.00,
+                touristTaxChild: parseFloat(pricing.tourist_tax_child) || 0,
+                weekendSurcharge: parseFloat(pricing.weekend_surcharge) || 0,
+                weeklyDiscount: parseFloat(pricing.weekly_discount) || 10,
+                monthlyDiscount: parseFloat(pricing.monthly_discount) || 15,
+                minStay: parseInt(pricing.min_stay) || 2,
+                maxStay: parseInt(pricing.max_stay) || 14,
+                maxGuests: parseInt(pricing.max_guests) || 8
+              }
+            });
+          } else {
+            // Restituisci prezzi default se tabella vuota
+            return res.status(200).json({
+              success: true,
+              pricing: {
+                priceGroup1to2: 75,
+                priceGroup3to4: 95,
+                priceGroup5to6: 115,
+                priceGroup7to8: 135,
+                cleaningFee: 50,
+                parkingFee: 20,
+                touristTaxAdult: 2.00,
+                touristTaxChild: 0,
+                weekendSurcharge: 0,
+                weeklyDiscount: 10,
+                monthlyDiscount: 15,
+                minStay: 2,
+                maxStay: 14,
+                maxGuests: 8
+              }
+            });
+          }
+        } catch (error) {
+          console.error('❌ Errore recupero pricing config:', error);
+          // Se errore database, restituisci default
+          return res.status(200).json({
+            success: true,
+            pricing: {
+              priceGroup1to2: 75,
+              priceGroup3to4: 95,
+              priceGroup5to6: 115,
+              priceGroup7to8: 135,
+              cleaningFee: 50,
+              parkingFee: 20,
+              touristTaxAdult: 2.00,
+              touristTaxChild: 0,
+              weekendSurcharge: 0,
+              weeklyDiscount: 10,
+              monthlyDiscount: 15,
+              minStay: 2,
+              maxStay: 14,
+              maxGuests: 8
+            }
+          });
         }
-      });
+      } else if (req.method === 'POST') {
+        try {
+          const pricingData = req.body;
+          
+          // Prima tenta di creare la tabella se non esiste
+          await pool.query(`
+            CREATE TABLE IF NOT EXISTS pricing_config (
+              id SERIAL PRIMARY KEY,
+              price_group_1to2 DECIMAL(10,2),
+              price_group_3to4 DECIMAL(10,2),
+              price_group_5to6 DECIMAL(10,2),
+              price_group_7to8 DECIMAL(10,2),
+              cleaning_fee DECIMAL(10,2),
+              parking_fee DECIMAL(10,2),
+              tourist_tax_adult DECIMAL(10,2),
+              tourist_tax_child DECIMAL(10,2),
+              weekend_surcharge DECIMAL(10,2),
+              weekly_discount DECIMAL(5,2),
+              monthly_discount DECIMAL(5,2),
+              min_stay INTEGER,
+              max_stay INTEGER,
+              max_guests INTEGER,
+              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+              updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+          `);
+
+          // Inserisci nuova configurazione prezzi
+          const result = await pool.query(`
+            INSERT INTO pricing_config (
+              price_group_1to2, price_group_3to4, price_group_5to6, price_group_7to8,
+              cleaning_fee, parking_fee, tourist_tax_adult, tourist_tax_child,
+              weekend_surcharge, weekly_discount, monthly_discount, min_stay, max_stay, max_guests
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+            RETURNING *
+          `, [
+            pricingData.priceGroup1to2,
+            pricingData.priceGroup3to4,
+            pricingData.priceGroup5to6,
+            pricingData.priceGroup7to8,
+            pricingData.cleaningFee,
+            pricingData.parkingFee,
+            pricingData.touristTaxAdult,
+            pricingData.touristTaxChild,
+            pricingData.weekendSurcharge,
+            pricingData.weeklyDiscount,
+            pricingData.monthlyDiscount,
+            pricingData.minStay,
+            pricingData.maxStay,
+            pricingData.maxGuests
+          ]);
+
+          return res.status(200).json({
+            success: true,
+            message: 'Configurazione prezzi salvata con successo',
+            pricing: result.rows[0]
+          });
+        } catch (error) {
+          console.error('❌ Errore salvataggio pricing config:', error);
+          return res.status(500).json({
+            success: false,
+            error: 'Errore salvataggio configurazione prezzi'
+          });
+        }
+      }
     }
 
     // ========================================
@@ -800,25 +917,143 @@ export default async function handler(req, res) {
     // SYSTEM SETTINGS SECTION
     // ========================================
     if (action === 'settings') {
-      return res.status(200).json({
-        success: true,
-        settings: {
-          site_name: 'Vincanto Maori',
-          admin_email: 'admin@vincantomaori.it',
-          paypal_enabled: true,
-          paypal_link: 'https://www.paypal.me/AntonioGuida320',
-          stripe_enabled: false,
-          bank_transfer_enabled: true,
-          calendar_sync_enabled: true,
-          google_analytics_enabled: true,
-          booking_notifications_enabled: true,
-          auto_confirm_bookings: false,
-          max_guests: 8,
-          min_stay_nights: 2,
-          checkin_time: '15:00',
-          checkout_time: '10:00'
+      if (req.method === 'GET') {
+        try {
+          // Ottieni impostazioni dal database
+          const result = await pool.query('SELECT * FROM settings ORDER BY id DESC LIMIT 1');
+          
+          if (result.rows.length > 0) {
+            const settings = result.rows[0];
+            return res.status(200).json({
+              success: true,
+              settings: {
+                site_name: settings.site_name || 'Vincanto Maori',
+                admin_email: settings.admin_email || 'admin@vincantomaori.it',
+                paypal_enabled: settings.paypal_enabled || true,
+                paypal_link: settings.paypal_link || 'https://www.paypal.me/AntonioGuida320',
+                stripe_enabled: settings.stripe_enabled || false,
+                bank_transfer_enabled: settings.bank_transfer_enabled || true,
+                calendar_sync_enabled: settings.calendar_sync_enabled || true,
+                google_analytics_enabled: settings.google_analytics_enabled || true,
+                booking_notifications_enabled: settings.booking_notifications_enabled || true,
+                auto_confirm_bookings: settings.auto_confirm_bookings || false,
+                max_guests: settings.max_guests || 8,
+                min_stay_nights: settings.min_stay_nights || 2,
+                checkin_time: settings.checkin_time || '15:00',
+                checkout_time: settings.checkout_time || '10:00'
+              }
+            });
+          } else {
+            // Restituisci impostazioni default se tabella vuota
+            return res.status(200).json({
+              success: true,
+              settings: {
+                site_name: 'Vincanto Maori',
+                admin_email: 'admin@vincantomaori.it',
+                paypal_enabled: true,
+                paypal_link: 'https://www.paypal.me/AntonioGuida320',
+                stripe_enabled: false,
+                bank_transfer_enabled: true,
+                calendar_sync_enabled: true,
+                google_analytics_enabled: true,
+                booking_notifications_enabled: true,
+                auto_confirm_bookings: false,
+                max_guests: 8,
+                min_stay_nights: 2,
+                checkin_time: '15:00',
+                checkout_time: '10:00'
+              }
+            });
+          }
+        } catch (error) {
+          console.error('❌ Errore recupero settings:', error);
+          // Se errore database, restituisci default
+          return res.status(200).json({
+            success: true,
+            settings: {
+              site_name: 'Vincanto Maori',
+              admin_email: 'admin@vincantomaori.it',
+              paypal_enabled: true,
+              paypal_link: 'https://www.paypal.me/AntonioGuida320',
+              stripe_enabled: false,
+              bank_transfer_enabled: true,
+              calendar_sync_enabled: true,
+              google_analytics_enabled: true,
+              booking_notifications_enabled: true,
+              auto_confirm_bookings: false,
+              max_guests: 8,
+              min_stay_nights: 2,
+              checkin_time: '15:00',
+              checkout_time: '10:00'
+            }
+          });
         }
-      });
+      } else if (req.method === 'POST') {
+        try {
+          const settingsData = req.body;
+          
+          // Prima tenta di creare la tabella se non esiste
+          await pool.query(`
+            CREATE TABLE IF NOT EXISTS settings (
+              id SERIAL PRIMARY KEY,
+              site_name VARCHAR(255),
+              admin_email VARCHAR(255),
+              paypal_enabled BOOLEAN,
+              paypal_link TEXT,
+              stripe_enabled BOOLEAN,
+              bank_transfer_enabled BOOLEAN,
+              calendar_sync_enabled BOOLEAN,
+              google_analytics_enabled BOOLEAN,
+              booking_notifications_enabled BOOLEAN,
+              auto_confirm_bookings BOOLEAN,
+              max_guests INTEGER,
+              min_stay_nights INTEGER,
+              checkin_time VARCHAR(10),
+              checkout_time VARCHAR(10),
+              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+              updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+          `);
+
+          // Inserisci o aggiorna impostazioni
+          const result = await pool.query(`
+            INSERT INTO settings (
+              site_name, admin_email, paypal_enabled, paypal_link, stripe_enabled,
+              bank_transfer_enabled, calendar_sync_enabled, google_analytics_enabled,
+              booking_notifications_enabled, auto_confirm_bookings, max_guests,
+              min_stay_nights, checkin_time, checkout_time
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+            RETURNING *
+          `, [
+            settingsData.site_name,
+            settingsData.admin_email,
+            settingsData.paypal_enabled,
+            settingsData.paypal_link,
+            settingsData.stripe_enabled,
+            settingsData.bank_transfer_enabled,
+            settingsData.calendar_sync_enabled,
+            settingsData.google_analytics_enabled,
+            settingsData.booking_notifications_enabled,
+            settingsData.auto_confirm_bookings,
+            settingsData.max_guests,
+            settingsData.min_stay_nights,
+            settingsData.checkin_time,
+            settingsData.checkout_time
+          ]);
+
+          return res.status(200).json({
+            success: true,
+            message: 'Impostazioni salvate con successo',
+            settings: result.rows[0]
+          });
+        } catch (error) {
+          console.error('❌ Errore salvataggio settings:', error);
+          return res.status(500).json({
+            success: false,
+            error: 'Errore salvataggio impostazioni'
+          });
+        }
+      }
     }
 
     // ========================================
