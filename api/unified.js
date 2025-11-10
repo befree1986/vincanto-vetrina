@@ -135,9 +135,10 @@ export default async function handler(req, res) {
             amount: 450,
             currency: 'EUR',
             status: 'completed',
-            method: 'credit_card',
+            method: 'paypal',
             date: new Date().toISOString(),
-            guest: 'Mario Rossi'
+            guest: 'Mario Rossi',
+            paypalLink: 'https://www.paypal.me/AntonioGuida320'
           },
           {
             id: 2,
@@ -145,9 +146,20 @@ export default async function handler(req, res) {
             amount: 325,
             currency: 'EUR',
             status: 'pending',
-            method: 'bank_transfer',
+            method: 'paypal',
             date: new Date(Date.now() - 86400000).toISOString(),
-            guest: 'Laura Bianchi'
+            guest: 'Laura Bianchi',
+            paypalLink: 'https://www.paypal.me/AntonioGuida320'
+          },
+          {
+            id: 3,
+            bookingId: 'BK003',
+            amount: 180,
+            currency: 'EUR',
+            status: 'completed',
+            method: 'bank_transfer',
+            date: new Date(Date.now() - 172800000).toISOString(),
+            guest: 'Giuseppe Verdi'
           }
         ]
       });

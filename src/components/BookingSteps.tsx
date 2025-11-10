@@ -197,11 +197,39 @@ export const BookingStep3: React.FC<BookingStep3Props> = ({ onBack }) => {
   const handleConfirmBooking = async () => {
     setIsProcessing(true);
     try {
-      await booking.submitBooking();
-      // Gestione del successo...
+      // Se PayPal è selezionato, apri il link diretto
+      if (booking.formData.payment_method === 'paypal') {
+        const depositAmount = booking.quote?.totalAmount 
+          ? (booking.formData.payment_type === 'deposit' 
+             ? booking.quote.totalAmount * 0.30 
+             : booking.quote.totalAmount)
+          : 0;
+        
+        const paypalUrl = `https://www.paypal.me/AntonioGuida320/${depositAmount.toFixed(2)}EUR`;
+        
+        // Apri PayPal in una nuova finestra
+        window.open(paypalUrl, '_blank');
+        
+        // Procedi comunque con la prenotazione per salvarla nel sistema
+        await booking.submitBooking();
+        
+        // Mostra messaggio di successo con istruzioni PayPal
+        alert(`
+🎉 Prenotazione confermata! 
+
+💳 PayPal: La finestra di pagamento si è aperta automaticamente.
+📧 Riceverai conferma via email una volta completato il pagamento.
+💰 Importo da pagare: €${depositAmount.toFixed(2)}
+
+📞 Per assistenza: contatta Antonio Guida
+        `.trim());
+      } else {
+        await booking.submitBooking();
+        alert('🎉 Prenotazione confermata! Riceverai una email di conferma.');
+      }
     } catch (error) {
       console.error('Errore nella prenotazione:', error);
-      // Gestione dell'errore...
+      alert('❌ Errore durante la prenotazione. Riprova o contatta il supporto.');
     } finally {
       setIsProcessing(false);
     }
@@ -339,10 +367,14 @@ export const BookingStep3: React.FC<BookingStep3Props> = ({ onBack }) => {
                 onChange={(e) => booking.setFormData({ payment_method: e.target.value as any })}
               />
               <div className="payment-method-content">
-                <span className="icon">🟦</span>
+                <span className="icon">�</span>
                 <div className="method-info">
-                  <span className="method-name">PayPal</span>
-                  <span className="method-description">Pagamento rapido e sicuro</span>
+                  <span className="method-name">PayPal - Antonio Guida</span>
+                  <span className="method-description">
+                    Pagamento diretto sicuro e immediato
+                    <br/>
+                    <small>🔗 paypal.me/AntonioGuida320</small>
+                  </span>
                 </div>
               </div>
             </label>
@@ -365,6 +397,43 @@ export const BookingStep3: React.FC<BookingStep3Props> = ({ onBack }) => {
             </label>
           </div>
         </div>
+
+        {/* Informazioni PayPal specifiche */}
+        {booking.formData.payment_method === 'paypal' && (
+          <div className="payment-info-section">
+            <div className="paypal-info">
+              <h5>
+                <span className="icon">💙</span>
+                Informazioni Pagamento PayPal
+              </h5>
+              <div className="info-content">
+                <p>
+                  <strong>🔗 Link PayPal:</strong> 
+                  <a href="https://www.paypal.me/AntonioGuida320" target="_blank" rel="noopener noreferrer">
+                    paypal.me/AntonioGuida320
+                  </a>
+                </p>
+                <p>
+                  <strong>💰 Importo:</strong> {' '}
+                  {booking.quote && (
+                    booking.formData.payment_type === 'deposit' 
+                      ? `€${(booking.quote.totalAmount * 0.30).toFixed(2)} (Acconto 30%)`
+                      : `€${booking.quote.totalAmount?.toFixed(2)} (Pagamento completo)`
+                  )}
+                </p>
+                <p>
+                  <strong>📧 Dopo il pagamento:</strong> Riceverai conferma via email
+                </p>
+                <div className="paypal-note">
+                  <small>
+                    💡 <strong>Nota:</strong> Il link PayPal si aprirà automaticamente quando confermi la prenotazione.
+                    Completa il pagamento per finalizzare la tua prenotazione.
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="payment-type">
           <h4>
