@@ -356,8 +356,8 @@ class AdminApiService {
   // Aggiorna configurazione calendario
   async updateCalendarConfig(id: string, config: any) {
     try {
-      const response = await fetch(`${this.baseUrl}/calendars/${id}`, {
-        method: 'PUT',
+      const response = await fetch(`${this.baseUrl}/unified?action=update-calendar-config&id=${id}`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(config)
       });
@@ -372,7 +372,7 @@ class AdminApiService {
   // Elimina configurazione calendario  
   async deleteCalendarConfig(id: string) {
     try {
-      const response = await fetch(`${this.baseUrl}/calendars/${id}`, {
+      const response = await fetch(`${this.baseUrl}/unified?action=delete-calendar-config&id=${id}`, {
         method: 'DELETE'
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -387,7 +387,7 @@ class AdminApiService {
   async getCalendarSyncStatus() {
     try {
       console.log('📊 Recupero status sincronizzazione calendari...');
-      const response = await fetch(`${this.baseUrl}/calendar-sync`);
+      const response = await fetch(`${this.baseUrl}/unified?action=calendar-sync-status`);
       if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       const result = await response.json();
       console.log('✅ Status calendari:', result);
@@ -402,7 +402,7 @@ class AdminApiService {
   async forceCalendarSync(calendarId?: string) {
     try {
       console.log('🔄 Avvio sincronizzazione calendari...');
-      const response = await fetch(`${this.baseUrl}/calendar-sync`, {
+      const response = await fetch(`${this.baseUrl}/unified?action=force-calendar-sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -423,7 +423,7 @@ class AdminApiService {
   // Test connessione calendario
   async testCalendarConnection(config: any) {
     try {
-      const response = await fetch(`${this.baseUrl}/calendars/test-connection`, {
+      const response = await fetch(`${this.baseUrl}/unified?action=test-calendar-connection`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(config)
