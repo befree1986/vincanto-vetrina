@@ -56,7 +56,7 @@ export const usePricing = () => {
       
       // 🎯 USA LA NUOVA API UNIFICATA
       const cacheBuster = new Date().getTime();
-      const response = await fetch(`/api/unified?action=pricing&_t=${cacheBuster}`);
+      const response = await fetch(`/api/unified?action=pricing-config&_t=${cacheBuster}`);
       
       if (!response.ok) {
         throw new Error('Errore nel caricamento prezzi');
@@ -214,7 +214,7 @@ export const usePricing = () => {
     setError(null);
     
     try {
-      const response = await fetch('/api/unified?action=pricing', {
+      const response = await fetch('/api/unified?action=pricing-config', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -151,7 +151,7 @@ class AdminApiService {
 
   async createPricingConfig(pricingData: any) {
     try {
-      const response = await fetch(`${this.baseUrl}/unified?action=pricing`, {
+      const response = await fetch(`${this.baseUrl}/unified?action=pricing-config`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(pricingData),

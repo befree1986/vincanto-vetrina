@@ -254,7 +254,7 @@ const AdminPanelPro: React.FC = () => {
 
       setIsUpdatingPricing(true);
       console.log('� ADMIN SAVE - Dati da salvare:', JSON.stringify(pricingConfig, null, 2));
-      console.log('🔗 URL API Unificata chiamata:', `${window.location.origin}/api/unified?action=pricing`);
+      console.log('🔗 URL API Unificata chiamata:', `${window.location.origin}/api/unified?action=pricing-config`);
       
       const result = await adminApiService.updatePricingConfig(pricingConfig);
       
