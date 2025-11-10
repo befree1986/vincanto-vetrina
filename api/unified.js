@@ -598,8 +598,8 @@ export default async function handler(req, res) {
       }
     }
             lastSync: new Date().toISOString(),
-            eventsFound; airbnbEvents.length,
-            blockedDates; airbnbEvents.length
+            eventsFound: airbnbEvents.length,
+            blockedDates: airbnbEvents.length
           });
           blockedDatesFound.push(...airbnbEvents);
         }
