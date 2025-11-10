@@ -523,14 +523,13 @@ export default async function handler(req, res) {
             id: 4,
             name: 'Airbnb Calendar',
             calendar_type: 'airbnb',
-            url: 'https://www.airbnb.it/calendar/ical/1387891577187940063.ics',
-            is_active: false,
+            url: 'https://www.airbnb.com/calendar/ical/1387891577187940063.ics?s=6622673f28e122e6b2b3336efd4d140e&locale=it',
+            is_active: true,
             sync_frequency: 30,
-            last_sync: new Date(Date.now() - 7200000).toISOString(),
-            status: 'pending_auth',
-            events_synced: 0,
-            priority: 4,
-            note: 'Richiede URL iCal con token da Airbnb Host Dashboard'
+            last_sync: new Date(Date.now() - 1200000).toISOString(),
+            status: 'connected',
+            events_synced: 5,
+            priority: 4
           },
           {
             id: 5,
@@ -547,16 +546,16 @@ export default async function handler(req, res) {
         ],
         stats: {
           total: 5,
-          active: 3,
+          active: 4,
           googleCalendar: 1,
           external: 4,
           lastSyncSuccess: new Date().toISOString(),
-          totalEventsSynced: 27,
+          totalEventsSynced: 32,
           calendarsConfigured: {
             google: { active: true, url: 'vincantomaiori@gmail.com' },
             booking: { active: true, url: 'ical.booking.com' },
             holidu: { active: true, url: 'api.host.holidu.com' },
-            airbnb: { active: false, url: 'pending_auth', note: 'Richiede token Host Dashboard' },
+            airbnb: { active: true, url: 'airbnb.com/1387891577187940063' },
             vrbo: { active: false, url: 'pending_setup' }
           }
         }
