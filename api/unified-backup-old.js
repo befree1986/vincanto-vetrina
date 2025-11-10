@@ -1,8 +1,6 @@
-// API COMPLETAMENTE UNIFICATA - Vincanto System
-// Consolidation of all API endpoints in a single file
-
+// API Unificata Semplificata - Senza dipendenze problematiche
 export default async function handler(req, res) {
-  // CORS Headers - Setup universale
+  // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -17,12 +15,10 @@ export default async function handler(req, res) {
     action = req.body.action;
   }
 
-  console.log('🎯 API UNIFICATA CONSOLIDATA - Action:', action, 'Method:', req.method);
+  console.log('🎯 API Unificata AGGIORNATA - Action:', action, 'Method:', req.method);
 
   try {
-    // ========================================
-    // AUTHENTICATION SECTION
-    // ========================================
+    // LOGIN
     if (action === 'login') {
       if (req.method !== 'POST') {
         return res.status(405).json({ success: false, error: 'Metodo non consentito' });
@@ -45,9 +41,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // ========================================
-    // DASHBOARD & ANALYTICS SECTION
-    // ========================================
+    // DASHBOARD STATS
     if (action === 'dashboard-stats') {
       return res.status(200).json({
         success: true,
@@ -69,6 +63,7 @@ export default async function handler(req, res) {
       });
     }
 
+    // ANALYTICS
     if (action === 'analytics') {
       const analyticsData = [];
       const today = new Date();
@@ -77,6 +72,7 @@ export default async function handler(req, res) {
         const date = new Date(today);
         date.setDate(date.getDate() - i);
         
+        const dayOfMonth = date.getDate();
         const bookings = Math.max(0, Math.floor(Math.random() * 3));
         const revenue = bookings * (150 + Math.random() * 100);
         const occupancy = bookings > 0 ? Math.min(100, 60 + Math.random() * 40) : 0;
@@ -95,9 +91,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // ========================================
-    // NOTIFICATIONS SECTION
-    // ========================================
+    // NOTIFICATIONS
     if (action === 'notifications') {
       return res.status(200).json({
         success: true,
@@ -113,16 +107,16 @@ export default async function handler(req, res) {
           {
             id: 2,
             type: 'payment',
-            title: 'Pagamento PayPal Ricevuto',
-            message: 'Pagamento di €450 completato via PayPal',
+            title: 'Pagamento Ricevuto',
+            message: 'Pagamento di €450 completato',
             date: new Date(Date.now() - 86400000).toISOString(),
             read: false
           },
           {
             id: 3,
-            type: 'calendar',
-            title: 'Sincronizzazione Calendar',
-            message: 'Airbnb calendar sincronizzato con successo',
+            type: 'review',
+            title: 'Nuova Recensione',
+            message: 'Recensione 5 stelle ricevuta',
             date: new Date(Date.now() - 172800000).toISOString(),
             read: true
           }
@@ -130,66 +124,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // ========================================
-    // BOOKINGS MANAGEMENT SECTION
-    // ========================================
-    if (action === 'booking') {
-      if (req.method === 'GET') {
-        // Ottieni tutte le prenotazioni
-        return res.status(200).json({
-          success: true,
-          bookings: [
-            {
-              id: 1,
-              customer_name: 'Mario Rossi',
-              customer_email: 'mario.rossi@email.com',
-              check_in: '2025-11-15',
-              check_out: '2025-11-18',
-              guests: 2,
-              total_amount: 450,
-              status: 'confirmed',
-              platform: 'direct',
-              payment_method: 'paypal',
-              created_at: new Date().toISOString()
-            },
-            {
-              id: 2,
-              customer_name: 'Laura Bianchi',
-              customer_email: 'laura.bianchi@email.com',
-              check_in: '2025-11-20',
-              check_out: '2025-11-23',
-              guests: 4,
-              total_amount: 325,
-              status: 'pending',
-              platform: 'airbnb',
-              payment_method: 'paypal',
-              created_at: new Date(Date.now() - 86400000).toISOString()
-            }
-          ]
-        });
-      }
-
-      if (req.method === 'POST') {
-        // Crea nuova prenotazione
-        const bookingData = req.body;
-        console.log('📝 Nuova prenotazione ricevuta:', bookingData);
-        
-        return res.status(201).json({
-          success: true,
-          message: 'Prenotazione creata con successo',
-          booking: {
-            id: Date.now(),
-            ...bookingData,
-            status: 'pending',
-            created_at: new Date().toISOString()
-          }
-        });
-      }
-    }
-
-    // ========================================
-    // PAYMENTS SECTION (PAYPAL INTEGRATED)
-    // ========================================
+    // PAYMENTS
     if (action === 'payments') {
       return res.status(200).json({
         success: true,
@@ -203,8 +138,7 @@ export default async function handler(req, res) {
             method: 'paypal',
             date: new Date().toISOString(),
             guest: 'Mario Rossi',
-            paypalLink: 'https://www.paypal.me/AntonioGuida320',
-            description: 'Acconto prenotazione 15-18 Nov'
+            paypalLink: 'https://www.paypal.me/AntonioGuida320'
           },
           {
             id: 2,
@@ -215,8 +149,7 @@ export default async function handler(req, res) {
             method: 'paypal',
             date: new Date(Date.now() - 86400000).toISOString(),
             guest: 'Laura Bianchi',
-            paypalLink: 'https://www.paypal.me/AntonioGuida320',
-            description: 'Pagamento completo 20-23 Nov'
+            paypalLink: 'https://www.paypal.me/AntonioGuida320'
           },
           {
             id: 3,
@@ -226,16 +159,13 @@ export default async function handler(req, res) {
             status: 'completed',
             method: 'bank_transfer',
             date: new Date(Date.now() - 172800000).toISOString(),
-            guest: 'Giuseppe Verdi',
-            description: 'Bonifico bancario'
+            guest: 'Giuseppe Verdi'
           }
         ]
       });
     }
 
-    // ========================================
-    // CALENDAR MANAGEMENT SECTION
-    // ========================================
+    // CALENDAR CONFIGS
     if (action === 'calendar-configs') {
       return res.status(200).json({
         success: true,
@@ -296,47 +226,7 @@ export default async function handler(req, res) {
       });
     }
 
-    if (action === 'calendar-sync') {
-      if (req.method === 'POST') {
-        // Forza sincronizzazione calendario
-        return res.status(200).json({
-          success: true,
-          message: 'Sincronizzazione calendario avviata',
-          sync_id: `sync_${Date.now()}`,
-          calendars_processed: 3,
-          events_found: 12
-        });
-      }
-    }
-
-    // ========================================
-    // PRICING CONFIGURATION SECTION
-    // ========================================
-    if (action === 'pricing-config') {
-      return res.status(200).json({
-        success: true,
-        pricing: {
-          priceGroup1to2: 75,
-          priceGroup3to4: 95,
-          priceGroup5to6: 115,
-          priceGroup7to8: 135,
-          cleaningFee: 50,
-          parkingFee: 20,
-          touristTaxAdult: 2.00,
-          touristTaxChild: 0,
-          weekendSurcharge: 0,
-          weeklyDiscount: 10,
-          monthlyDiscount: 15,
-          minStay: 2,
-          maxStay: 14,
-          maxGuests: 8
-        }
-      });
-    }
-
-    // ========================================
-    // EXTRA SERVICES SECTION
-    // ========================================
+    // EXTRA SERVICES
     if (action === 'extra-services') {
       return res.status(200).json({
         success: true,
@@ -364,74 +254,18 @@ export default async function handler(req, res) {
             currency: 'EUR',
             description: 'Colazione italiana completa',
             active: false
-          },
-          {
-            id: 4,
-            name: 'Transfer Aeroporto',
-            price: 45,
-            currency: 'EUR',
-            description: 'Servizio transfer da/per aeroporto',
-            active: true
           }
         ]
       });
     }
 
-    // ========================================
-    // CONTACT FORM SECTION
-    // ========================================
-    if (action === 'contact') {
-      if (req.method === 'POST') {
-        const { name, email, message, phone } = req.body;
-        
-        console.log('📧 Nuovo messaggio contatti:', { name, email, message, phone });
-        
-        return res.status(200).json({
-          success: true,
-          message: 'Messaggio inviato con successo',
-          contact_id: `contact_${Date.now()}`
-        });
-      }
-    }
-
-    // ========================================
-    // SYSTEM SETTINGS SECTION
-    // ========================================
-    if (action === 'settings') {
-      return res.status(200).json({
-        success: true,
-        settings: {
-          site_name: 'Vincanto Maori',
-          admin_email: 'admin@vincantomaori.it',
-          paypal_enabled: true,
-          paypal_link: 'https://www.paypal.me/AntonioGuida320',
-          stripe_enabled: false,
-          bank_transfer_enabled: true,
-          calendar_sync_enabled: true,
-          google_analytics_enabled: true,
-          booking_notifications_enabled: true,
-          auto_confirm_bookings: false,
-          max_guests: 8,
-          min_stay_nights: 2,
-          checkin_time: '15:00',
-          checkout_time: '10:00'
-        }
-      });
-    }
-
-    // ========================================
-    // ERROR HANDLING - ACTION NOT FOUND
-    // ========================================
+    // DEFAULT - Action non trovata
     return res.status(404).json({
       success: false,
       error: 'Endpoint non trovato',
       availableActions: [
-        'login', 'dashboard-stats', 'analytics', 'notifications', 
-        'booking', 'payments', 'calendar-configs', 'calendar-sync', 
-        'pricing-config', 'extra-services', 'contact', 'settings'
-      ],
-      requestedAction: action,
-      method: req.method
+        'login', 'dashboard-stats', 'analytics', 'notifications', 'payments', 'calendar-configs', 'extra-services'
+      ]
     });
 
   } catch (error) {
@@ -439,8 +273,7 @@ export default async function handler(req, res) {
     return res.status(500).json({
       success: false,
       error: 'Errore interno del server',
-      details: error.message,
-      action: action
+      details: error.message
     });
   }
 }
