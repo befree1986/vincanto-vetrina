@@ -530,33 +530,20 @@ export default async function handler(req, res) {
             status: 'connected',
             events_synced: 5,
             priority: 4
-          },
-          {
-            id: 5,
-            name: 'VRBO Calendar',
-            calendar_type: 'vrbo',
-            url: 'https://www.vrbo.com/icalendar/vincanto-property.ics',
-            is_active: false,
-            sync_frequency: 120,
-            last_sync: null,
-            status: 'pending_setup',
-            events_synced: 0,
-            priority: 5
           }
         ],
         stats: {
-          total: 5,
+          total: 4,
           active: 4,
           googleCalendar: 1,
-          external: 4,
+          external: 3,
           lastSyncSuccess: new Date().toISOString(),
           totalEventsSynced: 32,
           calendarsConfigured: {
             google: { active: true, url: 'vincantomaiori@gmail.com' },
             booking: { active: true, url: 'ical.booking.com' },
             holidu: { active: true, url: 'api.host.holidu.com' },
-            airbnb: { active: true, url: 'airbnb.com/1387891577187940063' },
-            vrbo: { active: false, url: 'pending_setup' }
+            airbnb: { active: true, url: 'airbnb.com/1387891577187940063' }
           }
         }
       });
