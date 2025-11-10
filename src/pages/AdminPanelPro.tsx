@@ -2853,12 +2853,12 @@ const AdminPanelPro: React.FC = () => {
                 <div className="admin-pricing-card">
                   <h4>💰 PayPal Business</h4>
                   <div className="pricing-controls">
-                    <div className="sync-indicator active">🟡 Configurazione</div>
-                    <label>Email PayPal:</label>
-                    <input type="email" defaultValue="vincanto@paypal.com" className="admin-input" aria-label="Email PayPal" />
+                    <div className="sync-indicator active">� Attivo</div>
+                    <label>Link PayPal:</label>
+                    <input type="url" defaultValue="https://www.paypal.me/AntonioGuida320" className="admin-input" aria-label="Link PayPal" readOnly />
                     <label>Commissione PayPal:</label>
                     <input type="number" defaultValue="3.4" className="admin-input-small" aria-label="Commissione PayPal" step="0.1" />
-                    <button className="admin-btn-primary admin-btn-small">⚙️ Completa Setup</button>
+                    <button className="admin-btn-primary admin-btn-small">✅ Setup Completo</button>
                   </div>
                 </div>
               </div>
@@ -2871,7 +2871,7 @@ const AdminPanelPro: React.FC = () => {
                 <div className="existing-services">
                   {paymentTransactions.map((transaction) => (
                     <div key={transaction.id} className="service-row">
-                      <span>{transaction.guestName}</span>
+                      <span>{transaction.guest || transaction.guestName}</span>
                       <span>€{(transaction.amount || 0).toFixed(2)}</span>
                       <span className={`platform-badge ${transaction.method}`}>
                         {transaction.method === 'stripe' && '💳 Stripe'}
@@ -2885,6 +2885,15 @@ const AdminPanelPro: React.FC = () => {
                       </span>
                       <span>{new Date(transaction.date).toLocaleDateString('it-IT')}</span>
                       <div className="action-buttons">
+                        {transaction.method === 'paypal' && transaction.paypalLink && (
+                          <button 
+                            className="admin-btn-small admin-btn-primary"
+                            onClick={() => window.open(transaction.paypalLink, '_blank')}
+                            title="Apri PayPal"
+                          >
+                            🌐 PayPal
+                          </button>
+                        )}
                         {transaction.status === 'pending' && (
                           <button 
                             className="admin-btn-small admin-btn-success"

@@ -165,6 +165,67 @@ export default async function handler(req, res) {
       });
     }
 
+    // CALENDAR CONFIGS
+    if (action === 'calendar-configs') {
+      return res.status(200).json({
+        success: true,
+        calendars: [
+          {
+            id: 1,
+            name: 'Airbnb Calendar',
+            calendar_type: 'airbnb',
+            url: 'https://www.airbnb.it/calendar/ical/123456789.ics',
+            is_active: true,
+            sync_frequency: 30,
+            last_sync: new Date().toISOString(),
+            status: 'connected',
+            events_synced: 15
+          },
+          {
+            id: 2,
+            name: 'Booking.com Calendar',
+            calendar_type: 'booking_com',
+            url: 'https://supply-xml.booking.com/hotels/xml/reservations?hotel_id=987654',
+            is_active: true,
+            sync_frequency: 60,
+            last_sync: new Date(Date.now() - 3600000).toISOString(),
+            status: 'connected',
+            events_synced: 8
+          },
+          {
+            id: 3,
+            name: 'VRBO Calendar',
+            calendar_type: 'vrbo',
+            url: 'https://www.vrbo.com/icalendar/1234567890.ics',
+            is_active: true,
+            sync_frequency: 120,
+            last_sync: new Date(Date.now() - 7200000).toISOString(),
+            status: 'connected',
+            events_synced: 12
+          },
+          {
+            id: 4,
+            name: 'Google Calendar Personal',
+            calendar_type: 'google_calendar',
+            url: 'https://calendar.google.com/calendar/ical/personal%40gmail.com/private-xxx/basic.ics',
+            is_active: false,
+            sync_frequency: 15,
+            last_sync: null,
+            status: 'pending_auth',
+            events_synced: 0
+          }
+        ],
+        stats: {
+          total: 4,
+          active: 3,
+          googleCalendar: 1,
+          external: 3,
+          lastSyncSuccess: new Date().toISOString(),
+          totalEventsSynced: 35
+        }
+      });
+    }
+
     // EXTRA SERVICES
     if (action === 'extra-services') {
       return res.status(200).json({
@@ -203,7 +264,7 @@ export default async function handler(req, res) {
       success: false,
       error: 'Endpoint non trovato',
       availableActions: [
-        'login', 'dashboard-stats', 'analytics', 'notifications', 'payments', 'extra-services'
+        'login', 'dashboard-stats', 'analytics', 'notifications', 'payments', 'calendar-configs', 'extra-services'
       ]
     });
 
