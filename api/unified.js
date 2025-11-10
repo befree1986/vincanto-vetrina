@@ -523,13 +523,14 @@ export default async function handler(req, res) {
             id: 4,
             name: 'Airbnb Calendar',
             calendar_type: 'airbnb',
-            url: 'https://www.airbnb.it/calendar/ical/vincanto-apartment.ics',
+            url: 'https://www.airbnb.it/calendar/ical/1387891577187940063.ics',
             is_active: false,
             sync_frequency: 30,
             last_sync: new Date(Date.now() - 7200000).toISOString(),
-            status: 'pending_setup',
+            status: 'pending_auth',
             events_synced: 0,
-            priority: 4
+            priority: 4,
+            note: 'Richiede URL iCal con token da Airbnb Host Dashboard'
           },
           {
             id: 5,
@@ -555,7 +556,7 @@ export default async function handler(req, res) {
             google: { active: true, url: 'vincantomaiori@gmail.com' },
             booking: { active: true, url: 'ical.booking.com' },
             holidu: { active: true, url: 'api.host.holidu.com' },
-            airbnb: { active: false, url: 'pending_setup' },
+            airbnb: { active: false, url: 'pending_auth', note: 'Richiede token Host Dashboard' },
             vrbo: { active: false, url: 'pending_setup' }
           }
         }
