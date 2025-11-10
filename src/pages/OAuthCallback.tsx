@@ -5,6 +5,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { devError } from '../utils/debug';
 import './OAuthCallback.css';
 
 const OAuthCallback: React.FC = () => {
@@ -40,7 +41,7 @@ const OAuthCallback: React.FC = () => {
       }, 2000);
 
     } catch (error) {
-      console.error('Errore nel callback OAuth:', error);
+      devError('Errore nel callback OAuth:', error);
       setMessage(`❌ Errore: ${error}`);
       setStatus('error');
 

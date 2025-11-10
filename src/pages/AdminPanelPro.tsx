@@ -6,9 +6,10 @@ import '../styles/AdminSuperAdmin.css';
 import '../styles/AdminUXResponsive.css';
 import AdminApiService from '../services/adminApiService';
 import { ExtraService } from '../hooks/useExtraServices';
+import { devLog, devError, debugLog } from '../utils/debug';
 
 const AdminPanelPro = (): JSX.Element => {
-  console.log('🚀 AdminPanelPro component rendering...');
+  devLog('🚀 AdminPanelPro component rendering...');
   
   // Stati principali
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -23,10 +24,10 @@ const AdminPanelPro = (): JSX.Element => {
   // Servizio Admin API
   const [adminApiService] = useState(() => {
     try {
-      console.log('🔌 Inizializzazione AdminApiService...');
+      devLog('🔌 Inizializzazione AdminApiService...');
       return new AdminApiService();
     } catch (error) {
-      console.error('❌ Errore AdminApiService:', error);
+      devError('❌ Errore AdminApiService:', error);
       return null;
     }
   });
@@ -180,18 +181,18 @@ const AdminPanelPro = (): JSX.Element => {
   
   // === AUTENTICAZIONE ===
   const handleLogin = async () => {
-    console.log('🔐 Tentativo di login...');
+    devLog('🔐 Tentativo di login...');
     if (password === 'vincanto2025') {
-      console.log('✅ Login riuscito, imposto autenticazione...');
+      devLog('✅ Login riuscito, imposto autenticazione...');
       // Salva sessione in localStorage
       localStorage.setItem('vincanto_admin_session', 'authenticated');
       setIsAuthenticated(true);
       setError('');
-      console.log('🎯 Stato autenticazione impostato e salvato');
+      devLog('🎯 Stato autenticazione impostato e salvato');
       // Carica tutti i dati reali dal backend
       loadRealApiData();
     } else {
-      console.log('❌ Password errata');
+      devLog('❌ Password errata');
       setError('Password non corretta');
     }
   };
@@ -290,13 +291,13 @@ const AdminPanelPro = (): JSX.Element => {
   };
 
   const updatePricingField = (field: string, value: number) => {
-    console.log('💰 Aggiornamento campo prezzo:', { field, value, currentConfig: pricingConfig });
+    devLog('💰 Aggiornamento campo prezzo:', { field, value, currentConfig: pricingConfig });
     setPricingConfig(prev => {
       const updated = {
         ...prev,
         [field]: value
       };
-      console.log('💰 Nuova configurazione prezzi:', updated);
+      devLog('💰 Nuova configurazione prezzi:', updated);
       return updated;
     });
   };
@@ -1336,7 +1337,7 @@ const AdminPanelPro = (): JSX.Element => {
   
   // === RENDER LOGIN ===
   if (!isAuthenticated) {
-    console.log('🔐 Rendering login form...');
+    devLog('🔐 Rendering login form...');
     return (
       <div className="admin-login-container">
         <div className="admin-login-card">
@@ -1369,7 +1370,7 @@ const AdminPanelPro = (): JSX.Element => {
   }
 
   // === RENDER DEBUG PRINCIPALE ===
-  console.log('🎯 Rendering main admin panel...');
+  devLog('🎯 Rendering main admin panel...');
   
   // === RENDER ADMIN PANEL RESPONSIVE ===
   return (
@@ -2295,7 +2296,7 @@ const AdminPanelPro = (): JSX.Element => {
         {/* Sezione Prenotazioni Professionale */}
         {activeTab === 'prenotazioni' && (() => {
           try {
-            console.log('🎯 Rendering sezione prenotazioni...');
+            devLog('🎯 Rendering sezione prenotazioni...');
             return (
           <div className="admin-prenotazioni">
             <div className="admin-header">
@@ -2740,7 +2741,7 @@ const AdminPanelPro = (): JSX.Element => {
         {/* Sezione Pagamenti Professionale */}
         {activeTab === 'pagamenti' && (() => {
           try {
-            console.log('🎯 Rendering sezione pagamenti...');
+            devLog('🎯 Rendering sezione pagamenti...');
             return (
           <div className="admin-pagamenti">
             <h2>💳 Gestione Pagamenti Avanzata</h2>

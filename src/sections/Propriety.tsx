@@ -8,6 +8,7 @@ import '../styles/Propriety.mobile.css';
 import LemonDivider from '../components/LemonDivider';
 import { Helmet } from 'react-helmet';
 import { usePricing } from '../hooks/usePricing';
+import { devLog } from '../utils/debug';
 
 const Propriety: React.FC = () => {
   const { t } = useTranslation();
@@ -19,10 +20,10 @@ const Propriety: React.FC = () => {
 
   // Debug: log dello stato pricing
   useEffect(() => {
-    console.log('🎯 Stato pricing in Propriety.tsx:', pricing);
-    console.log('🎯 currentPrice:', pricing.currentPrice);
-    console.log('🎯 loading:', pricing.loading);
-    console.log('🎯 error:', pricing.error);
+    devLog('🎯 Stato pricing in Propriety.tsx:', pricing);
+    devLog('🎯 currentPrice:', pricing.currentPrice);
+    devLog('🎯 loading:', pricing.loading);
+    devLog('🎯 error:', pricing.error);
   }, [pricing]);
 
   const openLightbox = useCallback((images: GalleryImage[], startIndex: number) => {
