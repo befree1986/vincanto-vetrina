@@ -24,3 +24,44 @@ dist-ssr
 *.sw?
 .env*
 .vercel
+
+# Security and Sensitive Files
+*.key
+*.pem
+*.p12
+*.pfx
+config.local.*
+secrets.*
+
+# Backup and Documentation Files
+*.backup
+*.backup.*
+*.bak
+*.md
+!README.md
+docs/
+database/
+logs_result.json
+vincanto.pdf
+
+# Test and Development Files
+test-*.js
+test-*.mjs
+*.test.js
+*.test.ts
+debug-*.js
+debug-*.mjs
+setup-*.mjs
+configure-*.mjs
+verify-*.mjs
+check-*.mjs
+cleanup-*.mjs
+init-*.mjs
+upgrade-*.mjs
+
+# Archive and Backup Folders
+CLEANUP_BACKUPS/
+*_ARCHIVED/
+*_backup/
+*.zip
+*.tar.gz

@@ -182,7 +182,8 @@ const AdminPanelPro = (): JSX.Element => {
   // === AUTENTICAZIONE ===
   const handleLogin = async () => {
     devLog('🔐 Tentativo di login...');
-    if (password === 'vincanto2025') {
+    const expectedPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'admin123';
+    if (password === expectedPassword) {
       devLog('✅ Login riuscito, imposto autenticazione...');
       // Salva sessione in localStorage
       localStorage.setItem('vincanto_admin_session', 'authenticated');
@@ -3460,7 +3461,7 @@ const AdminPanelPro = (): JSX.Element => {
                   <h4>Autenticazione</h4>
                   <div className="pricing-controls">
                     <label>Password Amministratore:</label>
-                    <input type="password" defaultValue="vincanto2025" className="admin-input" aria-label="Password admin" />
+                    <input type="password" defaultValue="••••••••••••" className="admin-input" aria-label="Password admin" />
                     
                     <label>Autenticazione 2FA:</label>
                     <select className="admin-select" aria-label="Two factor auth">
