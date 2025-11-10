@@ -374,9 +374,12 @@ class AdminApiService {
   // Stato sincronizzazione calendari
   async getCalendarSyncStatus() {
     try {
-      const response = await fetch(`${this.baseUrl}/unified?action=sync-status`);
+      console.log('📊 Recupero status sincronizzazione calendari...');
+      const response = await fetch(`${this.baseUrl}/calendar-sync`);
       if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      return await response.json();
+      const result = await response.json();
+      console.log('✅ Status calendari:', result);
+      return result;
     } catch (error) {
       console.error('❌ Error fetching calendar sync status:', error);
       return { success: false, stats: {} };
@@ -386,7 +389,8 @@ class AdminApiService {
   // Forza sincronizzazione calendario
   async forceCalendarSync(calendarId?: string) {
     try {
-      const response = await fetch(`${this.baseUrl}/unified?action=sync-calendars`, {
+      console.log('🔄 Avvio sincronizzazione calendari...');
+      const response = await fetch(`${this.baseUrl}/calendar-sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -395,7 +399,9 @@ class AdminApiService {
         })
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      return await response.json();
+      const result = await response.json();
+      console.log('✅ Sincronizzazione avviata:', result);
+      return result;
     } catch (error) {
       console.error('❌ Error forcing calendar sync:', error);
       throw error;
