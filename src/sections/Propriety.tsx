@@ -55,7 +55,7 @@ const Propriety: React.FC = () => {
       else if (event.key === 'ArrowLeft') showPrevImage();
       else if (event.key === 'ArrowRight') showNextImage();
     };
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown, { passive: true });
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isLightboxOpen, closeLightbox, showPrevImage, showNextImage]);
 

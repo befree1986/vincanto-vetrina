@@ -23,7 +23,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ onClose, onAccept, onCustom
         onClose();
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown, { passive: true });
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
