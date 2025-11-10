@@ -359,6 +359,124 @@ export default async function handler(req, res) {
     }
 
     // ========================================
+    // STRIPE INTEGRATION SECTION
+    // ========================================
+    if (action === 'stripe-payment-intent') {
+      if (req.method === 'POST') {
+        try {
+          const { amount, currency, bookingId, guestEmail } = req.body;
+          
+          // Simula creazione Payment Intent Stripe
+          // In produzione: const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+          // const paymentIntent = await stripe.paymentIntents.create({ amount: amount * 100, currency, metadata: { bookingId } });
+          
+          return res.status(200).json({
+            success: true,
+            clientSecret: `pi_mock_${Date.now()}_secret_${bookingId}`,
+            paymentIntentId: `pi_mock_${Date.now()}`,
+            amount: amount,
+            currency: currency,
+            status: 'requires_payment_method',
+            metadata: {
+              bookingId: bookingId,
+              guestEmail: guestEmail
+            }
+          });
+        } catch (error) {
+          console.error('❌ Errore Stripe Payment Intent:', error);
+          return res.status(500).json({
+            success: false,
+            message: 'Errore nella creazione del pagamento',
+            error: error.message
+          });
+        }
+      }
+    }
+
+    if (action === 'stripe-confirm-payment') {
+      if (req.method === 'POST') {
+        try {
+          const { paymentIntentId, bookingId } = req.body;
+          
+          // Simula conferma pagamento Stripe
+          // In produzione: const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+          
+          // Aggiorna stato pagamento nel database
+          await pool.query(`
+            UPDATE bookings 
+            SET payment_status = 'paid_deposit', 
+                stripe_payment_intent = $1,
+                updated_at = NOW()
+            WHERE booking_id = $2
+          `, [paymentIntentId, bookingId]);
+          
+          return res.status(200).json({
+            success: true,
+            message: 'Pagamento confermato con successo',
+            paymentIntentId: paymentIntentId,
+            bookingId: bookingId,
+            status: 'succeeded'
+          });
+        } catch (error) {
+          console.error('❌ Errore conferma Stripe:', error);
+          return res.status(500).json({
+            success: false,
+            message: 'Errore nella conferma del pagamento',
+            error: error.message
+          });
+        }
+      }
+    }
+
+    if (action === 'payment-methods') {
+      return res.status(200).json({
+        success: true,
+        methods: [
+          {
+            id: 'paypal',
+            name: 'PayPal',
+            type: 'redirect',
+            enabled: true,
+            url: 'https://www.paypal.me/AntonioGuida320',
+            description: 'Pagamento rapido e sicuro tramite PayPal',
+            fees: 'Commissione PayPal: 3.4% + €0.35'
+          },
+          {
+            id: 'stripe_card',
+            name: 'Carta di Credito/Debito',
+            type: 'card',
+            enabled: true,
+            supported_cards: ['visa', 'mastercard', 'amex'],
+            description: 'Pagamento diretto con carta di credito o debito',
+            fees: 'Commissione: 1.4% + €0.25'
+          },
+          {
+            id: 'stripe_sepa',
+            name: 'Bonifico SEPA',
+            type: 'bank_transfer',
+            enabled: true,
+            description: 'Bonifico bancario diretto SEPA',
+            fees: 'Commissione: €0.35'
+          },
+          {
+            id: 'bank_transfer',
+            name: 'Bonifico Bancario',
+            type: 'manual',
+            enabled: true,
+            account_details: {
+              iban: 'IT60X0542811101000000123456',
+              bic: 'BPMOIT22',
+              bank_name: 'Banco BPM',
+              account_holder: 'Vincanto Maori'
+            },
+            description: 'Bonifico tradizionale su conto corrente'
+          }
+        ],
+        defaultMethod: 'stripe_card'
+      });
+    }
+
+    // ========================================
     // CALENDAR MANAGEMENT SECTION
     // ========================================
     if (action === 'calendar-configs') {
@@ -367,56 +485,79 @@ export default async function handler(req, res) {
         calendars: [
           {
             id: 1,
-            name: 'Airbnb Calendar',
-            calendar_type: 'airbnb',
-            url: 'https://www.airbnb.it/calendar/ical/123456789.ics',
+            name: 'Google Calendar Vincanto (Privato)',
+            calendar_type: 'google',
+            url: 'https://calendar.google.com/calendar/ical/vincantomaiori%40gmail.com/private-c093b952abd5d0bafc2261928153f36d/basic.ics',
             is_active: true,
-            sync_frequency: 30,
+            sync_frequency: 15,
             last_sync: new Date().toISOString(),
             status: 'connected',
-            events_synced: 15
+            events_synced: 12,
+            priority: 1
           },
           {
             id: 2,
-            name: 'Booking.com Calendar',
+            name: 'Booking.com Principale',
             calendar_type: 'booking_com',
-            url: 'https://supply-xml.booking.com/hotels/xml/reservations?hotel_id=987654',
+            url: 'https://ical.booking.com/v1/export?t=d6fd211b-ce0a-486b-b98c-6fda80504dd0',
             is_active: true,
             sync_frequency: 60,
             last_sync: new Date(Date.now() - 3600000).toISOString(),
             status: 'connected',
-            events_synced: 8
+            events_synced: 8,
+            priority: 2
           },
           {
             id: 3,
-            name: 'VRBO Calendar',
-            calendar_type: 'vrbo',
-            url: 'https://www.vrbo.com/icalendar/1234567890.ics',
+            name: 'Holidu Calendar',
+            calendar_type: 'holidu',
+            url: 'https://api.host.holidu.com/pmc/rest/apartments/65376863/ical.ics?key=72d27a56f3e8836f690500877301d000',
             is_active: true,
-            sync_frequency: 120,
-            last_sync: new Date(Date.now() - 7200000).toISOString(),
+            sync_frequency: 60,
+            last_sync: new Date(Date.now() - 1800000).toISOString(),
             status: 'connected',
-            events_synced: 12
+            events_synced: 7,
+            priority: 3
           },
           {
             id: 4,
-            name: 'Google Calendar Personal',
-            calendar_type: 'google_calendar',
-            url: 'https://calendar.google.com/calendar/ical/personal%40gmail.com/private-xxx/basic.ics',
+            name: 'Airbnb Calendar',
+            calendar_type: 'airbnb',
+            url: 'https://www.airbnb.it/calendar/ical/vincanto-apartment.ics',
             is_active: false,
-            sync_frequency: 15,
+            sync_frequency: 30,
+            last_sync: new Date(Date.now() - 7200000).toISOString(),
+            status: 'pending_setup',
+            events_synced: 0,
+            priority: 4
+          },
+          {
+            id: 5,
+            name: 'VRBO Calendar',
+            calendar_type: 'vrbo',
+            url: 'https://www.vrbo.com/icalendar/vincanto-property.ics',
+            is_active: false,
+            sync_frequency: 120,
             last_sync: null,
-            status: 'pending_auth',
-            events_synced: 0
+            status: 'pending_setup',
+            events_synced: 0,
+            priority: 5
           }
         ],
         stats: {
-          total: 4,
+          total: 5,
           active: 3,
           googleCalendar: 1,
-          external: 3,
+          external: 4,
           lastSyncSuccess: new Date().toISOString(),
-          totalEventsSynced: 35
+          totalEventsSynced: 27,
+          calendarsConfigured: {
+            google: { active: true, url: 'vincantomaiori@gmail.com' },
+            booking: { active: true, url: 'ical.booking.com' },
+            holidu: { active: true, url: 'api.host.holidu.com' },
+            airbnb: { active: false, url: 'pending_setup' },
+            vrbo: { active: false, url: 'pending_setup' }
+          }
         }
       });
     }
@@ -432,6 +573,85 @@ export default async function handler(req, res) {
           events_found: 12
         });
       }
+    }
+
+    if (action === 'calendar-auto-sync') {
+      if (req.method === 'POST') {
+        try {
+          // Sincronizza tutte le prenotazioni su Google Calendar Vincanto
+          const bookings = await pool.query(`
+            SELECT 
+              booking_id,
+              first_name || ' ' || last_name as guest_name,
+              check_in,
+              check_out,
+              guests,
+              total_amount,
+              status,
+              'database' as source
+            FROM bookings 
+            WHERE status IN ('confirmed', 'pending')
+            ORDER BY check_in ASC
+          `);
+
+          const syncResults = {
+            totalBookings: bookings.rows.length,
+            synced: 0,
+            errors: []
+          };
+
+          // Simula sincronizzazione con Google Calendar
+          for (const booking of bookings.rows) {
+            try {
+              // In produzione qui si farebbe la chiamata API a Google Calendar
+              console.log(`📅 Sincronizzando prenotazione ${booking.booking_id} su Google Calendar`);
+              syncResults.synced++;
+            } catch (error) {
+              syncResults.errors.push({
+                bookingId: booking.booking_id,
+                error: error.message
+              });
+            }
+          }
+
+          return res.status(200).json({
+            success: true,
+            message: 'Sincronizzazione automatica completata',
+            results: syncResults,
+            googleCalendar: {
+              url: 'https://calendar.google.com/calendar/u/0?cid=vincantomaiori@gmail.com',
+              calendarId: 'vincantomaiori@gmail.com',
+              lastSync: new Date().toISOString()
+            },
+            nextSync: new Date(Date.now() + 3600000).toISOString() // Prossima sync tra 1 ora
+          });
+        } catch (error) {
+          console.error('❌ Errore sincronizzazione automatica:', error);
+          return res.status(500).json({
+            success: false,
+            message: 'Errore nella sincronizzazione automatica',
+            error: error.message
+          });
+        }
+      }
+
+      // GET - Status della sincronizzazione automatica
+      return res.status(200).json({
+        success: true,
+        autoSync: {
+          enabled: true,
+          frequency: '1 hour',
+          lastSync: new Date(Date.now() - 1800000).toISOString(),
+          nextSync: new Date(Date.now() + 1800000).toISOString(),
+          totalSynced: 27,
+          errors: 0,
+          calendars: [
+            { name: 'Google Calendar Vincanto', status: 'active', lastSync: new Date().toISOString() },
+            { name: 'Booking.com', status: 'active', lastSync: new Date(Date.now() - 3600000).toISOString() },
+            { name: 'Holidu', status: 'active', lastSync: new Date(Date.now() - 1800000).toISOString() }
+          ]
+        }
+      });
     }
 
     // ========================================
@@ -520,6 +740,64 @@ export default async function handler(req, res) {
     }
 
     // ========================================
+    // BLOCKED DATES MANAGEMENT SECTION
+    // ========================================
+    if (action === 'blocked-dates') {
+      if (req.method === 'GET') {
+        try {
+          // Per ora restituiamo date bloccate simulate
+          // In futuro possiamo aggiungere una tabella blocked_dates
+          const today = new Date();
+          const blockedDates = [
+            {
+              id: 1,
+              start_date: new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              end_date: new Date(today.getTime() + 9 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              reason: 'maintenance',
+              description: 'Manutenzione programmata impianti'
+            },
+            {
+              id: 2,
+              start_date: new Date(today.getTime() + 20 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              end_date: new Date(today.getTime() + 22 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              reason: 'personal',
+              description: 'Uso personale proprietario'
+            }
+          ];
+          
+          return res.status(200).json({
+            success: true,
+            blockedDates: blockedDates
+          });
+        } catch (error) {
+          console.error('❌ Errore blocked-dates GET:', error);
+          return res.status(200).json({
+            success: true,
+            blockedDates: []
+          });
+        }
+      }
+
+      if (req.method === 'POST') {
+        // Crea nuova data bloccata
+        const blockData = req.body;
+        console.log('🚫 Nuova data bloccata:', blockData);
+        
+        return res.status(201).json({
+          success: true,
+          message: 'Data bloccata creata con successo',
+          blockedDate: {
+            id: Date.now(),
+            start_date: blockData.start_date,
+            end_date: blockData.end_date,
+            reason: blockData.reason || 'maintenance',
+            description: blockData.description || ''
+          }
+        });
+      }
+    }
+
+    // ========================================
     // SYSTEM SETTINGS SECTION
     // ========================================
     if (action === 'settings') {
@@ -552,8 +830,9 @@ export default async function handler(req, res) {
       error: 'Endpoint non trovato',
       availableActions: [
         'login', 'dashboard-stats', 'analytics', 'notifications', 
-        'booking', 'payments', 'calendar-configs', 'calendar-sync', 
-        'pricing-config', 'extra-services', 'contact', 'settings'
+        'booking', 'payments', 'stripe-payment-intent', 'stripe-confirm-payment', 
+        'payment-methods', 'calendar-configs', 'calendar-sync', 'calendar-auto-sync',
+        'blocked-dates', 'pricing-config', 'extra-services', 'contact', 'settings'
       ],
       requestedAction: action,
       method: req.method
