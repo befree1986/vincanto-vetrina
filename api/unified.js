@@ -289,6 +289,30 @@ export default async function handler(req, res) {
     }
 
     // ========================================
+    // CLEAR TEST DATA SECTION
+    // ========================================
+    if (action === 'clear-test-bookings') {
+      if (req.method === 'DELETE') {
+        try {
+          // Cancella tutte le prenotazioni simulate/test
+          const deleteResult = await pool.query('DELETE FROM bookings WHERE id IN (1, 2, 3)');
+          
+          return res.status(200).json({
+            success: true,
+            message: 'Prenotazioni di test cancellate con successo',
+            deletedCount: deleteResult.rowCount
+          });
+        } catch (error) {
+          console.error('❌ Errore cancellazione prenotazioni test:', error);
+          return res.status(500).json({
+            success: false,
+            error: 'Errore cancellazione prenotazioni test'
+          });
+        }
+      }
+    }
+
+    // ========================================
     // PAYMENTS SECTION (PAYPAL INTEGRATED)
     // ========================================
     if (action === 'payments') {
@@ -942,7 +966,8 @@ export default async function handler(req, res) {
         'payment-methods', 'calendar-configs', 'calendar-sync', 'calendar-auto-sync',
         'blocked-dates', 'pricing-config', 'extra-services', 'contact', 'settings',
         'google-auth', 'google-auth-url', 'google-auth-callback', 'google-auth-status',
-        'google-calendars', 'google-events', 'google-sync', 'google-test', 'google-booking-events'
+        'google-calendars', 'google-events', 'google-sync', 'google-test', 'google-booking-events',
+        'clear-test-bookings'
       ],
       requestedAction: action,
       method: req.method
