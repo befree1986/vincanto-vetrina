@@ -48,6 +48,19 @@ const Propriety: React.FC = () => {
     setCurrentImageIndex((prevIndex) => (prevIndex - 1 + lightboxImages.length) % lightboxImages.length);
   }, [lightboxImages.length]);
 
+  // Touch handling ottimizzato per performance
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.changedTouches[0].clientX;
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    const delta = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(delta) > 50) {
+      if (delta > 0) showPrevImage();
+      else showNextImage();
+    }
+  }, [showPrevImage, showNextImage]);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!isLightboxOpen) return;
@@ -137,16 +150,9 @@ const Propriety: React.FC = () => {
             <div
               className="lightbox-content"
               onClick={(e) => e.stopPropagation()}
-              onTouchStart={(e) => {
-               touchStartX.current = e.changedTouches[0].clientX;
-  }}
-               onTouchEnd={(e) => {
-                const delta = e.changedTouches[0].clientX - touchStartX.current;
-                if (Math.abs(delta) > 50) {
-                if (delta > 0) showPrevImage();
-                else showNextImage();
-    }
-  }}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+            >
 >
               <button
                 className="lightbox-close"

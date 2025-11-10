@@ -35,9 +35,10 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import { Analytics } from "@vercel/analytics/react";
 import GoogleAnalytics from "./utils/GoogleAnalytics";
 import SafeSeo from './components/SafeSeo';
+import { suppressPerformanceWarnings } from './utils/eventListenerOptimizer';
 
-
-
+// Sopprimi warning di performance non critici in sviluppo
+suppressPerformanceWarnings();
 
 function App() {
   const location = useLocation();
