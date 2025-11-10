@@ -41,18 +41,18 @@ export const useDynamicPricing = (): PricingData => {
             pricingConfig: data.pricingConfig
           });
           
-          if (data.success && data.pricing) {
-            // L'API restituisce i dati in data.pricing.config, non data.pricingConfig
-            const config = data.pricing.config || {};
+          if (data.success && data.quote) {
+            // L'API quote restituisce i dati direttamente in data.quote
+            const config = data.quote || {};
             console.log('🔍 DYNAMIC PRICING: Configurazione trovata:', config);
             
             setPricing(prev => ({
               ...prev,
-              basePrice: parseFloat(config.base_price || config.basePrice) || prev.basePrice,
-              parkingFee: parseFloat(config.parking_fee || config.parkingFee) || prev.parkingFee,
-              cleaningFee: parseFloat(config.cleaning_fee || config.cleaningFee) || prev.cleaningFee,
-              touristTax: parseFloat(config.tourist_tax_adult || config.touristTaxAdult) || prev.touristTax,
-              additionalGuestPrice: parseFloat(config.additional_guest_3to4 || config.additionalGuest3to4) || prev.additionalGuestPrice,
+              basePrice: parseFloat(config.basePrice) || prev.basePrice,
+              parkingFee: parseFloat(config.parkingCost) || prev.parkingFee,
+              cleaningFee: parseFloat(config.cleaningFee) || prev.cleaningFee,
+              touristTax: parseFloat(config.touristTax) || prev.touristTax,
+              additionalGuestPrice: 0, // Quote API non ha questo campo
               loading: false,
               error: null
             }));
