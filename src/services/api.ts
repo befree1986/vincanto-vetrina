@@ -98,9 +98,10 @@ export async function getBookingQuote(data: BookingQuoteRequest): Promise<Bookin
     console.log('🚀 Frontend sending quote request:', data);
     
     try {
-        // Invia i dati nel formato che il backend si aspetta
-        const response = await api.get('/quote', {
+        // USA API UNIFICATA - Cambio da /quote a /unified?action=quote
+        const response = await api.get('/unified', {
             params: {
+                action: 'quote',
                 checkIn: data.checkIn,
                 checkOut: data.checkOut,
                 guests: data.guests,
@@ -110,29 +111,29 @@ export async function getBookingQuote(data: BookingQuoteRequest): Promise<Bookin
         
         console.log('📦 API quote response:', response.data);
         
-        // Il nuovo backend restituisce { success: true, data: { pricing: {...}, config_used: {...}, booking_details: {...} } }
-        if (!response.data.success || !response.data.data) {
+        // Il nuovo backend API unificata restituisce { success: true, quote: {...}, breakdown: {...} }
+        if (!response.data.success || !response.data.quote) {
             throw new Error('Invalid API response format');
         }
         
-        const { pricing, config_used, booking_details } = response.data.data;
+        const quote = response.data.quote;
         
-        // Trasforma la risposta API per il frontend
+        // Trasforma la risposta API unificata per il frontend
         const transformedCosts: BookingQuoteResponse = {
-            nights: booking_details.nights,
-            guests: booking_details.guests,
-            basePrice: pricing.base_price,
-            parkingCost: 0, // TODO: Implementare parcheggio nel nuovo sistema
-            cleaningFee: pricing.cleaning_fee,
-            touristTax: pricing.tourist_tax,
-            subtotal: pricing.subtotal,
-            totalAmount: pricing.total,
-            depositAmount: pricing.total * 0.30, // TODO: Prendere da configurazione
+            nights: quote.nights,
+            guests: quote.guests,
+            basePrice: quote.basePrice,
+            parkingCost: quote.parkingCost || 0,
+            cleaningFee: quote.cleaningFee,
+            touristTax: quote.touristTax,
+            subtotal: quote.discountedAccommodation + quote.cleaningFee,
+            totalAmount: quote.totalAmount,
+            depositAmount: quote.depositAmount,
             depositPercentage: 0.30,
             currency: 'EUR',
             pricingConfig: {
-                basePrice: config_used.base_price_per_night || pricing.rate_per_night,
-                additionalGuestPrice: 0, // TODO: Implementare nel nuovo sistema
+                basePrice: quote.basePrice,
+                additionalGuestPrice: 0,
                 minimumNights: 2
             }
         };

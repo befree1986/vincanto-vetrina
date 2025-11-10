@@ -920,6 +920,149 @@ export default async function handler(req, res) {
     }
 
     // ========================================
+    // QUOTE/PRICING CALCULATION SECTION
+    // ========================================
+    if (action === 'quote') {
+      try {
+        const { checkIn, checkOut, guests, includeParking } = req.query;
+        
+        // Validazione parametri
+        if (!checkIn || !checkOut || !guests) {
+          return res.status(400).json({
+            success: false,
+            error: 'Parametri mancanti: checkIn, checkOut, guests sono obbligatori'
+          });
+        }
+
+        // Calcola notti
+        const checkInDate = new Date(checkIn);
+        const checkOutDate = new Date(checkOut);
+        const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+
+        if (nights <= 0) {
+          return res.status(400).json({
+            success: false,
+            error: 'Date non valide'
+          });
+        }
+
+        // Ottieni configurazione prezzi dal database
+        let pricing;
+        try {
+          const pricingResult = await pool.query('SELECT * FROM pricing_config ORDER BY id DESC LIMIT 1');
+          if (pricingResult.rows.length > 0) {
+            const p = pricingResult.rows[0];
+            pricing = {
+              priceGroup1to2: parseFloat(p.price_group_1to2) || 75,
+              priceGroup3to4: parseFloat(p.price_group_3to4) || 95,
+              priceGroup5to6: parseFloat(p.price_group_5to6) || 115,
+              priceGroup7to8: parseFloat(p.price_group_7to8) || 135,
+              cleaningFee: parseFloat(p.cleaning_fee) || 50,
+              parkingFee: parseFloat(p.parking_fee) || 20,
+              touristTaxAdult: parseFloat(p.tourist_tax_adult) || 2.00,
+              touristTaxChild: parseFloat(p.tourist_tax_child) || 0,
+              weeklyDiscount: parseFloat(p.weekly_discount) || 10,
+              monthlyDiscount: parseFloat(p.monthly_discount) || 15
+            };
+          } else {
+            // Prezzi default se tabella vuota
+            pricing = {
+              priceGroup1to2: 75,
+              priceGroup3to4: 95,
+              priceGroup5to6: 115,
+              priceGroup7to8: 135,
+              cleaningFee: 50,
+              parkingFee: 20,
+              touristTaxAdult: 2.00,
+              touristTaxChild: 0,
+              weeklyDiscount: 10,
+              monthlyDiscount: 15
+            };
+          }
+        } catch (dbError) {
+          console.warn('⚠️ Errore database pricing, uso default:', dbError);
+          pricing = {
+            priceGroup1to2: 75,
+            priceGroup3to4: 95,
+            priceGroup5to6: 115,
+            priceGroup7to8: 135,
+            cleaningFee: 50,
+            parkingFee: 20,
+            touristTaxAdult: 2.00,
+            touristTaxChild: 0,
+            weeklyDiscount: 10,
+            monthlyDiscount: 15
+          };
+        }
+
+        // Calcola prezzo base per ospiti
+        const guestsNum = parseInt(guests);
+        let basePrice;
+        if (guestsNum <= 2) basePrice = pricing.priceGroup1to2;
+        else if (guestsNum <= 4) basePrice = pricing.priceGroup3to4;
+        else if (guestsNum <= 6) basePrice = pricing.priceGroup5to6;
+        else basePrice = pricing.priceGroup7to8;
+
+        // Calcola subtotale alloggio
+        const accommodationCost = basePrice * nights;
+
+        // Applica sconti per soggiorni lunghi
+        let discount = 0;
+        if (nights >= 28) discount = pricing.monthlyDiscount; // 15% sconto mensile
+        else if (nights >= 7) discount = pricing.weeklyDiscount; // 10% sconto settimanale
+
+        const discountAmount = (accommodationCost * discount) / 100;
+        const discountedAccommodation = accommodationCost - discountAmount;
+
+        // Calcola costi aggiuntivi
+        const cleaningFee = pricing.cleaningFee;
+        const parkingCost = (includeParking === 'true') ? pricing.parkingFee * nights : 0;
+        const touristTax = pricing.touristTaxAdult * guestsNum * nights;
+
+        // Calcola totale
+        const totalAmount = discountedAccommodation + cleaningFee + parkingCost + touristTax;
+        const depositAmount = totalAmount * 0.30; // Acconto 30%
+
+        // Risposta quote
+        return res.status(200).json({
+          success: true,
+          quote: {
+            checkIn: checkIn,
+            checkOut: checkOut,
+            guests: guestsNum,
+            nights: nights,
+            basePrice: basePrice,
+            accommodationCost: accommodationCost,
+            discount: discount,
+            discountAmount: discountAmount,
+            discountedAccommodation: discountedAccommodation,
+            cleaningFee: cleaningFee,
+            parkingCost: parkingCost,
+            touristTax: touristTax,
+            totalAmount: totalAmount,
+            depositAmount: depositAmount,
+            includeParking: includeParking === 'true'
+          },
+          breakdown: {
+            alloggio: `€${basePrice}/notte × ${nights} notti = €${accommodationCost.toFixed(2)}`,
+            sconto: discount > 0 ? `Sconto ${discount}%: -€${discountAmount.toFixed(2)}` : null,
+            pulizie: `€${cleaningFee.toFixed(2)}`,
+            parcheggio: parkingCost > 0 ? `€${pricing.parkingFee}/notte × ${nights} notti = €${parkingCost.toFixed(2)}` : null,
+            tassa: `€${pricing.touristTaxAdult}/persona/notte × ${guestsNum} × ${nights} = €${touristTax.toFixed(2)}`,
+            totale: `€${totalAmount.toFixed(2)}`,
+            acconto: `€${depositAmount.toFixed(2)} (30%)`
+          }
+        });
+      } catch (error) {
+        console.error('❌ Errore calcolo quote:', error);
+        return res.status(500).json({
+          success: false,
+          error: 'Errore nel calcolo del preventivo'
+        });
+      }
+    }
+
+    // ========================================
     // EXTRA SERVICES SECTION
     // ========================================
     if (action === 'extra-services') {
@@ -1328,7 +1471,7 @@ export default async function handler(req, res) {
         'login', 'dashboard-stats', 'analytics', 'notifications', 
         'booking', 'payments', 'stripe-payment-intent', 'stripe-confirm-payment', 
         'payment-methods', 'calendar-configs', 'calendar-sync', 'calendar-auto-sync',
-        'blocked-dates', 'pricing-config', 'extra-services', 'contact', 'settings',
+        'blocked-dates', 'pricing-config', 'quote', 'extra-services', 'contact', 'settings',
         'google-auth', 'google-auth-url', 'google-auth-callback', 'google-auth-status',
         'google-calendars', 'google-events', 'google-sync', 'google-test', 'google-booking-events',
         'clear-test-bookings', 'update-calendar-config', 'delete-calendar-config', 
