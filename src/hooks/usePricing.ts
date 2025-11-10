@@ -64,41 +64,41 @@ export const usePricing = () => {
       
       const result = await response.json();
       
-      if (result.success && result.pricing && result.pricing.config) {
-        const apiData = result.pricing.config;
+      if (result.success && result.pricing) {
+        const apiData = result.pricing;
         console.log('🔍 Dati ricevuti dall\'API Unificata:', apiData);
         
-        // 🔥 NUOVO: Gestione dati sistema base + aggiuntive
+        // 🔥 NUOVO: Gestione dati dal sistema pricing-config
         const transformedData = {
-          basePrice: apiData.basePrice || 75,
+          basePrice: apiData.priceGroup1to2 || 75,
           date: new Date().toISOString().split('T')[0],
           season: 'medium' as const,
           priceByGuests: {
-            persons1to2: apiData.basePrice * 2 || 150,                                    // Base: €75 × 2 = €150
-            persons3to4: (apiData.basePrice * 2) + apiData.additionalGuest3to4 || 180,   // €150 + €30 = €180  
-            persons5to6: (apiData.basePrice * 2) + (apiData.additionalGuest3to4 * 2) + apiData.additionalGuest5to6 || 235,  // €150 + €60 + €25 = €235
-            persons7to8: (apiData.basePrice * 2) + (apiData.additionalGuest3to4 * 2) + (apiData.additionalGuest5to6 * 2) + apiData.additionalGuest7to8 || 275   // €150 + €60 + €50 + €20 = €275
+            persons1to2: apiData.priceGroup1to2 || 75,
+            persons3to4: apiData.priceGroup3to4 || 95,
+            persons5to6: apiData.priceGroup5to6 || 115,
+            persons7to8: apiData.priceGroup7to8 || 135
           },
           groupPricing: {
-            priceGroup1to2: apiData.basePrice || 75,
-            priceGroup3to4: apiData.additionalGuest3to4 || 30,
-            priceGroup5to6: apiData.additionalGuest5to6 || 25,
-            priceGroup7to8: apiData.additionalGuest7to8 || 20,
+            priceGroup1to2: apiData.priceGroup1to2 || 75,
+            priceGroup3to4: apiData.priceGroup3to4 || 95,
+            priceGroup5to6: apiData.priceGroup5to6 || 115,
+            priceGroup7to8: apiData.priceGroup7to8 || 135,
             cleaningFee: apiData.cleaningFee || 50,
             parkingFee: apiData.parkingFee || 20,
             touristTaxAdult: apiData.touristTaxAdult || 2.00,
-            touristTaxChild: 0
+            touristTaxChild: apiData.touristTaxChild || 0
           },
             discounts: {
               weekly: Number(apiData.weeklyDiscount) || 10,
-              monthly: Number(apiData.monthlyDiscount) || 0
+              monthly: Number(apiData.monthlyDiscount) || 15
             }
           };
           
           console.log('🎯 Dati sistema base + aggiuntive trasformati:', transformedData);
           setCurrentPrice(transformedData);
       } else {
-        throw new Error('Formato dati API non valido');
+        throw new Error('Formato risposta API non valido');
       }
     } catch (err) {
       console.error('❌ Errore fetch prezzi:', err);
