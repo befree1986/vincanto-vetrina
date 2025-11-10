@@ -141,67 +141,8 @@ export async function getBookingQuote(data: BookingQuoteRequest): Promise<Bookin
         return transformedCosts;
         
     } catch (error) {
-        console.warn('⚠️ API not available, using mock data for testing');
-        
-        // FALLBACK TEMPORANEO per test senza API - AGGIORNATO AI PREZZI CORRETTI
-        const checkIn = new Date(data.checkIn);
-        const checkOut = new Date(data.checkOut);
-        const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
-        const guests = data.guests;
-        
-        // 🔄 PREZZI DINAMICI: Carica dal database admin tramite API quote
-        let dynamicPricing = null;
-        try {
-            // 🎯 USA L'API UNIFICATA per il calcolo dei preventivi
-            const quoteResponse = await fetch(`/api/unified?action=quote&checkIn=${formatDateForApi(checkIn)}&checkOut=${formatDateForApi(checkOut)}&guests=${guests}&includeParking=${data.includeParking}`);
-            if (quoteResponse.ok) {
-                const quoteData = await quoteResponse.json();
-                if (quoteData.success && quoteData.pricingConfig) {
-                    dynamicPricing = quoteData.pricingConfig;
-                    console.log('✅ DYNAMIC PRICING: Prezzi caricati dal database admin:', dynamicPricing);
-                }
-            }
-        } catch (error) {
-            console.warn('⚠️ DYNAMIC PRICING: Fallback ai prezzi statici, errore:', error);
-        }
-
-        // Usa prezzi dinamici o fallback statici
-        const pricePerPerson = dynamicPricing?.basePrice || 75;
-        const parkingPerNight = dynamicPricing?.parkingFee || 15;
-        const cleaningPrice = dynamicPricing?.cleaningFee || 50;
-        const touristTaxRate = dynamicPricing?.touristTax || 2;
-        
-        console.log('💰 PRICING USED:', { pricePerPerson, parkingPerNight, cleaningPrice, touristTaxRate, isDynamic: !!dynamicPricing });
-        
-        const basePrice = nights * guests * pricePerPerson; // Per PERSONA per notte
-        const parkingCost = data.includeParking ? nights * parkingPerNight : 0; // Parcheggio dinamico
-        const cleaningFee = cleaningPrice;
-        const touristTax = guests * nights * touristTaxRate;
-        const subtotal = basePrice + parkingCost + cleaningFee;
-        const totalAmount = subtotal + touristTax;
-        const depositAmount = totalAmount * 0.30;
-        
-        const mockResponse: BookingQuoteResponse = {
-            nights,
-            guests,
-            basePrice: basePrice, // Solo basePrice, additionalGuestPrice = 0
-            parkingCost,
-            cleaningFee,
-            touristTax,
-            subtotal,
-            totalAmount,
-            depositAmount,
-            depositPercentage: 0.30,
-            currency: 'EUR',
-            pricingConfig: {
-                basePrice: 75, // €75 per persona
-                additionalGuestPrice: 75, // Stesso prezzo per ogni persona
-                minimumNights: 2
-            }
-        };
-        
-        console.log('🎭 Using mock quote response:', mockResponse);
-        return mockResponse;
+        console.error('❌ Errore richiesta preventivo:', error);
+        throw new Error('Servizio preventivi non disponibile. Riprova più tardi.');
     }
 }
 
@@ -267,12 +208,46 @@ export async function checkAvailability(data: AvailabilityCheck): Promise<Availa
  * Ottieni calendario con date occupate
  */
 export async function getCalendar(startDate?: string, endDate?: string): Promise<CalendarResponse> {
-    const params: any = { action: 'calendar' };
+    const params: any = {};
     if (startDate) params.start_date = startDate;
     if (endDate) params.end_date = endDate;
     
-    const response = await api.get('/availability', { params });
-    return response.data;
+    // Carica sia date bloccate che prenotazioni
+    const [blockedResponse, bookingsResponse] = await Promise.all([
+        api.get('/unified', { params: { ...params, action: 'blocked-dates' } }),
+        api.get('/unified', { params: { ...params, action: 'booking' } })
+    ]);
+    
+    const blockedData = blockedResponse.data;
+    const bookingsData = bookingsResponse.data;
+    
+    // Trasforma blockedDates in occupied_dates
+    const blocked_dates = (blockedData.blockedDates || []).map((blocked: any) => ({
+        start: blocked.start_date,
+        end: blocked.end_date,
+        type: 'blocked' as const,
+        status: blocked.reason || 'blocked'
+    }));
+    
+    // Trasforma bookings in occupied_dates
+    const booking_dates = (bookingsData.bookings || []).map((booking: any) => ({
+        start: booking.check_in.split('T')[0],
+        end: booking.check_out.split('T')[0], 
+        type: 'booking' as const,
+        status: booking.status || 'booked'
+    }));
+    
+    // Combina tutte le date occupate
+    const occupied_dates = [...blocked_dates, ...booking_dates];
+    
+    return {
+        success: blockedData.success && bookingsData.success,
+        period: {
+            start: startDate || new Date().toISOString().split('T')[0],
+            end: endDate || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        },
+        occupied_dates
+    };
 }
 
 /**

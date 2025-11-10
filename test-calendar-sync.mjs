@@ -10,11 +10,10 @@ async function testCalendarSyncSystem() {
     
     try {
         // 1. Verifica stato attuale database
-        console.log('📋 1. Verifica stato database calendari...');
-        const dbStatusResponse = await fetch(`${API_BASE_URL}/utilities`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'database-status' })
+        console.log('📋 1. Verifica configurazione calendari...');
+        const dbStatusResponse = await fetch(`${API_BASE_URL}/unified?action=calendar-configs`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
         });
         
         const dbStatus = await dbStatusResponse.json();
@@ -22,10 +21,9 @@ async function testCalendarSyncSystem() {
         
         // 2. Esegui sincronizzazione calendari
         console.log('\n🔄 2. Avvio sincronizzazione calendari esterni...');
-        const syncResponse = await fetch(`${API_BASE_URL}/utilities`, {
+        const syncResponse = await fetch(`${API_BASE_URL}/unified?action=calendar-sync`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'sync-calendars' })
+            headers: { 'Content-Type': 'application/json' }
         });
         
         if (!syncResponse.ok) {
@@ -40,7 +38,7 @@ async function testCalendarSyncSystem() {
         const today = new Date();
         const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate());
         
-        const availabilityResponse = await fetch(`${API_BASE_URL}/booking`, {
+        const availabilityResponse = await fetch(`${API_BASE_URL}/unified?action=blocked-dates`, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' }
         });

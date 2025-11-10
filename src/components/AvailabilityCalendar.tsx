@@ -52,32 +52,62 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
       const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
       const endDate = `${year}-${month.toString().padStart(2, '0')}-${new Date(year, month, 0).getDate()}`;
 
-      // 🎯 CONSOLIDATO: Usa calendar-hub per tutti i servizi calendario
+      // 🎯 AGGIORNATO: Usa endpoint unificato per tutti i servizi calendario
       console.log(`📅 Caricamento disponibilità per ${year}-${month}...`);
       
-      const availabilityResponse = await fetch(`/api/calendar-hub?service=availability&action=check&startDate=${startDate}&endDate=${endDate}`);
+      // Carica sia date bloccate che prenotazioni  
+      const [blockedResponse, bookingsResponse] = await Promise.all([
+        fetch(`/api/unified?action=blocked-dates&start_date=${startDate}&end_date=${endDate}`),
+        fetch(`/api/unified?action=booking&start_date=${startDate}&end_date=${endDate}`)
+      ]);
       
-      if (!availabilityResponse.ok) {
-        throw new Error('Errore caricamento disponibilità');
+      if (!blockedResponse.ok || !bookingsResponse.ok) {
+        throw new Error('Errore caricamento calendario');
       }
       
-      const availabilityData = await availabilityResponse.json();
+      const blockedData = await blockedResponse.json();
+      const bookingsData = await bookingsResponse.json();
       
-      if (availabilityData.success) {
-        // Imposta date bloccate da TUTTE le fonti (Google, Booking, Holidu, DB interno)  
-        setBlockedDates(availabilityData.blockedDates || []);
+      if (blockedData.success && bookingsData.success) {
+        // Crea array date bloccate da date manuali
+        const manualBlockedDates = (blockedData.blockedDates || []).map((block: any) => block.start_date);
         
-        // Converti in eventi calendario con source info
-        const calendarEvents: CalendarEvent[] = (availabilityData.blockedDates || []).map((date: string) => ({
-          date,
+        // Crea array date bloccate da prenotazioni
+        const bookingBlockedDates = (bookingsData.bookings || []).map((booking: any) => {
+          const checkIn = new Date(booking.check_in);
+          const checkOut = new Date(booking.check_out);
+          const dates = [];
+          for (let d = new Date(checkIn); d < checkOut; d.setDate(d.getDate() + 1)) {
+            dates.push(d.toISOString().split('T')[0]);
+          }
+          return dates;
+        }).flat();
+        
+        // Combina tutte le date bloccate
+        const allBlockedDates = [...manualBlockedDates, ...bookingBlockedDates];
+        setBlockedDates(allBlockedDates);
+        
+        // Crea eventi calendario combinati
+        const manualEvents: CalendarEvent[] = (blockedData.blockedDates || []).map((block: any) => ({
+          date: block.start_date,
           type: 'blocked' as const,
-          reason: 'Occupato',
-          source: 'sync'
+          reason: block.description || 'Bloccato',
+          source: 'manual'
         }));
         
-        setBookings(calendarEvents);
+        const bookingEvents: CalendarEvent[] = (bookingsData.bookings || []).map((booking: any) => ({
+          date: booking.check_in.split('T')[0],
+          type: 'booking' as const,
+          reason: `Prenotato - ${booking.customer_name}`,
+          source: 'booking',
+          check_in_date: booking.check_in.split('T')[0],
+          check_out_date: booking.check_out.split('T')[0]
+        }));
         
-        console.log(`✅ ${Object.keys(availabilityData.blockedDates || {}).length} date bloccate caricate da ${availabilityData.calendarsChecked || 0} calendari`);
+        const allEvents = [...manualEvents, ...bookingEvents];
+        setBookings(allEvents);
+        
+        console.log(`✅ ${allBlockedDates.length} date bloccate caricate (${manualBlockedDates.length} manuali + ${bookingBlockedDates.length} prenotazioni)`);
       } else {
         // Se success è false, usa modalità aperta senza errore
         console.log('⚠️ API non disponibile, modalità calendario aperto');
@@ -100,12 +130,12 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
         const year = currentMonth.getFullYear();
         const month = currentMonth.getMonth() + 1;
         
-        const blockedResponse = await fetch('/api/blocked-dates');
+        const blockedResponse = await fetch('/api/unified?action=blocked-dates');
         if (blockedResponse.ok) {
           const blockedData = await blockedResponse.json();
           if (blockedData.success) {
-            const dates = blockedData.blocked_dates.map((item: any) => 
-              new Date(item.date).toISOString().split('T')[0]
+            const dates = blockedData.blockedDates.map((item: any) => 
+              new Date(item.start_date).toISOString().split('T')[0]
             );
             setBlockedDates(dates);
           }

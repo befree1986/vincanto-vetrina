@@ -291,14 +291,26 @@ class AdminApiService {
       console.log('📅 Calendar configs da API unificata:', data);
       
       // Adatta la risposta per il formato atteso dall'admin panel
+      const adaptedCalendars = (data.calendars || []).map((cal: any) => ({
+        ...cal,
+        // Mappa i campi dall'API al formato admin panel
+        last_sync_at: cal.last_sync,
+        sync_frequency: cal.sync_frequency || 60,
+        events_count: cal.events_synced || 0,
+        is_active: cal.is_active || cal.status === 'active',
+        // Mantiene anche i campi originali per compatibilità
+        status: cal.status || (cal.is_active ? 'connected' : 'disconnected')
+      }));
+      
       return {
-        calendars: data.calendars || [],
+        calendars: adaptedCalendars,
         stats: {
-          total: data.calendars?.length || 0,
-          active: data.calendars?.filter((c: any) => c.status === 'active')?.length || 0,
-          external: data.calendars?.length || 0,
-          googleCalendar: 0,
-          lastSyncSuccess: new Date().toISOString()
+          total: adaptedCalendars.length || 0,
+          active: adaptedCalendars.filter((c: any) => c.is_active)?.length || 0,
+          external: adaptedCalendars.length || 0,
+          googleCalendar: adaptedCalendars.filter((c: any) => c.calendar_type === 'google')?.length || 0,
+          lastSyncSuccess: data.stats?.lastSyncSuccess || new Date().toISOString(),
+          totalEventsSynced: data.stats?.totalEventsSynced || 0
         }
       };
     } catch (error) {
@@ -429,7 +441,7 @@ class AdminApiService {
   // Ottieni URL autorizzazione Google
   async getGoogleAuthUrl() {
     try {
-      const response = await fetch(`${this.baseUrl}/google-calendar/auth-url`);
+      const response = await fetch(`${this.baseUrl}/unified?action=google-auth-url`);
       if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       return await response.json();
     } catch (error) {
@@ -441,7 +453,7 @@ class AdminApiService {
   // Completa autorizzazione Google
   async completeGoogleAuth(code: string) {
     try {
-      const response = await fetch(`${this.baseUrl}/google-calendar/callback`, {
+      const response = await fetch(`${this.baseUrl}/unified?action=google-auth-callback`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code })
@@ -457,7 +469,7 @@ class AdminApiService {
   // Verifica stato autenticazione Google
   async getGoogleAuthStatus() {
     try {
-      const response = await fetch(`${this.baseUrl}/google-calendar/status`);
+      const response = await fetch(`${this.baseUrl}/unified?action=google-auth-status`);
       if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       return await response.json();
     } catch (error) {
@@ -469,7 +481,7 @@ class AdminApiService {
   // Lista calendari Google
   async getGoogleCalendars() {
     try {
-      const response = await fetch(`${this.baseUrl}/google-calendar/calendars`);
+      const response = await fetch(`${this.baseUrl}/unified?action=google-calendars`);
       if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       return await response.json();
     } catch (error) {
@@ -482,11 +494,12 @@ class AdminApiService {
   async getGoogleCalendarEvents(calendarId?: string, timeMin?: string, timeMax?: string) {
     try {
       const params = new URLSearchParams();
+      params.append('action', 'google-events');
       if (calendarId) params.append('calendarId', calendarId);
       if (timeMin) params.append('timeMin', timeMin);
       if (timeMax) params.append('timeMax', timeMax);
       
-      const response = await fetch(`${this.baseUrl}/google-calendar/events?${params}`);
+      const response = await fetch(`${this.baseUrl}/unified?${params}`);
       if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       return await response.json();
     } catch (error) {
@@ -498,7 +511,7 @@ class AdminApiService {
   // Sincronizza prenotazioni con Google Calendar
   async syncBookingsToGoogle(bookings: any[], calendarId?: string) {
     try {
-      const response = await fetch(`${this.baseUrl}/google-calendar/sync`, {
+      const response = await fetch(`${this.baseUrl}/unified?action=google-sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -517,7 +530,7 @@ class AdminApiService {
   // Test connessione Google Calendar
   async testGoogleConnection() {
     try {
-      const response = await fetch(`${this.baseUrl}/google-calendar/test`);
+      const response = await fetch(`${this.baseUrl}/unified?action=google-test`);
       if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       return await response.json();
     } catch (error) {
@@ -529,7 +542,7 @@ class AdminApiService {
   // Ottieni eventi convertiti da prenotazioni
   async getBookingEvents() {
     try {
-      const response = await fetch(`${this.baseUrl}/google-calendar/booking-events`);
+      const response = await fetch(`${this.baseUrl}/unified?action=google-booking-events`);
       if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       return await response.json();
     } catch (error) {
@@ -541,7 +554,7 @@ class AdminApiService {
   // Metodi per l'autenticazione e gestione Google Calendar
   async initiateGoogleAuth() {
     try {
-      const response = await fetch(`${this.baseUrl}/google-calendar/auth`);
+      const response = await fetch(`${this.baseUrl}/unified?action=google-auth`);
       if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       const result = await response.json();
       return result.authUrl;

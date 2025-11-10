@@ -126,7 +126,10 @@ const BookingSystem: React.FC = () => {
         submitBooking,
         formErrors,
         validateForm,
-        resetForm
+        resetForm,
+        calendar,
+        isLoadingCalendar,
+        loadCalendar
     } = useBooking();
     
     // 🎯 PREZZI DINAMICI dal pannello admin
@@ -135,6 +138,11 @@ const BookingSystem: React.FC = () => {
     // 🛎️ SERVIZI EXTRA
     const [extraServicesCost, setExtraServicesCost] = useState(0);
     const [selectedExtraServices, setSelectedExtraServices] = useState<any[]>([]);
+
+    // 📅 CARICA CALENDARIO AL MOUNT
+    React.useEffect(() => {
+        loadCalendar();
+    }, [loadCalendar]);
 
     const handleDateSelection = async (checkIn: Date | null, checkOut: Date | null) => {
         if (!checkIn || !checkOut) return;
@@ -215,7 +223,8 @@ const BookingSystem: React.FC = () => {
                 selectedCheckIn={formData.check_in_date}
                 selectedCheckOut={formData.check_out_date}
                 onDateChange={handleDateSelection}
-                occupiedDates={[]}
+                occupiedDates={calendar?.occupied_dates || []}
+                isLoading={isLoadingCalendar}
             />
         </div>
     );
