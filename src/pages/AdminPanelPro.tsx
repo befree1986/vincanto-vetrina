@@ -5,6 +5,7 @@ import './AdminPanelPro.css';
 import '../styles/AdminSuperAdmin.css';
 import '../styles/AdminUXResponsive.css';
 import AdminApiService from '../services/adminApiService';
+import AdminPricing from '../components/admin/AdminPricing';
 import { ExtraService } from '../hooks/useExtraServices';
 import { devLog, devError, debugLog } from '../utils/debug';
 
