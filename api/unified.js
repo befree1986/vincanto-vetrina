@@ -4,9 +4,14 @@ import { Pool } from 'pg';
 
 // Database connection
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
+
+// Controllo configurazione database
+if (!process.env.DATABASE_URL && !process.env.POSTGRES_URL) {
+  console.error('⚠️ ATTENZIONE: Nessuna variabile DATABASE_URL o POSTGRES_URL configurata!');
+}
 
 // Initialize database tables
 async function initializeTables() {
@@ -39,6 +44,19 @@ export default async function handler(req, res) {
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
+  }
+
+  // Test connessione database per debugging
+  try {
+    await pool.query('SELECT 1');
+    console.log('✅ Database connesso correttamente');
+  } catch (dbError) {
+    console.error('❌ Errore connessione database:', dbError);
+    return res.status(500).json({
+      success: false,
+      error: 'Errore connessione database',
+      details: dbError.message
+    });
   }
 
   // Ottieni action da query params o body
@@ -854,9 +872,28 @@ export default async function handler(req, res) {
         }
       } else if (req.method === 'POST') {
         try {
+          console.log('🔧 POST pricing-config iniziato');
           const pricingData = req.body;
+          console.log('📝 Ricevuti dati pricing:', JSON.stringify(pricingData, null, 2));
+          console.log('📊 Tipo dati ricevuti:', typeof pricingData);
+          console.log('🔗 DATABASE_URL presente:', !!process.env.DATABASE_URL);
+          
+          // Validazione dati
+          if (!pricingData || typeof pricingData !== 'object') {
+            console.error('❌ Dati pricing non validi:', pricingData);
+            return res.status(400).json({
+              success: false,
+              error: 'Dati pricing non validi'
+            });
+          }
+          
+          // Test connessione database
+          console.log('🔍 Test connessione database...');
+          await pool.query('SELECT 1');
+          console.log('✅ Database connection OK');
           
           // Prima tenta di creare la tabella se non esiste
+          console.log('🔧 Creazione tabella pricing_config...');
           await pool.query(`
             CREATE TABLE IF NOT EXISTS pricing_config (
               id SERIAL PRIMARY KEY,
@@ -878,8 +915,10 @@ export default async function handler(req, res) {
               updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
           `);
+          console.log('✅ Tabella pricing_config pronta');
 
           // Inserisci nuova configurazione prezzi
+          console.log('💾 Inserimento configurazione prezzi...');
           const result = await pool.query(`
             INSERT INTO pricing_config (
               price_group_1to2, price_group_3to4, price_group_5to6, price_group_7to8,
@@ -888,21 +927,22 @@ export default async function handler(req, res) {
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
             RETURNING *
           `, [
-            pricingData.priceGroup1to2,
-            pricingData.priceGroup3to4,
-            pricingData.priceGroup5to6,
-            pricingData.priceGroup7to8,
-            pricingData.cleaningFee,
-            pricingData.parkingFee,
-            pricingData.touristTaxAdult,
-            pricingData.touristTaxChild,
-            pricingData.weekendSurcharge,
-            pricingData.weeklyDiscount,
-            pricingData.monthlyDiscount,
-            pricingData.minStay,
-            pricingData.maxStay,
-            pricingData.maxGuests
+            pricingData.priceGroup1to2 || 75,
+            pricingData.priceGroup3to4 || 95,
+            pricingData.priceGroup5to6 || 115,
+            pricingData.priceGroup7to8 || 135,
+            pricingData.cleaningFee || 50,
+            pricingData.parkingFee || 20,
+            pricingData.touristTaxAdult || 2.00,
+            pricingData.touristTaxChild || 0,
+            pricingData.weekendSurcharge || 0,
+            pricingData.weeklyDiscount || 10,
+            pricingData.monthlyDiscount || 15,
+            pricingData.minStay || 2,
+            pricingData.maxStay || 14,
+            pricingData.maxGuests || 8
           ]);
+          console.log('✅ Configurazione prezzi salvata:', result.rows[0]);
 
           return res.status(200).json({
             success: true,
@@ -910,10 +950,12 @@ export default async function handler(req, res) {
             pricing: result.rows[0]
           });
         } catch (error) {
-          console.error('❌ Errore salvataggio pricing config:', error);
+          console.error('❌ Errore completo salvataggio pricing config:', error);
+          console.error('❌ Stack trace:', error.stack);
           return res.status(500).json({
             success: false,
-            error: 'Errore salvataggio configurazione prezzi'
+            error: 'Errore salvataggio configurazione prezzi',
+            details: error.message
           });
         }
       }
