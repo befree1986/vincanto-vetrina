@@ -271,7 +271,7 @@ const AdminPanelPro = (): JSX.Element => {
       }
 
       setIsUpdatingPricing(true);
-      console.log('� ADMIN SAVE - Dati da salvare:', JSON.stringify(pricingConfig, null, 2));
+      console.log('🔥 ADMIN SAVE - Dati da salvare:', JSON.stringify(pricingConfig, null, 2));
       console.log('🔗 URL API Unificata chiamata:', `${window.location.origin}/api/unified?action=pricing-config`);
       
       const result = await adminApiService.updatePricingConfig(pricingConfig);
@@ -282,17 +282,24 @@ const AdminPanelPro = (): JSX.Element => {
         alert('✅ Configurazione prezzi salvata con successo!');
         console.log('✅ Prezzi salvati nel database:', result.saved_data || result.data);
         
-        // 🔥 TEST IMMEDIATO: Verifica che i prezzi siano salvati con API unificata
-        console.log('🧪 TEST: Ricarico prezzi dal database per verifica...');
+        // 🔥 FORZA RICARICAMENTO IMMEDIATO DEI PREZZI
+        console.log('🔄 FORCE RELOAD: Ricarico configurazione prezzi...');
+        await loadPricingConfig();
+        
+        // 🧪 TEST IMMEDIATO: Verifica che i prezzi siano salvati con API unificata
+        console.log('🧪 TEST: Verifica prezzi dal database...');
         setTimeout(async () => {
           try {
-            const testResponse = await fetch('/api/unified?action=quote&checkIn=2025-12-01&checkOut=2025-12-02&guests=2&includeParking=true');
+            const testResponse = await fetch(`/api/unified?action=pricing-config?t=${Date.now()}`, {
+              cache: 'no-cache',
+              headers: { 'Cache-Control': 'no-cache' }
+            });
             const testData = await testResponse.json();
-            console.log('🧪 TEST PREZZI POST-SALVATAGGIO (API Unificata):', testData);
+            console.log('🧪 TEST PREZZI POST-SALVATAGGIO (NO CACHE):', testData);
           } catch (testError) {
             console.error('❌ Errore test post-salvataggio:', testError);
           }
-        }, 2000);
+        }, 1000);
         
       } else {
         alert('❌ Errore nel salvataggio: ' + (result.message || 'Errore sconosciuto'));
