@@ -919,6 +919,8 @@ export default async function handler(req, res) {
 
           // Inserisci nuova configurazione prezzi
           console.log('💾 Inserimento configurazione prezzi...');
+          console.log('🔍 Dati ricevuti:', JSON.stringify(pricingData, null, 2));
+          
           const result = await pool.query(`
             INSERT INTO pricing_config (
               price_group_1to2, price_group_3to4, price_group_5to6, price_group_7to8,
@@ -927,20 +929,20 @@ export default async function handler(req, res) {
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
             RETURNING *
           `, [
-            pricingData.priceGroup1to2 || 75,
-            pricingData.priceGroup3to4 || 95,
-            pricingData.priceGroup5to6 || 115,
-            pricingData.priceGroup7to8 || 135,
-            pricingData.cleaningFee || 50,
-            pricingData.parkingFee || 20,
-            pricingData.touristTaxAdult || 2.00,
-            pricingData.touristTaxChild || 0,
-            pricingData.weekendSurcharge || 0,
-            pricingData.weeklyDiscount || 10,
-            pricingData.monthlyDiscount || 15,
-            pricingData.minStay || 2,
-            pricingData.maxStay || 14,
-            pricingData.maxGuests || 8
+            pricingData.priceGroup1to2 || pricingData.price_group_1to2 || 75,
+            pricingData.priceGroup3to4 || pricingData.price_group_3to4 || 95,
+            pricingData.priceGroup5to6 || pricingData.price_group_5to6 || 115,
+            pricingData.priceGroup7to8 || pricingData.price_group_7to8 || 135,
+            pricingData.cleaningFee || pricingData.cleaning_fee || 50,
+            pricingData.parkingFee || pricingData.parking_fee || 20,
+            pricingData.touristTaxAdult || pricingData.tourist_tax_adult || 2.00,
+            pricingData.touristTaxChild || pricingData.tourist_tax_child || 0,
+            pricingData.weekendSurcharge || pricingData.weekend_surcharge || 0,
+            pricingData.weeklyDiscount || pricingData.weekly_discount || 10,
+            pricingData.monthlyDiscount || pricingData.monthly_discount || 15,
+            pricingData.minStay || pricingData.min_stay || 2,
+            pricingData.maxStay || pricingData.max_stay || 14,
+            pricingData.maxGuests || pricingData.max_guests || 8
           ]);
           console.log('✅ Configurazione prezzi salvata:', result.rows[0]);
 
