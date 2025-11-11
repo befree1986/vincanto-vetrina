@@ -28,6 +28,31 @@ async function initializeTables() {
       )
     `);
     console.log('✅ Tabella blocked_dates inizializzata');
+
+    // Crea tabella bookings se non esiste
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS bookings (
+        id SERIAL PRIMARY KEY,
+        booking_id VARCHAR(100) UNIQUE NOT NULL,
+        check_in DATE NOT NULL,
+        check_out DATE NOT NULL,
+        guests INTEGER DEFAULT 1,
+        adults INTEGER DEFAULT 1,
+        children INTEGER DEFAULT 0,
+        first_name VARCHAR(100),
+        last_name VARCHAR(100),
+        email VARCHAR(200),
+        phone VARCHAR(50),
+        total_amount DECIMAL(10,2) DEFAULT 0,
+        deposit_amount DECIMAL(10,2) DEFAULT 0,
+        notes TEXT,
+        status VARCHAR(50) DEFAULT 'pending',
+        payment_status VARCHAR(50) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✅ Tabella bookings inizializzata');
   } catch (error) {
     console.error('❌ Errore inizializzazione tabelle:', error);
   }
