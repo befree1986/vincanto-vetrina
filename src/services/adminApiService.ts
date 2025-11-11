@@ -18,17 +18,22 @@ class AdminApiService {
       
       // Se abbiamo un token, lo includiamo nell'header
       const token = localStorage.getItem('vincanto_admin_token');
-      const headers = {
+      const baseHeaders: Record<string, string> = {
         'Content-Type': 'application/json',
-        ...options.headers,
+      };
+      
+      // Merge con gli headers delle opzioni se presenti
+      const mergedHeaders = {
+        ...baseHeaders,
+        ...(options.headers as Record<string, string> || {}),
       };
       
       if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+        mergedHeaders['Authorization'] = `Bearer ${token}`;
       }
 
       const response = await fetch(url, {
-        headers,
+        headers: mergedHeaders,
         ...options,
       });
 
