@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useBooking } from '../hooks/useBooking';
 import { getSafeTranslation } from '../i18n';
+import { devLog, isDevelopment } from '../utils/debug';
 import './BookingSteps.css';
 
 // 📝 Step 2: Dati Personali
@@ -184,7 +185,7 @@ export const BookingStep3: React.FC<BookingStep3Props> = ({ onBack }) => {
   
   // 🔍 DEBUG: Log dei dati per verificare il problema del riepilogo vuoto
   React.useEffect(() => {
-    console.log('📋 BOOKING STEP 3 DEBUG:', {
+    devLog('📋 BOOKING STEP 3 DEBUG:', {
       formData: booking.formData,
       quote: booking.quote,
       hasName: !!booking.formData.guest_name,
@@ -264,16 +265,18 @@ export const BookingStep3: React.FC<BookingStep3Props> = ({ onBack }) => {
                 {!booking.formData.check_in_date && <li>Data check-in mancante</li>}
                 {!booking.formData.check_out_date && <li>Data check-out mancante</li>}
               </ul>
-              <div className="debug-data booking-debug-info">
-                <strong>🔍 Debug Info:</strong><br/>
-                Nome: "{booking.formData.guest_name}"<br/>
-                Cognome: "{booking.formData.guest_surname}"<br/>
-                Email: "{booking.formData.guest_email}"<br/>
-                Telefono: "{booking.formData.guest_phone}"<br/>
-                Check-in: {booking.formData.check_in_date?.toString() || 'null'}<br/>
-                Check-out: {booking.formData.check_out_date?.toString() || 'null'}<br/>
-                Quote disponibile: {!!booking.quote ? 'Sì' : 'No'}
-              </div>
+              {isDevelopment && (
+                <div className="debug-data booking-debug-info">
+                  <strong>🔍 Debug Info:</strong><br/>
+                  Nome: "{booking.formData.guest_name}"<br/>
+                  Cognome: "{booking.formData.guest_surname}"<br/>
+                  Email: "{booking.formData.guest_email}"<br/>
+                  Telefono: "{booking.formData.guest_phone}"<br/>
+                  Check-in: {booking.formData.check_in_date?.toString() || 'null'}<br/>
+                  Check-out: {booking.formData.check_out_date?.toString() || 'null'}<br/>
+                  Quote disponibile: {!!booking.quote ? 'Sì' : 'No'}
+                </div>
+              )}
               <button onClick={onBack} className="btn-secondary booking-back-btn">
                 ← Torna Indietro
               </button>
