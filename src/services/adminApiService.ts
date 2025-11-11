@@ -169,17 +169,25 @@ class AdminApiService {
 
   async updatePricingConfig(pricingData: any) {
     try {
+      console.log('💰 AdminApiService: Invio dati pricing al database:', pricingData);
       const response = await fetch(`${this.baseUrl}/unified?action=pricing-config`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          basePrice: pricingData.basePrice || pricingData.priceGroup1to2,
-          additionalGuest3to4: pricingData.additionalGuest3to4 || pricingData.priceGroup3to4,
-          additionalGuest5to6: pricingData.additionalGuest5to6 || pricingData.priceGroup5to6,
-          additionalGuest7to8: pricingData.additionalGuest7to8 || pricingData.priceGroup7to8,
+          priceGroup1to2: pricingData.priceGroup1to2,
+          priceGroup3to4: pricingData.priceGroup3to4,
+          priceGroup5to6: pricingData.priceGroup5to6,
+          priceGroup7to8: pricingData.priceGroup7to8,
           cleaningFee: pricingData.cleaningFee,
           parkingFee: pricingData.parkingFee,
-          touristTaxAdult: pricingData.touristTaxAdult
+          touristTaxAdult: pricingData.touristTaxAdult,
+          touristTaxChild: pricingData.touristTaxChild,
+          weekendSurcharge: pricingData.weekendSurcharge,
+          weeklyDiscount: pricingData.weeklyDiscount,
+          monthlyDiscount: pricingData.monthlyDiscount,
+          minStay: pricingData.minStay,
+          maxStay: pricingData.maxStay,
+          maxGuests: pricingData.maxGuests
         }),
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
