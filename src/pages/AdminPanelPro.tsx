@@ -183,19 +183,33 @@ const AdminPanelPro = (): JSX.Element => {
   // === AUTENTICAZIONE ===
   const handleLogin = async () => {
     devLog('🔐 Tentativo di login...');
-    const expectedPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'admin123';
-    if (password === expectedPassword) {
-      devLog('✅ Login riuscito, imposto autenticazione...');
-      // Salva sessione in localStorage
-      localStorage.setItem('vincanto_admin_session', 'authenticated');
-      setIsAuthenticated(true);
-      setError('');
-      devLog('🎯 Stato autenticazione impostato e salvato');
-      // Carica tutti i dati reali dal backend
-      loadRealApiData();
-    } else {
-      devLog('❌ Password errata');
-      setError('Password non corretta');
+    
+    if (!adminApiService) {
+      setError('Servizio API non disponibile');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const result = await adminApiService.login(password);
+      
+      if (result.success) {
+        devLog('✅ Login API riuscito, imposto autenticazione...');
+        localStorage.setItem('vincanto_admin_session', 'authenticated');
+        setIsAuthenticated(true);
+        setError('');
+        devLog('🎯 Stato autenticazione impostato e salvato');
+        // Carica tutti i dati reali dal backend
+        loadRealApiData();
+      } else {
+        devLog('❌ Login API fallito:', result.error);
+        setError(result.error || 'Login fallito');
+      }
+    } catch (error) {
+      devLog('❌ Errore durante il login:', error);
+      setError('Errore di connessione al server');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1402,7 +1416,11 @@ const AdminPanelPro = (): JSX.Element => {
           
           <button 
             className="admin-btn admin-btn-secondary"
-            onClick={() => setIsAuthenticated(false)}
+            onClick={() => {
+              localStorage.removeItem('vincanto_admin_session');
+              localStorage.removeItem('vincanto_admin_token');
+              setIsAuthenticated(false);
+            }}
           >
             <span className="admin-hidden-mobile">📤 Logout</span>
             <span className="admin-visible-mobile">📤</span>

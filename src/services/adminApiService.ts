@@ -6,7 +6,7 @@ class AdminApiService {
 
   constructor() {
     // 🎯 API UNIFICATA - CONFIGURAZIONE CONSOLIDATA
-    this.baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://vincanto-backup.vercel.app/api';
+    this.baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://vincanto-vetrina.vercel.app/api';
     console.log('🎯 AdminApiService PRODUZIONE API UNIFICATA:', this.baseUrl);
   }
 
@@ -16,11 +16,19 @@ class AdminApiService {
       const url = `${this.baseUrl}/unified?action=${endpoint}`;
       console.log('🌐 API Unificata Request:', url);
       
+      // Se abbiamo un token, lo includiamo nell'header
+      const token = localStorage.getItem('vincanto_admin_token');
+      const headers = {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(url, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
+        headers,
         ...options,
       });
 
@@ -34,6 +42,34 @@ class AdminApiService {
     } catch (error) {
       console.error('❌ API Unificata Error:', endpoint, error);
       throw error;
+    }
+  }
+
+  // Login method
+  async login(password: string) {
+    try {
+      const response = await fetch(`${this.baseUrl}/unified?action=login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      if (data.success && data.token) {
+        localStorage.setItem('vincanto_admin_token', data.token);
+        console.log('✅ Login riuscito, token salvato');
+        return data;
+      } else {
+        console.error('❌ Login fallito:', data.error);
+        return { success: false, error: data.error || 'Login fallito' };
+      }
+    } catch (error) {
+      console.error('❌ Errore login:', error);
+      return { success: false, error: 'Errore di connessione' };
     }
   }
 
