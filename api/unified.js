@@ -892,10 +892,12 @@ export default async function handler(req, res) {
           await pool.query('SELECT 1');
           console.log('✅ Database connection OK');
           
-          // Prima tenta di creare la tabella se non esiste
-          console.log('🔧 Creazione tabella pricing_config...');
+          // Prima tenta di droppare e ricreare la tabella con lo schema corretto
+          console.log('🔧 Reset tabella pricing_config...');
+          await pool.query('DROP TABLE IF EXISTS pricing_config CASCADE');
+          
           await pool.query(`
-            CREATE TABLE IF NOT EXISTS pricing_config (
+            CREATE TABLE pricing_config (
               id SERIAL PRIMARY KEY,
               price_group_1to2 DECIMAL(10,2),
               price_group_3to4 DECIMAL(10,2),
@@ -915,7 +917,7 @@ export default async function handler(req, res) {
               updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
           `);
-          console.log('✅ Tabella pricing_config pronta');
+          console.log('✅ Tabella pricing_config ricreata');
 
           // Inserisci nuova configurazione prezzi
           console.log('💾 Inserimento configurazione prezzi...');
