@@ -25,16 +25,20 @@ export default async function handler(req, res) {
         let servicesResult;
         try {
           servicesResult = await pool.query(`
-            SELECT id, name, price, description, active, included
-            FROM extra_services 
-            ORDER BY name
-          `);
+              SELECT id, name, price, description, active, sort_order
+              FROM extra_services 
+              ORDER BY sort_order ASC, name
+            `);
         } catch (dbError) {
           console.log('Extra services table might not exist, returning mock data');
           servicesResult = { rows: [] };
         }
         
-        let services = servicesResult.rows;
+        let services = servicesResult.rows.map(r => ({
+          ...r,
+          included: false,
+          sort_order: r.sort_order || 0
+        }));
         
         // Se non ci sono servizi nel DB, genera alcuni di esempio
         if (services.length === 0) {
@@ -88,7 +92,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-      const { name, price, description, active = true, included = false } = req.body;
+      const { name, price, description, active = true } = req.body;
       
       if (!name || price === undefined) {
         return res.status(400).json({
@@ -99,14 +103,18 @@ export default async function handler(req, res) {
 
       try {
         const result = await pool.query(`
-          INSERT INTO extra_services (name, price, description, active, included, created_at)
-          VALUES ($1, $2, $3, $4, $5, NOW())
+          INSERT INTO extra_services (name, price, description, active, created_at)
+          VALUES ($1, $2, $3, $4, NOW())
           RETURNING *
-        `, [name, price, description, active, included]);
+        `, [name, price, description, active]);
+
+        const created = result.rows[0];
+        // Normalize response to include 'included' for frontend compatibility
+        created.included = false;
 
         return res.status(201).json({
           success: true,
-          service: result.rows[0]
+          service: created
         });
       } catch (dbError) {
         console.error('Database error creating service:', dbError);
@@ -118,7 +126,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'PUT') {
-      const { id, name, price, description, active, included } = req.body;
+      const { id, name, price, description, active } = req.body;
       
       if (!id) {
         return res.status(400).json({
@@ -130,10 +138,10 @@ export default async function handler(req, res) {
       try {
         const result = await pool.query(`
           UPDATE extra_services 
-          SET name = $1, price = $2, description = $3, active = $4, included = $5, updated_at = NOW()
-          WHERE id = $6
+          SET name = COALESCE($2, name), price = COALESCE($3, price), description = COALESCE($4, description), active = COALESCE($5, active), updated_at = NOW()
+          WHERE id = $1
           RETURNING *
-        `, [name, price, description, active, included, id]);
+        `, [id, name, price !== undefined ? parseFloat(price) : null, description, active]);
 
         if (result.rows.length === 0) {
           return res.status(404).json({
@@ -142,9 +150,12 @@ export default async function handler(req, res) {
           });
         }
 
+        const updated = result.rows[0];
+        updated.included = false;
+
         return res.status(200).json({
           success: true,
-          service: result.rows[0]
+          service: updated
         });
       } catch (dbError) {
         console.error('Database error updating service:', dbError);
