@@ -995,7 +995,7 @@ export default async function handler(req, res) {
     // ========================================
     if (action === 'quote') {
       try {
-        const { checkIn, checkOut, guests, includeParking } = req.query;
+        const { checkIn, checkOut, guests, adults, children, includeParking } = req.query;
         
         // Validazione parametri
         if (!checkIn || !checkOut || !guests) {
@@ -1100,7 +1100,12 @@ export default async function handler(req, res) {
         const cleaningFee = pricing.cleaningFee;
         // 🔧 FIX: Parcheggio è un costo FISSO per soggiorno, NON per notte
         const parkingCost = (includeParking === 'true') ? pricing.parkingFee : 0;
-        const touristTax = pricing.touristTaxAdult * guestsNum * nights;
+        
+        // 🔧 FIX: Tassa soggiorno SOLO per adulti (bambini <12 anni gratis)
+        const adultsNum = parseInt(adults) || parseInt(guests); // Fallback se adults non specificato
+        const touristTax = pricing.touristTaxAdult * adultsNum * nights;
+        
+        console.log(`🏛️ CALCOLO TASSA SOGGIORNO: ${adultsNum} adulti × €${pricing.touristTaxAdult} × ${nights} notti = €${touristTax}`);
 
         // Calcola totale
         const totalAmount = discountedAccommodation + cleaningFee + parkingCost + touristTax;
@@ -1131,7 +1136,7 @@ export default async function handler(req, res) {
             sconto: discount > 0 ? `Sconto ${discount}%: -€${discountAmount.toFixed(2)}` : null,
             pulizie: `€${cleaningFee.toFixed(2)}`,
             parcheggio: parkingCost > 0 ? `€${pricing.parkingFee}/soggiorno = €${parkingCost.toFixed(2)}` : null,
-            tassa: `€${pricing.touristTaxAdult}/persona/notte × ${guestsNum} × ${nights} = €${touristTax.toFixed(2)}`,
+            tassa: `€${pricing.touristTaxAdult}/adulto/notte × ${adultsNum} adulti × ${nights} notti = €${touristTax.toFixed(2)}`,
             totale: `€${totalAmount.toFixed(2)}`,
             acconto: `€${depositAmount.toFixed(2)} (30%)`
           }

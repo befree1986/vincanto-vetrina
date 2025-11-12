@@ -105,6 +105,8 @@ export async function getBookingQuote(data: BookingQuoteRequest): Promise<Bookin
                 checkIn: data.checkIn,
                 checkOut: data.checkOut,
                 guests: data.guests,
+                adults: data.adults || data.guests, // Fallback per compatibilità
+                children: data.children || 0,
                 includeParking: data.includeParking || false
             }
         });
