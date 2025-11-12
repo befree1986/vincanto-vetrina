@@ -1066,16 +1066,27 @@ export default async function handler(req, res) {
           };
         }
 
-        // Calcola prezzo base per ospiti
+        // Calcola prezzo base per ospiti con LOGICA CORRETTA
         const guestsNum = parseInt(guests);
-        let basePrice;
-        if (guestsNum <= 2) basePrice = pricing.priceGroup1to2;
-        else if (guestsNum <= 4) basePrice = pricing.priceGroup3to4;
-        else if (guestsNum <= 6) basePrice = pricing.priceGroup5to6;
-        else basePrice = pricing.priceGroup7to8;
+        
+        // NUOVA LOGICA: Prezzo base 150€ per 1-2 persone + 20€ per ogni persona aggiuntiva
+        let basePricePerNight;
+        if (guestsNum <= 2) {
+          // 1-2 persone: 150€ totale (75€ × 2)
+          basePricePerNight = pricing.priceGroup1to2 * 2; // 75€ × 2 = 150€
+        } else {
+          // 3+ persone: 150€ base + 20€ per ogni persona aggiuntiva
+          basePricePerNight = (pricing.priceGroup1to2 * 2) + ((guestsNum - 2) * 20);
+          // Esempi:
+          // 3 persone: 150€ + (1 × 20€) = 170€
+          // 4 persone: 150€ + (2 × 20€) = 190€
+          // 5 persone: 150€ + (3 × 20€) = 210€
+        }
+        
+        console.log(`🔢 CALCOLO PREZZO BACKEND: ${guestsNum} persone = ${basePricePerNight}€ per notte`);
 
         // Calcola subtotale alloggio
-        const accommodationCost = basePrice * nights;
+        const accommodationCost = basePricePerNight * nights;
 
         // Applica sconti per soggiorni lunghi
         let discount = 0;
@@ -1103,7 +1114,7 @@ export default async function handler(req, res) {
             checkOut: checkOut,
             guests: guestsNum,
             nights: nights,
-            basePrice: basePrice,
+            basePrice: basePricePerNight,
             accommodationCost: accommodationCost,
             discount: discount,
             discountAmount: discountAmount,
@@ -1116,10 +1127,10 @@ export default async function handler(req, res) {
             includeParking: includeParking === 'true'
           },
           breakdown: {
-            alloggio: `€${basePrice}/notte × ${nights} notti = €${accommodationCost.toFixed(2)}`,
+            alloggio: `€${basePricePerNight}/notte × ${nights} notti = €${accommodationCost.toFixed(2)}`,
             sconto: discount > 0 ? `Sconto ${discount}%: -€${discountAmount.toFixed(2)}` : null,
             pulizie: `€${cleaningFee.toFixed(2)}`,
-            parcheggio: parkingCost > 0 ? `€${pricing.parkingFee}/notte × ${nights} notti = €${parkingCost.toFixed(2)}` : null,
+            parcheggio: parkingCost > 0 ? `€${pricing.parkingFee}/soggiorno = €${parkingCost.toFixed(2)}` : null,
             tassa: `€${pricing.touristTaxAdult}/persona/notte × ${guestsNum} × ${nights} = €${touristTax.toFixed(2)}`,
             totale: `€${totalAmount.toFixed(2)}`,
             acconto: `€${depositAmount.toFixed(2)} (30%)`
