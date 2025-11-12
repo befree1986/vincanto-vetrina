@@ -44,15 +44,33 @@ export const useExtraServices = (): ExtraServicesData => {
     try {
       console.log('🛎️ EXTRA SERVICES HOOK: Caricamento servizi...');
       
+      // 🎯 USA API UNIFICATA PER CONSISTENZA
       const timestamp = new Date().getTime();
-      const response = await fetch(`/api/extra-services?_t=${timestamp}`);
+      const apiUrl = import.meta.env.VITE_API_BASE_URL || 'https://vincanto-vetrina.vercel.app/api';
+      const response = await fetch(`${apiUrl}/unified?action=extra-services&_t=${timestamp}`);
       
       if (response.ok) {
         const data = await response.json();
         
         if (data.success && data.services) {
-          setServices(data.services);
-          console.log('✅ EXTRA SERVICES: Servizi caricati:', data.services.length);
+          // Trasforma i servizi per compatibilità frontend
+          const transformedServices = data.services.map((service: any) => ({
+            id: service.id,
+            name: service.name,
+            price: service.price,
+            unit: service.unit || 'soggiorno',
+            description: service.description,
+            category: service.category || 'general',
+            available: service.active !== false,
+            active: service.active !== false,
+            included: false, // Per ora tutti i servizi sono a pagamento
+            minAge: service.minAge,
+            maxAge: service.maxAge,
+            isParking: service.category === 'parcheggio'
+          }));
+          
+          setServices(transformedServices);
+          console.log('✅ EXTRA SERVICES: Servizi caricati dal database:', transformedServices.length);
         } else {
           throw new Error(data.message || 'Errore caricamento servizi');
         }

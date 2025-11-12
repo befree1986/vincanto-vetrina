@@ -2485,18 +2485,6 @@ const AdminPanelPro = (): JSX.Element => {
             }}
             isUpdatingPricing={isUpdatingPricing}
             showSuccessMessage={false}
-            customServices={customServices}
-            allServices={allServices}
-            updateHardcodedServicePrice={updateHardcodedServicePrice}
-            updateHardcodedServiceActive={updateHardcodedServiceActive}
-            updateHardcodedServiceIncluded={updateHardcodedServiceIncluded}
-            newServiceName={newServiceName}
-            setNewServiceName={setNewServiceName}
-            newServicePrice={newServicePrice}
-            setNewServicePrice={setNewServicePrice}
-            addCustomService={addCustomService}
-            updateCustomService={updateCustomService}
-            deleteCustomService={deleteCustomService}
           />
         )}
 

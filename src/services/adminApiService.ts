@@ -689,7 +689,7 @@ class AdminApiService {
   // Carica tutti i servizi extra (hardcoded + custom)
   async getExtraServices(): Promise<ExtraService[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/extra-services`);
+      const response = await fetch(`${this.baseUrl}/unified?action=extra-services`);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       return data.services || [];
@@ -704,7 +704,7 @@ class AdminApiService {
     try {
       console.log('➕ ADMIN API: Aggiunta servizio custom:', serviceData);
       
-      const response = await fetch(`${this.baseUrl}/extra-services`, {
+      const response = await fetch(`${this.baseUrl}/unified?action=extra-services`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(serviceData),
@@ -726,7 +726,7 @@ class AdminApiService {
     try {
       console.log('🔄 ADMIN API: Aggiornamento servizio custom:', serviceData);
       
-      const response = await fetch(`${this.baseUrl}/extra-services`, {
+      const response = await fetch(`${this.baseUrl}/unified?action=extra-services&id=${serviceData.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(serviceData),
@@ -748,7 +748,7 @@ class AdminApiService {
     try {
       console.log('🗑️ ADMIN API: Eliminazione servizio custom:', serviceId);
       
-      const response = await fetch(`${this.baseUrl}/extra-services?id=${serviceId}`, {
+      const response = await fetch(`${this.baseUrl}/unified?action=extra-services&id=${serviceId}`, {
         method: 'DELETE',
       });
       
@@ -766,7 +766,7 @@ class AdminApiService {
   // Crea nuovo servizio extra
   async createExtraService(serviceData: Partial<ExtraService>): Promise<any> {
     try {
-      const response = await fetch(`${this.baseUrl}/extra-services`, {
+      const response = await fetch(`${this.baseUrl}/unified?action=extra-services`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(serviceData),
@@ -782,7 +782,7 @@ class AdminApiService {
   // Aggiorna servizio extra esistente
   async updateExtraService(serviceId: number, serviceData: Partial<ExtraService>): Promise<any> {
     try {
-      const response = await fetch(`${this.baseUrl}/extra-services/${serviceId}`, {
+      const response = await fetch(`${this.baseUrl}/unified?action=extra-services&id=${serviceId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(serviceData),
@@ -798,7 +798,7 @@ class AdminApiService {
   // Elimina servizio extra
   async deleteExtraService(serviceId: number): Promise<any> {
     try {
-      const response = await fetch(`${this.baseUrl}/extra-services/${serviceId}`, {
+      const response = await fetch(`${this.baseUrl}/unified?action=extra-services&id=${serviceId}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
