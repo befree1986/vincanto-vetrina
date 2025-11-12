@@ -140,40 +140,49 @@ export const usePricing = () => {
     if (!currentPrice?.groupPricing) return 150; // Base fallback
     
     const config = currentPrice.groupPricing;
-    const basePrice = config.priceGroup1to2 * 2; // €75 × 2 = €150 base
+    
+    // Base: 150€ per le prime 2 persone (75€ × 2)
+    const basePrice = config.priceGroup1to2 * 2; // €75 × 2 = €150
     
     if (guests <= 2) return basePrice;
     
-    let additionalCost = 0;
-    let remainingGuests = guests - 2;
+    let totalPrice = basePrice;
     
-    // 3-4 persone
-    if (remainingGuests > 0) {
-      const guestsInRange = Math.min(remainingGuests, 2);
-      additionalCost += guestsInRange * config.priceGroup3to4;
-      remainingGuests -= guestsInRange;
+    // 3a persona: aggiunge 20€
+    if (guests >= 3) {
+      // LOGICA CORRETTA: priceGroup3to4 dovrebbe essere il prezzo PER PERSONA aggiuntiva
+      // Assumiamo che priceGroup3to4 contenga il prezzo aggiuntivo diretto
+      totalPrice += 20; // €20 per la 3a persona (hardcoded finché non sistemiamo il DB)
     }
     
-    // 5-6 persone
-    if (remainingGuests > 0) {
-      const guestsInRange = Math.min(remainingGuests, 2);
-      additionalCost += guestsInRange * config.priceGroup5to6;
-      remainingGuests -= guestsInRange;
+    // 4a persona
+    if (guests >= 4) {
+      totalPrice += 20; // €20 per la 4a persona
     }
     
-    // 7-8 persone
-    if (remainingGuests > 0) {
-      const guestsInRange = Math.min(remainingGuests, 2);
-      additionalCost += guestsInRange * config.priceGroup7to8;
-      remainingGuests -= guestsInRange;
+    // 5a persona  
+    if (guests >= 5) {
+      totalPrice += 20; // €20 per la 5a persona
     }
     
-    // Per più di 8 ospiti, usa il prezzo 7-8
-    if (remainingGuests > 0) {
-      additionalCost += remainingGuests * config.priceGroup7to8;
+    // 6a persona
+    if (guests >= 6) {
+      totalPrice += 20; // €20 per la 6a persona
     }
     
-    return basePrice + additionalCost;
+    // 7a persona
+    if (guests >= 7) {
+      totalPrice += 20; // €20 per la 7a persona
+    }
+    
+    // 8a persona
+    if (guests >= 8) {
+      totalPrice += 20; // €20 per la 8a persona
+    }
+    
+    console.log(`🔢 CALCOLO PREZZI: ${guests} persone = ${totalPrice}€ (base: ${basePrice}€ + aggiuntive: ${totalPrice - basePrice}€)`);
+    
+    return totalPrice;
   };
 
   // Fetch storico prezzi (mantenuto per compatibilità)

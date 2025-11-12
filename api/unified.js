@@ -1087,7 +1087,8 @@ export default async function handler(req, res) {
 
         // Calcola costi aggiuntivi
         const cleaningFee = pricing.cleaningFee;
-        const parkingCost = (includeParking === 'true') ? pricing.parkingFee * nights : 0;
+        // 🔧 FIX: Parcheggio è un costo FISSO per soggiorno, NON per notte
+        const parkingCost = (includeParking === 'true') ? pricing.parkingFee : 0;
         const touristTax = pricing.touristTaxAdult * guestsNum * nights;
 
         // Calcola totale
