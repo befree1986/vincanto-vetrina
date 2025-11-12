@@ -763,6 +763,52 @@ class AdminApiService {
     }
   }
 
+  // Crea nuovo servizio extra
+  async createExtraService(serviceData: Partial<ExtraService>): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/extra-services`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(serviceData),
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error creating extra service:', error);
+      throw error;
+    }
+  }
+
+  // Aggiorna servizio extra esistente
+  async updateExtraService(serviceId: number, serviceData: Partial<ExtraService>): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/extra-services/${serviceId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(serviceData),
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating extra service:', error);
+      throw error;
+    }
+  }
+
+  // Elimina servizio extra
+  async deleteExtraService(serviceId: number): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/extra-services/${serviceId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error deleting extra service:', error);
+      throw error;
+    }
+  }
+
 }
 
 export default AdminApiService;

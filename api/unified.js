@@ -53,6 +53,40 @@ async function initializeTables() {
       )
     `);
     console.log('✅ Tabella bookings inizializzata');
+
+    // 🆕 Crea tabella extra_services se non esiste
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS extra_services (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        price DECIMAL(10,2) NOT NULL DEFAULT 0,
+        category VARCHAR(100) DEFAULT 'general',
+        unit VARCHAR(50) DEFAULT 'per_stay',
+        active BOOLEAN DEFAULT true,
+        sort_order INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✅ Tabella extra_services inizializzata');
+
+    // 🆕 Inserisci servizi di default se tabella vuota
+    const servicesCount = await pool.query('SELECT COUNT(*) FROM extra_services');
+    if (parseInt(servicesCount.rows[0].count) === 0) {
+      await pool.query(`
+        INSERT INTO extra_services (name, description, price, category, unit, active, sort_order) VALUES
+        ('Late Check-out', 'Check-out posticipato alle 14:00 invece delle 10:00', 30.00, 'convenience', 'per_stay', true, 1),
+        ('Early Check-in', 'Check-in anticipato dalle 12:00 invece delle 15:00', 25.00, 'convenience', 'per_stay', true, 2),
+        ('Pulizia Extra', 'Pulizia approfondita pre-arrivo con sanificazione', 50.00, 'cleaning', 'per_stay', true, 3),
+        ('Colazione Italiana', 'Colazione italiana completa con prodotti locali', 15.00, 'food', 'per_person_per_day', true, 4),
+        ('Transfer Aeroporto', 'Servizio transfer da/per Aeroporto di Palermo', 45.00, 'transport', 'per_stay', true, 5),
+        ('Culla per Bambini', 'Culla con biancheria per bambini fino a 2 anni', 20.00, 'equipment', 'per_stay', true, 6),
+        ('Parcheggio Privato Extra', 'Posto auto aggiuntivo nel parcheggio privato', 10.00, 'parking', 'per_night', false, 7),
+        ('Kit Welcome', 'Kit di benvenuto con prodotti tipici siciliani', 25.00, 'gift', 'per_stay', true, 8)
+      `);
+      console.log('✅ Servizi extra di default inseriti');
+    }
   } catch (error) {
     console.error('❌ Errore inizializzazione tabelle:', error);
   }
@@ -1151,46 +1185,211 @@ export default async function handler(req, res) {
     }
 
     // ========================================
-    // EXTRA SERVICES SECTION
+    // EXTRA SERVICES SECTION - CRUD COMPLETO
     // ========================================
     if (action === 'extra-services') {
-      return res.status(200).json({
-        success: true,
-        services: [
-          {
-            id: 1,
-            name: 'Pulizia Extra',
-            price: 50,
+      if (req.method === 'GET') {
+        try {
+          // Ottieni tutti i servizi dal database
+          const result = await pool.query(`
+            SELECT 
+              id, name, description, price, category, unit, active, 
+              sort_order, created_at, updated_at
+            FROM extra_services 
+            ORDER BY sort_order ASC, id ASC
+          `);
+          
+          const services = result.rows.map(service => ({
+            id: service.id,
+            name: service.name,
+            description: service.description,
+            price: parseFloat(service.price),
             currency: 'EUR',
-            description: 'Pulizia approfondita pre-arrivo',
-            active: true
-          },
-          {
-            id: 2,
-            name: 'Late Check-out',
-            price: 30,
-            currency: 'EUR',
-            description: 'Check-out posticipato alle 14:00',
-            active: true
-          },
-          {
-            id: 3,
-            name: 'Colazione',
-            price: 15,
-            currency: 'EUR',
-            description: 'Colazione italiana completa',
-            active: false
-          },
-          {
-            id: 4,
-            name: 'Transfer Aeroporto',
-            price: 45,
-            currency: 'EUR',
-            description: 'Servizio transfer da/per aeroporto',
-            active: true
+            category: service.category,
+            unit: service.unit,
+            active: service.active,
+            sortOrder: service.sort_order,
+            createdAt: service.created_at?.toISOString(),
+            updatedAt: service.updated_at?.toISOString()
+          }));
+          
+          return res.status(200).json({
+            success: true,
+            services: services,
+            count: services.length
+          });
+        } catch (error) {
+          console.error('❌ Errore GET extra-services:', error);
+          return res.status(500).json({
+            success: false,
+            error: 'Errore caricamento servizi extra'
+          });
+        }
+      }
+
+      if (req.method === 'POST') {
+        try {
+          // Crea nuovo servizio
+          const { name, description, price, category, unit, active, sortOrder } = req.body;
+          
+          // Validazione dati
+          if (!name || price === undefined) {
+            return res.status(400).json({
+              success: false,
+              error: 'Nome e prezzo sono obbligatori'
+            });
           }
-        ]
-      });
+
+          const result = await pool.query(`
+            INSERT INTO extra_services (name, description, price, category, unit, active, sort_order, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+            RETURNING *
+          `, [
+            name,
+            description || '',
+            parseFloat(price),
+            category || 'general',
+            unit || 'per_stay',
+            active !== false, // Default true
+            sortOrder || 0
+          ]);
+
+          const newService = result.rows[0];
+          console.log('✅ Nuovo servizio creato:', newService);
+
+          return res.status(201).json({
+            success: true,
+            message: 'Servizio extra creato con successo',
+            service: {
+              id: newService.id,
+              name: newService.name,
+              description: newService.description,
+              price: parseFloat(newService.price),
+              currency: 'EUR',
+              category: newService.category,
+              unit: newService.unit,
+              active: newService.active,
+              sortOrder: newService.sort_order
+            }
+          });
+        } catch (error) {
+          console.error('❌ Errore POST extra-services:', error);
+          return res.status(500).json({
+            success: false,
+            error: 'Errore creazione servizio extra'
+          });
+        }
+      }
+
+      if (req.method === 'PUT') {
+        try {
+          // Aggiorna servizio esistente
+          const { id } = req.query;
+          const { name, description, price, category, unit, active, sortOrder } = req.body;
+          
+          if (!id) {
+            return res.status(400).json({
+              success: false,
+              error: 'ID servizio richiesto per aggiornamento'
+            });
+          }
+
+          const result = await pool.query(`
+            UPDATE extra_services 
+            SET 
+              name = COALESCE($2, name),
+              description = COALESCE($3, description),
+              price = COALESCE($4, price),
+              category = COALESCE($5, category),
+              unit = COALESCE($6, unit),
+              active = COALESCE($7, active),
+              sort_order = COALESCE($8, sort_order),
+              updated_at = NOW()
+            WHERE id = $1
+            RETURNING *
+          `, [
+            parseInt(id),
+            name,
+            description,
+            price !== undefined ? parseFloat(price) : null,
+            category,
+            unit,
+            active,
+            sortOrder !== undefined ? parseInt(sortOrder) : null
+          ]);
+
+          if (result.rows.length === 0) {
+            return res.status(404).json({
+              success: false,
+              error: 'Servizio non trovato'
+            });
+          }
+
+          const updatedService = result.rows[0];
+          console.log('✅ Servizio aggiornato:', updatedService);
+
+          return res.status(200).json({
+            success: true,
+            message: 'Servizio extra aggiornato con successo',
+            service: {
+              id: updatedService.id,
+              name: updatedService.name,
+              description: updatedService.description,
+              price: parseFloat(updatedService.price),
+              currency: 'EUR',
+              category: updatedService.category,
+              unit: updatedService.unit,
+              active: updatedService.active,
+              sortOrder: updatedService.sort_order
+            }
+          });
+        } catch (error) {
+          console.error('❌ Errore PUT extra-services:', error);
+          return res.status(500).json({
+            success: false,
+            error: 'Errore aggiornamento servizio extra'
+          });
+        }
+      }
+
+      if (req.method === 'DELETE') {
+        try {
+          // Elimina servizio
+          const { id } = req.query;
+          
+          if (!id) {
+            return res.status(400).json({
+              success: false,
+              error: 'ID servizio richiesto per eliminazione'
+            });
+          }
+
+          const result = await pool.query(`
+            DELETE FROM extra_services WHERE id = $1 RETURNING *
+          `, [parseInt(id)]);
+
+          if (result.rows.length === 0) {
+            return res.status(404).json({
+              success: false,
+              error: 'Servizio non trovato'
+            });
+          }
+
+          console.log('🗑️ Servizio eliminato:', result.rows[0]);
+
+          return res.status(200).json({
+            success: true,
+            message: 'Servizio extra eliminato con successo',
+            deletedId: parseInt(id)
+          });
+        } catch (error) {
+          console.error('❌ Errore DELETE extra-services:', error);
+          return res.status(500).json({
+            success: false,
+            error: 'Errore eliminazione servizio extra'
+          });
+        }
+      }
     }
 
     // ========================================

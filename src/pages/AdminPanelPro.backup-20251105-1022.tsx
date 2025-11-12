@@ -1,17 +1,11 @@
-/* eslint-disable */
-// @ts-nocheck  
+/* eslint-disable jsx-a11y/label-has-associated-control, jsx-a11y/no-autofocus */
 import React, { useState, useEffect } from 'react';
 import './AdminPanelPro.css';
 import '../styles/AdminSuperAdmin.css';
-import '../styles/AdminUXResponsive.css';
 import AdminApiService from '../services/adminApiService';
-import AdminPricing from '../components/admin/AdminPricing';
-import ExtraServicesAdmin from '../components/admin/ExtraServicesAdmin';
-import { ExtraService } from '../hooks/useExtraServices';
-import { devLog, devError, debugLog } from '../utils/debug';
 
-const AdminPanelPro = (): JSX.Element => {
-  devLog('🚀 AdminPanelPro component rendering...');
+const AdminPanelPro: React.FC = () => {
+  console.log('🚀 AdminPanelPro component rendering...');
   
   // Stati principali
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -26,10 +20,10 @@ const AdminPanelPro = (): JSX.Element => {
   // Servizio Admin API
   const [adminApiService] = useState(() => {
     try {
-      devLog('🔌 Inizializzazione AdminApiService...');
+      console.log('🔌 Inizializzazione AdminApiService...');
       return new AdminApiService();
     } catch (error) {
-      devError('❌ Errore AdminApiService:', error);
+      console.error('❌ Errore AdminApiService:', error);
       return null;
     }
   });
@@ -65,39 +59,31 @@ const AdminPanelPro = (): JSX.Element => {
     reason: 'maintenance'
   });
 
-  // Stati per gestione prezzi PER GRUPPI SPECIFICI
+  // Stati per gestione prezzi AGGIORNATI secondo specifiche
   const [pricingConfig, setPricingConfig] = useState({
-    // 🔥 NUOVO: Prezzi per gruppi specifici
-    priceGroup1to2: 75,       // €75 per 1-2 persone
-    priceGroup3to4: 95,       // €95 per 3-4 persone
-    priceGroup5to6: 115,      // €115 per 5-6 persone
-    priceGroup7to8: 135,      // €135 per 7-8 persone
-    
-    // Costi aggiuntivi
+    basePrice: 75,            // €75 per persona per notte
     cleaningFee: 50,
-    parkingFee: 20,          // €20 parcheggio per notte
-    touristTaxAdult: 2.00,   // €2.00 tassa soggiorno adulti
-    touristTaxChild: 0,      // Bambini <12 anni gratuiti
-    
-    // Sconti e maggiorazioni
-    weekendSurcharge: 0,     // Nessuna maggiorazione weekend
-    weeklyDiscount: 10,      // 10% sconto settimanale
-    monthlyDiscount: 15,     // 15% sconto mensile
-    
-    // Limiti soggiorno
+    weekendSurcharge: 20,
+    monthlyDiscount: 15,
+    weeklyDiscount: 10,
+    parkingFee: 20,          // 🅿️ AGGIORNATO: €20 parcheggio per notte
     minStay: 2,
     maxStay: 14,
-    maxGuests: 8,            // Massimo 8 ospiti
-    
-    // Sconti avanzati (opzionali)
     advanceBookingDiscount: 0,
-    lastMinuteDiscount: 0
+    lastMinuteDiscount: 0,
+    // Nuovi campi per gestione bambini e tasse
+    additionalGuestPrice: 75,  // €75 per persona aggiuntiva (stesso prezzo per persona)
+    touristTaxAdult: 3,       // Tassa di soggiorno per adulti (€/notte)
+    touristTaxChild: 0        // Tassa di soggiorno per bambini 12+ (€/notte)
   });
   const [isUpdatingPricing, setIsUpdatingPricing] = useState(false);
   
   // Stati per servizi personalizzati AGGIORNATI
-  const [customServices, setCustomServices] = useState<ExtraService[]>([]);
-  const [allServices, setAllServices] = useState<ExtraService[]>([]); // 🔥 TUTTI i servizi (hardcoded + custom)
+  const [customServices, setCustomServices] = useState([
+    { id: 1, name: 'Culla per bambini (0-3 anni)', price: 30, unit: 'soggiorno' },
+    { id: 2, name: 'Seggiolone', price: 15, unit: 'soggiorno' },
+    { id: 3, name: 'Animali domestici', price: 25, unit: 'soggiorno' }
+  ]);
   const [newServiceName, setNewServiceName] = useState('');
   const [newServicePrice, setNewServicePrice] = useState(0);
   
@@ -134,11 +120,8 @@ const AdminPanelPro = (): JSX.Element => {
   //   }
   // });
   
-  // Stati autenticazione admin con persistenza
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    // Controlla se c'è una sessione salvata
-    return localStorage.getItem('vincanto_admin_session') === 'authenticated';
-  });
+  // Stati autenticazione admin
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
@@ -183,38 +166,19 @@ const AdminPanelPro = (): JSX.Element => {
   
   // === AUTENTICAZIONE ===
   const handleLogin = async () => {
-    devLog('🔐 Tentativo di login...');
-    
-    if (!adminApiService) {
-      setError('Servizio API non disponibile');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const result = await adminApiService.login(password);
-      
-      if (result.success) {
-        devLog('✅ Login API riuscito, imposto autenticazione...');
-        localStorage.setItem('vincanto_admin_session', 'authenticated');
-        setIsAuthenticated(true);
-        setError('');
-        devLog('🎯 Stato autenticazione impostato e salvato');
-        // Carica tutti i dati reali dal backend
-        loadRealApiData();
-      } else {
-        devLog('❌ Login API fallito:', result.error);
-        setError(result.error || 'Login fallito');
-      }
-    } catch (error) {
-      devLog('❌ Errore durante il login:', error);
-      setError('Errore di connessione al server');
-    } finally {
-      setLoading(false);
+    console.log('🔐 Tentativo di login...');
+    if (password === 'vincanto2025') {
+      console.log('✅ Login riuscito, imposto autenticazione...');
+      setIsAuthenticated(true);
+      setError('');
+      console.log('🎯 Stato autenticazione impostato');
+      // Carica tutti i dati reali dal backend
+      loadRealApiData();
+    } else {
+      console.log('❌ Password errata');
+      setError('Password non corretta');
     }
   };
-
-  // Logout gestito direttamente nel bottone
 
 
 
@@ -222,42 +186,29 @@ const AdminPanelPro = (): JSX.Element => {
   const loadPricingConfig = async () => {
     try {
       if (!adminApiService) return;
-      console.log('💰 Caricamento configurazione prezzi per gruppi...');
+      console.log('💰 Caricamento configurazione prezzi...');
       const result = await adminApiService.getPricingConfig();
       
-      if (result && (result.priceGroup1to2 !== undefined || result.success)) {
-        // Nuova API unificata: dati direttamente disponibili
-        const config = result.priceGroup1to2 ? result : result.pricing || {};
+      if (result.success && result.config) {
+        const config = result.config;
         setPricingConfig({
-          // Mappato direttamente dai nuovi campi API unificata
-          priceGroup1to2: parseFloat(config.priceGroup1to2) || 75,
-          priceGroup3to4: parseFloat(config.priceGroup3to4) || 95,
-          priceGroup5to6: parseFloat(config.priceGroup5to6) || 115,
-          priceGroup7to8: parseFloat(config.priceGroup7to8) || 135,
-          
-          // Costi e configurazioni
-          cleaningFee: parseFloat(config.cleaningFee) || 50,
-          parkingFee: parseFloat(config.parkingFee) || 20,
-          touristTaxAdult: parseFloat(config.touristTaxAdult) || 2.00,
-          touristTaxChild: parseFloat(config.touristTaxChild) || 0,
-          
-          // Sconti e maggiorazioni
-          weekendSurcharge: parseFloat(config.weekendSurcharge) || 0,
-          weeklyDiscount: parseFloat(config.weeklyDiscount) || 10,
-          monthlyDiscount: parseFloat(config.monthlyDiscount) || 15,
-          
-          // Limiti
-          minStay: parseInt(config.minStay) || 2,
-          maxStay: parseInt(config.maxStay) || 14,
-          maxGuests: parseInt(config.maxGuests) || 8,
-          
-          // Sconti avanzati
+          basePrice: config.basePrice || 75,
+          cleaningFee: config.cleaningFee || 50,
+          weekendSurcharge: config.weekendSurcharge || 20,
+          monthlyDiscount: config.monthlyDiscount || 15,
+          weeklyDiscount: config.weeklyDiscount || 10,
+          parkingFee: config.parkingFee || 15, // 🅿️ AGGIUNTO
+          minStay: config.minStay || 2,
+          maxStay: config.maxStay || 14,
           advanceBookingDiscount: config.advanceBookingDiscount || 0,
-          lastMinuteDiscount: config.lastMinuteDiscount || 0
+          lastMinuteDiscount: config.lastMinuteDiscount || 0,
+          additionalGuestPrice: config.additionalGuestPrice || 75,
+          touristTaxAdult: config.touristTaxAdult || 3,
+          touristTaxChild: config.touristTaxChild || 0
         });
-        console.log('✅ Configurazione prezzi per gruppi caricata:', config);
+        console.log('✅ Configurazione prezzi caricata dal database:', config);
       } else {
-        console.log('⚠️ Nessuna configurazione trovata, uso valori predefiniti per gruppi');
+        console.log('⚠️ Nessuna configurazione trovata, uso valori predefiniti');
       }
     } catch (error) {
       console.error('❌ Errore caricamento prezzi:', error);
@@ -272,35 +223,28 @@ const AdminPanelPro = (): JSX.Element => {
       }
 
       setIsUpdatingPricing(true);
-      console.log('🔥 ADMIN SAVE - Dati da salvare:', JSON.stringify(pricingConfig, null, 2));
-      console.log('🔗 URL API Unificata chiamata:', `${window.location.origin}/api/unified?action=pricing-config`);
+      console.log('� ADMIN SAVE - Dati da salvare:', JSON.stringify(pricingConfig, null, 2));
+      console.log('🔗 URL API chiamata:', `${window.location.origin}/api/admin?action=pricing-config`);
       
       const result = await adminApiService.updatePricingConfig(pricingConfig);
       
-      console.log('🎯 RISPOSTA API UNIFICATA:', JSON.stringify(result, null, 2));
+      console.log('🎯 RISPOSTA API ADMIN:', JSON.stringify(result, null, 2));
       
       if (result.success) {
         alert('✅ Configurazione prezzi salvata con successo!');
         console.log('✅ Prezzi salvati nel database:', result.saved_data || result.data);
         
-        // 🔥 FORZA RICARICAMENTO IMMEDIATO DEI PREZZI
-        console.log('🔄 FORCE RELOAD: Ricarico configurazione prezzi...');
-        await loadPricingConfig();
-        
-        // 🧪 TEST IMMEDIATO: Verifica che i prezzi siano salvati con API unificata
-        console.log('🧪 TEST: Verifica prezzi dal database...');
+        // 🔥 TEST IMMEDIATO: Verifica che i prezzi siano salvati
+        console.log('🧪 TEST: Ricarico prezzi dal database per verifica...');
         setTimeout(async () => {
           try {
-            const testResponse = await fetch(`/api/unified?action=pricing-config?t=${Date.now()}`, {
-              cache: 'no-cache',
-              headers: { 'Cache-Control': 'no-cache' }
-            });
+            const testResponse = await fetch('/api/quote?checkIn=2025-12-01&checkOut=2025-12-02&guests=2&includeParking=true');
             const testData = await testResponse.json();
-            console.log('🧪 TEST PREZZI POST-SALVATAGGIO (NO CACHE):', testData);
+            console.log('🧪 TEST PREZZI POST-SALVATAGGIO:', testData);
           } catch (testError) {
             console.error('❌ Errore test post-salvataggio:', testError);
           }
-        }, 1000);
+        }, 2000);
         
       } else {
         alert('❌ Errore nel salvataggio: ' + (result.message || 'Errore sconosciuto'));
@@ -315,231 +259,48 @@ const AdminPanelPro = (): JSX.Element => {
   };
 
   const updatePricingField = (field: string, value: number) => {
-    devLog('💰 Aggiornamento campo prezzo:', { field, value, currentConfig: pricingConfig });
+    console.log('💰 Aggiornamento campo prezzo:', { field, value, currentConfig: pricingConfig });
     setPricingConfig(prev => {
       const updated = {
         ...prev,
         [field]: value
       };
-      devLog('💰 Nuova configurazione prezzi:', updated);
+      console.log('💰 Nuova configurazione prezzi:', updated);
       return updated;
     });
   };
 
-  // Nota: La tassa di soggiorno è ora gestita tramite i campi in `pricingConfig`.
-  // Se necessario, possiamo ripristinare il caricamento remoto in futuro.
-
   // === CUSTOM SERVICES FUNCTIONS ===
   
-  const loadCustomServices = async () => {
-    if (!adminApiService) return;
-    
-    try {
-      console.log('🛎️ Caricamento servizi dal database...');
-      
-      const services = await adminApiService.getExtraServices();
-      
-      // Filtra solo i servizi custom (categoria 'custom')
-      const customOnly = services.filter(service => service.category === 'custom');
-      setCustomServices(customOnly);
-      
-      // 🔥 NUOVO: Carica TUTTI i servizi per permettere modifica di quelli hardcoded
-      setAllServices(services);
-      
-      console.log('✅ Servizi caricati - Custom:', customOnly.length, 'Totali:', services.length);
-    } catch (error) {
-      console.error('❌ Errore caricamento servizi:', error);
-    }
-  };
-
-  const addCustomService = async () => {
+  const addCustomService = () => {
     if (!newServiceName.trim() || newServicePrice <= 0) {
       alert('⚠️ Inserisci nome e prezzo validi');
       return;
     }
 
-    if (!adminApiService) {
-      alert('❌ Servizio API non disponibile');
-      return;
-    }
+    const newService = {
+      id: Date.now(),
+      name: newServiceName.trim(),
+      price: newServicePrice,
+      unit: 'notte'
+    };
 
-    try {
-      const serviceData = {
-        name: newServiceName.trim(),
-        price: newServicePrice,
-        unit: 'soggiorno',
-        description: '',
-        category: 'custom'
-      };
-
-      const result = await adminApiService.addCustomService(serviceData);
-      
-      if (result.success) {
-        // Ricarica i servizi dal database
-        await loadCustomServices();
-        
-        setNewServiceName('');
-        setNewServicePrice(0);
-        console.log('✅ Servizio aggiunto e salvato nel database');
-      } else {
-        alert('❌ Errore aggiunta servizio: ' + result.message);
-      }
-    } catch (error) {
-      console.error('❌ Errore aggiunta servizio:', error);
-      alert('❌ Errore aggiunta servizio');
-    }
+    setCustomServices(prev => [...prev, newService]);
+    setNewServiceName('');
+    setNewServicePrice(0);
+    console.log('✅ Servizio aggiunto:', newService);
   };
 
-  const updateCustomService = async (id: number, field: string, value: any) => {
-    if (!adminApiService) return;
-    
-    try {
-      // Aggiorna immediatamente l'interfaccia
-      setCustomServices(prev => prev.map(service => 
-        service.id === id ? { ...service, [field]: value } : service
-      ));
-
-      // Trova il servizio corrente per avere tutti i dati
-      const currentService = customServices.find(s => s.id === id);
-      if (!currentService) return;
-
-      // Prepara i dati completi da inviare
-      const serviceData = {
-        id,
-        name: field === 'name' ? value : currentService.name,
-        price: field === 'price' ? value : currentService.price,
-        unit: field === 'unit' ? value : (currentService.unit || 'soggiorno'),
-        description: field === 'description' ? value : (currentService.description ?? ''),
-        active: field === 'active' ? value : (currentService.active ?? true),
-        included: field === 'included' ? value : (currentService.included ?? false),
-      };
-
-      const result = await adminApiService.updateCustomService(serviceData);
-      
-      if (!result.success) {
-        console.warn('⚠️ Errore aggiornamento servizio:', result.message);
-        // Ricarica per sincronizzare
-        await loadCustomServices();
-      }
-    } catch (error) {
-      console.error('❌ Errore aggiornamento servizio:', error);
-      // Ricarica per sincronizzare
-      await loadCustomServices();
-    }
+  const updateCustomService = (id: number, field: string, value: any) => {
+    setCustomServices(prev => prev.map(service => 
+      service.id === id ? { ...service, [field]: value } : service
+    ));
   };
 
-  const deleteCustomService = async (id: number) => {
-    if (!confirm('⚠️ Sei sicuro di voler eliminare questo servizio?')) {
-      return;
-    }
-
-    if (!adminApiService) {
-      alert('❌ Servizio API non disponibile');
-      return;
-    }
-
-    try {
-      const result = await adminApiService.deleteCustomService(id);
-      
-      if (result.success) {
-        // Ricarica i servizi dal database
-        await loadCustomServices();
-        console.log('✅ Servizio eliminato dal database');
-      } else {
-        alert('❌ Errore eliminazione servizio: ' + result.message);
-      }
-    } catch (error) {
-      console.error('❌ Errore eliminazione servizio:', error);
-      alert('❌ Errore eliminazione servizio');
-    }
-  };
-
-  // 🔥 NUOVO: Funzione per aggiornare prezzi servizi hardcoded
-  const updateHardcodedServicePrice = async (serviceId: number, newPrice: number) => {
-    if (!adminApiService) {
-      alert('❌ Servizio API non disponibile');
-      return;
-    }
-
-    try {
-      console.log(`💰 Aggiornamento prezzo servizio ${serviceId}: €${newPrice}`);
-
-      // Usa l'API di pricing-config per aggiornare il prezzo del servizio
-      const result = await adminApiService.updatePricingConfig({
-        [`service_${serviceId}_price`]: newPrice.toString()
-      });
-
-      if (result.success) {
-        // Aggiorna lo stato locale
-        setAllServices(prev => prev.map(service => 
-          service.id === serviceId ? { ...service, price: newPrice } : service
-        ));
-        
-        console.log('✅ Prezzo servizio aggiornato nel database');
-      } else {
-        alert('❌ Errore aggiornamento prezzo: ' + result.message);
-      }
-    } catch (error) {
-      console.error('❌ Errore aggiornamento prezzo servizio:', error);
-      alert('❌ Errore aggiornamento prezzo servizio');
-    }
-  };
-
-  // 🔥 NUOVO: Funzione per attivare/disattivare servizi hardcoded
-  const updateHardcodedServiceActive = async (serviceId: number, active: boolean) => {
-    if (!adminApiService) {
-      alert('❌ Servizio API non disponibile');
-      return;
-    }
-
-    try {
-      console.log(`🔄 ${active ? 'Attivazione' : 'Disattivazione'} servizio ${serviceId}`);
-
-      const result = await adminApiService.updatePricingConfig({
-        [`service_${serviceId}_active`]: active.toString()
-      });
-
-      if (result.success) {
-        setAllServices(prev => prev.map(service => 
-          service.id === serviceId ? { ...service, active } : service
-        ));
-        
-        console.log(`✅ Servizio ${active ? 'attivato' : 'disattivato'} nel database`);
-      } else {
-        alert(`❌ Errore ${active ? 'attivazione' : 'disattivazione'} servizio: ` + result.message);
-      }
-    } catch (error) {
-      console.error(`❌ Errore ${active ? 'attivazione' : 'disattivazione'} servizio:`, error);
-      alert(`❌ Errore ${active ? 'attivazione' : 'disattivazione'} servizio`);
-    }
-  };
-
-  // 🔥 NUOVO: Funzione per impostare servizi come inclusi
-  const updateHardcodedServiceIncluded = async (serviceId: number, included: boolean) => {
-    if (!adminApiService) {
-      alert('❌ Servizio API non disponibile');
-      return;
-    }
-
-    try {
-      console.log(`🎁 ${included ? 'Impostazione come incluso' : 'Rimozione da inclusi'} servizio ${serviceId}`);
-
-      const result = await adminApiService.updatePricingConfig({
-        [`service_${serviceId}_included`]: included.toString()
-      });
-
-      if (result.success) {
-        setAllServices(prev => prev.map(service => 
-          service.id === serviceId ? { ...service, included } : service
-        ));
-        
-        console.log(`✅ Servizio ${included ? 'impostato come incluso' : 'rimosso da inclusi'} nel database`);
-      } else {
-        alert(`❌ Errore modifica servizio incluso: ` + result.message);
-      }
-    } catch (error) {
-      console.error(`❌ Errore modifica servizio incluso:`, error);
-      alert(`❌ Errore modifica servizio incluso`);
+  const deleteCustomService = (id: number) => {
+    if (confirm('⚠️ Sei sicuro di voler eliminare questo servizio?')) {
+      setCustomServices(prev => prev.filter(service => service.id !== id));
+      console.log('🗑️ Servizio eliminato:', id);
     }
   };
 
@@ -908,6 +669,14 @@ const AdminPanelPro = (): JSX.Element => {
     notificationEmail: 'admin@vincantomaori.it'
   });
 
+  const [mockNotifications] = useState([
+    { id: 1, type: 'booking', title: 'Nuova Prenotazione', message: 'Cliente Marco R. ha prenotato per il 15-17 Marzo', timestamp: '2 minuti fa', priority: 'high', read: false },
+    { id: 2, type: 'payment', title: 'Pagamento Ricevuto', message: 'Pagamento di €450 ricevuto per prenotazione #1234', timestamp: '15 minuti fa', priority: 'medium', read: false },
+    { id: 3, type: 'system', title: 'Backup Completato', message: 'Backup automatico del sistema completato con successo', timestamp: '1 ora fa', priority: 'low', read: true },
+    { id: 4, type: 'review', title: 'Nuova Recensione', message: 'Recensione 5 stelle ricevuta da cliente precedente', timestamp: '3 ore fa', priority: 'medium', read: true },
+    { id: 5, type: 'booking', title: 'Check-in Oggi', message: 'Cliente Sara M. effettuerà il check-in alle 15:00', timestamp: '1 giorno fa', priority: 'high', read: true }
+  ]);
+
   const saveNotificationSettings = async () => {
     setLoading(true);
     try {
@@ -1046,16 +815,6 @@ const AdminPanelPro = (): JSX.Element => {
       } catch (err) {
         console.error('❌ Errore calendari:', err);
       }
-
-      try {
-        await loadCustomServices();
-        console.log('✅ Servizi custom caricati');
-      } catch (err) {
-        console.error('❌ Errore servizi custom:', err);
-      }
-
-      // Tassa soggiorno: caricamento remoto disabilitato (gestita via `pricingConfig`)
-      console.log('ℹ️ Tassa soggiorno gestita tramite pricingConfig (caricamento remoto disabilitato)');
 
       console.log('✅ Dati API reali caricati completamente');
     } catch (error) {
@@ -1237,8 +996,10 @@ const AdminPanelPro = (): JSX.Element => {
   
   // Stati per eventi calendario (legacy - ora usati per la dashboard)
   const [calendarEvents, setCalendarEvents] = useState<any[]>([]);
+  const [isLoadingCalendar, setIsLoadingCalendar] = useState(false);
 
   const loadCalendarData = async () => {
+    setIsLoadingCalendar(true);
     try {
       if (!adminApiService) return;
       
@@ -1248,6 +1009,8 @@ const AdminPanelPro = (): JSX.Element => {
       
     } catch (error) {
       console.error('Errore caricamento calendario:', error);
+    } finally {
+      setIsLoadingCalendar(false);
     }
   };
 
@@ -1273,6 +1036,7 @@ const AdminPanelPro = (): JSX.Element => {
     try {
       if (!adminApiService) return;
       
+      setIsLoadingCalendar(true);
       const result = await adminApiService.syncGoogleCalendar();
       
       if (result.success) {
@@ -1284,6 +1048,8 @@ const AdminPanelPro = (): JSX.Element => {
     } catch (error) {
       console.error('Errore sincronizzazione Google Calendar:', error);
       alert('❌ Errore nella sincronizzazione Google Calendar');
+    } finally {
+      setIsLoadingCalendar(false);
     }
   };
 
@@ -1310,6 +1076,7 @@ const AdminPanelPro = (): JSX.Element => {
     try {
       if (!adminApiService) return;
       
+      setIsLoadingCalendar(true);
       const events = await adminApiService.getGoogleCalendarEvents();
       
       console.log('Eventi Google Calendar caricati:', events);
@@ -1320,801 +1087,9 @@ const AdminPanelPro = (): JSX.Element => {
       console.error('Errore caricamento eventi Google:', error);
       alert('❌ Errore nel caricamento eventi Google Calendar');
       return [];
-    }
-  };
-
-  // === NUOVE FUNZIONI CALENDARIO AGGIUNTE ===
-
-  const handleShareGoogleCalendar = async () => {
-    try {
-      if (!adminApiService) return;
-      
-      const shareUrl = await adminApiService.getGoogleCalendarShareUrl();
-      
-      if (shareUrl) {
-        navigator.clipboard.writeText(shareUrl);
-        alert(`📱 Link di condivisione copiato negli appunti!\n\n${shareUrl}\n\nCondividi questo link per permettere la visualizzazione del calendario.`);
-      } else {
-        alert('❌ Impossibile generare il link di condivisione. Verifica l\'autenticazione Google Calendar.');
-      }
-    } catch (error) {
-      console.error('Errore condivisione calendario:', error);
-      alert('❌ Errore nella condivisione del calendario Google');
-    }
-  };
-
-  const handleGoogleSyncReport = async () => {
-    try {
-      if (!adminApiService) return;
-      
-      const report = await adminApiService.getGoogleSyncReport();
-      
-      if (report) {
-        const reportText = `📊 Report Sincronizzazione Google Calendar\n\n` +
-          `📅 Ultima sincronizzazione: ${report.lastSync || 'Mai'}\n` +
-          `📋 Eventi sincronizzati: ${report.eventsCount || 0}\n` +
-          `✅ Successi: ${report.successCount || 0}\n` +
-          `❌ Errori: ${report.errorCount || 0}\n\n` +
-          `${report.errors && report.errors.length > 0 ? 'Errori:\n' + report.errors.join('\n') : ''}`;
-        
-        alert(reportText);
-      } else {
-        alert('📊 Nessun report di sincronizzazione disponibile');
-      }
-    } catch (error) {
-      console.error('Errore report sincronizzazione:', error);
-      alert('❌ Errore nel recupero del report di sincronizzazione');
-    }
-  };
-
-  const handleCompleteAirbnbSetup = async () => {
-    const apiKey = prompt('🔑 Inserisci la tua API Key di Airbnb:');
-    if (!apiKey) return;
-
-    try {
-      if (!adminApiService) return;
-      
-      const setupData = {
-        platform: 'airbnb',
-        apiKey: apiKey,
-        isActive: true
-      };
-      
-      const result = await adminApiService.setupExternalCalendar(setupData);
-      
-      if (result.success) {
-        alert('✅ Setup Airbnb completato con successo!');
-        await loadCalendarConfigs();
-      } else {
-        alert('❌ Setup fallito: ' + (result.error || 'Errore sconosciuto'));
-      }
-    } catch (error) {
-      console.error('Errore setup Airbnb:', error);
-      alert('❌ Errore nel setup Airbnb. Verifica la tua API Key.');
-    }
-  };
-
-  const handleTestAirbnbAPI = async () => {
-    try {
-      if (!adminApiService) return;
-      
-      const testResult = await adminApiService.testExternalCalendarAPI('airbnb');
-      
-      if (testResult.success) {
-        alert(`✅ Test API Airbnb riuscito!\n\n📊 Status: ${testResult.status}\n📅 Calendari trovati: ${testResult.calendarsCount || 0}`);
-      } else {
-        alert(`❌ Test API fallito: ${testResult.error || 'Errore sconosciuto'}`);
-      }
-    } catch (error) {
-      console.error('Errore test API Airbnb:', error);
-      alert('❌ Errore nel test delle API Airbnb');
-    }
-  };
-
-  const handleCancelAirbnbSetup = async () => {
-    const confirm = window.confirm('⚠️ Sei sicuro di voler annullare il setup Airbnb? Tutte le configurazioni verranno rimosse.');
-    
-    if (!confirm) return;
-
-    try {
-      if (!adminApiService) return;
-      
-      await adminApiService.removeExternalCalendar('airbnb');
-      alert('🗑️ Setup Airbnb annullato e configurazioni rimosse');
-      await loadCalendarConfigs();
-    } catch (error) {
-      console.error('Errore annullamento setup:', error);
-      alert('❌ Errore nell\'annullamento del setup');
-    }
-  };
-
-  const handleReactivateVRBO = async () => {
-    const confirm = window.confirm('▶️ Riattivare il calendario VRBO?');
-    
-    if (!confirm) return;
-
-    try {
-      if (!adminApiService) return;
-      
-      const result = await adminApiService.reactivateExternalCalendar('vrbo');
-      
-      if (result.success) {
-        alert('✅ Calendario VRBO riattivato con successo!');
-        await loadCalendarConfigs();
-      } else {
-        alert('❌ Riattivazione fallita: ' + (result.error || 'Errore sconosciuto'));
-      }
-    } catch (error) {
-      console.error('Errore riattivazione VRBO:', error);
-      alert('❌ Errore nella riattivazione VRBO');
-    }
-  };
-
-  const handleEditVRBO = () => {
-    const newUrl = prompt('✏️ Modifica URL VRBO Calendar:', 'https://www.vrbo.com/calendar/...');
-    
-    if (!newUrl) return;
-
-    // Simula salvataggio configurazione VRBO
-    alert(`✅ Configurazione VRBO aggiornata!\n\n🔗 Nuovo URL: ${newUrl}`);
-  };
-
-  const handleDeleteVRBO = async () => {
-    const confirm = window.confirm('⚠️ Eliminare definitivamente il calendario VRBO?\n\nQuesta azione non può essere annullata.');
-    
-    if (!confirm) return;
-
-    try {
-      if (!adminApiService) return;
-      
-      await adminApiService.removeExternalCalendar('vrbo');
-      alert('🗑️ Calendario VRBO eliminato con successo');
-      await loadCalendarConfigs();
-    } catch (error) {
-      console.error('Errore eliminazione VRBO:', error);
-      alert('❌ Errore nell\'eliminazione del calendario VRBO');
-    }
-  };
-
-  const handleTestHoliduURL = async () => {
-    const testUrl = 'https://api.host.holidu.com/pmc/rest/apartments/65376863/ical.ics?key=72d27a56f3e8836f690500877301d000';
-    
-    try {
-      // Test connessione URL Holidu
-      const response = await fetch(testUrl, { method: 'HEAD' });
-      
-      if (response.ok) {
-        alert(`✅ Test URL Holidu riuscito!\n\n🔗 URL: Accessibile\n📊 Status: ${response.status}\n📅 Pronto per l'integrazione`);
-      } else {
-        alert(`❌ Test URL fallito\n\n📊 Status: ${response.status}\n🚨 URL non accessibile`);
-      }
-    } catch (error) {
-      console.error('Errore test URL Holidu:', error);
-      alert('❌ Errore nel test dell\'URL Holidu. Verifica la connessione internet.');
-    }
-  };
-
-  const handleTestGeneralConnection = async () => {
-    try {
-      if (!adminApiService) return;
-      
-      const connectionTest = await adminApiService.testGeneralCalendarConnection();
-      
-      const statusMessage = `🔧 Test Connessioni Generale\n\n` +
-        `🌐 Connessione Internet: ${connectionTest.internet ? '✅' : '❌'}\n` +
-        `📅 Google Calendar: ${connectionTest.google ? '✅' : '❌'}\n` +
-        `🏠 Airbnb API: ${connectionTest.airbnb ? '✅' : '❌'}\n` +
-        `🏖️ VRBO API: ${connectionTest.vrbo ? '✅' : '❌'}\n` +
-        `🏛️ Database: ${connectionTest.database ? '✅' : '❌'}\n\n` +
-        `📊 Stato Generale: ${connectionTest.overall ? '✅ Tutto OK' : '❌ Problemi rilevati'}`;
-      
-      alert(statusMessage);
-    } catch (error) {
-      console.error('Errore test connessioni:', error);
-      alert('❌ Errore nel test delle connessioni');
-    }
-  };
-
-  const handleSyncAllCalendars = async () => {
-    const confirm = window.confirm('🔄 Sincronizzare tutti i calendari?\n\nQuesta operazione potrebbe richiedere alcuni minuti.');
-    
-    if (!confirm) return;
-
-    try {
-      if (!adminApiService) return;
-      setIsLoadingCalendars(true);
-      
-      const syncResults = await adminApiService.syncAllCalendars();
-      
-      const resultMessage = `🔄 Sincronizzazione Completata\n\n` +
-        `✅ Successi: ${syncResults.successful || 0}\n` +
-        `❌ Errori: ${syncResults.failed || 0}\n` +
-        `📅 Eventi totali: ${syncResults.totalEvents || 0}\n\n` +
-        `${syncResults.errors && syncResults.errors.length > 0 ? 'Dettagli errori:\n' + syncResults.errors.join('\n') : ''}`;
-      
-      alert(resultMessage);
-      await loadCalendarConfigs();
-    } catch (error) {
-      console.error('Errore sincronizzazione calendari:', error);
-      alert('❌ Errore nella sincronizzazione di tutti i calendari');
     } finally {
-      setIsLoadingCalendars(false);
+      setIsLoadingCalendar(false);
     }
-  };
-
-  const handleShowOccupancyDashboard = () => {
-    // Simula apertura dashboard occupazione
-    const occupancyData = {
-      today: '75%',
-      thisWeek: '82%',
-      thisMonth: '68%',
-      nextMonth: '45%'
-    };
-    
-    const dashboardMessage = `📊 Dashboard Occupazione\n\n` +
-      `📅 Oggi: ${occupancyData.today}\n` +
-      `📆 Questa settimana: ${occupancyData.thisWeek}\n` +
-      `📈 Questo mese: ${occupancyData.thisMonth}\n` +
-      `📮 Prossimo mese: ${occupancyData.nextMonth}\n\n` +
-      `💡 Suggerimento: Considera di aumentare i prezzi nei periodi di alta occupazione.`;
-    
-    alert(dashboardMessage);
-  };
-
-  const handleShowSyncReport = async () => {
-    try {
-      if (!adminApiService) return;
-      
-      const report = await adminApiService.getFullSyncReport();
-      
-      const reportMessage = `📈 Report Sincronizzazioni Completo\n\n` +
-        `📊 Sincronizzazioni oggi: ${report.todaySync || 0}\n` +
-        `📅 Sincronizzazioni settimana: ${report.weekSync || 0}\n` +
-        `🔄 Ultima sincronizzazione: ${report.lastSync || 'Mai'}\n` +
-        `⚡ Media tempo sync: ${report.averageTime || '0'}s\n` +
-        `✅ Tasso successo: ${report.successRate || 0}%\n\n` +
-        `🏆 Platform più affidabile: ${report.bestPlatform || 'N/A'}`;
-      
-      alert(reportMessage);
-    } catch (error) {
-      console.error('Errore report sincronizzazioni:', error);
-      alert('❌ Errore nel recupero del report sincronizzazioni');
-    }
-  };
-
-  const handleExportCalendarConfig = async () => {
-    try {
-      const configData = {
-        calendars: calendarConfigs,
-        settings: calendarStats,
-        timestamp: new Date().toISOString(),
-        exportedBy: 'Vincanto Admin Panel'
-      };
-      
-      const jsonString = JSON.stringify(configData, null, 2);
-      
-      // Crea e scarica il file
-      const blob = new Blob([jsonString], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `vincanto-calendar-config-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      
-      alert('📤 Configurazione calendari esportata con successo!');
-    } catch (error) {
-      console.error('Errore esportazione:', error);
-      alert('❌ Errore nell\'esportazione della configurazione');
-    }
-  };
-
-  const handleAdvancedCalendarSettings = () => {
-    const settings = prompt(`⚙️ Impostazioni Avanzate Calendari\n\nInserisci nuove impostazioni (JSON format):\n\nEsempio:\n{\n  "syncInterval": 30,\n  "maxRetries": 3,\n  "timeoutSeconds": 60\n}`, 
-      JSON.stringify({
-        syncInterval: 30,
-        maxRetries: 3,
-        timeoutSeconds: 60,
-        autoSync: true
-      }, null, 2)
-    );
-    
-    if (!settings) return;
-    
-    try {
-      const parsedSettings = JSON.parse(settings);
-      
-      // Simula salvataggio impostazioni avanzate
-      alert(`⚙️ Impostazioni avanzate salvate!\n\n${JSON.stringify(parsedSettings, null, 2)}`);
-    } catch (error) {
-      alert('❌ Formato JSON non valido. Riprova.');
-    }
-  };
-
-  // === NUOVE FUNZIONI PRENOTAZIONI AGGIUNTE ===
-
-  const handleEditBookingDemo = (booking: any) => {
-    if (typeof booking === 'string') {
-      // Se è un ID stringa (come 'VIN_DEMO'), trova la prenotazione corrispondente
-      const foundBooking = recentBookings.find(b => `#${b.id.toUpperCase()}` === `#${booking}` || b.id === booking);
-      if (foundBooking) {
-        alert(`✏️ Modifica Prenotazione\n\nModifica la prenotazione di:\n👤 ${foundBooking.guestName}\n📅 ${new Date(foundBooking.checkIn).toLocaleDateString('it-IT')} - ${new Date(foundBooking.checkOut).toLocaleDateString('it-IT')}\n💰 €${foundBooking.totalPrice}\n\n(Funzione demo - implementare integrazione completa)`);
-      } else {
-        alert(`✏️ Modifica Prenotazione ${booking}\n\n(Funzione demo - implementare integrazione completa)`);
-      }
-    } else {
-      // È un oggetto prenotazione completo
-      setNewBookingData({
-        customer_name: booking.guestName || '',
-        customer_email: booking.guestName ? booking.guestName.toLowerCase().replace(' ', '.') + '@email.com' : '',
-        check_in: booking.checkIn || '',
-        check_out: booking.checkOut || '',
-        guests: booking.guests || 1,
-        total_amount: booking.totalPrice || 0,
-        status: booking.status || 'pending',
-        platform: booking.platform || 'direct'
-      });
-      setEditingBooking(booking);
-      setShowBookingForm(true);
-    }
-  };
-
-  const handleSendBookingEmail = (booking: any) => {
-    if (typeof booking === 'string') {
-      const bookingId = booking;
-      const emailTypes = [
-        'Conferma prenotazione',
-        'Promemoria check-in', 
-        'Istruzioni accesso',
-        'Richiesta recensione',
-        'Email personalizzata'
-      ];
-      
-      const selectedType = prompt(`✉️ Invia Email per ${bookingId}\n\nSeleziona il tipo di email:\n${emailTypes.map((type, index) => `${index + 1}. ${type}`).join('\n')}\n\nInserisci il numero (1-5):`);
-      
-      if (selectedType && parseInt(selectedType) >= 1 && parseInt(selectedType) <= 5) {
-        const emailType = emailTypes[parseInt(selectedType) - 1];
-        alert(`✅ Email "${emailType}" inviata con successo per la prenotazione ${bookingId}!`);
-      }
-    } else {
-      alert(`✉️ Inviando email a ${booking.guestName} per la prenotazione #${booking.id}\n\n📧 Email: ${booking.guestName.toLowerCase().replace(' ', '.')}@email.com\n📅 Periodo: ${new Date(booking.checkIn).toLocaleDateString('it-IT')} - ${new Date(booking.checkOut).toLocaleDateString('it-IT')}\n\n✅ Email inviata con successo!`);
-    }
-  };
-
-  const handleGenerateInvoice = (booking: any) => {
-    if (typeof booking === 'string') {
-      const bookingId = booking;
-      alert(`📄 Generando fattura per prenotazione ${bookingId}...\n\n✅ Fattura generata con successo!\n📁 Salvata in: /fatture/${bookingId}_fattura.pdf\n📧 Inviata automaticamente al cliente`);
-    } else {
-      const invoiceData = `📄 FATTURA VINCANTO MAORI\n\n` +
-        `📋 Prenotazione: #${booking.id.toUpperCase()}\n` +
-        `👤 Cliente: ${booking.guestName}\n` +
-        `📅 Periodo: ${new Date(booking.checkIn).toLocaleDateString('it-IT')} - ${new Date(booking.checkOut).toLocaleDateString('it-IT')}\n` +
-        `👥 Ospiti: ${booking.guests}\n` +
-        `💰 Totale: €${booking.totalPrice}\n` +
-        `📊 Piattaforma: ${booking.platform}\n\n` +
-        `✅ Fattura generata il ${new Date().toLocaleDateString('it-IT')}`;
-      
-      alert(invoiceData + '\n\n📁 Fattura salvata e inviata al cliente');
-    }
-  };
-
-  const handleRequestPayment = (bookingId: string) => {
-    const paymentMethods = [
-      'Bonifico bancario',
-      'Carta di credito',
-      'PayPal',
-      'Pagamento in loco'
-    ];
-    
-    const selectedMethod = prompt(`💳 Richiesta Pagamento - ${bookingId}\n\nSeleziona il metodo di pagamento:\n${paymentMethods.map((method, index) => `${index + 1}. ${method}`).join('\n')}\n\nInserisci il numero (1-4):`);
-    
-    if (selectedMethod && parseInt(selectedMethod) >= 1 && parseInt(selectedMethod) <= 4) {
-      const method = paymentMethods[parseInt(selectedMethod) - 1];
-      alert(`💳 Richiesta di pagamento inviata!\n\n📋 Prenotazione: ${bookingId}\n💰 Importo: €1,250.00\n💳 Metodo: ${method}\n📧 Email inviata al cliente con istruzioni\n\n⏱️ Scadenza: 48 ore`);
-    }
-  };
-
-  const handleRequestReview = (bookingId: string) => {
-    const reviewPlatforms = [
-      'Google Reviews',
-      'TripAdvisor',
-      'Airbnb (se applicabile)',
-      'Booking.com (se applicabile)',
-      'Email diretta'
-    ];
-    
-    const selectedPlatform = prompt(`⭐ Richiesta Recensione - ${bookingId}\n\nSeleziona la piattaforma:\n${reviewPlatforms.map((platform, index) => `${index + 1}. ${platform}`).join('\n')}\n\nInserisci il numero (1-5):`);
-    
-    if (selectedPlatform && parseInt(selectedPlatform) >= 1 && parseInt(selectedPlatform) <= 5) {
-      const platform = reviewPlatforms[parseInt(selectedPlatform) - 1];
-      alert(`⭐ Richiesta recensione inviata!\n\n📋 Prenotazione: ${bookingId}\n🌟 Piattaforma: ${platform}\n📧 Email personalizzata inviata al cliente\n🎁 Incluso sconto 10% per prossima prenotazione`);
-    }
-  };
-
-  const handleBookAgain = (bookingId: string) => {
-    const currentDate = new Date();
-    const suggestedDates = [
-      new Date(currentDate.getTime() + (30 * 24 * 60 * 60 * 1000)), // +30 giorni
-      new Date(currentDate.getTime() + (90 * 24 * 60 * 60 * 1000)), // +90 giorni
-      new Date(currentDate.getTime() + (180 * 24 * 60 * 60 * 1000)) // +6 mesi
-    ];
-    
-    const message = `🔁 Prenota Ancora - ${bookingId}\n\n` +
-      `📧 Email promozionale inviata al cliente!\n\n` +
-      `🎯 Offerte incluse:\n` +
-      `• 15% sconto per prenotazioni entro 30 giorni\n` +
-      `• 10% sconto per prenotazioni entro 90 giorni\n` +
-      `• Upgrade gratuito camera (se disponibile)\n\n` +
-      `📅 Date suggerite:\n` +
-      `• ${suggestedDates[0].toLocaleDateString('it-IT')}\n` +
-      `• ${suggestedDates[1].toLocaleDateString('it-IT')}\n` +
-      `• ${suggestedDates[2].toLocaleDateString('it-IT')}\n\n` +
-      `✅ Campaign attivata con successo!`;
-    
-    alert(message);
-  };
-
-  const handleBookingsDetailedReport = async () => {
-    try {
-      const reportData = {
-        totalBookings: realBookings.length + recentBookings.length,
-        confirmedBookings: realBookings.filter(b => b.status === 'confirmed').length + recentBookings.filter(b => b.status === 'confirmed').length,
-        pendingBookings: realBookings.filter(b => b.status === 'pending').length + recentBookings.filter(b => b.status === 'pending').length,
-        totalRevenue: realBookings.reduce((sum, b) => sum + (b.total_amount || 0), 0) + recentBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0),
-        averageStay: 4.2,
-        occupancyRate: 68,
-        topPlatform: 'Airbnb (45%)',
-        averageGuests: 2.8
-      };
-      
-      const report = `📊 REPORT DETTAGLIATO PRENOTAZIONI\n\n` +
-        `📈 STATISTICHE GENERALI:\n` +
-        `• Prenotazioni totali: ${reportData.totalBookings}\n` +
-        `• Confermate: ${reportData.confirmedBookings}\n` +
-        `• In attesa: ${reportData.pendingBookings}\n` +
-        `• Ricavo totale: €${reportData.totalRevenue.toFixed(2)}\n\n` +
-        `📊 METRICHE:\n` +
-        `• Soggiorno medio: ${reportData.averageStay} notti\n` +
-        `• Tasso occupazione: ${reportData.occupancyRate}%\n` +
-        `• Piattaforma top: ${reportData.topPlatform}\n` +
-        `• Ospiti medi: ${reportData.averageGuests}\n\n` +
-        `📅 Generato il: ${new Date().toLocaleDateString('it-IT')} alle ${new Date().toLocaleTimeString('it-IT')}`;
-      
-      alert(report);
-    } catch (error) {
-      console.error('Errore generazione report:', error);
-      alert('❌ Errore nella generazione del report dettagliato');
-    }
-  };
-
-  const handleMassEmailSend = () => {
-    const emailTypes = [
-      'Newsletter mensile',
-      'Offerte speciali',
-      'Promemoria check-in',
-      'Richiesta feedback',
-      'Email promozionale personalizzata'
-    ];
-    
-    const selectedType = prompt(`📧 Email di Massa\n\nSeleziona il tipo di email:\n${emailTypes.map((type, index) => `${index + 1}. ${type}`).join('\n')}\n\nInserisci il numero (1-5):`);
-    
-    if (selectedType && parseInt(selectedType) >= 1 && parseInt(selectedType) <= 5) {
-      const type = emailTypes[parseInt(selectedType) - 1];
-      const recipientCount = realBookings.length + recentBookings.length + 150; // Aggiungi database email
-      
-      alert(`📧 Invio Email di Massa Avviato!\n\n📨 Tipo: ${type}\n👥 Destinatari: ${recipientCount} clienti\n⏱️ Tempo stimato: 15-20 minuti\n\n✅ Email aggiunte alla coda di invio\n📊 Riceverai un report al completamento`);
-    }
-  };
-
-  const handleExportBookingsExcel = async () => {
-    try {
-      // Simula la generazione di un file Excel
-      const bookingsData = [
-        ...realBookings.map(b => ({
-          ID: b.id,
-          Cliente: b.customer_name || b.guestName || 'N/A',
-          Email: b.customer_email || 'N/A',
-          CheckIn: b.check_in || b.checkIn,
-          CheckOut: b.check_out || b.checkOut,
-          Ospiti: b.guests,
-          Totale: b.total_amount || b.totalPrice || 0,
-          Stato: b.status,
-          Piattaforma: b.platform || 'N/A',
-          DataCreazione: new Date().toISOString()
-        })),
-        ...recentBookings.map(b => ({
-          ID: b.id,
-          Cliente: b.guestName,
-          Email: b.guestName.toLowerCase().replace(' ', '.') + '@email.com',
-          CheckIn: b.checkIn,
-          CheckOut: b.checkOut,
-          Ospiti: b.guests,
-          Totale: b.totalPrice,
-          Stato: b.status,
-          Piattaforma: b.platform,
-          DataCreazione: new Date().toISOString()
-        }))
-      ];
-      
-      // Crea CSV (simulazione Excel)
-      const csvContent = [
-        'ID,Cliente,Email,CheckIn,CheckOut,Ospiti,Totale,Stato,Piattaforma,DataCreazione',
-        ...bookingsData.map(row => 
-          `${row.ID},"${row.Cliente}","${row.Email}",${row.CheckIn},${row.CheckOut},${row.Ospiti},${row.Totale},"${row.Stato}","${row.Piattaforma}",${row.DataCreazione}`
-        )
-      ].join('\n');
-      
-      // Scarica il file
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `vincanto-prenotazioni-${new Date().toISOString().split('T')[0]}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      
-      alert(`💾 Export Excel Completato!\n\n📁 File: vincanto-prenotazioni-${new Date().toISOString().split('T')[0]}.csv\n📊 Righe esportate: ${bookingsData.length}\n💾 Download avviato automaticamente`);
-    } catch (error) {
-      console.error('Errore export Excel:', error);
-      alert('❌ Errore nell\'esportazione Excel');
-    }
-  };
-
-  const handleSyncAllPlatforms = async () => {
-    const confirm = window.confirm('🔄 Sincronizzare tutte le piattaforme?\n\nQuesta operazione potrebbe richiedere alcuni minuti e aggiornare tutte le prenotazioni.');
-    
-    if (!confirm) return;
-
-    try {
-      setIsLoadingData(true);
-      
-      // Simula sincronizzazione con tutte le piattaforme
-      const platforms = ['Airbnb', 'Booking.com', 'Expedia', 'Google Calendar', 'VRBO'];
-      const syncResults = {
-        airbnb: { success: true, newBookings: 3, updated: 1 },
-        booking: { success: true, newBookings: 2, updated: 0 },
-        expedia: { success: false, error: 'API timeout' },
-        google: { success: true, newBookings: 0, updated: 2 },
-        vrbo: { success: true, newBookings: 1, updated: 0 }
-      };
-      
-      await new Promise(resolve => setTimeout(resolve, 3000)); // Simula attesa
-      
-      const successfulPlatforms = Object.values(syncResults).filter(r => r.success).length;
-      const totalNewBookings = Object.values(syncResults).filter(r => r.success).reduce((sum, r) => sum + (r.newBookings || 0), 0);
-      const totalUpdated = Object.values(syncResults).filter(r => r.success).reduce((sum, r) => sum + (r.updated || 0), 0);
-      
-      const resultMessage = `🔄 Sincronizzazione Completata!\n\n` +
-        `✅ Piattaforme sincronizzate: ${successfulPlatforms}/${platforms.length}\n` +
-        `➕ Nuove prenotazioni: ${totalNewBookings}\n` +
-        `✏️ Prenotazioni aggiornate: ${totalUpdated}\n\n` +
-        `📊 Dettagli:\n` +
-        `• Airbnb: ${syncResults.airbnb.success ? `✅ ${syncResults.airbnb.newBookings} nuove, ${syncResults.airbnb.updated} aggiornate` : '❌'}\n` +
-        `• Booking.com: ${syncResults.booking.success ? `✅ ${syncResults.booking.newBookings} nuove, ${syncResults.booking.updated} aggiornate` : '❌'}\n` +
-        `• Expedia: ${syncResults.expedia.success ? '✅' : '❌ ' + syncResults.expedia.error}\n` +
-        `• Google Calendar: ${syncResults.google.success ? `✅ ${syncResults.google.newBookings} nuove, ${syncResults.google.updated} aggiornate` : '❌'}\n` +
-        `• VRBO: ${syncResults.vrbo.success ? `✅ ${syncResults.vrbo.newBookings} nuove, ${syncResults.vrbo.updated} aggiornate` : '❌'}`;
-      
-      alert(resultMessage);
-      
-      // Ricarica i dati dopo la sincronizzazione
-      await loadRealApiData();
-    } catch (error) {
-      console.error('Errore sincronizzazione piattaforme:', error);
-      alert('❌ Errore nella sincronizzazione delle piattaforme');
-    } finally {
-      setIsLoadingData(false);
-    }
-  };
-
-  // === NUOVE FUNZIONI PAGAMENTI AGGIUNTE ===
-
-  const handleConfigureStripe = () => {
-    const stripeConfig = prompt(`⚙️ Configurazione Stripe\n\nInserisci la tua configurazione Stripe (JSON):\n\nEsempio:\n{\n  "publicKey": "pk_live_...",\n  "secretKey": "sk_live_...",\n  "webhookSecret": "whsec_...",\n  "currency": "EUR"\n}`, 
-      JSON.stringify({
-        publicKey: 'pk_live_51...',
-        secretKey: 'sk_live_51...',
-        webhookSecret: 'whsec_1...',
-        currency: 'EUR',
-        commission: 2.9
-      }, null, 2)
-    );
-    
-    if (!stripeConfig) return;
-    
-    try {
-      const config = JSON.parse(stripeConfig);
-      alert(`⚙️ Configurazione Stripe Salvata!\n\n💳 Valuta: ${config.currency}\n📊 Commissione: ${config.commission}%\n🔐 Sicurezza: Attivata\n\n✅ Stripe configurato correttamente`);
-    } catch (error) {
-      alert('❌ Formato JSON non valido. Riprova.');
-    }
-  };
-
-  const handleEditBankTransfer = () => {
-    const newIBAN = prompt('🏦 Modifica Dati Bonifico Bancario\n\nInserisci il nuovo IBAN:', 'IT02 L012 3456 789012345678901');
-    
-    if (!newIBAN) return;
-    
-    const liquidationDays = prompt('⏱️ Giorni per liquidazione:', '2');
-    
-    if (liquidationDays) {
-      alert(`🏦 Dati Bonifico Aggiornati!\n\n💳 IBAN: ${newIBAN}\n📅 Liquidazione: ${liquidationDays} giorni\n✅ Configurazione salvata con successo`);
-    }
-  };
-
-  const handleCompletePayPalSetup = () => {
-    const paypalConfig = {
-      email: 'antonio.guida320@vincanto.com',
-      link: 'https://www.paypal.me/AntonioGuida320',
-      commission: 3.4,
-      currency: ['EUR', 'USD', 'GBP'],
-      webhooks: true
-    };
-    
-    alert(`✅ Setup PayPal Completato!\n\n📧 Email: ${paypalConfig.email}\n🔗 Link: ${paypalConfig.link}\n📊 Commissione: ${paypalConfig.commission}%\n💰 Valute: ${paypalConfig.currency.join(', ')}\n🔔 Webhook: ${paypalConfig.webhooks ? 'Attivi' : 'Disattivi'}\n\n🎉 PayPal Business è ora completamente configurato!`);
-  };
-
-  // === NUOVE FUNZIONI EMAIL AGGIUNTE ===
-
-  const handleShowEmailStats = (templateName: string) => {
-    const statsData = {
-      'Conferma Prenotazione': {
-        sent: 156,
-        opened: 136,
-        clicked: 89,
-        bounced: 2,
-        unsubscribed: 1,
-        openRate: '87%',
-        clickRate: '57%'
-      },
-      'Istruzioni Check-in': {
-        sent: 142,
-        opened: 135,
-        clicked: 128,
-        bounced: 0,
-        unsubscribed: 0,
-        openRate: '95%',
-        clickRate: '90%'
-      },
-      'Messaggio Benvenuto': {
-        sent: 98,
-        opened: 76,
-        clicked: 34,
-        bounced: 1,
-        unsubscribed: 2,
-        openRate: '78%',
-        clickRate: '35%'
-      },
-      'Richiesta Recensione': {
-        sent: 87,
-        opened: 57,
-        clicked: 23,
-        bounced: 0,
-        unsubscribed: 1,
-        openRate: '65%',
-        clickRate: '26%'
-      }
-    };
-    
-    const stats = statsData[templateName as keyof typeof statsData] || statsData['Conferma Prenotazione'];
-    
-    const report = `📊 Statistiche Email: ${templateName}\n\n` +
-      `📧 Email inviate: ${stats.sent}\n` +
-      `👀 Aperture: ${stats.opened} (${stats.openRate})\n` +
-      `🖱️ Click: ${stats.clicked} (${stats.clickRate})\n` +
-      `⚠️ Bounce: ${stats.bounced}\n` +
-      `❌ Disiscrizioni: ${stats.unsubscribed}\n\n` +
-      `📈 Performance: ${parseFloat(stats.openRate) > 80 ? 'Eccellente' : parseFloat(stats.openRate) > 60 ? 'Buona' : 'Da migliorare'}\n` +
-      `📅 Ultimo invio: ${new Date().toLocaleDateString('it-IT')}`;
-    
-    alert(report);
-  };
-
-  const handleEmailDetailedReport = async () => {
-    try {
-      const totalStats = {
-        totalSent: 483,
-        totalOpened: 404,
-        totalClicked: 274,
-        totalBounced: 3,
-        totalUnsubscribed: 4,
-        averageOpenRate: '83.6%',
-        averageClickRate: '56.7%',
-        topTemplate: 'Istruzioni Check-in (95% open rate)',
-        worstTemplate: 'Richiesta Recensione (65% open rate)'
-      };
-      
-      const report = `📧 REPORT DETTAGLIATO EMAIL\n\n` +
-        `📊 STATISTICHE GENERALI:\n` +
-        `• Email inviate totali: ${totalStats.totalSent}\n` +
-        `• Aperture totali: ${totalStats.totalOpened}\n` +
-        `• Click totali: ${totalStats.totalClicked}\n` +
-        `• Bounce totali: ${totalStats.totalBounced}\n` +
-        `• Disiscrizioni: ${totalStats.totalUnsubscribed}\n\n` +
-        `📈 PERFORMANCE:\n` +
-        `• Tasso apertura medio: ${totalStats.averageOpenRate}\n` +
-        `• Tasso click medio: ${totalStats.averageClickRate}\n` +
-        `• Template migliore: ${totalStats.topTemplate}\n` +
-        `• Template da migliorare: ${totalStats.worstTemplate}\n\n` +
-        `💡 SUGGERIMENTI:\n` +
-        `• Ottimizza oggetto email per template recensioni\n` +
-        `• A/B test per migliorare CTR\n` +
-        `• Personalizzazione avanzata consigliata\n\n` +
-        `📅 Report generato: ${new Date().toLocaleString('it-IT')}`;
-      
-      alert(report);
-    } catch (error) {
-      console.error('Errore report email:', error);
-      alert('❌ Errore nella generazione del report email');
-    }
-  };
-
-  const handleManageEmailAutomations = () => {
-    const automations = [
-      'Welcome sequence (3 email)',
-      'Pre-checkin reminders',
-      'Post-checkout follow-up',
-      'Birthday offers',
-      'Seasonal promotions',
-      'Abandoned booking recovery'
-    ];
-    
-    const selectedAutomation = prompt(`⚡ Gestisci Automazioni Email\n\nSeleziona automazione da configurare:\n${automations.map((auto, index) => `${index + 1}. ${auto}`).join('\n')}\n\nInserisci il numero (1-6):`);
-    
-    if (selectedAutomation && parseInt(selectedAutomation) >= 1 && parseInt(selectedAutomation) <= 6) {
-      const automation = automations[parseInt(selectedAutomation) - 1];
-      
-      const settings = prompt(`⚙️ Configurazione: ${automation}\n\nInserisci impostazioni (JSON):\n\nEsempio:\n{\n  "active": true,\n  "delay": "24h",\n  "conditions": ["booking_confirmed"]\n}`,
-        JSON.stringify({
-          active: true,
-          delay: automation.includes('Welcome') ? '1h' : '24h',
-          conditions: ['booking_confirmed'],
-          segments: ['all_guests']
-        }, null, 2)
-      );
-      
-      if (settings) {
-        try {
-          const config = JSON.parse(settings);
-          alert(`⚡ Automazione Configurata!\n\n🎯 Automazione: ${automation}\n✅ Stato: ${config.active ? 'Attiva' : 'Sospesa'}\n⏱️ Delay: ${config.delay}\n📊 Condizioni: ${config.conditions.join(', ')}\n\n🚀 Automazione salvata e attivata!`);
-        } catch (error) {
-          alert('❌ Formato JSON non valido. Riprova.');
-        }
-      }
-    }
-  };
-
-  // === NUOVE FUNZIONI SISTEMA AGGIUNTE ===
-
-  const handleChangeAdminPassword = () => {
-    const currentPassword = prompt('🔐 Inserisci la password attuale:', '');
-    
-    if (currentPassword !== 'vincanto2025') {
-      alert('❌ Password attuale non corretta');
-      return;
-    }
-    
-    const newPassword = prompt('🆕 Inserisci la nuova password:\n\nRequisiti:\n• Minimo 8 caratteri\n• Almeno una maiuscola\n• Almeno un numero\n• Almeno un simbolo', '');
-    
-    if (!newPassword || newPassword.length < 8) {
-      alert('❌ La nuova password deve avere almeno 8 caratteri');
-      return;
-    }
-    
-    const confirmPassword = prompt('🔄 Conferma la nuova password:', '');
-    
-    if (newPassword !== confirmPassword) {
-      alert('❌ Le password non coincidono');
-      return;
-    }
-    
-    // Simula il cambio password
-    alert(`🔐 Password Cambiata con Successo!\n\n✅ Nuova password salvata\n🔒 Sessioni precedenti invalidate\n📧 Email di notifica inviata\n\n⚠️ Ricorda di aggiornare le tue credenziali salvate`);
   };
 
   // === GESTIONE NOTIFICHE ===
@@ -2155,7 +1130,7 @@ const AdminPanelPro = (): JSX.Element => {
   
   // === RENDER LOGIN ===
   if (!isAuthenticated) {
-    devLog('🔐 Rendering login form...');
+    console.log('🔐 Rendering login form...');
     return (
       <div className="admin-login-container">
         <div className="admin-login-card">
@@ -2188,44 +1163,33 @@ const AdminPanelPro = (): JSX.Element => {
   }
 
   // === RENDER DEBUG PRINCIPALE ===
-  devLog('🎯 Rendering main admin panel...');
+  console.log('🎯 Rendering main admin panel...');
   
-  // === RENDER ADMIN PANEL RESPONSIVE ===
+  // === RENDER ADMIN PANEL SEMPLIFICATO ===
   return (
-    <div className="admin-panel-pro admin-container">
-      {/* Header Responsive */}
+    <div className="admin-panel-pro">
+      {/* Header Professionale */}
       <header className="admin-header">
         <div className="admin-header-left">
           <h1>🏡 Vincanto Admin</h1>
-          <span className="admin-version admin-badge admin-badge-info">v2.0 Pro</span>
+          <span className="admin-version">v2.0 Pro</span>
         </div>
         
-        <div className="admin-header-actions">
-          <div className="admin-flex admin-items-center admin-gap-md">
-            {/* Indicatore Status */}
-            <div className={`admin-badge ${isLoadingData ? 'admin-badge-warning' : 'admin-badge-success'}`}>
-              {isLoadingData ? '⏳ Loading' : '✅ Online'}
-            </div>
+        <div className="admin-header-right">
+          <div className="admin-user-info">
+            <span>👤 Administrator</span>
             
-            {/* User Info */}
-            <div className="admin-flex admin-items-center admin-gap-sm">
-              <span className="admin-text-muted admin-hidden-mobile">👤 Administrator</span>
-              <div className="admin-badge admin-badge-info" title="Modalità SuperAdmin Attiva">
-                ⚡ SuperAdmin
-              </div>
+            {/* Indicatore SuperAdmin attivo */}
+            <div className="admin-super-indicator" title="Modalità SuperAdmin Attiva">
+              ⚡ SuperAdmin
             </div>
           </div>
           
           <button 
-            className="admin-btn admin-btn-secondary"
-            onClick={() => {
-              localStorage.removeItem('vincanto_admin_session');
-              localStorage.removeItem('vincanto_admin_token');
-              setIsAuthenticated(false);
-            }}
+            className="admin-btn-secondary"
+            onClick={() => setIsAuthenticated(false)}
           >
-            <span className="admin-hidden-mobile">📤 Logout</span>
-            <span className="admin-visible-mobile">📤</span>
+            Logout
           </button>
         </div>
       </header>
@@ -2251,16 +1215,6 @@ const AdminPanelPro = (): JSX.Element => {
             }}
           >
             💰 Prezzi
-          </button>
-          
-          <button 
-            className={`admin-nav-item ${activeTab === 'servizi-extra' ? 'active' : ''}`}
-            onClick={() => {
-              console.log('🎯 Click su tab servizi-extra');
-              setActiveTab('servizi-extra');
-            }}
-          >
-            🛎️ Servizi Extra
           </button>
           
           <button 
@@ -2323,25 +1277,18 @@ const AdminPanelPro = (): JSX.Element => {
         </div>
       </nav>
 
-      {/* Contenuto Principale Responsive */}
-      <main className="admin-main">
-        {error && (
-          <div className="admin-section admin-text-danger">
-            <div className="admin-card">
-              <h4>⚠️ Errore di Sistema</h4>
-              <p>{error}</p>
-            </div>
-          </div>
-        )}
+      {/* Contenuto Principale */}
+      <main className="admin-content">
+        {error && <div className="admin-error-banner">{error}</div>}
 
-        {/* Dashboard con Dati Backend Reali */}
+        {/* Dashboard con SOLO Dati Backend Reali */}
         {activeTab === 'dashboard' && (
-          <div className="admin-section admin-animate-fade-in">
-            <h2>📊 Dashboard Live {isLoadingData && <span className="admin-loading"><div className="admin-spinner"></div> Caricamento...</span>}</h2>
+          <div className="admin-dashboard">
+            <h2>� Dashboard Backend Reale {isLoadingData && '(Caricamento...)'}</h2>
             
             {/* Statistiche Principali */}
-            <div className="admin-mb-xl">
-              <h3>📊 Statistiche Live (Database)</h3>
+            <div className="admin-section">
+              <h3>� Statistiche Live (Database)</h3>
               <div className="admin-stats-grid">
                 <div className="admin-stat-card">
                   <h3>Prenotazioni Totali</h3>
@@ -2370,8 +1317,8 @@ const AdminPanelPro = (): JSX.Element => {
             </div>
 
             {/* Statistiche Aggiuntive */}
-            <div className="admin-mb-xl">
-              <h3>📈 Metriche Avanzate</h3>
+            <div className="admin-section">
+              <h3>� Metriche Avanzate</h3>
               <div className="admin-stats-grid">
                 <div className="admin-stat-card">
                   <h3>Notifiche Attive</h3>
@@ -2400,48 +1347,36 @@ const AdminPanelPro = (): JSX.Element => {
             </div>
 
             {/* Prossime Prenotazioni */}
-            <div className="admin-mb-xl">
+            <div className="admin-pricing-section">
               <h3>📅 Prossime Prenotazioni</h3>
-              <div className="admin-card">
-                <div className="admin-table-container">
-                  {calendarEvents.length > 0 ? (
-                    <table className="admin-table">
-                      <thead>
-                        <tr>
-                          <th>Evento</th>
-                          <th>Data</th>
-                          <th>Piattaforma</th>
-                          <th>Prezzo</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {calendarEvents.slice(0, 5).map((event, index) => (
-                          <tr key={event.id || index}>
-                            <td><strong>{event.title}</strong></td>
-                            <td>{new Date(event.start).toLocaleDateString('it-IT')}</td>
-                            <td>
-                              <span className={`admin-badge admin-badge-${event.source === 'airbnb' ? 'info' : event.source === 'booking' ? 'success' : 'warning'}`}>
-                                {event.source === 'airbnb' && '🏠 Airbnb'}
-                                {event.source === 'booking' && '🏨 Booking.com'}
-                                {event.source === 'expedia' && '✈️ Expedia'}
-                                {event.source === 'direct' && '📞 Diretto'}
-                                {event.source === 'other' && '📅 Altro'}
-                              </span>
-                            </td>
-                            <td><strong>€{event.totalPrice}</strong></td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  ) : (
-                    <div className="admin-text-center admin-text-muted">
-                      <p>📊 Nessuna prenotazione trovata nel calendario Google</p>
+              <div className="admin-pricing-card">
+                <div className="existing-services">
+                  {calendarEvents.slice(0, 5).map((event, index) => (
+                    <div key={event.id || index} className="service-row">
+                      <span>{event.title}</span>
+                      <span>{new Date(event.start).toLocaleDateString('it-IT')}</span>
+                      <span className={`platform-badge ${event.source}`}>
+                        {event.source === 'airbnb' && '🏠 Airbnb'}
+                        {event.source === 'booking' && '🏨 Booking.com'}
+                        {event.source === 'expedia' && '✈️ Expedia'}
+                        {event.source === 'direct' && '📞 Diretto'}
+                        {event.source === 'other' && '📅 Altro'}
+                      </span>
+                      <span>€{event.totalPrice}</span>
+                    </div>
+                  ))}
+                  
+                  {calendarEvents.length === 0 && !isLoadingCalendar && (
+                    <div className="service-row">
+                      <span className="no-data-message">
+                        Nessuna prenotazione trovata nel calendario Google
+                      </span>
                     </div>
                   )}
                 </div>
                 
-                <div className="admin-flex admin-gap-md admin-mb-0 admin-mt-lg">
-                  <button className="admin-btn admin-btn-secondary" onClick={() => loadCalendarData()}>
+                <div className="admin-pricing-actions dashboard-actions">
+                  <button className="admin-btn-secondary" onClick={() => loadCalendarData()}>
                     🔄 Ricarica Calendario
                   </button>
                   <button className="admin-btn-secondary" onClick={() => setActiveTab('calendari')}>
@@ -2453,57 +1388,423 @@ const AdminPanelPro = (): JSX.Element => {
           </div>
         )}
 
-        {/* Sezione Prezzi SEMPLIFICATA */}
+        {/* Sezione Prezzi FUNZIONALE */}
         {activeTab === 'prezzi' && (
-          <AdminPricing
-            pricingConfig={pricingConfig}
-            updatePricingField={updatePricingField}
-            savePricingConfig={savePricingConfig}
-            resetPricingConfig={() => {
-              // Reset alla configurazione di default per gruppi
-              const defaultConfig = {
-                priceGroup1to2: 75,
-                priceGroup3to4: 95,
-                priceGroup5to6: 115,
-                priceGroup7to8: 135,
-                cleaningFee: 50,
-                parkingFee: 20,
-                touristTaxAdult: 2.00,
-                touristTaxChild: 0,
-                weekendSurcharge: 0,
-                weeklyDiscount: 10,
-                monthlyDiscount: 15,
-                minStay: 2,
-                maxStay: 14,
-                maxGuests: 8,
-                advanceBookingDiscount: 0,
-                lastMinuteDiscount: 0
-              };
-              Object.keys(defaultConfig).forEach(key => {
-                updatePricingField(key, defaultConfig[key as keyof typeof defaultConfig]);
-              });
-            }}
-            isUpdatingPricing={isUpdatingPricing}
-            showSuccessMessage={false}
-            customServices={customServices}
-            allServices={allServices}
-            updateHardcodedServicePrice={updateHardcodedServicePrice}
-            updateHardcodedServiceActive={updateHardcodedServiceActive}
-            updateHardcodedServiceIncluded={updateHardcodedServiceIncluded}
-            newServiceName={newServiceName}
-            setNewServiceName={setNewServiceName}
-            newServicePrice={newServicePrice}
-            setNewServicePrice={setNewServicePrice}
-            addCustomService={addCustomService}
-            updateCustomService={updateCustomService}
-            deleteCustomService={deleteCustomService}
-          />
-        )}
+          <div className="admin-prezzi">
+            <div className="admin-header">
+              <h2>⚙️ Configurazione Prezzi e Sistema</h2>
+              <div className="header-actions">
+                <button 
+                  onClick={savePricingConfig}
+                  disabled={isUpdatingPricing}
+                  className="admin-button primary"
+                >
+                  {isUpdatingPricing ? '⏳ Salvando...' : '💾 Salva Configurazione'}
+                </button>
+                <button 
+                  onClick={loadRealApiData}
+                  className="admin-button secondary"
+                >
+                  🔄 Aggiorna Dati
+                </button>
+              </div>
+            </div>
+            
+            {/* Configurazione Base FUNZIONALE */}
+            <div className="admin-pricing-section">
+              <h3>🏠 Tariffe Base</h3>
+              <div className="admin-pricing-grid">
+                <div className="admin-pricing-card">
+                  <h4>Prezzo Base per Notte</h4>
+                  <div className="pricing-controls">
+                    <label htmlFor="basePrice">Prezzo base (€/notte):</label>
+                    <input 
+                      id="basePrice"
+                      type="number" 
+                      value={pricingConfig.basePrice}
+                      onChange={(e) => updatePricingField('basePrice', Number(e.target.value))}
+                      className="admin-input-small" 
+                      min="1"
+                    />
+                    
+                    <label htmlFor="cleaningFee">Tassa di pulizia (€):</label>
+                    <input 
+                      id="cleaningFee"
+                      type="number" 
+                      value={pricingConfig.cleaningFee}
+                      onChange={(e) => updatePricingField('cleaningFee', Number(e.target.value))}
+                      className="admin-input-small" 
+                      min="0"
+                    />
+                    
+                    <label htmlFor="weekendSurcharge">Supplemento Weekend (%):</label>
+                    <input 
+                      id="weekendSurcharge"
+                      type="number" 
+                      value={pricingConfig.weekendSurcharge}
+                      onChange={(e) => updatePricingField('weekendSurcharge', Number(e.target.value))}
+                      className="admin-input-small" 
+                      min="0"
+                      max="100"
+                    />
+                  </div>
+                </div>
+                
+                <div className="admin-pricing-card">
+                  <h4>Sconti per Soggiorno</h4>
+                  <div className="pricing-controls">
+                    <label htmlFor="weeklyDiscount">Sconto Settimanale (%):</label>
+                    <input 
+                      id="weeklyDiscount"
+                      type="number" 
+                      value={pricingConfig.weeklyDiscount}
+                      onChange={(e) => updatePricingField('weeklyDiscount', Number(e.target.value))}
+                      className="admin-input-small" 
+                      min="0"
+                      max="50"
+                    />
+                    
+                    <label htmlFor="monthlyDiscount">Sconto Mensile (%):</label>
+                    <input 
+                      id="monthlyDiscount"
+                      type="number" 
+                      value={pricingConfig.monthlyDiscount}
+                      onChange={(e) => updatePricingField('monthlyDiscount', Number(e.target.value))}
+                      className="admin-input-small" 
+                      min="0"
+                      max="50"
+                    />
+                    
+                    <div className="pricing-note">
+                      💡 Sconti applicati automaticamente per soggiorni lunghi
+                    </div>
+                  </div>
+                </div>
 
-        {/* === SEZIONE SERVIZI EXTRA === */}
-        {activeTab === 'servizi-extra' && (
-          <div className="admin-section admin-animate-fade-in">
-            <ExtraServicesAdmin />
+                <div className="admin-pricing-card">
+                  <h4>🅿️ Parcheggio</h4>
+                  <div className="pricing-controls">
+                    <label htmlFor="parkingFee">Costo Parcheggio (€/notte):</label>
+                    <input 
+                      id="parkingFee"
+                      type="number" 
+                      value={pricingConfig.parkingFee}
+                      onChange={(e) => updatePricingField('parkingFee', Number(e.target.value))}
+                      className="admin-input-small" 
+                      min="0"
+                      max="50"
+                    />
+                    
+                    <div className="pricing-note">
+                      🅿️ Costo per posto auto privato per notte
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Regole di Soggiorno */}
+            <div className="admin-pricing-section">
+              <h3>📅 Regole di Soggiorno</h3>
+              <div className="admin-pricing-grid">
+                <div className="admin-pricing-card">
+                  <h4>Durata Soggiorno</h4>
+                  <div className="pricing-controls">
+                    <label htmlFor="minStay">Soggiorno Minimo (notti):</label>
+                    <input 
+                      id="minStay"
+                      type="number" 
+                      value={pricingConfig.minStay}
+                      onChange={(e) => updatePricingField('minStay', Number(e.target.value))}
+                      className="admin-input-small" 
+                      min="1"
+                    />
+                    
+                    <label htmlFor="maxStay">Soggiorno Massimo (notti):</label>
+                    <input 
+                      id="maxStay"
+                      type="number" 
+                      value={pricingConfig.maxStay}
+                      onChange={(e) => updatePricingField('maxStay', Number(e.target.value))}
+                      className="admin-input-small" 
+                      min="1"
+                    />
+                  </div>
+                </div>
+                
+                <div className="admin-pricing-card">
+                  <h4>Anteprima Calcolo AGGIORNATO</h4>
+                  <div className="pricing-preview">
+                    <div className="preview-item">
+                      <span>2 adulti, 2 notti:</span>
+                      <strong>€{(pricingConfig.basePrice * 2 + pricingConfig.cleaningFee + (pricingConfig.touristTaxAdult * 2 * 2)).toFixed(2)}</strong>
+                    </div>
+                    <div className="preview-item">
+                      <span>4 adulti, 2 notti (+2 extra):</span>
+                      <strong>€{((pricingConfig.basePrice + pricingConfig.additionalGuestPrice * 2) * 2 + pricingConfig.cleaningFee + (pricingConfig.touristTaxAdult * 4 * 2)).toFixed(2)}</strong>
+                    </div>
+                    <div className="preview-item">
+                      <span>2 adulti + 1 bambino (0-3 anni), 2 notti:</span>
+                      <strong>€{(pricingConfig.basePrice * 2 + pricingConfig.cleaningFee + (pricingConfig.touristTaxAdult * 2 * 2)).toFixed(2)}</strong>
+                      <small> (bambino gratuito)</small>
+                    </div>
+                    <div className="preview-item">
+                      <span>7 notti (con sconto settimanale):</span>
+                      <strong>€{((pricingConfig.basePrice * 7) * (1 - pricingConfig.weeklyDiscount/100) + pricingConfig.cleaningFee + (pricingConfig.touristTaxAdult * 2 * 7)).toFixed(2)}</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Gestione Ospiti e Bambini AGGIORNATA */}
+            <div className="admin-pricing-section">
+              <h3>� Gestione Ospiti e Bambini</h3>
+              <div className="admin-pricing-grid">
+                <div className="admin-pricing-card">
+                  <h4>Prezzo per Ospiti Aggiuntivi</h4>
+                  <div className="pricing-controls">
+                    <label htmlFor="additionalGuestPrice">Prezzo per persona aggiuntiva oltre le 2 base (€/notte):</label>
+                    <input 
+                      id="additionalGuestPrice"
+                      type="number" 
+                      value={pricingConfig.additionalGuestPrice}
+                      onChange={(e) => updatePricingField('additionalGuestPrice', Number(e.target.value))}
+                      className="admin-input-small" 
+                      min="0"
+                    />
+                    <div className="pricing-note">
+                      👥 Il prezzo base include 2 persone. Ogni persona aggiuntiva paga il supplemento sopra.
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="admin-pricing-card">
+                  <h4>Politiche Bambini AGGIORNATE</h4>
+                  <div className="pricing-controls">
+                    <div className="policy-item">
+                      <span className="policy-label">👶 Bambini 0-3 anni:</span>
+                      <span className="policy-value">GRATUITI (no tassa soggiorno)</span>
+                    </div>
+                    
+                    <div className="policy-item">
+                      <span className="policy-label">🧒 Bambini 4-11 anni:</span>
+                      <span className="policy-value">Prezzo normale (no tassa soggiorno)</span>
+                    </div>
+                    
+                    <div className="policy-item">
+                      <span className="policy-label">👦 Ragazzi 12+ anni:</span>
+                      <span className="policy-value">Prezzo normale + tassa soggiorno</span>
+                    </div>
+                    
+                    <label htmlFor="touristTaxAdult">Tassa di soggiorno adulti 12+ (€/notte):</label>
+                    <input 
+                      id="touristTaxAdult"
+                      type="number" 
+                      value={pricingConfig.touristTaxAdult}
+                      onChange={(e) => updatePricingField('touristTaxAdult', Number(e.target.value))}
+                      className="admin-input-small" 
+                      min="0"
+                    />
+                    
+                    <div className="pricing-note">
+                      🏠 <strong>Capacità max: 8 posti letto disponibili</strong><br/>
+                      📝 Letti aggiuntivi non necessari (già inclusi)
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Servizi e Costi Extra */}
+            <div className="admin-pricing-section">
+              <h3>🚗 Servizi e Costi Extra</h3>
+              <div className="admin-pricing-grid">
+                <div className="admin-pricing-card">
+                  <h4>Parcheggio</h4>
+                  <div className="pricing-controls">
+                    <label>Parcheggio Gratuito:</label>
+                    <select className="admin-select" aria-label="Parcheggio gratuito">
+                      <option>Incluso</option>
+                      <option>A pagamento</option>
+                      <option>Non disponibile</option>
+                    </select>
+                    
+                    <label>Costo Parcheggio/Notte:</label>
+                    <input type="number" defaultValue="15" className="admin-input-small" aria-label="Costo parcheggio per notte" />
+                    
+                    <label>Parcheggio Coperto (+):</label>
+                    <input type="number" defaultValue="5" className="admin-input-small" aria-label="Supplemento parcheggio coperto" />
+                  </div>
+                </div>
+                
+                <div className="admin-pricing-card">
+                  <h4>Servizi Standard</h4>
+                  <div className="pricing-controls">
+                    <label>Pulizia Finale:</label>
+                    <input type="number" defaultValue="80" className="admin-input-small" aria-label="Costo pulizia finale" />
+                    
+                    <label>Tassa di Soggiorno:</label>
+                    <input type="number" defaultValue="3" className="admin-input-small" aria-label="Tassa soggiorno per persona" />
+                    
+                    <label>WiFi:</label>
+                    <select className="admin-select" aria-label="Costo WiFi">
+                      <option>Incluso</option>
+                      <option>€5/giorno</option>
+                      <option>€15/settimana</option>
+                    </select>
+                    
+                    <label>Aria Condizionata:</label>
+                    <select className="admin-select" aria-label="Costo aria condizionata">
+                      <option>Inclusa</option>
+                      <option>€8/giorno</option>
+                      <option>€25/settimana</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Servizi Premium e Personalizzati */}
+            <div className="admin-pricing-section">
+              <h3>⭐ Servizi Premium e Personalizzati</h3>
+              <div className="admin-pricing-grid">
+                <div className="admin-pricing-card">
+                  <h4>Servizi Premium</h4>
+                  <div className="pricing-controls">
+                    <label>Check-in Anticipato (prima 15:00):</label>
+                    <input type="number" defaultValue="30" className="admin-input-small" aria-label="Costo check-in anticipato" />
+                    
+                    <label>Check-out Posticipato (dopo 11:00):</label>
+                    <input type="number" defaultValue="25" className="admin-input-small" aria-label="Costo check-out posticipato" />
+                    
+                    <label>Colazione (per persona):</label>
+                    <input type="number" defaultValue="15" className="admin-input-small" aria-label="Costo colazione" />
+                    
+                    <label>Transfer Aeroporto:</label>
+                    <input type="number" defaultValue="45" className="admin-input-small" aria-label="Costo transfer aeroporto" />
+                  </div>
+                </div>
+                
+                <div className="admin-pricing-card">
+                  <h4>Servizi Personalizzati</h4>
+                  <div className="pricing-controls">
+                    <div className="custom-service-item">
+                      <input 
+                        type="text" 
+                        placeholder="Nome servizio..." 
+                        className="admin-input" 
+                        value={newServiceName}
+                        onChange={(e) => setNewServiceName(e.target.value)}
+                        aria-label="Nome servizio personalizzato" 
+                      />
+                      <input 
+                        type="number" 
+                        placeholder="Prezzo" 
+                        className="admin-input-small" 
+                        value={newServicePrice}
+                        onChange={(e) => setNewServicePrice(Number(e.target.value))}
+                        aria-label="Prezzo servizio personalizzato" 
+                      />
+                      <button 
+                        className="admin-btn-small"
+                        onClick={addCustomService}
+                        title="Aggiungi servizio"
+                      >
+                        ➕
+                      </button>
+                    </div>
+                    
+                    <div className="existing-services">
+                      {customServices.map((service) => (
+                        <div key={service.id} className="service-row">
+                          <input 
+                            type="text"
+                            value={service.name}
+                            onChange={(e) => updateCustomService(service.id, 'name', e.target.value)}
+                            className="admin-input-small"
+                            title={`Nome servizio ${service.id}`}
+                            placeholder="Nome servizio"
+                          />
+                          <div className="service-price-container">
+                            <span>€</span>
+                            <input 
+                              type="number"
+                              value={service.price}
+                              onChange={(e) => updateCustomService(service.id, 'price', Number(e.target.value))}
+                              className="admin-input-small admin-input-price"
+                              title={`Prezzo servizio ${service.id}`}
+                              placeholder="Prezzo"
+                            />
+                            <span>/{service.unit}</span>
+                          </div>
+                          <button 
+                            className="admin-btn-small"
+                            onClick={() => deleteCustomService(service.id)}
+                            title="Elimina servizio"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <button 
+                      className="admin-btn-secondary"
+                      onClick={addCustomService}
+                    >
+                      ➕ Aggiungi Servizio
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Sconti e Promozioni */}
+            <div className="admin-pricing-section">
+              <h3>🎯 Sconti e Promozioni</h3>
+              <div className="admin-pricing-grid">
+                <div className="admin-pricing-card">
+                  <h4>Sconti per Durata</h4>
+                  <div className="pricing-controls">
+                    <label>Sconto Settimanale (7+ notti):</label>
+                    <input type="number" defaultValue="15" className="admin-input-small" aria-label="Sconto settimanale percentuale" />
+                    
+                    <label>Sconto Mensile (30+ notti):</label>
+                    <input type="number" defaultValue="25" className="admin-input-small" aria-label="Sconto mensile percentuale" />
+                    
+                    <label>Sconto Last Minute (7gg prima):</label>
+                    <input type="number" defaultValue="10" className="admin-input-small" aria-label="Sconto last minute" />
+                  </div>
+                </div>
+                
+                <div className="admin-pricing-card">
+                  <h4>Promozioni Speciali</h4>
+                  <div className="pricing-controls">
+                    <label>Promo Prima Prenotazione:</label>
+                    <input type="number" defaultValue="20" className="admin-input-small" aria-label="Sconto prima prenotazione" />
+                    
+                    <label>Sconto Clienti Fedeli:</label>
+                    <input type="number" defaultValue="12" className="admin-input-small" aria-label="Sconto clienti fedeli" />
+                    
+                    <div className="promo-dates">
+                      <label>Promo Periodo Specifico:</label>
+                      <input type="date" className="admin-input-small" aria-label="Data inizio promo" />
+                      <input type="date" className="admin-input-small" aria-label="Data fine promo" />
+                      <input type="number" placeholder="% sconto" className="admin-input-small" aria-label="Percentuale sconto promo" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Azioni Finali */}
+            <div className="admin-pricing-actions">
+              <button className="admin-btn-primary">💾 Salva Configurazione Completa</button>
+              <button className="admin-btn-secondary">🔄 Aggiorna Tutti i Prezzi</button>
+              <button className="admin-btn-secondary">📊 Anteprima Listino</button>
+              <button className="admin-btn-secondary">📤 Esporta Configurazione</button>
+            </div>
           </div>
         )}
 
@@ -2901,7 +2202,7 @@ const AdminPanelPro = (): JSX.Element => {
                   <div className={`sync-indicator ${isGoogleAuthenticated ? 'success' : 'warning'}`} id="calendar-connection-status">
                     {isGoogleAuthenticated 
                       ? '✅ Autenticato - Sincronizzazione attiva' 
-                      : '� Richiesta autenticazione Google Calendar'}
+                      : '🟡 Non autenticato - Usando dati demo'}
                   </div>
                 </div>
                 <div className="calendar-controls">
@@ -2912,8 +2213,8 @@ const AdminPanelPro = (): JSX.Element => {
                   )}
                   <button className="admin-btn-secondary admin-btn-small" onClick={() => testGoogleConnection()}>⚙️ Test Google</button>
                   <button className="admin-btn-secondary admin-btn-small" onClick={() => loadGoogleCalendarEvents()}>📅 Carica Eventi</button>
-                  <button className="admin-btn-secondary admin-btn-small" onClick={() => handleShareGoogleCalendar()}>📱 Condividi Calendario</button>
-                  <button className="admin-btn-secondary admin-btn-small" onClick={() => handleGoogleSyncReport()}>📊 Report Sincronizzazione</button>
+                  <button className="admin-btn-secondary admin-btn-small">📱 Condividi Calendario</button>
+                  <button className="admin-btn-secondary admin-btn-small">📊 Report Sincronizzazione</button>
                 </div>
               </div>
             </div>
@@ -3018,9 +2319,9 @@ const AdminPanelPro = (): JSX.Element => {
                     </div>
                   </div>
                   <div className="calendar-controls">
-                    <button className="admin-btn-primary admin-btn-small" onClick={() => handleCompleteAirbnbSetup()}>⚙️ Completa Setup</button>
-                    <button className="admin-btn-secondary admin-btn-small" onClick={() => handleTestAirbnbAPI()}>🔧 Test API</button>
-                    <button className="admin-btn-danger admin-btn-small" onClick={() => handleCancelAirbnbSetup()}>❌ Annulla</button>
+                    <button className="admin-btn-primary admin-btn-small">⚙️ Completa Setup</button>
+                    <button className="admin-btn-secondary admin-btn-small">🔧 Test API</button>
+                    <button className="admin-btn-danger admin-btn-small">❌ Annulla</button>
                   </div>
                 </div>
                 
@@ -3036,9 +2337,9 @@ const AdminPanelPro = (): JSX.Element => {
                     </div>
                   </div>
                   <div className="calendar-controls">
-                    <button className="admin-btn-success admin-btn-small" onClick={() => handleReactivateVRBO()}>▶️ Riattiva</button>
-                    <button className="admin-btn-secondary admin-btn-small" onClick={() => handleEditVRBO()}>✏️ Modifica</button>
-                    <button className="admin-btn-danger admin-btn-small" onClick={() => handleDeleteVRBO()}>🗑️ Elimina</button>
+                    <button className="admin-btn-success admin-btn-small">▶️ Riattiva</button>
+                    <button className="admin-btn-secondary admin-btn-small">✏️ Modifica</button>
+                    <button className="admin-btn-danger admin-btn-small">🗑️ Elimina</button>
                   </div>
                 </div>
                 
@@ -3065,7 +2366,7 @@ const AdminPanelPro = (): JSX.Element => {
                       });
                       setShowNewCalendarForm(true);
                     }}>⚡ Configura Subito</button>
-                    <button className="admin-btn-secondary admin-btn-small" onClick={() => handleTestHoliduURL()}>🔍 Test URL</button>
+                    <button className="admin-btn-secondary admin-btn-small">🔍 Test URL</button>
                   </div>
                 </div>
               </div>
@@ -3114,7 +2415,7 @@ const AdminPanelPro = (): JSX.Element => {
                     <label>Ultima Verifica API:</label>
                     <span className="pricing-note">27/10/2025 - 15:45 ✅</span>
                     
-                    <button className="admin-btn-secondary admin-btn-small" onClick={() => handleTestGeneralConnection()}>🔧 Test Connessione</button>
+                    <button className="admin-btn-secondary admin-btn-small">🔧 Test Connessione</button>
                   </div>
                 </div>
               </div>
@@ -3122,12 +2423,12 @@ const AdminPanelPro = (): JSX.Element => {
             
             {/* Azioni Avanzate */}
             <div className="admin-pricing-actions">
-              <button className="admin-btn-primary" onClick={() => setShowNewCalendarForm(true)}>➕ Aggiungi Nuovo Calendario</button>
-              <button className="admin-btn-secondary" onClick={() => handleSyncAllCalendars()}>🔄 Sincronizza Tutti</button>
-              <button className="admin-btn-secondary" onClick={() => handleShowOccupancyDashboard()}>📊 Dashboard Occupazione</button>
-              <button className="admin-btn-secondary" onClick={() => handleShowSyncReport()}>📈 Report Sincronizzazioni</button>
-              <button className="admin-btn-secondary" onClick={() => handleExportCalendarConfig()}>📤 Esporta Configurazione</button>
-              <button className="admin-btn-secondary" onClick={() => handleAdvancedCalendarSettings()}>⚙️ Impostazioni Avanzate</button>
+              <button className="admin-btn-primary">➕ Aggiungi Nuovo Calendario</button>
+              <button className="admin-btn-secondary">� Sincronizza Tutti</button>
+              <button className="admin-btn-secondary">📊 Dashboard Occupazione</button>
+              <button className="admin-btn-secondary">📈 Report Sincronizzazioni</button>
+              <button className="admin-btn-secondary">📤 Esporta Configurazione</button>
+              <button className="admin-btn-secondary">⚙️ Impostazioni Avanzate</button>
             </div>
           </div>
         )}
@@ -3135,7 +2436,7 @@ const AdminPanelPro = (): JSX.Element => {
         {/* Sezione Prenotazioni Professionale */}
         {activeTab === 'prenotazioni' && (() => {
           try {
-            devLog('🎯 Rendering sezione prenotazioni...');
+            console.log('🎯 Rendering sezione prenotazioni...');
             return (
           <div className="admin-prenotazioni">
             <div className="admin-header">
@@ -3484,9 +2785,9 @@ const AdminPanelPro = (): JSX.Element => {
                         <td>€{(booking.totalPrice || booking.total_amount || 0).toFixed(2)}</td>
                         <td>
                           <div className="action-buttons">
-                            <button className="admin-btn-small" onClick={() => handleEditBookingDemo(booking)}>✏️ Modifica</button>
-                            <button className="admin-btn-small" onClick={() => handleSendBookingEmail(booking)}>✉️ Email</button>
-                            <button className="admin-btn-small" onClick={() => handleGenerateInvoice(booking)}>📄 Fattura</button>
+                            <button className="admin-btn-small">✏️ Modifica</button>
+                            <button className="admin-btn-small">✉️ Email</button>
+                            <button className="admin-btn-small">📄 Fattura</button>
                           </div>
                         </td>
                       </tr>
@@ -3516,9 +2817,9 @@ const AdminPanelPro = (): JSX.Element => {
                       <td>€1,250.00</td>
                       <td>
                         <div className="action-buttons">
-                          <button className="admin-btn-small admin-btn-warning" onClick={() => handleRequestPayment('VIN_DEMO')}>💳 Richiedi Pag.</button>
-                          <button className="admin-btn-small" onClick={() => handleEditBookingDemo('VIN_DEMO')}>✏️ Modifica</button>
-                          <button className="admin-btn-small" onClick={() => handleSendBookingEmail('VIN_DEMO')}>✉️ Email</button>
+                          <button className="admin-btn-small admin-btn-warning">💳 Richiedi Pag.</button>
+                          <button className="admin-btn-small">✏️ Modifica</button>
+                          <button className="admin-btn-small">✉️ Email</button>
                         </div>
                       </td>
                     </tr>
@@ -3539,9 +2840,9 @@ const AdminPanelPro = (): JSX.Element => {
                       <td>€1,625.00</td>
                       <td>
                         <div className="action-buttons">
-                          <button className="admin-btn-small" onClick={() => handleGenerateInvoice('VIN003')}>📄 Fattura</button>
-                          <button className="admin-btn-small" onClick={() => handleRequestReview('VIN003')}>⭐ Recensione</button>
-                          <button className="admin-btn-small" onClick={() => handleBookAgain('VIN003')}>🔁 Prenota Ancora</button>
+                          <button className="admin-btn-small">📄 Fattura</button>
+                          <button className="admin-btn-small">⭐ Recensione</button>
+                          <button className="admin-btn-small">🔁 Prenota Ancora</button>
                         </div>
                       </td>
                     </tr>
@@ -3552,12 +2853,12 @@ const AdminPanelPro = (): JSX.Element => {
             
             {/* Azioni Avanzate */}
             <div className="admin-pricing-actions">
-              <button className="admin-btn-primary" onClick={() => setShowBookingForm(true)}>➕ Nuova Prenotazione</button>
-              <button className="admin-btn-secondary" onClick={() => handleBookingsDetailedReport()}>📊 Report Dettagliato</button>
-              <button className="admin-btn-secondary" onClick={() => handleMassEmailSend()}>📧 Email di Massa</button>
-              <button className="admin-btn-secondary" onClick={() => handleShowOccupancyDashboard()}>📅 Calendario Occupazione</button>
-              <button className="admin-btn-secondary" onClick={() => handleExportBookingsExcel()}>💾 Esporta Excel</button>
-              <button className="admin-btn-secondary" onClick={() => handleSyncAllPlatforms()}>🔄 Sincronizza Piattaforme</button>
+              <button className="admin-btn-primary">➕ Nuova Prenotazione</button>
+              <button className="admin-btn-secondary">📊 Report Dettagliato</button>
+              <button className="admin-btn-secondary">📧 Email di Massa</button>
+              <button className="admin-btn-secondary">📅 Calendario Occupazione</button>
+              <button className="admin-btn-secondary">💾 Esporta Excel</button>
+              <button className="admin-btn-secondary">🔄 Sincronizza Piattaforme</button>
             </div>
           </div>
             );
@@ -3580,7 +2881,7 @@ const AdminPanelPro = (): JSX.Element => {
         {/* Sezione Pagamenti Professionale */}
         {activeTab === 'pagamenti' && (() => {
           try {
-            devLog('🎯 Rendering sezione pagamenti...');
+            console.log('🎯 Rendering sezione pagamenti...');
             return (
           <div className="admin-pagamenti">
             <h2>💳 Gestione Pagamenti Avanzata</h2>
@@ -3665,7 +2966,7 @@ const AdminPanelPro = (): JSX.Element => {
                     <input type="number" defaultValue="2.9" className="admin-input-small" aria-label="Commissione Stripe" step="0.1" />
                     <label>Valute Accettate:</label>
                     <div className="pricing-note">EUR, USD, GBP</div>
-                    <button className="admin-btn-secondary admin-btn-small" onClick={() => handleConfigureStripe()}>⚙️ Configura</button>
+                    <button className="admin-btn-secondary admin-btn-small">⚙️ Configura</button>
                   </div>
                 </div>
                 
@@ -3677,19 +2978,19 @@ const AdminPanelPro = (): JSX.Element => {
                     <input type="text" defaultValue="IT02 L012 3456 789012345678901" className="admin-input" aria-label="IBAN" readOnly />
                     <label>Tempo Liquidazione:</label>
                     <input type="number" defaultValue="2" className="admin-input-small" aria-label="Giorni liquidazione" />
-                    <button className="admin-btn-secondary admin-btn-small" onClick={() => handleEditBankTransfer()}>✏️ Modifica</button>
+                    <button className="admin-btn-secondary admin-btn-small">✏️ Modifica</button>
                   </div>
                 </div>
                 
                 <div className="admin-pricing-card">
                   <h4>💰 PayPal Business</h4>
                   <div className="pricing-controls">
-                    <div className="sync-indicator active">� Attivo</div>
-                    <label>Link PayPal:</label>
-                    <input type="url" defaultValue="https://www.paypal.me/AntonioGuida320" className="admin-input" aria-label="Link PayPal" readOnly />
+                    <div className="sync-indicator active">🟡 Configurazione</div>
+                    <label>Email PayPal:</label>
+                    <input type="email" defaultValue="vincanto@paypal.com" className="admin-input" aria-label="Email PayPal" />
                     <label>Commissione PayPal:</label>
                     <input type="number" defaultValue="3.4" className="admin-input-small" aria-label="Commissione PayPal" step="0.1" />
-                    <button className="admin-btn-primary admin-btn-small" onClick={() => handleCompletePayPalSetup()}>✅ Setup Completo</button>
+                    <button className="admin-btn-primary admin-btn-small">⚙️ Completa Setup</button>
                   </div>
                 </div>
               </div>
@@ -3702,7 +3003,7 @@ const AdminPanelPro = (): JSX.Element => {
                 <div className="existing-services">
                   {paymentTransactions.map((transaction) => (
                     <div key={transaction.id} className="service-row">
-                      <span>{transaction.guest || transaction.guestName}</span>
+                      <span>{transaction.guestName}</span>
                       <span>€{(transaction.amount || 0).toFixed(2)}</span>
                       <span className={`platform-badge ${transaction.method}`}>
                         {transaction.method === 'stripe' && '💳 Stripe'}
@@ -3716,15 +3017,6 @@ const AdminPanelPro = (): JSX.Element => {
                       </span>
                       <span>{new Date(transaction.date).toLocaleDateString('it-IT')}</span>
                       <div className="action-buttons">
-                        {transaction.method === 'paypal' && transaction.paypalLink && (
-                          <button 
-                            className="admin-btn-small admin-btn-primary"
-                            onClick={() => window.open(transaction.paypalLink, '_blank')}
-                            title="Apri PayPal"
-                          >
-                            🌐 PayPal
-                          </button>
-                        )}
                         {transaction.status === 'pending' && (
                           <button 
                             className="admin-btn-small admin-btn-success"
@@ -4019,28 +3311,28 @@ const AdminPanelPro = (): JSX.Element => {
                       >
                         ✏️ Modifica
                       </button>
-                      <button className="admin-btn-small" onClick={() => handleShowEmailStats('Conferma Prenotazione')}>📊 Stats</button>
+                      <button className="admin-btn-small">📊 Stats</button>
                     </div>
                     
                     <div className="service-row">
                       <span>🏠 Istruzioni Check-in</span>
                       <span>95% apertura</span>
-                      <button className="admin-btn-small" onClick={() => handleEditTemplate('Istruzioni Check-in')}>✏️ Modifica</button>
-                      <button className="admin-btn-small" onClick={() => handleShowEmailStats('Istruzioni Check-in')}>📊 Stats</button>
+                      <button className="admin-btn-small">✏️ Modifica</button>
+                      <button className="admin-btn-small">📊 Stats</button>
                     </div>
                     
                     <div className="service-row">
                       <span>👋 Messaggio Benvenuto</span>
                       <span>78% apertura</span>
-                      <button className="admin-btn-small" onClick={() => handleEditTemplate('Messaggio Benvenuto')}>✏️ Modifica</button>
-                      <button className="admin-btn-small" onClick={() => handleShowEmailStats('Messaggio Benvenuto')}>📊 Stats</button>
+                      <button className="admin-btn-small">✏️ Modifica</button>
+                      <button className="admin-btn-small">� Stats</button>
                     </div>
                     
                     <div className="service-row">
                       <span>⭐ Richiesta Recensione</span>
                       <span>65% apertura</span>
-                      <button className="admin-btn-small" onClick={() => handleEditTemplate('Richiesta Recensione')}>✏️ Modifica</button>
-                      <button className="admin-btn-small" onClick={() => handleShowEmailStats('Richiesta Recensione')}>📊 Stats</button>
+                      <button className="admin-btn-small">✏️ Modifica</button>
+                      <button className="admin-btn-small">📊 Stats</button>
                     </div>
                   </div>
                 </div>
@@ -4099,9 +3391,9 @@ const AdminPanelPro = (): JSX.Element => {
               >
                 � {loading ? 'Salvataggio...' : 'Salva Configurazione'}
               </button>
-              <button className="admin-btn-secondary" onClick={() => handleEmailDetailedReport()}>📊 Report Dettagliato</button>
-              <button className="admin-btn-secondary" onClick={() => handleMassEmailSend()}>📧 Invio Massivo</button>
-              <button className="admin-btn-secondary" onClick={() => handleManageEmailAutomations()}>⚡ Gestisci Automazioni</button>
+              <button className="admin-btn-secondary">� Report Dettagliato</button>
+              <button className="admin-btn-secondary">📧 Invio Massivo</button>
+              <button className="admin-btn-secondary">⚡ Gestisci Automazioni</button>
             </div>
           </div>
         )}
@@ -4110,7 +3402,7 @@ const AdminPanelPro = (): JSX.Element => {
         {activeTab === 'sistema' && (
           <div className="admin-sistema">
             <h2>⚙️ Configurazione Sistema e Database</h2>
-            <div className="admin-notice">
+            <div className="admin-notice admin-system-notice">
               <strong>💡 Nota:</strong> Per modificare prezzi, tariffe e configurazioni di prenotazione, utilizza la tab <strong>"🏷️ Prezzi"</strong>.
               Questa sezione è dedicata solo alle impostazioni tecniche del sistema.
             </div>
@@ -4299,7 +3591,7 @@ const AdminPanelPro = (): JSX.Element => {
                   <h4>Autenticazione</h4>
                   <div className="pricing-controls">
                     <label>Password Amministratore:</label>
-                    <input type="password" defaultValue="••••••••••••" className="admin-input" aria-label="Password admin" />
+                    <input type="password" defaultValue="vincanto2025" className="admin-input" aria-label="Password admin" />
                     
                     <label>Autenticazione 2FA:</label>
                     <select className="admin-select" aria-label="Two factor auth">
@@ -4311,7 +3603,7 @@ const AdminPanelPro = (): JSX.Element => {
                     <label>Timeout Sessione (minuti):</label>
                     <input type="number" defaultValue="120" className="admin-input-small" aria-label="Timeout sessione" />
                     
-                    <button className="admin-btn-secondary admin-btn-small" onClick={() => handleChangeAdminPassword()}>🔑 Cambia Password</button>
+                    <button className="admin-btn-secondary admin-btn-small">🔑 Cambia Password</button>
                   </div>
                 </div>
                 
@@ -4416,7 +3708,7 @@ const AdminPanelPro = (): JSX.Element => {
                 </button>
               </div>
               
-              {notifications.length > 0 ? (
+              {mockNotifications.length > 0 ? (
                 <div className="bookings-table-container">
                   <table className="bookings-table">
                     <thead>
@@ -4431,7 +3723,7 @@ const AdminPanelPro = (): JSX.Element => {
                       </tr>
                     </thead>
                     <tbody>
-                      {notifications.map((notif) => (
+                      {mockNotifications.map((notif) => (
                         <tr key={notif.id} className={`booking-row ${!notif.read ? 'unread' : ''}`}>
                           <td>
                             <span className={`status ${notif.type}`}>
@@ -4756,8 +4048,6 @@ const AdminPanelPro = (): JSX.Element => {
             </div>
           </div>
         )}
-
-        {/* Fine sezioni amministrative */}
       </main>
     </div>
   );
