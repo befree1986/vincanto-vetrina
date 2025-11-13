@@ -395,7 +395,7 @@ export default async function handler(req, res) {
     // CLEAR TEST DATA SECTION
     // ========================================
     if (action === 'clear-test-bookings') {
-      if (req.method === 'DELETE') {
+      if (req.method === 'DELETE' || req.method === 'GET') {
         try {
           // Cancella tutte le prenotazioni simulate/test/mock
           console.log('🗑️ Cancellando dati mock dal database...');
