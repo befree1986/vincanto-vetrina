@@ -1638,7 +1638,7 @@ const AdminPanelPro = (): JSX.Element => {
   const handleEditBookingDemo = (booking: any) => {
     if (typeof booking === 'string') {
       // Se è un ID stringa (come 'VIN_DEMO'), trova la prenotazione corrispondente
-      const foundBooking = recentBookings.find(b => `#${b.id.toUpperCase()}` === `#${booking}` || b.id === booking);
+      const foundBooking = recentBookings.find(b => `#${String(b.id).toUpperCase()}` === `#${booking}` || b.id === booking);
       if (foundBooking) {
         alert(`✏️ Modifica Prenotazione\n\nModifica la prenotazione di:\n👤 ${foundBooking.guestName}\n📅 ${new Date(foundBooking.checkIn).toLocaleDateString('it-IT')} - ${new Date(foundBooking.checkOut).toLocaleDateString('it-IT')}\n💰 €${foundBooking.totalPrice}\n\n(Funzione demo - implementare integrazione completa)`);
       } else {
@@ -1689,7 +1689,7 @@ const AdminPanelPro = (): JSX.Element => {
       alert(`📄 Generando fattura per prenotazione ${bookingId}...\n\n✅ Fattura generata con successo!\n📁 Salvata in: /fatture/${bookingId}_fattura.pdf\n📧 Inviata automaticamente al cliente`);
     } else {
       const invoiceData = `📄 FATTURA VINCANTO MAORI\n\n` +
-        `📋 Prenotazione: #${booking.id.toUpperCase()}\n` +
+        `📋 Prenotazione: #${String(booking.id).toUpperCase()}\n` +
         `👤 Cliente: ${booking.guestName}\n` +
         `📅 Periodo: ${new Date(booking.checkIn).toLocaleDateString('it-IT')} - ${new Date(booking.checkOut).toLocaleDateString('it-IT')}\n` +
         `👥 Ospiti: ${booking.guests}\n` +

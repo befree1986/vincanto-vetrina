@@ -87,12 +87,12 @@ export const useExtraServices = (): ExtraServicesData => {
           name: 'Culla per Bambini', 
           price: 20, 
           unit: 'soggiorno',
-          description: 'Culla con biancheria per bambini fino a 2 anni',
+          description: 'Culla con biancheria per bambini fino a 7 anni',
           category: 'equipment',
           available: true,
           included: false,
           minAge: 0,
-          maxAge: 2
+          maxAge: 7
         },
         { 
           id: 1, 
