@@ -397,13 +397,34 @@ export default async function handler(req, res) {
     if (action === 'clear-test-bookings') {
       if (req.method === 'DELETE') {
         try {
-          // Cancella tutte le prenotazioni simulate/test
-          const deleteResult = await pool.query('DELETE FROM bookings WHERE id IN (1, 2, 3)');
+          // Cancella tutte le prenotazioni simulate/test/mock
+          console.log('🗑️ Cancellando dati mock dal database...');
+          
+          // Cancella prenotazioni con pattern tipici dei dati mock
+          const deleteResult = await pool.query(`
+            DELETE FROM bookings 
+            WHERE booking_id LIKE 'VIN%' 
+               OR email LIKE '%@email.com'
+               OR first_name IN ('Mario', 'Anna', 'Giuseppe', 'Marco', 'Silvia')
+               OR last_name IN ('Rossi', 'Bianchi', 'Verdi', 'Neri', 'Gialli')
+               OR id IN (1, 2, 3, 4, 5)
+          `);
+          
+          // Cancella anche richieste contatti mock
+          const contactsResult = await pool.query(`
+            DELETE FROM contact_requests 
+            WHERE email LIKE '%@email.com'
+               OR name IN ('Anna Gialli', 'Marco Neri', 'Silvia Bianchi')
+          `);
+          
+          console.log(`✅ Cancellate ${deleteResult.rowCount} prenotazioni mock`);
+          console.log(`✅ Cancellate ${contactsResult.rowCount} richieste contatti mock`);
           
           return res.status(200).json({
             success: true,
-            message: 'Prenotazioni di test cancellate con successo',
-            deletedCount: deleteResult.rowCount
+            message: 'Dati mock cancellati con successo',
+            deletedBookings: deleteResult.rowCount,
+            deletedContacts: contactsResult.rowCount
           });
         } catch (error) {
           console.error('❌ Errore cancellazione prenotazioni test:', error);
