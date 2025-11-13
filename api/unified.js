@@ -361,6 +361,18 @@ export default async function handler(req, res) {
             'pending'
           ]);
           
+          // 📧 Invia email di conferma (se configurata)
+          try {
+            // Configurazione nodemailer base (da implementare in production)
+            console.log('📧 Booking creato, invio email a:', bookingData.customerEmail || bookingData.email);
+            
+            // TODO: Implementare invio email con nodemailer
+            // const transporter = nodemailer.createTransporter(process.env.SMTP_CONFIG);
+            // await transporter.sendMail({ to: customerEmail, subject: "Conferma prenotazione Vincanto", html: emailTemplate });
+          } catch (emailError) {
+            console.warn('⚠️ Email non inviata:', emailError.message);
+          }
+          
           return res.status(201).json({
             success: true,
             message: 'Prenotazione creata con successo',
