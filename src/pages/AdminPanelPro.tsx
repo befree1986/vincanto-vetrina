@@ -3444,7 +3444,7 @@ const AdminPanelPro = (): JSX.Element => {
                   <tbody>
                     {recentBookings.map((booking) => (
                       <tr key={booking.id} className="booking-row">
-                        <td>#{booking.id.toUpperCase()}</td>
+                        <td>#{String(booking.id).toUpperCase()}</td>
                         <td>
                           <div className="customer-info">
                             <strong>{booking.guestName}</strong>
