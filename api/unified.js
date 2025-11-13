@@ -316,6 +316,7 @@ export default async function handler(req, res) {
             success: true,
             bookings: result.rows.map(booking => ({
               ...booking,
+              id: String(booking.id), // 🔧 ASSICURA che ID sia sempre stringa
               total_amount: parseFloat(booking.total_amount), // Converti stringa in numero
               platform: 'direct', // Default platform
               created_at: booking.created_at.toISOString()
