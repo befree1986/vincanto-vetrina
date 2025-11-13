@@ -635,18 +635,23 @@
 }
 
 .booking-summary {
-  background: #f8f9fa;
+  background: #f8f9fa !important;
   padding: 20px;
   border-radius: 8px;
   border: 1px solid #e9ecef;
   margin: 20px 0;
   text-align: left;
+  color: #333 !important; /* Force normal text color */
 }
 
 .booking-summary h3 {
-  color: #d2691e;
+  color: #d2691e !important;
   margin-bottom: 15px;
   text-align: center;
+}
+
+.booking-summary p {
+  color: #555 !important; /* Evita colori rossi ereditati */
 }
 
 /* Responsive Design */

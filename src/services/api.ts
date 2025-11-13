@@ -153,7 +153,21 @@ export async function getBookingQuote(data: BookingQuoteRequest): Promise<Bookin
  * Crea una nuova prenotazione
  */
 export async function createBooking(data: CreateBookingRequest): Promise<CreateBookingResponse> {
-    const response = await api.post('/booking/create', data);
+    // 🔧 Adatta i dati per l'API backend
+    const adaptedData = {
+        customerName: `${data.guest_name} ${data.guest_surname}`,
+        customerEmail: data.guest_email,
+        customerPhone: data.guest_phone,
+        checkin: data.check_in_date,
+        checkout: data.check_out_date,
+        guests: data.num_adults + data.num_children,
+        adults: data.num_adults,
+        children: data.num_children,
+        specialRequests: data.guest_message,
+        totalPrice: 0 // Sarà calcolato dal backend
+    };
+    
+    const response = await api.post('/unified?action=booking', adaptedData);
     return response.data;
 }
 

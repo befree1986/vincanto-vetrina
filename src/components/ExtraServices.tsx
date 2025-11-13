@@ -60,7 +60,7 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
         </span>
         {isSelected && (
           <span className="service-selected-badge">
-            ✅ Incluso
+            ✅ Aggiunto
           </span>
         )}
       </div>
