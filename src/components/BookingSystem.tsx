@@ -118,7 +118,7 @@ const BookingSystem: React.FC = () => {
     const [showPayment, setShowPayment] = useState(false);
     const [bookingResult, setBookingResult] = useState<any>(null);
     
-    // 🔥 HOOK SCROLL LOCK - Impedisce scroll durante cambi step
+    // 🔥 HOOK SCROLL LOCK - Impedisce scroll durante cambi step [v2.0]
     const [isTransitioning, setIsTransitioning] = useState(false);
     
     useEffect(() => {
