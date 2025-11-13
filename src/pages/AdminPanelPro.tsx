@@ -1679,7 +1679,7 @@ const AdminPanelPro = (): JSX.Element => {
         alert(`✅ Email "${emailType}" inviata con successo per la prenotazione ${bookingId}!`);
       }
     } else {
-      alert(`✉️ Inviando email a ${booking.guestName} per la prenotazione #${booking.id}\n\n📧 Email: ${booking.guestName.toLowerCase().replace(' ', '.')}@email.com\n📅 Periodo: ${new Date(booking.checkIn).toLocaleDateString('it-IT')} - ${new Date(booking.checkOut).toLocaleDateString('it-IT')}\n\n✅ Email inviata con successo!`);
+      alert(`✉️ Inviando email a ${booking.guestName || 'Ospite'} per la prenotazione #${booking.id}\n\n📧 Email: ${booking.guestName ? booking.guestName.toLowerCase().replace(' ', '.') : 'ospite'}@email.com\n📅 Periodo: ${new Date(booking.checkIn).toLocaleDateString('it-IT')} - ${new Date(booking.checkOut).toLocaleDateString('it-IT')}\n\n✅ Email inviata con successo!`);
     }
   };
 
@@ -1827,8 +1827,8 @@ const AdminPanelPro = (): JSX.Element => {
         })),
         ...recentBookings.map(b => ({
           ID: b.id,
-          Cliente: b.guestName,
-          Email: b.guestName.toLowerCase().replace(' ', '.') + '@email.com',
+          Cliente: b.guestName || 'Ospite Sconosciuto',
+          Email: (b.guestName ? b.guestName.toLowerCase().replace(' ', '.') : 'ospite') + '@email.com',
           CheckIn: b.checkIn,
           CheckOut: b.checkOut,
           Ospiti: b.guests,
@@ -3447,8 +3447,8 @@ const AdminPanelPro = (): JSX.Element => {
                         <td>#{String(booking.id).toUpperCase()}</td>
                         <td>
                           <div className="customer-info">
-                            <strong>{booking.guestName}</strong>
-                            <small>{booking.guestName.toLowerCase().replace(' ', '.')}@email.com</small>
+                            <strong>{booking.guestName || 'Ospite Sconosciuto'}</strong>
+                            <small>{booking.guestName ? booking.guestName.toLowerCase().replace(' ', '.') : 'ospite'}@email.com</small>
                           </div>
                         </td>
                         <td>{booking.guests} {booking.guests === 1 ? 'ospite' : 'ospiti'}</td>
