@@ -7,7 +7,7 @@ export interface ExtraService {
   price: number;
   unit: 'soggiorno' | 'notte' | 'persona';
   description?: string;
-  category: 'bambini' | 'animali' | 'comfort' | 'comodita' | 'parcheggio' | 'custom';
+  category: 'bambini' | 'animali' | 'comfort' | 'comodita' | 'parcheggio' | 'custom' | 'equipment' | 'convenience' | 'food' | 'gift';
   available: boolean;
   active?: boolean; // 🔥 NUOVO: Flag per attivare/disattivare il servizio
   included?: boolean; // 🔥 NUOVO: Flag per servizi inclusi (prezzo 0)
@@ -63,7 +63,7 @@ export const useExtraServices = (): ExtraServicesData => {
             category: service.category || 'general',
             available: service.active !== false,
             active: service.active !== false,
-            included: false, // Per ora tutti i servizi sono a pagamento
+            included: service.included === true, // 🔥 USA VALORE DAL DATABASE
             minAge: service.minAge,
             maxAge: service.maxAge,
             isParking: service.category === 'parcheggio'
@@ -80,65 +80,59 @@ export const useExtraServices = (): ExtraServicesData => {
     } catch (err) {
       console.error('❌ EXTRA SERVICES: API non disponibile, uso servizi predefiniti:', err);
       
-      // 🔄 WORKAROUND: Servizi predefiniti completi (fino a quando API non funziona)
+      // 🔄 SERVIZI ALLINEATI CON DATABASE (fallback se API non disponibile)
       setServices([
         { 
+          id: 6, 
+          name: 'Culla per Bambini', 
+          price: 20, 
+          unit: 'soggiorno',
+          description: 'Culla con biancheria per bambini fino a 2 anni',
+          category: 'equipment',
+          available: true,
+          included: false,
+          minAge: 0,
+          maxAge: 2
+        },
+        { 
           id: 1, 
-          name: 'Culla per bambini (0-3 anni)', 
+          name: 'Late Check-out', 
           price: 30, 
           unit: 'soggiorno',
-          description: 'Culla sicura e confortevole per i più piccoli',
-          category: 'bambini',
+          description: 'Check-out posticipato alle 14:00 invece delle 10:00',
+          category: 'convenience',
           available: true,
-          minAge: 0,
-          maxAge: 3
+          included: false
         },
         { 
           id: 2, 
-          name: 'Seggiolone', 
-          price: 15, 
-          unit: 'soggiorno',
-          description: 'Seggiolone per pasti in sicurezza',
-          category: 'bambini', 
-          available: true,
-          minAge: 0,
-          maxAge: 6
-        },
-        { 
-          id: 3, 
-          name: 'Animali domestici', 
+          name: 'Early Check-in', 
           price: 25, 
           unit: 'soggiorno',
-          description: 'Supplemento per animali domestici (max 2)',
-          category: 'animali',
-          available: true
+          description: 'Check-in anticipato dalle 12:00 invece delle 15:00',
+          category: 'convenience',
+          available: true,
+          included: false
         },
         { 
           id: 4, 
-          name: 'Set biancheria extra', 
-          price: 20, 
-          unit: 'soggiorno',
-          description: 'Set aggiuntivo di lenzuola e asciugamani',
-          category: 'comfort',
-          available: true
+          name: 'Colazione Italiana', 
+          price: 15, 
+          unit: 'persona',
+          description: 'Colazione italiana completa con prodotti locali',
+          category: 'food',
+          available: true,
+          included: false
         },
         { 
-          id: 5, 
-          name: 'Check-in anticipato (ore 12:00)', 
-          price: 40, 
+          id: 8, 
+          name: 'Kit Welcome', 
+          price: 25, 
           unit: 'soggiorno',
-          description: 'Check-in 3 ore prima del normale (soggetto a disponibilità)',
-          category: 'comodita',
-          available: true
-        },
-        { 
-          id: 6, 
-          name: 'Check-out posticipato (ore 14:00)', 
-          price: 40, 
-          unit: 'soggiorno',
-          description: 'Check-out 3 ore dopo il normale (soggetto a disponibilità)',
-          category: 'comodita',
-          available: true
+          description: 'Kit di benvenuto con prodotti tipici siciliani',
+          category: 'gift',
+          available: true,
+          included: true  // 🎁 SERVIZIO INCLUSO
         }
       ]);
       

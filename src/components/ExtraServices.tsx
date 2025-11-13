@@ -47,12 +47,24 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
     );
   };
 
-  // 🔥 NUOVO: Helper per formattare prezzo o "INCLUSO"
-  const formatServicePrice = (service: ExtraService) => {
+  // 🔥 NUOVO: Helper per formattare prezzo con effetto sbarrato
+  const formatServicePrice = (service: ExtraService, isSelected: boolean) => {
     if (service.included) {
       return <span className="service-included">✅ INCLUSO</span>;
     }
-    return <span className="service-price">€{service.price}/{service.unit}</span>;
+    
+    return (
+      <div className="service-price-container">
+        <span className={`service-price ${isSelected ? 'price-crossed' : ''}`}>
+          €{service.price}/{service.unit}
+        </span>
+        {isSelected && (
+          <span className="service-selected-badge">
+            ✅ Incluso
+          </span>
+        )}
+      </div>
+    );
   };
 
   // 🔥 NUOVO: Helper per aria-label accessibilità
@@ -119,7 +131,7 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
               >
                 <div className="service-header">
                   <h5>{service.name}</h5>
-                  {formatServicePrice(service)}
+                  {formatServicePrice(service, selectedServices.includes(service.id))}
                 </div>
                 {service.description && (
                   <p className="service-description">{service.description}</p>
@@ -156,7 +168,7 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
               >
                 <div className="service-header">
                   <h5>{service.name}</h5>
-                  {formatServicePrice(service)}
+                  {formatServicePrice(service, selectedServices.includes(service.id))}
                 </div>
                 {service.description && (
                   <p className="service-description">{service.description}</p>
@@ -196,7 +208,7 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
               >
                 <div className="service-header">
                   <h5>{service.name}</h5>
-                  {formatServicePrice(service)}
+                  {formatServicePrice(service, selectedServices.includes(service.id))}
                 </div>
                 {service.description && (
                   <p className="service-description">{service.description}</p>
@@ -233,7 +245,7 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
               >
                 <div className="service-header">
                   <h5>{service.name}</h5>
-                  {formatServicePrice(service)}
+                  {formatServicePrice(service, selectedServices.includes(service.id))}
                 </div>
                 {service.description && (
                   <p className="service-description">{service.description}</p>
@@ -270,7 +282,7 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
               >
                 <div className="service-header">
                   <h5>{service.name}</h5>
-                  {formatServicePrice(service)}
+                  {formatServicePrice(service, selectedServices.includes(service.id))}
                 </div>
                 {service.description && (
                   <p className="service-description">{service.description}</p>
@@ -307,7 +319,7 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
               >
                 <div className="service-header">
                   <h5>{service.name}</h5>
-                  {formatServicePrice(service)}
+                  {formatServicePrice(service, selectedServices.includes(service.id))}
                 </div>
                 {service.description && (
                   <p className="service-description">{service.description}</p>

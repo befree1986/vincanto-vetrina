@@ -18,6 +18,7 @@ const ExtraServicesAdmin: React.FC<ExtraServicesAdminProps> = ({ onClose }) => {
     unit: 'soggiorno' as 'soggiorno' | 'notte' | 'persona',
     category: 'custom' as ExtraService['category'],
     active: true,
+    included: false,
     sort_order: 0
   });
 
@@ -69,6 +70,7 @@ const ExtraServicesAdmin: React.FC<ExtraServicesAdminProps> = ({ onClose }) => {
       unit: service.unit,
       category: service.category,
       active: service.active ?? true,
+      included: service.included ?? false,
       sort_order: 0
     });
     setShowAddForm(true);
@@ -94,6 +96,7 @@ const ExtraServicesAdmin: React.FC<ExtraServicesAdminProps> = ({ onClose }) => {
       unit: 'soggiorno',
       category: 'custom',
       active: true,
+      included: false,
       sort_order: 0
     });
     setEditingService(null);
@@ -253,6 +256,19 @@ const ExtraServicesAdmin: React.FC<ExtraServicesAdminProps> = ({ onClose }) => {
                 />
                 <label htmlFor="active" className="ml-2 text-sm text-gray-700">
                   Servizio attivo (visibile agli ospiti)
+                </label>
+              </div>
+              
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="included"
+                  checked={formData.included}
+                  onChange={(e) => setFormData({ ...formData, included: e.target.checked })}
+                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                />
+                <label htmlFor="included" className="ml-2 text-sm text-gray-700">
+                  <span className="font-medium text-green-600">✅ Servizio incluso</span> (prezzo mostrato come incluso)
                 </label>
               </div>
               

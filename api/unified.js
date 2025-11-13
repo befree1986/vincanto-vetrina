@@ -64,6 +64,7 @@ async function initializeTables() {
         category VARCHAR(100) DEFAULT 'general',
         unit VARCHAR(50) DEFAULT 'per_stay',
         active BOOLEAN DEFAULT true,
+        included BOOLEAN DEFAULT false,
         sort_order INTEGER DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -71,19 +72,30 @@ async function initializeTables() {
     `);
     console.log('✅ Tabella extra_services inizializzata');
 
+    // 🔄 Aggiungi campo included se non esiste (per aggiornare DB esistenti)
+    try {
+      await pool.query(`
+        ALTER TABLE extra_services 
+        ADD COLUMN IF NOT EXISTS included BOOLEAN DEFAULT false
+      `);
+      console.log('✅ Campo included aggiunto/verificato');
+    } catch (err) {
+      console.log('ℹ️ Campo included già esistente o errore aggiunta:', err.message);
+    }
+
     // 🆕 Inserisci servizi di default se tabella vuota
     const servicesCount = await pool.query('SELECT COUNT(*) FROM extra_services');
     if (parseInt(servicesCount.rows[0].count) === 0) {
       await pool.query(`
-        INSERT INTO extra_services (name, description, price, category, unit, active, sort_order) VALUES
-        ('Late Check-out', 'Check-out posticipato alle 14:00 invece delle 10:00', 30.00, 'convenience', 'per_stay', true, 1),
-        ('Early Check-in', 'Check-in anticipato dalle 12:00 invece delle 15:00', 25.00, 'convenience', 'per_stay', true, 2),
-        ('Pulizia Extra', 'Pulizia approfondita pre-arrivo con sanificazione', 50.00, 'cleaning', 'per_stay', true, 3),
-        ('Colazione Italiana', 'Colazione italiana completa con prodotti locali', 15.00, 'food', 'per_person_per_day', true, 4),
-        ('Transfer Aeroporto', 'Servizio transfer da/per Aeroporto di Palermo', 45.00, 'transport', 'per_stay', true, 5),
-        ('Culla per Bambini', 'Culla con biancheria per bambini fino a 2 anni', 20.00, 'equipment', 'per_stay', true, 6),
-        ('Parcheggio Privato Extra', 'Posto auto aggiuntivo nel parcheggio privato', 10.00, 'parking', 'per_night', false, 7),
-        ('Kit Welcome', 'Kit di benvenuto con prodotti tipici siciliani', 25.00, 'gift', 'per_stay', true, 8)
+        INSERT INTO extra_services (name, description, price, category, unit, active, included, sort_order) VALUES
+        ('Late Check-out', 'Check-out posticipato alle 14:00 invece delle 10:00', 30.00, 'convenience', 'per_stay', true, false, 1),
+        ('Early Check-in', 'Check-in anticipato dalle 12:00 invece delle 15:00', 25.00, 'convenience', 'per_stay', true, false, 2),
+        ('Pulizia Extra', 'Pulizia approfondita pre-arrivo con sanificazione', 50.00, 'cleaning', 'per_stay', true, false, 3),
+        ('Colazione Italiana', 'Colazione italiana completa con prodotti locali', 15.00, 'food', 'per_person_per_day', true, true, 4),
+        ('Transfer Aeroporto', 'Servizio transfer da/per Aeroporto di Palermo', 45.00, 'transport', 'per_stay', true, false, 5),
+        ('Culla per Bambini', 'Culla con biancheria per bambini fino a 3 anni', 30.00, 'bambini', 'per_stay', true, false, 6),
+        ('Parcheggio Privato Extra', 'Posto auto aggiuntivo nel parcheggio privato', 10.00, 'parking', 'per_night', false, false, 7),
+        ('Kit Welcome', 'Kit di benvenuto con prodotti tipici siciliani', 25.00, 'gift', 'per_stay', true, true, 8)
       `);
       console.log('✅ Servizi extra di default inseriti');
     }
@@ -1193,7 +1205,7 @@ export default async function handler(req, res) {
           // Ottieni tutti i servizi dal database
           const result = await pool.query(`
             SELECT 
-              id, name, description, price, category, unit, active, 
+              id, name, description, price, category, unit, active, included,
               sort_order, created_at, updated_at
             FROM extra_services 
             ORDER BY sort_order ASC, id ASC
@@ -1208,6 +1220,7 @@ export default async function handler(req, res) {
             category: service.category,
             unit: service.unit,
             active: service.active,
+            included: service.included,
             sortOrder: service.sort_order,
             createdAt: service.created_at?.toISOString(),
             updatedAt: service.updated_at?.toISOString()
@@ -1230,7 +1243,7 @@ export default async function handler(req, res) {
       if (req.method === 'POST') {
         try {
           // Crea nuovo servizio
-          const { name, description, price, category, unit, active, sortOrder } = req.body;
+          const { name, description, price, category, unit, active, included, sortOrder } = req.body;
           
           // Validazione dati
           if (!name || price === undefined) {
@@ -1241,8 +1254,8 @@ export default async function handler(req, res) {
           }
 
           const result = await pool.query(`
-            INSERT INTO extra_services (name, description, price, category, unit, active, sort_order, updated_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+            INSERT INTO extra_services (name, description, price, category, unit, active, included, sort_order, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
             RETURNING *
           `, [
             name,
@@ -1251,6 +1264,7 @@ export default async function handler(req, res) {
             category || 'general',
             unit || 'per_stay',
             active !== false, // Default true
+            included === true, // Default false
             sortOrder || 0
           ]);
 
@@ -1269,6 +1283,7 @@ export default async function handler(req, res) {
               category: newService.category,
               unit: newService.unit,
               active: newService.active,
+              included: newService.included,
               sortOrder: newService.sort_order
             }
           });
@@ -1285,7 +1300,7 @@ export default async function handler(req, res) {
         try {
           // Aggiorna servizio esistente
           const { id } = req.query;
-          const { name, description, price, category, unit, active, sortOrder } = req.body;
+          const { name, description, price, category, unit, active, included, sortOrder } = req.body;
           
           if (!id) {
             return res.status(400).json({
@@ -1303,7 +1318,8 @@ export default async function handler(req, res) {
               category = COALESCE($5, category),
               unit = COALESCE($6, unit),
               active = COALESCE($7, active),
-              sort_order = COALESCE($8, sort_order),
+              included = COALESCE($8, included),
+              sort_order = COALESCE($9, sort_order),
               updated_at = NOW()
             WHERE id = $1
             RETURNING *
@@ -1315,6 +1331,7 @@ export default async function handler(req, res) {
             category,
             unit,
             active,
+            included,
             sortOrder !== undefined ? parseInt(sortOrder) : null
           ]);
 
@@ -1340,6 +1357,7 @@ export default async function handler(req, res) {
               category: updatedService.category,
               unit: updatedService.unit,
               active: updatedService.active,
+              included: updatedService.included,
               sortOrder: updatedService.sort_order
             }
           });

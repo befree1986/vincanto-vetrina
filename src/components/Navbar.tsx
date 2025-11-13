@@ -81,8 +81,7 @@ const Navbar: React.FC = () => {
         <button 
           className="menu-toggle" 
           onClick={toggleMenu} 
-          aria-label="Toggle menu" 
-          aria-expanded={isOpen ? "true" : "false"}
+          aria-label="Toggle menu"
           aria-controls="navMenu"
         >
           {isOpen ? <X size={24} /> : <Menu size={24} />}
