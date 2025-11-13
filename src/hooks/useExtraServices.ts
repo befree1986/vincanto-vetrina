@@ -88,7 +88,7 @@ export const useExtraServices = (): ExtraServicesData => {
           price: 20, 
           unit: 'soggiorno',
           description: 'Culla con biancheria per bambini fino a 7 anni',
-          category: 'equipment',
+          category: 'bambini',
           available: true,
           included: false,
           minAge: 0,

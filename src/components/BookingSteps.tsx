@@ -7,13 +7,15 @@ import './BookingSteps.css';
 
 // 📝 Step 2: Dati Personali
 interface BookingStep2Props {
+  booking?: any; // Oggetto booking passato dal parent
   onNext: () => void;
   onBack: () => void;
 }
 
-export const BookingStep2: React.FC<BookingStep2Props> = ({ onNext, onBack }) => {
+export const BookingStep2: React.FC<BookingStep2Props> = ({ booking: propBooking, onNext, onBack }) => {
   const { t } = useTranslation();
-  const booking = useBooking();
+  const defaultBooking = useBooking();
+  const booking = propBooking || defaultBooking; // Usa il booking passato come prop o fallback
   const [errors, setErrors] = useState<string[]>([]);
 
   const validateForm = () => {
@@ -175,12 +177,14 @@ export const BookingStep2: React.FC<BookingStep2Props> = ({ onNext, onBack }) =>
 
 // 💳 Step 3: Pagamento
 interface BookingStep3Props {
+  booking?: any; // Oggetto booking passato dal parent
   onBack: () => void;
 }
 
-export const BookingStep3: React.FC<BookingStep3Props> = ({ onBack }) => {
+export const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBack }) => {
   const { t } = useTranslation();
-  const booking = useBooking();
+  const defaultBooking = useBooking();
+  const booking = propBooking || defaultBooking; // Usa il booking passato come prop o fallback
   const [isProcessing, setIsProcessing] = useState(false);
   
   // 🔍 DEBUG: Log dei dati per verificare il problema del riepilogo vuoto

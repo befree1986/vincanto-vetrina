@@ -118,19 +118,19 @@ const BookingSystem: React.FC = () => {
     const [showPayment, setShowPayment] = useState(false);
     const [bookingResult, setBookingResult] = useState<any>(null);
     
-    // 🔥 HOOK SCROLL LOCK - Impedisce scroll durante cambi step [v2.0]
+    // 🔥 HOOK SCROLL LOCK - DISABILITATO TEMPORANEAMENTE
     const [isTransitioning, setIsTransitioning] = useState(false);
     
     useEffect(() => {
-        if (isTransitioning) {
-            // Blocca scroll durante transizioni
-            document.body.style.overflow = 'hidden';
-            const timer = setTimeout(() => {
-                document.body.style.overflow = 'unset';
-                setIsTransitioning(false);
-            }, 100);
-            return () => clearTimeout(timer);
-        }
+        // SCROLL LOCK DISABILITATO - causava problemi
+        // if (isTransitioning) {
+        //     document.body.style.overflow = 'hidden';
+        //     const timer = setTimeout(() => {
+        //         document.body.style.overflow = 'unset';
+        //         setIsTransitioning(false);
+        //     }, 100);
+        //     return () => clearTimeout(timer);
+        // }
     }, [isTransitioning]);
     
     const {

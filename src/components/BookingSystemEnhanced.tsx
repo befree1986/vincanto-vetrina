@@ -511,6 +511,7 @@ const BookingSystemEnhanced: React.FC = () => {
                 {/* Step 3: Dati Personali */}
                 {currentStep === 3 && (
                     <BookingStep2 
+                        booking={booking}
                         onNext={() => setCurrentStep(4)}
                         onBack={() => setCurrentStep(2)}
                     />
@@ -519,6 +520,7 @@ const BookingSystemEnhanced: React.FC = () => {
                 {/* Step 4: Pagamento */}
                 {currentStep === 4 && (
                     <BookingStep3 
+                        booking={booking}
                         onBack={() => setCurrentStep(3)}
                     />
                 )}
