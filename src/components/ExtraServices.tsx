@@ -56,7 +56,7 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
     return (
       <div className="service-price-container">
         <span className={`service-price ${isSelected ? 'price-crossed' : ''}`}>
-          €{service.price}/{service.unit}
+          €{service.price}/{getUnitLabel(service.unit)}
         </span>
         {isSelected && (
           <span className="service-selected-badge">
@@ -67,12 +67,27 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
     );
   };
 
+  // 🔥 NUOVO: Helper per tradurre unità di misura
+  const getUnitLabel = (unit: string): string => {
+    const unitLabels: Record<string, string> = {
+      'soggiorno': 'soggiorno',
+      'per_stay': 'soggiorno',
+      'notte': 'notte',
+      'per_night': 'notte',
+      'persona': 'persona',
+      'per_person': 'persona',
+      'per_person_per_day': 'persona/giorno'
+    };
+    
+    return unitLabels[unit] || unit;
+  };
+
   // 🔥 NUOVO: Helper per aria-label accessibilità
   const getServiceAriaLabel = (service: ExtraService) => {
     if (service.included) {
       return `Seleziona ${service.name} - Incluso nel prezzo`;
     }
-    return `Seleziona ${service.name} - €${service.price}/${service.unit}`;
+    return `Seleziona ${service.name} - €${service.price}/${getUnitLabel(service.unit)}`;
   };
 
   if (loading) {

@@ -980,3 +980,35 @@
     top: auto;
   }
 }
+
+/* 🔥 FIX SCROLL AUTOMATICO - Impedisce scroll durante navigazione step */
+.booking-system {
+  scroll-behavior: auto !important;
+}
+
+.booking-system .booking-step-content {
+  scroll-margin-top: 0;
+  scroll-snap-align: none;
+}
+
+/* Impedisce scroll quando cambiano gli step */
+.booking-system:focus-within {
+  scroll-behavior: auto !important;
+}
+
+/* Mantiene posizione durante transizioni step */
+.step-transition {
+  scroll-behavior: auto !important;
+  animation: fadeInStep 0.3s ease-in-out;
+}
+
+@keyframes fadeInStep {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

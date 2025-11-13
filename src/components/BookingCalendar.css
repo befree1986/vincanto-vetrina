@@ -703,3 +703,57 @@
     font-size: 1.2rem;
   }
 }
+
+/* 🔥 MIGLIORAMENTO UX - Range selection enhanced */
+.react-datepicker__day.selected-range {
+  background: rgba(210, 105, 30, 0.4) !important;
+  color: #495057 !important;
+  border-color: rgba(210, 105, 30, 0.6);
+  position: relative;
+}
+
+.react-datepicker__day.selected-range:first-child {
+  border-top-left-radius: 50%;
+  border-bottom-left-radius: 50%;
+}
+
+.react-datepicker__day.selected-range:last-child {
+  border-top-right-radius: 50%;
+  border-bottom-right-radius: 50%;
+}
+
+/* Range hover più evidente */
+.react-datepicker__day--in-selecting-range {
+  background: rgba(210, 105, 30, 0.2) !important;
+  color: #495057 !important;
+  border-color: rgba(210, 105, 30, 0.4) !important;
+  animation: pulse-range 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-range {
+  0%, 100% { 
+    background: rgba(210, 105, 30, 0.2) !important;
+  }
+  50% { 
+    background: rgba(210, 105, 30, 0.4) !important;
+  }
+}
+
+/* Range selezionato finale più evidente */
+.react-datepicker__day--range-start,
+.react-datepicker__day--range-end {
+  background: linear-gradient(135deg, #d2691e 0%, #b8541a 100%) !important;
+  color: white !important;
+  font-weight: 700;
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(210, 105, 30, 0.4);
+  border-color: #b8541a !important;
+}
+
+/* Date nel range selezionato finale */
+.react-datepicker__day--in-range:not(.react-datepicker__day--range-start):not(.react-datepicker__day--range-end) {
+  background: rgba(210, 105, 30, 0.3) !important;
+  color: #495057 !important;
+  border-color: rgba(210, 105, 30, 0.5) !important;
+  font-weight: 600;
+}

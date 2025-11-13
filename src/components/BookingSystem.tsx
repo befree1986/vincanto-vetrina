@@ -217,7 +217,7 @@ const BookingSystem: React.FC = () => {
     );
 
     const renderDateStep = () => (
-        <div className="booking-step-content">
+        <div className="booking-step-content step-transition">
             <h2>Seleziona le Date</h2>
             <BookingCalendar
                 selectedCheckIn={formData.check_in_date}
@@ -230,7 +230,7 @@ const BookingSystem: React.FC = () => {
     );
 
     const renderDetailsStep = () => (
-        <div className="booking-step-content">
+        <div className="booking-step-content step-transition">
             <h2>Dettagli Prenotazione</h2>
             
             {/* Loading indicator per calcolo prezzi - Design Professionale */}
@@ -550,15 +550,23 @@ const BookingSystem: React.FC = () => {
 
             <div className="step-actions">
                 <button 
-                    onClick={() => setCurrentStep('dates')} 
+                    onClick={(e) => {
+                        e.preventDefault();
+                        setCurrentStep('dates');
+                    }} 
                     className="btn-secondary"
+                    type="button"
                 >
                     Indietro
                 </button>
                 <button 
-                    onClick={handleDetailsSubmit}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        handleDetailsSubmit();
+                    }}
                     className="btn-primary"
                     disabled={isLoadingQuote}
+                    type="button"
                 >
                     {isLoadingQuote ? 'Elaborazione...' : 'Continua al Pagamento'}
                 </button>
