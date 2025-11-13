@@ -45,12 +45,12 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
         setStartDate(start);
         setEndDate(end);
         
-        // Chiama il callback solo quando abbiamo entrambe le date
+        // 🔥 FIX: Chiama il callback SOLO quando abbiamo entrambe le date complete
         if (start && end) {
+            console.log('📅 Range completo selezionato:', { start, end });
             onDateChange(start, end);
-        } else if (start) {
-            onDateChange(start, null);
         }
+        // Non chiamiamo onDateChange con date incomplete
     };
 
     // Verifica se una data è disabilitata
@@ -102,7 +102,6 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
                     startDate={startDate}
                     endDate={endDate}
                     selectsRange
-                    selectsDisabledDaysInRange
                     inline
                     locale={it}
                     minDate={new Date()}
@@ -118,6 +117,9 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
                         }
                         return '';
                     }}
+                    // 🔥 FIX: Previeni autoScroll del DatePicker
+                    shouldCloseOnSelect={false}
+                    preventOpenOnFocus={true}
                 />
             </div>
 

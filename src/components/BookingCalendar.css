@@ -154,17 +154,39 @@
 
 .react-datepicker__day--in-selecting-range,
 .react-datepicker__day--in-range {
-  background: rgba(210, 105, 30, 0.3) !important;
+  background: rgba(210, 105, 30, 0.4) !important;
   color: #495057 !important;
-  border-color: rgba(210, 105, 30, 0.5);
+  border-color: rgba(210, 105, 30, 0.6) !important;
+  font-weight: 600;
+  position: relative;
+}
+
+/* 🔥 ENHANCED: Hover durante selezione più evidente */
+.react-datepicker__day--in-selecting-range {
+  background: rgba(210, 105, 30, 0.3) !important;
+  animation: pulse-selecting 1s ease-in-out infinite;
+  border: 2px solid rgba(210, 105, 30, 0.5) !important;
+}
+
+@keyframes pulse-selecting {
+  0%, 100% { 
+    background: rgba(210, 105, 30, 0.3) !important;
+    transform: scale(1);
+  }
+  50% { 
+    background: rgba(210, 105, 30, 0.5) !important;
+    transform: scale(1.02);
+  }
 }
 
 .react-datepicker__day--range-start,
 .react-datepicker__day--range-end {
-  background: #d2691e !important;
+  background: linear-gradient(135deg, #d2691e 0%, #b8541a 100%) !important;
   color: white !important;
   font-weight: 700;
-  transform: scale(1.05);
+  transform: scale(1.08);
+  box-shadow: 0 3px 10px rgba(210, 105, 30, 0.4);
+  border: 2px solid #b8541a !important;
 }
 
 .react-datepicker__day--disabled {

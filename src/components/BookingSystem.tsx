@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useBooking } from '../hooks/useBooking';
 import { useDynamicPricing } from '../hooks/useDynamicPricing';
@@ -118,6 +118,21 @@ const BookingSystem: React.FC = () => {
     const [showPayment, setShowPayment] = useState(false);
     const [bookingResult, setBookingResult] = useState<any>(null);
     
+    // 🔥 HOOK SCROLL LOCK - Impedisce scroll durante cambi step
+    const [isTransitioning, setIsTransitioning] = useState(false);
+    
+    useEffect(() => {
+        if (isTransitioning) {
+            // Blocca scroll durante transizioni
+            document.body.style.overflow = 'hidden';
+            const timer = setTimeout(() => {
+                document.body.style.overflow = 'unset';
+                setIsTransitioning(false);
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+    }, [isTransitioning]);
+    
     const {
         formData,
         setFormData,
@@ -147,16 +162,17 @@ const BookingSystem: React.FC = () => {
     const handleDateSelection = async (checkIn: Date | null, checkOut: Date | null) => {
         if (!checkIn || !checkOut) return;
         
+        // 🔥 ATTIVA SCROLL LOCK
+        setIsTransitioning(true);
+        
         // Aggiorna le date nel form - il preventivo verrà calcolato automaticamente tramite useEffect
         setFormData({
             check_in_date: checkIn,
             check_out_date: checkOut
         });
         
-        // Aspetta un momento per far sì che l'effect dell'hook calcoli il preventivo
-        setTimeout(() => {
-            setCurrentStep('details');
-        }, 300);
+        // Cambio step senza scroll
+        setCurrentStep('details');
     };
 
     const handleDetailsSubmit = async () => {
@@ -552,6 +568,7 @@ const BookingSystem: React.FC = () => {
                 <button 
                     onClick={(e) => {
                         e.preventDefault();
+                        setIsTransitioning(true);
                         setCurrentStep('dates');
                     }} 
                     className="btn-secondary"
@@ -562,6 +579,7 @@ const BookingSystem: React.FC = () => {
                 <button 
                     onClick={(e) => {
                         e.preventDefault();
+                        setIsTransitioning(true);
                         handleDetailsSubmit();
                     }}
                     className="btn-primary"
