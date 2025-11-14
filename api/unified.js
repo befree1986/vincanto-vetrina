@@ -12,13 +12,34 @@ const pool = new Pool({
 // Email transporter configuration
 let emailTransporter = null;
 if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
+  const smtpPort = parseInt(process.env.SMTP_PORT) || 587;
+  // Porta 465 = SSL, 587 = STARTTLS
+  const smtpSecure = smtpPort === 465;
+  console.log('[SMTP DEBUG] Configurazione:', {
+    host: process.env.SMTP_HOST,
+    port: smtpPort,
+    secure: smtpSecure,
+    user: process.env.SMTP_USER,
+    from: process.env.SMTP_FROM
+  });
   emailTransporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT) || 587,
-    secure: false,
+    port: smtpPort,
+    secure: smtpSecure,
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASSWORD
+    },
+    connectionTimeout: 5000,
+    greetingTimeout: 5000,
+    socketTimeout: 5000
+  });
+  // Test connessione SMTP
+  emailTransporter.verify(function(error, success) {
+    if (error) {
+      console.error('[SMTP DEBUG] Errore connessione SMTP:', error);
+    } else {
+      console.log('[SMTP DEBUG] Connessione SMTP OK:', success);
     }
   });
   console.log('✅ Email transporter configurato');
