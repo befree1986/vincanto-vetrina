@@ -3371,8 +3371,8 @@ const AdminPanelPro = (): JSX.Element => {
                           <td><strong>#{booking.id}</strong></td>
                           <td>{booking.customer_name || booking.guestName || 'N/A'}</td>
                           <td>{booking.customer_email || booking.email || 'N/A'}</td>
-                          <td>{booking.check_in || booking.checkIn}</td>
-                          <td>{booking.check_out || booking.checkOut}</td>
+                          <td>{booking.check_in ? new Date(booking.check_in).toLocaleDateString('it-IT') : (booking.checkIn ? new Date(booking.checkIn).toLocaleDateString('it-IT') : 'N/A')}</td>
+                          <td>{booking.check_out ? new Date(booking.check_out).toLocaleDateString('it-IT') : (booking.checkOut ? new Date(booking.checkOut).toLocaleDateString('it-IT') : 'N/A')}</td>
                           <td>{booking.guests}</td>
                           <td>
                             <span className={`status ${booking.status}`}>
