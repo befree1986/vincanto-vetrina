@@ -9,6 +9,7 @@ jobs:
   sync-calendars:
     runs-on: ubuntu-latest
     steps:
-      - name: Chiamata endpoint di sync calendari
+      - name: Chiamata endpoint di sync calendari (DEV)
         run: |
-          curl -X POST "https://TUODOMINIO/api/calendar-real-sync"
+          # In produzione sostituire con https://vincantomaori.it/api/calendar-real-sync
+          curl -X POST "https://vincanto-vetrina.vercel.app/api/calendar-real-sync"
