@@ -1,12 +1,30 @@
 // API COMPLETAMENTE UNIFICATA - Vincanto System
 // Consolidation of all API endpoints in a single file
 import { Pool } from 'pg';
+import nodemailer from 'nodemailer';
 
 // Database connection
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
+
+// Email transporter configuration
+let emailTransporter = null;
+if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
+  emailTransporter = nodemailer.createTransporter({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT) || 587,
+    secure: false,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASSWORD
+    }
+  });
+  console.log('✅ Email transporter configurato');
+} else {
+  console.log('⚠️ Email transporter non configurato (variabili SMTP mancanti)');
+}
 
 // Controllo configurazione database
 if (!process.env.DATABASE_URL && !process.env.POSTGRES_URL) {
@@ -420,16 +438,42 @@ export default async function handler(req, res) {
             'pending'
           ]);
           
-          // 📧 Invia email di conferma (se configurata)
-          try {
-            // Configurazione nodemailer base (da implementare in production)
-            console.log('📧 Booking creato, invio email a:', bookingData.customerEmail || bookingData.email);
-            
-            // TODO: Implementare invio email con nodemailer
-            // const transporter = nodemailer.createTransporter(process.env.SMTP_CONFIG);
-            // await transporter.sendMail({ to: customerEmail, subject: "Conferma prenotazione Vincanto", html: emailTemplate });
-          } catch (emailError) {
-            console.warn('⚠️ Email non inviata:', emailError.message);
+          // 📧 Invia email di conferma
+          if (emailTransporter) {
+            try {
+              const emailHtml = `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                  <h2 style="color: #2c5282;">Conferma Prenotazione - Vincanto Maori</h2>
+                  <p>Gentile <strong>${firstName} ${lastName}</strong>,</p>
+                  <p>Grazie per la tua prenotazione! Ecco i dettagli:</p>
+                  <div style="background: #f7fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <p><strong>Codice Prenotazione:</strong> ${result.rows[0].booking_id}</p>
+                    <p><strong>Check-in:</strong> ${new Date(checkin).toLocaleDateString('it-IT')}</p>
+                    <p><strong>Check-out:</strong> ${new Date(checkout).toLocaleDateString('it-IT')}</p>
+                    <p><strong>Ospiti:</strong> ${guests} (${adults} adulti, ${children} bambini)</p>
+                    <p><strong>Totale:</strong> €${totalAmount.toFixed(2)}</p>
+                    <p><strong>Acconto richiesto:</strong> €${(totalAmount * 0.3).toFixed(2)}</p>
+                  </div>
+                  <p>Ti confermeremo la prenotazione entro 24 ore.</p>
+                  <p>Per qualsiasi domanda, contattaci a: <a href="mailto:${process.env.SMTP_FROM}">${process.env.SMTP_FROM}</a></p>
+                  <hr style="margin: 30px 0; border: none; border-top: 1px solid #e2e8f0;">
+                  <p style="font-size: 12px; color: #718096;">Vincanto Maori - Maiori (SA)<br>www.vincantomaori.it</p>
+                </div>
+              `;
+              
+              await emailTransporter.sendMail({
+                from: `"${process.env.SMTP_FROM_NAME || 'Vincanto Maori'}" <${process.env.SMTP_FROM}>`,
+                to: email,
+                subject: `Conferma Prenotazione ${result.rows[0].booking_id}`,
+                html: emailHtml
+              });
+              
+              console.log('✅ Email conferma inviata a:', email);
+            } catch (emailError) {
+              console.error('⚠️ Errore invio email:', emailError.message);
+            }
+          } else {
+            console.log('ℹ️ Email non configurata, skip invio');
           }
           
           return res.status(201).json({
