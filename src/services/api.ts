@@ -154,6 +154,13 @@ export async function getBookingQuote(data: BookingQuoteRequest): Promise<Bookin
  */
 export async function createBooking(data: CreateBookingRequest): Promise<CreateBookingResponse> {
     // 🔧 Adatta i dati per l'API backend
+    // Calcola il totale dal quote se disponibile
+    let totalPrice = 0;
+    if (typeof (data as any).quote === 'object' && (data as any).quote.totalAmount) {
+        totalPrice = (data as any).quote.totalAmount;
+    } else if ((data as any).totalPrice) {
+        totalPrice = (data as any).totalPrice;
+    }
     const adaptedData = {
         customerName: `${data.guest_name} ${data.guest_surname}`,
         customerEmail: data.guest_email,
@@ -164,7 +171,7 @@ export async function createBooking(data: CreateBookingRequest): Promise<CreateB
         adults: data.num_adults,
         children: data.num_children,
         specialRequests: data.guest_message,
-        totalPrice: 0 // Sarà calcolato dal backend
+        totalPrice
     };
     
     const response = await api.post('/unified?action=booking', adaptedData);
