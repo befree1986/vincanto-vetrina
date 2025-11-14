@@ -65,12 +65,26 @@ async function initializeTables() {
         unit VARCHAR(50) DEFAULT 'per_stay',
         active BOOLEAN DEFAULT true,
         included BOOLEAN DEFAULT false,
+        min_age INTEGER DEFAULT NULL,
+        max_age INTEGER DEFAULT NULL,
         sort_order INTEGER DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
     console.log('✅ Tabella extra_services inizializzata');
+
+    // 🔄 Aggiungi campi min_age e max_age se non esistono
+    try {
+      await pool.query(`
+        ALTER TABLE extra_services 
+        ADD COLUMN IF NOT EXISTS min_age INTEGER DEFAULT NULL,
+        ADD COLUMN IF NOT EXISTS max_age INTEGER DEFAULT NULL
+      `);
+      console.log('✅ Campi min_age e max_age aggiunti/verificati');
+    } catch (err) {
+      console.log('ℹ️ Campi min_age/max_age già esistenti o errore aggiunta:', err.message);
+    }
 
     // 🔄 Aggiungi campo included se non esiste (per aggiornare DB esistenti)
     try {
@@ -87,15 +101,15 @@ async function initializeTables() {
     const servicesCount = await pool.query('SELECT COUNT(*) FROM extra_services');
     if (parseInt(servicesCount.rows[0].count) === 0) {
       await pool.query(`
-        INSERT INTO extra_services (name, description, price, category, unit, active, included, sort_order) VALUES
-        ('Late Check-out', 'Check-out posticipato alle 14:00 invece delle 10:00', 30.00, 'convenience', 'per_stay', true, false, 1),
-        ('Early Check-in', 'Check-in anticipato dalle 12:00 invece delle 15:00', 25.00, 'convenience', 'per_stay', true, false, 2),
-        ('Pulizia Extra', 'Pulizia approfondita pre-arrivo con sanificazione', 50.00, 'cleaning', 'per_stay', true, false, 3),
-        ('Colazione Italiana', 'Colazione italiana completa con prodotti locali', 15.00, 'food', 'per_person_per_day', true, true, 4),
-        ('Transfer Aeroporto', 'Servizio transfer da/per Aeroporto di Palermo', 45.00, 'transport', 'per_stay', true, false, 5),
-        ('Culla per Bambini', 'Culla con biancheria per bambini fino a 3 anni', 30.00, 'bambini', 'per_stay', true, false, 6),
-        ('Parcheggio Privato Extra', 'Posto auto aggiuntivo nel parcheggio privato', 10.00, 'parking', 'per_night', false, false, 7),
-        ('Kit Welcome', 'Kit di benvenuto con prodotti tipici siciliani', 25.00, 'gift', 'per_stay', true, true, 8)
+        INSERT INTO extra_services (name, description, price, category, unit, active, included, min_age, max_age, sort_order) VALUES
+        ('Late Check-out', 'Check-out posticipato alle 14:00 invece delle 10:00', 30.00, 'convenience', 'per_stay', true, false, NULL, NULL, 1),
+        ('Early Check-in', 'Check-in anticipato dalle 12:00 invece delle 15:00', 25.00, 'convenience', 'per_stay', true, false, NULL, NULL, 2),
+        ('Pulizia Extra', 'Pulizia approfondita pre-arrivo con sanificazione', 50.00, 'cleaning', 'per_stay', true, false, NULL, NULL, 3),
+        ('Colazione Italiana', 'Colazione italiana completa con prodotti locali', 15.00, 'food', 'per_person_per_day', true, true, NULL, NULL, 4),
+        ('Transfer Aeroporto', 'Servizio transfer da/per Aeroporto di Palermo', 45.00, 'transport', 'per_stay', true, false, NULL, NULL, 5),
+        ('Culla per Bambini', 'Culla con biancheria per bambini 0-7 anni', 30.00, 'bambini', 'per_stay', true, false, 0, 7, 6),
+        ('Parcheggio Privato Extra', 'Posto auto aggiuntivo nel parcheggio privato', 10.00, 'parking', 'per_night', false, false, NULL, NULL, 7),
+        ('Kit Welcome', 'Kit di benvenuto con prodotti tipici siciliani', 25.00, 'gift', 'per_stay', true, true, NULL, NULL, 8)
       `);
       console.log('✅ Servizi extra di default inseriti');
     }
@@ -336,7 +350,50 @@ export default async function handler(req, res) {
         try {
           // Crea nuova prenotazione nel database
           const bookingData = req.body;
-          console.log('📝 Nuova prenotazione ricevuta:', bookingData);
+          console.log('📝 Nuova prenotazione ricevuta:', JSON.stringify(bookingData, null, 2));
+          
+          // 🔧 NORMALIZZAZIONE CAMPI: supporta entrambi i formati (checkin/check_in, customerName/first_name, etc)
+          const checkin = bookingData.checkin || bookingData.check_in;
+          const checkout = bookingData.checkout || bookingData.check_out;
+          const guests = bookingData.guests || (bookingData.adults || 0) + (bookingData.children || 0) || 1;
+          const adults = bookingData.adults || bookingData.guests || 1;
+          const children = bookingData.children || 0;
+          const email = bookingData.customerEmail || bookingData.email;
+          const phone = bookingData.customerPhone || bookingData.phone;
+          const totalAmount = bookingData.totalPrice || bookingData.total_amount || 0;
+          const notes = bookingData.specialRequests || bookingData.notes || '';
+          
+          // Parsing nome/cognome da customerName o campi separati
+          let firstName = 'Nome';
+          let lastName = 'Cognome';
+          
+          if (bookingData.customerName) {
+            const nameParts = bookingData.customerName.trim().split(' ');
+            firstName = nameParts[0] || 'Nome';
+            lastName = nameParts.slice(1).join(' ') || 'Cognome';
+          } else if (bookingData.first_name || bookingData.last_name) {
+            firstName = bookingData.first_name || 'Nome';
+            lastName = bookingData.last_name || 'Cognome';
+          }
+          
+          // 🔍 VALIDAZIONE DATI
+          if (!checkin || !checkout) {
+            console.error('❌ Date check-in/check-out mancanti:', { checkin, checkout });
+            return res.status(400).json({
+              success: false,
+              error: 'Date check-in e check-out obbligatorie'
+            });
+          }
+          
+          if (!email) {
+            console.error('❌ Email cliente mancante');
+            return res.status(400).json({
+              success: false,
+              error: 'Email cliente obbligatoria'
+            });
+          }
+          
+          console.log('✅ Dati normalizzati:', { checkin, checkout, guests, adults, children, firstName, lastName, email, phone, totalAmount });
           
           const result = await pool.query(`
             INSERT INTO bookings (
@@ -347,18 +404,18 @@ export default async function handler(req, res) {
             RETURNING *
           `, [
             `VIN${Date.now()}`,
-            bookingData.checkin || bookingData.check_in,
-            bookingData.checkout || bookingData.check_out,
-            bookingData.guests || 1,
-            bookingData.adults || bookingData.guests || 1,
-            bookingData.children || 0,
-            bookingData.customerName?.split(' ')[0] || bookingData.first_name || 'Nome',
-            bookingData.customerName?.split(' ').slice(1).join(' ') || bookingData.last_name || 'Cognome',
-            bookingData.customerEmail || bookingData.email,
-            bookingData.customerPhone || bookingData.phone,
-            bookingData.totalPrice || bookingData.total_amount || 0,
-            (bookingData.totalPrice || bookingData.total_amount || 0) * 0.3, // 30% acconto
-            bookingData.specialRequests || bookingData.notes || '',
+            checkin,
+            checkout,
+            guests,
+            adults,
+            children,
+            firstName,
+            lastName,
+            email,
+            phone,
+            totalAmount,
+            totalAmount * 0.3, // 30% acconto
+            notes,
             'pending',
             'pending'
           ]);
@@ -1241,7 +1298,7 @@ export default async function handler(req, res) {
           const result = await pool.query(`
             SELECT 
               id, name, description, price, category, unit, active, included,
-              sort_order, created_at, updated_at
+              min_age, max_age, sort_order, created_at, updated_at
             FROM extra_services 
             ORDER BY sort_order ASC, id ASC
           `);
@@ -1256,6 +1313,8 @@ export default async function handler(req, res) {
             unit: service.unit,
             active: service.active,
             included: service.included,
+            minAge: service.min_age, // 🔧 AGGIUNTO
+            maxAge: service.max_age, // 🔧 AGGIUNTO
             sortOrder: service.sort_order,
             createdAt: service.created_at?.toISOString(),
             updatedAt: service.updated_at?.toISOString()

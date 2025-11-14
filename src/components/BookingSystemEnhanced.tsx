@@ -154,8 +154,13 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
 
 // 🎯 Componente principale ottimizzato
 const BookingSystemEnhanced: React.FC = () => {
+    console.log('🔍 BookingSystemEnhanced: Componente inizializzato');
+    
     const { t } = useTranslation();
     const booking = useBooking();
+    
+    console.log('🔍 BookingSystemEnhanced: Booking hook caricato', booking);
+    
     const [currentStep, setCurrentStep] = useState(1);
     
     // 🛎️ Stati per servizi extra
@@ -164,6 +169,11 @@ const BookingSystemEnhanced: React.FC = () => {
 
     // 🔄 Calcolo del numero di notti
     const nights = useMemo(() => {
+        console.log('🔍 BookingSystemEnhanced: Calcolo notti', {
+            checkIn: booking.formData.check_in_date,
+            checkOut: booking.formData.check_out_date
+        });
+        
         if (booking.formData.check_in_date && booking.formData.check_out_date) {
             const checkIn = new Date(booking.formData.check_in_date);
             const checkOut = new Date(booking.formData.check_out_date);
