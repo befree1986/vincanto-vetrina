@@ -12,7 +12,7 @@ const pool = new Pool({
 // Email transporter configuration
 let emailTransporter = null;
 if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
-  emailTransporter = nodemailer.createTransporter({
+  emailTransporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: parseInt(process.env.SMTP_PORT) || 587,
     secure: false,
