@@ -1,0 +1,14 @@
+name: Sync Calendari Automatico
+
+on:
+  schedule:
+    - cron: '*/5 * * * *' # ogni 5 minuti (UTC)
+  workflow_dispatch: # permette di lanciare manualmente
+
+jobs:
+  sync-calendars:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Chiamata endpoint di sync calendari
+        run: |
+          curl -X POST "https://TUODOMINIO/api/calendar-real-sync"
