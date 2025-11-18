@@ -2,6 +2,20 @@
 import { ExtraService } from '../hooks/useExtraServices';
 
 class AdminApiService {
+    // Sincronizza tutti i calendari (API unificata)
+    async syncAllCalendars() {
+      try {
+        const response = await fetch('/api/calendar-real-sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        return await response.json();
+      } catch (error) {
+        console.error('❌ Errore syncAllCalendars:', error);
+        throw error;
+      }
+    }
   private readonly baseUrl: string;
 
   constructor() {
