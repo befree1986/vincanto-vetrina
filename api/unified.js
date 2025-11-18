@@ -615,25 +615,20 @@ export default async function handler(req, res) {
       if (req.method === 'POST') {
         try {
           const { amount, currency, bookingId, guestEmail } = req.body;
-          
-          // TODO: Integrazione Stripe reale
-          // const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-          // const paymentIntent = await stripe.paymentIntents.create({ amount: amount * 100, currency, metadata: { bookingId } });
-          
-          // Per ora restituisce una simulazione funzionale
-          const simulatedIntentId = `pi_${Date.now()}${Math.random().toString(36).substr(2, 9)}`;
-          
+          const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+          const paymentIntent = await stripe.paymentIntents.create({
+            amount: Math.round(amount * 100),
+            currency,
+            metadata: { bookingId, guestEmail }
+          });
           return res.status(200).json({
             success: true,
-            clientSecret: `${simulatedIntentId}_secret`,
-            paymentIntentId: simulatedIntentId,
-            amount: amount,
-            currency: currency,
-            status: 'requires_payment_method',
-            metadata: {
-              bookingId: bookingId,
-              guestEmail: guestEmail
-            }
+            clientSecret: paymentIntent.client_secret,
+            paymentIntentId: paymentIntent.id,
+            amount: paymentIntent.amount,
+            currency: paymentIntent.currency,
+            status: paymentIntent.status,
+            metadata: paymentIntent.metadata
           });
         } catch (error) {
           console.error('❌ Errore Stripe Payment Intent:', error);
