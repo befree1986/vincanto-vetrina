@@ -182,10 +182,13 @@ const BookingSystem: React.FC = () => {
             return;
         }
 
+        // DEBUG: mostra il metodo di pagamento selezionato
+        console.log('DEBUG payment_method:', formData.payment_method);
+
         try {
             const result = await submitBooking();
             setBookingResult(result);
-            
+
             if (formData.payment_method === 'bank_transfer') {
                 setCurrentStep('confirmation');
             } else {
