@@ -181,6 +181,21 @@ const AdminPanelPro = (): JSX.Element => {
     });
   }, [analytics]);
   
+  const handleForceRealCalendarSync = async () => {
+    if (!adminApiService) return;
+    setIsLoadingCalendars(true);
+    try {
+      await adminApiService.forceRealCalendarSync();
+      await loadCalendarConfigs();
+      alert('✅ Sincronizzazione completata!');
+    } catch (error) {
+      alert('❌ Errore durante la sincronizzazione');
+      console.error(error);
+    } finally {
+      setIsLoadingCalendars(false);
+    }
+  };
+  
   // === AUTENTICAZIONE ===
   const handleLogin = async () => {
     devLog('🔐 Tentativo di login...');
@@ -2639,6 +2654,15 @@ const AdminPanelPro = (): JSX.Element => {
                   disabled={isLoadingCalendars}
                 >
                   🔄 Ricarica
+                </button>
+                {/* Bottone per sync manuale reale */}
+                <button
+                  className="admin-btn admin-btn-warning"
+                  style={{ marginLeft: 8 }}
+                  onClick={handleForceRealCalendarSync}
+                  disabled={isLoadingCalendars}
+                >
+                  {isLoadingCalendars ? '⏳ Sync Reale...' : '⚡ Sincronizza Calendari Ora'}
                 </button>
               </div>
               

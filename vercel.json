@@ -33,6 +33,10 @@
       "destination": "/api/unified.js?action=sync-calendars"
     },
     {
+      "source": "/api/create-payment-intent",
+      "destination": "/api/create-payment-intent.js"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/unified.js?action=$1"
     },
