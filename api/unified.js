@@ -161,6 +161,24 @@ async function initializeTables() {
 initializeTables();
 
 export default async function handler(req, res) {
+      // Restituisce tutti gli eventi da calendar_events (per unificazione prenotazioni)
+      if (action === 'calendar-events') {
+        try {
+          const eventsResult = await pool.query(`
+            SELECT id, uid, calendar_source, summary, description, start_date, end_date, location, is_demo, created_at, updated_at
+            FROM calendar_events
+            WHERE start_date >= NOW() - INTERVAL '1 year'
+            ORDER BY start_date ASC
+          `);
+          return res.status(200).json({
+            success: true,
+            events: eventsResult.rows
+          });
+        } catch (error) {
+          console.error('❌ Errore fetch calendar_events:', error.message);
+          return res.status(500).json({ success: false, error: error.message });
+        }
+      }
   // CORS Headers - Setup universale
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');

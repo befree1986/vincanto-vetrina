@@ -2,6 +2,16 @@
 import { ExtraService } from '../hooks/useExtraServices';
 
 class AdminApiService {
+      // Recupera eventi da calendar_events (eventi iCal esterni)
+      async getCalendarEvents() {
+        try {
+          const data = await this.request('calendar-events');
+          return data.events || [];
+        } catch (error) {
+          console.error('Error fetching calendar events:', error);
+          return [];
+        }
+      }
     // Sincronizza tutti i calendari (API unificata)
     async syncAllCalendars() {
       try {

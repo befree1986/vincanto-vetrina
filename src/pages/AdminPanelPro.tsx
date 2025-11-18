@@ -18,6 +18,7 @@ const AdminPanelPro = (): JSX.Element => {
   
   // Stati per prenotazioni e pagamenti (solo backend reale)
   const [recentBookings, setRecentBookings] = useState<any[]>([]);
+  const [calendarEvents, setCalendarEvents] = useState<any[]>([]); // Eventi iCal esterni
   const [paymentTransactions, setPaymentTransactions] = useState<any[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(false);
   
@@ -1004,6 +1005,16 @@ const AdminPanelPro = (): JSX.Element => {
         setRecentBookings(bookings || []);
       } catch (err) {
         console.error('❌ Errore prenotazioni:', err);
+      }
+
+      // Carica eventi iCal esterni
+      try {
+        const events = await adminApiService.getCalendarEvents();
+        console.log('✅ Eventi iCal esterni caricati:', events);
+        setCalendarEvents(events || []);
+      } catch (err) {
+        console.error('❌ Errore eventi iCal:', err);
+        setCalendarEvents([]);
       }
 
       try {
@@ -2206,6 +2217,35 @@ const AdminPanelPro = (): JSX.Element => {
   devLog('🎯 Rendering main admin panel...');
   
   // === RENDER ADMIN PANEL RESPONSIVE ===
+  // Unifica bookings e calendarEvents per la tabella
+  const unifiedBookings = [
+    ...realBookings.map(b => ({
+      id: b.id || b.booking_id,
+      source: b.platform || b.source || 'manual',
+      guestName: b.customer_name || b.guestName || '',
+      email: b.customer_email || b.email || '',
+      checkIn: b.check_in || b.checkIn,
+      checkOut: b.check_out || b.checkOut,
+      guests: b.guests,
+      totalPrice: b.total_amount || b.totalPrice,
+      status: b.status,
+      type: 'booking',
+    })),
+    ...calendarEvents.map(e => ({
+      id: e.id || e.uid,
+      source: e.calendar_source || 'ical',
+      guestName: e.summary || '(Evento iCal)',
+      email: '',
+      checkIn: e.start_date,
+      checkOut: e.end_date,
+      guests: '',
+      totalPrice: '',
+      status: 'imported',
+      type: 'calendar_event',
+      isDemo: e.is_demo,
+    }))
+  ];
+
   return (
     <div className="admin-panel-pro admin-container">
       {/* Header Responsive */}
@@ -2416,48 +2456,47 @@ const AdminPanelPro = (): JSX.Element => {
 
             {/* Prossime Prenotazioni */}
             <div className="admin-mb-xl">
-              <h3>📅 Prossime Prenotazioni</h3>
+              <h3>📅 Prossime Prenotazioni & Eventi iCal</h3>
               <div className="admin-card">
                 <div className="admin-table-container">
-                  {calendarEvents.length > 0 ? (
+                  {unifiedBookings.length > 0 ? (
                     <table className="admin-table">
                       <thead>
                         <tr>
-                          <th>Evento</th>
+                          <th>Evento / Ospite</th>
                           <th>Data</th>
                           <th>Piattaforma</th>
                           <th>Prezzo</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {calendarEvents.slice(0, 5).map((event, index) => (
-                          <tr key={event.id || index}>
-                            <td><strong>{event.title}</strong></td>
-                            <td>{new Date(event.start).toLocaleDateString('it-IT')}</td>
+                        {unifiedBookings.slice(0, 10).map((item, index) => (
+                          <tr key={item.id || index} className={item.type === 'calendar_event' ? 'admin-row-ical' : ''}>
+                            <td><strong>{item.guestName}</strong>{item.isDemo && <span className="admin-badge admin-badge-warning ml-2">DEMO</span>}</td>
+                            <td>{item.checkIn ? new Date(item.checkIn).toLocaleDateString('it-IT') : '-'}</td>
                             <td>
-                              <span className={`admin-badge admin-badge-${event.source === 'airbnb' ? 'info' : event.source === 'booking' ? 'success' : 'warning'}`}>
-                                {event.source === 'airbnb' && '🏠 Airbnb'}
-                                {event.source === 'booking' && '🏨 Booking.com'}
-                                {event.source === 'expedia' && '✈️ Expedia'}
-                                {event.source === 'direct' && '📞 Diretto'}
-                                {event.source === 'other' && '📅 Altro'}
+                              <span className={`admin-badge admin-badge-${item.source === 'airbnb' ? 'info' : item.source === 'booking' ? 'success' : item.source === 'ical' ? 'warning' : 'default'}`}>
+                                {item.source === 'airbnb' && '🏠 Airbnb'}
+                                {item.source === 'booking' && '🏨 Booking.com'}
+                                {item.source === 'ical' && '📅 iCal'}
+                                {item.source === 'manual' && '✍️ Manuale'}
+                                {item.source !== 'airbnb' && item.source !== 'booking' && item.source !== 'ical' && item.source !== 'manual' && item.source}
                               </span>
                             </td>
-                            <td><strong>€{event.totalPrice}</strong></td>
+                            <td><strong>{item.totalPrice ? `€${item.totalPrice}` : '-'}</strong></td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   ) : (
                     <div className="admin-text-center admin-text-muted">
-                      <p>📊 Nessuna prenotazione trovata nel calendario Google</p>
+                      <p>📊 Nessuna prenotazione o evento iCal trovato</p>
                     </div>
                   )}
                 </div>
-                
                 <div className="admin-flex admin-gap-md admin-mb-0 admin-mt-lg">
-                  <button className="admin-btn admin-btn-secondary" onClick={() => loadCalendarData()}>
-                    🔄 Ricarica Calendario
+                  <button className="admin-btn admin-btn-secondary" onClick={() => loadRealApiData()}>
+                    🔄 Ricarica Dati
                   </button>
                   <button className="admin-btn-secondary" onClick={() => setActiveTab('calendari')}>
                     📅 Gestisci Calendari
@@ -2657,8 +2696,7 @@ const AdminPanelPro = (): JSX.Element => {
                 </button>
                 {/* Bottone per sync manuale reale */}
                 <button
-                  className="admin-btn admin-btn-warning"
-                  style={{ marginLeft: 8 }}
+                  className="admin-btn admin-btn-warning admin-ml-2"
                   onClick={handleForceRealCalendarSync}
                   disabled={isLoadingCalendars}
                 >
