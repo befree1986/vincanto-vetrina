@@ -146,7 +146,7 @@ async function initializeTables() {
         ('Pulizia Extra', 'Pulizia approfondita pre-arrivo con sanificazione', 50.00, 'cleaning', 'per_stay', true, false, NULL, NULL, 3),
         ('Colazione Italiana', 'Colazione italiana completa con prodotti locali', 15.00, 'food', 'per_person_per_day', true, true, NULL, NULL, 4),
         ('Transfer Aeroporto', 'Servizio transfer da/per Aeroporto di Palermo', 45.00, 'transport', 'per_stay', true, false, NULL, NULL, 5),
-        ('Culla per Bambini', 'Culla con biancheria per bambini 0-7 anni', 30.00, 'bambini', 'per_stay', true, false, 0, 7, 6),
+        ('Culla per Bambini', 'Culla con biancheria per bambini 0-6 anni', 30.00, 'bambini', 'per_stay', true, false, 0, 7, 6),
         ('Parcheggio Privato Extra', 'Posto auto aggiuntivo nel parcheggio privato', 10.00, 'parking', 'per_night', false, false, NULL, NULL, 7),
         ('Kit Welcome', 'Kit di benvenuto con prodotti tipici siciliani', 25.00, 'gift', 'per_stay', true, true, NULL, NULL, 8)
       `);
