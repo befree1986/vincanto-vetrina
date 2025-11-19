@@ -32,8 +32,8 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: booking.formData.payment_type === 'deposit'
-            ? Math.round(booking.quote.totalAmount * 0.3 * 100)
-            : Math.round(booking.quote.totalAmount * 100),
+            ? Math.round(booking.quote.totalAmount * 0.3 * 100) / 100
+            : Math.round(booking.quote.totalAmount * 100) / 100,
           customer_email: booking.formData.guest_email,
           customer_name: booking.formData.guest_name + ' ' + booking.formData.guest_surname
         })
