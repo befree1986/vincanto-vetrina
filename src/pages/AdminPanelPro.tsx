@@ -1261,8 +1261,7 @@ const AdminPanelPro = (): JSX.Element => {
 
   // === GESTIONE CALENDARIO ===
   
-  // Stati per eventi calendario (legacy - ora usati per la dashboard)
-  const [calendarEvents, setCalendarEvents] = useState<any[]>([]);
+
 
   const loadCalendarData = async () => {
     try {
@@ -1270,7 +1269,7 @@ const AdminPanelPro = (): JSX.Element => {
       
       // Carica prenotazioni dal sistema per mostrare nel calendario
       const bookings = await adminApiService.getBookings() || [];
-      setCalendarEvents(bookings);
+
       
     } catch (error) {
       console.error('Errore caricamento calendario:', error);

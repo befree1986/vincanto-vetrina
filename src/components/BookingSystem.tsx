@@ -161,17 +161,14 @@ const BookingSystem: React.FC = () => {
 
     const handleDateSelection = async (checkIn: Date | null, checkOut: Date | null) => {
         if (!checkIn || !checkOut) return;
-        
-        // 🔥 ATTIVA SCROLL LOCK
         setIsTransitioning(true);
-        
-        // Aggiorna le date nel form - il preventivo verrà calcolato automaticamente tramite useEffect
         setFormData({
             check_in_date: checkIn,
             check_out_date: checkOut
         });
-        
-        // Cambio step senza scroll
+        // Blocco scroll automatico: forzo lo scroll in alto (o dove vuoi tu) solo se necessario
+        // window.scrollTo({ top: 0, behavior: 'auto' }); // decommenta se vuoi forzare in alto
+        setTimeout(() => setIsTransitioning(false), 100); // reset transizione
         setCurrentStep('details');
     };
 
@@ -182,15 +179,14 @@ const BookingSystem: React.FC = () => {
             return;
         }
 
-        // DEBUG: mostra il metodo di pagamento selezionato
-        console.log('DEBUG payment_method:', formData.payment_method);
-
         try {
             const result = await submitBooking();
             setBookingResult(result);
 
             if (formData.payment_method === 'bank_transfer') {
                 setCurrentStep('confirmation');
+                // Reset automatico dopo 4 secondi
+                setTimeout(() => startNewBooking(), 4000);
             } else {
                 setShowPayment(true);
                 setCurrentStep('payment');
@@ -204,6 +200,8 @@ const BookingSystem: React.FC = () => {
         setBookingResult((prev: any) => ({ ...prev, ...result }));
         setCurrentStep('confirmation');
         setShowPayment(false);
+        // Reset automatico dopo 4 secondi
+        setTimeout(() => startNewBooking(), 4000);
     };
 
     const startNewBooking = () => {
