@@ -161,6 +161,15 @@ async function initializeTables() {
 initializeTables();
 
 export default async function handler(req, res) {
+        // Endpoint di health check DB
+        if (req.query.action === 'db-health') {
+          try {
+            await pool.query('SELECT 1');
+            return res.status(200).json({ success: true, message: 'DB OK' });
+          } catch (err) {
+            return res.status(500).json({ success: false, error: err.message });
+          }
+        }
       // Restituisce tutti gli eventi da calendar_events (per unificazione prenotazioni)
       if (action === 'calendar-events') {
         try {
