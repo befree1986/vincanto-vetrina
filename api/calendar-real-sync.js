@@ -332,7 +332,7 @@ export class RealCalendarSync {
           start_date TIMESTAMP NOT NULL,
           end_date TIMESTAMP NOT NULL,
           location TEXT,
-          is_demo BOOLEAN DEFAULT FALSE,
+          /* is_demo BOOLEAN DEFAULT FALSE, */
           created_at TIMESTAMP DEFAULT NOW(),
           updated_at TIMESTAMP DEFAULT NOW()
         )
@@ -344,8 +344,8 @@ export class RealCalendarSync {
           const eventUid = event.uid || `${calendarSource}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
           
           const result = await pool.query(`
-            INSERT INTO calendar_events (uid, calendar_source, summary, description, start_date, end_date, location, is_demo)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            INSERT INTO calendar_events (uid, calendar_source, summary, description, start_date, end_date, location)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
             ON CONFLICT (uid) 
             DO UPDATE SET 
               summary = EXCLUDED.summary,
@@ -362,8 +362,7 @@ export class RealCalendarSync {
             event.description || '',
             event.start,
             event.end,
-            event.location || '',
-            true // Demo events
+            event.location || ''
           ]);
 
           if (result.rowCount > 0) savedCount++;

@@ -205,7 +205,7 @@ export default async function handler(req, res) {
   if (action === 'calendar-events') {
     try {
       const eventsResult = await pool.query(`
-        SELECT id, uid, calendar_source, summary, description, start_date, end_date, location, is_demo, created_at, updated_at
+        SELECT id, uid, calendar_source, summary, description, start_date, end_date, location, created_at, updated_at
         FROM calendar_events
         WHERE start_date >= NOW() - INTERVAL '1 year'
         ORDER BY start_date ASC
