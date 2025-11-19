@@ -1,3 +1,16 @@
+/* Bottone submit Stripe con margine superiore */
+.stripe-submit-btn {
+  margin-top: 16px;
+}
+/* Blocchi pagamento uniformi per Stripe/PayPal */
+.payment-block {
+  margin: 32px 0;
+}
+
+.payment-form-wrapper {
+  max-width: 400px;
+  margin: 0 auto;
+}
 /* 📝 BookingSteps - Step 2 e 3 del sistema di prenotazione */
 
 /* 📋 Form dati personali - Design Moderno */

@@ -2,242 +2,63 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useBooking } from '../hooks/useBooking';
 import { getSafeTranslation } from '../i18n';
-import { devLog, isDevelopment } from '../utils/debug';
+import StripePaymentForm from './StripePaymentForm';
+import PayPalPaymentButton from './PayPalPaymentButton';
 import './BookingSteps.css';
 
-// 📝 Step 2: Dati Personali
-interface BookingStep2Props {
-  booking?: any; // Oggetto booking passato dal parent
-  onNext: () => void;
+type BookingStep3Props = {
+  booking?: any;
   onBack: () => void;
-}
-
-export const BookingStep2: React.FC<BookingStep2Props> = ({ booking: propBooking, onNext, onBack }) => {
-  const { t } = useTranslation();
-  const defaultBooking = useBooking();
-  const booking = propBooking || defaultBooking; // Usa il booking passato come prop o fallback
-  const [errors, setErrors] = useState<string[]>([]);
-
-  const validateForm = () => {
-    const newErrors: string[] = [];
-    
-    if (!booking.formData.guest_name.trim()) {
-      newErrors.push('Il nome è obbligatorio');
-    }
-    
-    if (!booking.formData.guest_surname.trim()) {
-      newErrors.push('Il cognome è obbligatorio');
-    }
-    
-    if (!booking.formData.guest_email.trim()) {
-      newErrors.push('L\'email è obbligatoria');
-    } else if (!/\S+@\S+\.\S+/.test(booking.formData.guest_email)) {
-      newErrors.push('Inserisci un\'email valida');
-    }
-    
-    if (!booking.formData.guest_phone.trim()) {
-      newErrors.push('Il telefono è obbligatorio');
-    }
-    
-    setErrors(newErrors);
-    return newErrors.length === 0;
-  };
-
-  const handleNext = () => {
-    if (validateForm()) {
-      onNext();
-    }
-  };
-
-  return (
-    <div className="booking-step">
-      <div className="step-header">
-        <h3>
-          <span className="step-icon">📝</span>
-          {getSafeTranslation(t, 'booking.step2.title', 'Dati Personali')}
-        </h3>
-        <p>{getSafeTranslation(t, 'booking.step2.subtitle', 'I tuoi dati per la prenotazione')}</p>
-      </div>
-
-      <div className="personal-data-form">
-        <div className="form-grid">
-          <div className="form-group">
-            <label htmlFor="guest_name">
-              <span className="icon">👤</span>
-              Nome *
-            </label>
-            <input
-              id="guest_name"
-              type="text"
-              value={booking.formData.guest_name}
-              onChange={(e) => booking.setFormData({ guest_name: e.target.value })}
-              placeholder="Inserisci il tuo nome"
-              className={errors.some(e => e.includes('nome')) ? 'error' : ''}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="guest_surname">
-              <span className="icon">👤</span>
-              Cognome *
-            </label>
-            <input
-              id="guest_surname"
-              type="text"
-              value={booking.formData.guest_surname}
-              onChange={(e) => booking.setFormData({ guest_surname: e.target.value })}
-              placeholder="Inserisci il tuo cognome"
-              className={errors.some(e => e.includes('cognome')) ? 'error' : ''}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="guest_email">
-              <span className="icon">📧</span>
-              Email *
-            </label>
-            <input
-              id="guest_email"
-              type="email"
-              value={booking.formData.guest_email}
-              onChange={(e) => booking.setFormData({ guest_email: e.target.value })}
-              placeholder="inserisci@email.com"
-              className={errors.some(e => e.includes('email')) ? 'error' : ''}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="guest_phone">
-              <span className="icon">📱</span>
-              Telefono *
-            </label>
-            <input
-              id="guest_phone"
-              type="tel"
-              value={booking.formData.guest_phone}
-              onChange={(e) => booking.setFormData({ guest_phone: e.target.value })}
-              placeholder="+39 333 1234567"
-              className={errors.some(e => e.includes('telefono')) ? 'error' : ''}
-              required
-            />
-          </div>
-        </div>
-
-        <div className="form-group full-width">
-          <label htmlFor="guest_message">
-            <span className="icon">💬</span>
-            Messaggio aggiuntivo (opzionale)
-          </label>
-          <textarea
-            id="guest_message"
-            value={booking.formData.guest_message}
-            onChange={(e) => booking.setFormData({ guest_message: e.target.value })}
-            placeholder="Hai richieste particolari? Scrivici qui..."
-            rows={4}
-          />
-        </div>
-
-        {errors.length > 0 && (
-          <div className="error-messages">
-            {errors.map((error, index) => (
-              <div key={index} className="error-message">
-                <span className="icon">⚠️</span>
-                {error}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="booking-navigation">
-        <button 
-          type="button" 
-          onClick={onBack}
-          className="btn btn-secondary"
-        >
-          <span className="icon">⬅️</span>
-          {getSafeTranslation(t, 'booking.navigation.back', 'Indietro')}
-        </button>
-        
-        <button 
-          type="button" 
-          onClick={handleNext}
-          className="btn btn-primary"
-        >
-          {getSafeTranslation(t, 'booking.navigation.next', 'Continua')}
-          <span className="icon">➡️</span>
-        </button>
-      </div>
-    </div>
-  );
 };
 
-// 💳 Step 3: Pagamento
-interface BookingStep3Props {
-  booking?: any; // Oggetto booking passato dal parent
-  onBack: () => void;
-}
-
-export const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBack }) => {
+const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBack }) => {
   const { t } = useTranslation();
   const defaultBooking = useBooking();
-  const booking = propBooking || defaultBooking; // Usa il booking passato come prop o fallback
+  const booking = propBooking || defaultBooking;
   const [isProcessing, setIsProcessing] = useState(false);
-  
-  // 🔍 DEBUG: Log dei dati per verificare il problema del riepilogo vuoto
+  const [stripeClientSecret, setStripeClientSecret] = useState<string | null>(null);
+  const [stripeError, setStripeError] = useState<string | null>(null);
+  const [stripeSuccess, setStripeSuccess] = useState(false);
+  const [paypalSuccess, setPaypalSuccess] = useState(false);
+  const [paypalError, setPaypalError] = useState<string | null>(null);
+
   React.useEffect(() => {
-    devLog('📋 BOOKING STEP 3 DEBUG:', {
-      formData: booking.formData,
-      quote: booking.quote,
-      hasName: !!booking.formData.guest_name,
-      hasEmail: !!booking.formData.guest_email,
-      hasCheckIn: !!booking.formData.check_in_date,
-      hasCheckOut: !!booking.formData.check_out_date
-    });
-  }, [booking.formData, booking.quote]);
-
-  const handleConfirmBooking = async () => {
-    setIsProcessing(true);
-    try {
-      // Se PayPal è selezionato, apri il link diretto
-      if (booking.formData.payment_method === 'paypal') {
-        const depositAmount = booking.quote?.totalAmount 
-          ? (booking.formData.payment_type === 'deposit' 
-             ? booking.quote.totalAmount * 0.30 
-             : booking.quote.totalAmount)
-          : 0;
-        
-        const paypalUrl = `https://www.paypal.me/AntonioGuida320/${depositAmount.toFixed(2)}EUR`;
-        
-        // Apri PayPal in una nuova finestra
-        window.open(paypalUrl, '_blank');
-        
-        // Procedi comunque con la prenotazione per salvarla nel sistema
-        await booking.submitBooking();
-        
-        // Mostra messaggio di successo con istruzioni PayPal
-        alert(`
-🎉 Prenotazione confermata! 
-
-💳 PayPal: La finestra di pagamento si è aperta automaticamente.
-📧 Riceverai conferma via email una volta completato il pagamento.
-💰 Importo da pagare: €${depositAmount.toFixed(2)}
-
-📞 Per assistenza: contatta Antonio Guida
-        `.trim());
-      } else {
-        await booking.submitBooking();
-        alert('🎉 Prenotazione confermata! Riceverai una email di conferma.');
-      }
-    } catch (error) {
-      console.error('Errore nella prenotazione:', error);
-      alert('❌ Errore durante la prenotazione. Riprova o contatta il supporto.');
-    } finally {
-      setIsProcessing(false);
+    if (booking.formData.payment_method === 'stripe' && booking.quote && !stripeClientSecret) {
+      setIsProcessing(true);
+      setStripeError(null);
+      fetch('/api/stripe/create-payment-intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: booking.formData.payment_type === 'deposit'
+            ? Math.round(booking.quote.totalAmount * 0.3 * 100)
+            : Math.round(booking.quote.totalAmount * 100),
+          customer_email: booking.formData.guest_email,
+          customer_name: booking.formData.guest_name + ' ' + booking.formData.guest_surname
+        })
+      })
+        .then(res => res.json())
+        .then(data => setStripeClientSecret(data.clientSecret))
+        .catch(() => setStripeError('Errore nel recupero del pagamento Stripe.'))
+        .finally(() => setIsProcessing(false));
     }
+  }, [booking.formData.payment_method, booking.quote, booking.formData.payment_type, booking.formData.guest_email, booking.formData.guest_name, booking.formData.guest_surname, stripeClientSecret]);
+
+  const handleStripeSuccess = () => {
+    setStripeSuccess(true);
+    setStripeError(null);
+  };
+  const handlePayPalSuccess = () => {
+    setPaypalSuccess(true);
+    setPaypalError(null);
+  };
+  const handlePayPalError = (err: string) => {
+    setPaypalError(err);
+  };
+  const handleConfirmBooking = () => {
+    setIsProcessing(true);
+    // ...logica di conferma prenotazione...
+    setIsProcessing(false);
   };
 
   return (
@@ -249,215 +70,43 @@ export const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking
         </h3>
         <p>{getSafeTranslation(t, 'booking.step3.subtitle', 'Conferma la tua prenotazione')}</p>
       </div>
-
-      <div className="payment-section">
-        <div className="booking-summary">
-          <h4>
-            <span className="icon">📋</span>
-            Riepilogo Prenotazione
-          </h4>
-          
-          {/* 🔍 DEBUG: Verifica presenza dati con debug dettagliato */}
-          {(!booking.formData.guest_name?.trim() || !booking.formData.guest_email?.trim() || !booking.formData.check_in_date || !booking.formData.check_out_date) ? (
-            <div className="summary-error">
-              <p>⚠️ Dati incompleti. Torna ai passaggi precedenti per completare:</p>
-              <ul>
-                {!booking.formData.guest_name?.trim() && <li>Nome ospite mancante</li>}
-                {!booking.formData.guest_surname?.trim() && <li>Cognome ospite mancante</li>}
-                {!booking.formData.guest_email?.trim() && <li>Email mancante</li>}
-                {!booking.formData.guest_phone?.trim() && <li>Telefono mancante</li>}
-                {!booking.formData.check_in_date && <li>Data check-in mancante</li>}
-                {!booking.formData.check_out_date && <li>Data check-out mancante</li>}
-              </ul>
-              {isDevelopment && (
-                <div className="debug-data booking-debug-info">
-                  <strong>🔍 Debug Info:</strong><br/>
-                  Nome: "{booking.formData.guest_name}"<br/>
-                  Cognome: "{booking.formData.guest_surname}"<br/>
-                  Email: "{booking.formData.guest_email}"<br/>
-                  Telefono: "{booking.formData.guest_phone}"<br/>
-                  Check-in: {booking.formData.check_in_date?.toString() || 'null'}<br/>
-                  Check-out: {booking.formData.check_out_date?.toString() || 'null'}<br/>
-                  Quote disponibile: {!!booking.quote ? 'Sì' : 'No'}
-                </div>
-              )}
-              <button onClick={onBack} className="btn-secondary booking-back-btn">
-                ← Torna Indietro
-              </button>
-            </div>
-          ) : (
-            <div className="summary-details">
-              <div className="summary-item">
-                <span className="label">Ospite:</span>
-                <span className="value">
-                  {booking.formData.guest_name} {booking.formData.guest_surname}
-                </span>
-              </div>
-              
-              <div className="summary-item">
-                <span className="label">Email:</span>
-                <span className="value">{booking.formData.guest_email}</span>
-              </div>
-              
-              <div className="summary-item">
-                <span className="label">Check-in:</span>
-                <span className="value">
-                  {booking.formData.check_in_date?.toLocaleDateString('it-IT')}
-                </span>
-              </div>
-              
-              <div className="summary-item">
-                <span className="label">Check-out:</span>
-                <span className="value">
-                  {booking.formData.check_out_date?.toLocaleDateString('it-IT')}
-                </span>
-              </div>
-              
-              <div className="summary-item">
-                <span className="label">Ospiti:</span>
-                <span className="value">
-                  {booking.formData.num_adults} adulti
-                  {booking.formData.num_children > 0 && 
-                    `, ${booking.formData.num_children} bambini`
-                  }
-                </span>
-              </div>
-              
-              {/* Mostra preventivo se disponibile */}
-              {booking.quote && (
-                <>
-                  <div className="summary-separator"></div>
-                  <div className="summary-item">
-                    <span className="label">Notti:</span>
-                    <span className="value">{booking.quote.nights}</span>
-                  </div>
-                  <div className="summary-item total">
-                    <span className="label">Totale:</span>
-                    <span className="value">€{booking.quote.totalAmount?.toFixed(2)}</span>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="payment-methods">
-          <h4>
-            <span className="icon">💳</span>
-            Metodo di Pagamento
-          </h4>
-          
-          <div className="payment-options">
-            <label className="payment-option">
-              <input
-                type="radio"
-                name="payment_method"
-                value="stripe"
-                checked={booking.formData.payment_method === 'stripe'}
-                onChange={(e) => booking.setFormData({ payment_method: e.target.value as any })}
+      <div className="payment-methods">
+        {/* Stripe Elements */}
+        {booking.formData.payment_method === 'stripe' && stripeClientSecret && !stripeSuccess && (
+          <div className="payment-block">
+            <h4>Paga con carta</h4>
+            <div className="payment-form-wrapper">
+              <StripePaymentForm
+                clientSecret={stripeClientSecret}
+                onSuccess={handleStripeSuccess}
+                onError={setStripeError}
               />
-              <div className="payment-method-content">
-                <span className="icon">💳</span>
-                <div className="method-info">
-                  <span className="method-name">Carta di Credito/Debito</span>
-                  <span className="method-description">Pagamento sicuro con Stripe</span>
-                </div>
-              </div>
-            </label>
-
-            <label className="payment-option">
-              <input
-                type="radio"
-                name="payment_method"
-                value="paypal"
-                checked={booking.formData.payment_method === 'paypal'}
-                onChange={(e) => booking.setFormData({ payment_method: e.target.value as any })}
-              />
-              <div className="payment-method-content">
-                <span className="icon">💙</span>
-                <div className="method-info">
-                  <span className="method-name">PayPal</span>
-                  <span className="method-description">
-                    Pagamento sicuro e immediato
-                  </span>
-                </div>
-              </div>
-            </label>
-
-            <label className="payment-option">
-              <input
-                type="radio"
-                name="payment_method"
-                value="bank_transfer"
-                checked={booking.formData.payment_method === 'bank_transfer'}
-                onChange={(e) => booking.setFormData({ payment_method: e.target.value as any })}
-              />
-              <div className="payment-method-content">
-                <span className="icon">🏦</span>
-                <div className="method-info">
-                  <span className="method-name">Bonifico Bancario</span>
-                  <span className="method-description">Riceverai le coordinate via email</span>
-                </div>
-              </div>
-            </label>
-          </div>
-        </div>
-
-        {/* Informazioni PayPal specifiche - NASCOSTE PER RICHIESTA UTENTE */}
-        {booking.formData.payment_method === 'paypal' && (
-          <div className="payment-info-section">
-            <div className="paypal-info">
-              <div className="paypal-note">
-                <small>
-                  💡 <strong>Nota:</strong> Il pagamento PayPal si aprirà automaticamente quando confermi la prenotazione.
-                </small>
-              </div>
             </div>
+            {stripeError && <div className="error-message"><span className="icon">⚠️</span> {stripeError}</div>}
           </div>
         )}
-
-        <div className="payment-type">
-          <h4>
-            <span className="icon">💰</span>
-            Tipo di Pagamento
-          </h4>
-          
-          <div className="payment-type-options">
-            <label className="payment-type-option">
-              <input
-                type="radio"
-                name="payment_type"
-                value="deposit"
-                checked={booking.formData.payment_type === 'deposit'}
-                onChange={(e) => booking.setFormData({ payment_type: e.target.value as any })}
+        {stripeSuccess && (
+          <div className="success-message"><span className="icon">✅</span> Pagamento completato! Prenotazione in corso...</div>
+        )}
+        {/* PayPal Button */}
+        {booking.formData.payment_method === 'paypal' && !paypalSuccess && (
+          <div className="payment-block">
+            <h4>Paga con PayPal</h4>
+            <div className="payment-form-wrapper">
+              <PayPalPaymentButton
+                amount={booking.formData.payment_type === 'deposit' && booking.quote ? booking.quote.totalAmount * 0.3 : (booking.quote?.totalAmount || 0)}
+                currency="EUR"
+                onSuccess={handlePayPalSuccess}
+                onError={handlePayPalError}
               />
-              <div className="type-content">
-                <span className="type-name">Acconto (30%)</span>
-                <span className="type-description">
-                  Paga ora l'acconto, il resto al check-in
-                </span>
-              </div>
-            </label>
-
-            <label className="payment-type-option">
-              <input
-                type="radio"
-                name="payment_type"
-                value="full"
-                checked={booking.formData.payment_type === 'full'}
-                onChange={(e) => booking.setFormData({ payment_type: e.target.value as any })}
-              />
-              <div className="type-content">
-                <span className="type-name">Pagamento Completo</span>
-                <span className="type-description">
-                  Paga l'intero importo ora
-                </span>
-              </div>
-            </label>
+            </div>
+            {paypalError && <div className="error-message"><span className="icon">⚠️</span> {paypalError}</div>}
           </div>
-        </div>
+        )}
+        {paypalSuccess && (
+          <div className="success-message"><span className="icon">✅</span> Pagamento completato! Prenotazione in corso...</div>
+        )}
       </div>
-
       <div className="booking-navigation">
         <button 
           type="button" 
@@ -468,26 +117,31 @@ export const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking
           <span className="icon">⬅️</span>
           {getSafeTranslation(t, 'booking.navigation.back', 'Indietro')}
         </button>
-        
-        <button 
-          type="button" 
-          onClick={handleConfirmBooking}
-          className="btn btn-primary btn-confirm"
-          disabled={isProcessing}
-        >
-          {isProcessing ? (
-            <>
-              <span className="loading-spinner">⏳</span>
-              Elaborazione...
-            </>
-          ) : (
-            <>
-              {getSafeTranslation(t, 'booking.navigation.confirm', 'Conferma Prenotazione')}
-              <span className="icon">✅</span>
-            </>
-          )}
-        </button>
+        {/* Mostra il bottone conferma solo se non Stripe, Stripe lo gestisce dal form */}
+        {booking.formData.payment_method !== 'stripe' && (
+          <button 
+            type="button" 
+            onClick={handleConfirmBooking}
+            className="btn btn-primary btn-confirm"
+            disabled={isProcessing || (!stripeSuccess && !paypalSuccess)}
+          >
+            {isProcessing ? (
+              <>
+                <span className="loading-spinner">⏳</span>
+                Elaborazione...
+              </>
+            ) : (
+              <>
+                {getSafeTranslation(t, 'booking.navigation.confirm', 'Conferma Prenotazione')}
+                <span className="icon">✅</span>
+              </>
+            )}
+          </button>
+        )}
       </div>
     </div>
   );
 };
+
+export default BookingStep3;
+export { BookingStep3 };

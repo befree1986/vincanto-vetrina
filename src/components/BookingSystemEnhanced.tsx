@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useBooking } from '../hooks/useBooking';
 import AvailabilityCalendar from './AvailabilityCalendar';
-import { BookingStep2, BookingStep3 } from './BookingSteps';
+import { BookingStep3 } from './BookingSteps';
 import ExtraServices from './ExtraServices';
 import './BookingSystemEnhanced.css';
 import { getSafeTranslation } from '../i18n';
@@ -519,12 +519,39 @@ const BookingSystemEnhanced: React.FC = () => {
                 )}
 
                 {/* Step 3: Dati Personali */}
+                {/* Step 3: Dati Personali */}
                 {currentStep === 3 && (
-                    <BookingStep2 
-                        booking={booking}
-                        onNext={() => setCurrentStep(4)}
-                        onBack={() => setCurrentStep(2)}
-                    />
+                    <div className="booking-step step-personal">
+                        <div className="step-header">
+                            <h3>
+                                <span className="step-icon">📝</span>
+                                {getSafeTranslation(t, 'booking.step2.title', 'Dati Personali')}
+                            </h3>
+                            <p>{getSafeTranslation(t, 'booking.step2.subtitle', 'Inserisci i tuoi dati personali per la prenotazione')}</p>
+                        </div>
+                        {/* Qui puoi inserire il form dati personali custom o un placeholder */}
+                        <div className="personal-form-placeholder">
+                            <p>Form dati personali da implementare.</p>
+                        </div>
+                        <div className="step-navigation">
+                            <button 
+                                type="button"
+                                onClick={() => setCurrentStep(2)}
+                                className="btn btn-secondary"
+                            >
+                                <span className="icon">⬅️</span>
+                                {getSafeTranslation(t, 'booking.navigation.back', 'Indietro')}
+                            </button>
+                            <button 
+                                type="button"
+                                onClick={() => setCurrentStep(4)}
+                                className="btn btn-primary"
+                            >
+                                {getSafeTranslation(t, 'booking.navigation.next', 'Continua')}
+                                <span className="icon">➡️</span>
+                            </button>
+                        </div>
+                    </div>
                 )}
 
                 {/* Step 4: Pagamento */}
