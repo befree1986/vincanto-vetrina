@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useBooking } from '../hooks/useBooking';
 import AvailabilityCalendar from './AvailabilityCalendar';
-import { BookingStep3 } from './BookingSteps';
+import BookingStep3WithStripe from './BookingStep3WithStripe';
 import ExtraServices from './ExtraServices';
 import './BookingSystemEnhanced.css';
 import { getSafeTranslation } from '../i18n';
@@ -627,7 +627,7 @@ const BookingSystemEnhanced: React.FC = () => {
 
                 {/* Step 4: Pagamento */}
                 {currentStep === 4 && (
-                    <BookingStep3 
+                    <BookingStep3WithStripe 
                         booking={booking}
                         onBack={() => setCurrentStep(3)}
                     />
