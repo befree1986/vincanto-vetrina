@@ -26,7 +26,7 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
     if (booking.formData.payment_method === 'stripe' && booking.quote && !stripeClientSecret) {
       setIsProcessing(true);
       setStripeError(null);
-      fetch('/api/stripe/create-payment-intent', {
+      fetch('/api/create-payment-intent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
