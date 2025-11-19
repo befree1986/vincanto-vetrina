@@ -99,15 +99,24 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
                                 <span className="icon">🛎️</span>
                                 Servizi Extra
                             </div>
-                            {selectedExtraServices.map(service => (
-                                <div key={service.id} className="breakdown-item extra-service">
-                                    <span className="item-label">
-                                        <span className="icon">✨</span>
-                                        {service.name}
-                                    </span>
-                                    <span className="item-value">€{service.price.toFixed(2)}</span>
-                                </div>
-                            ))}
+                                                        {selectedExtraServices.map(service => (
+                                                                <div key={service.id} className="breakdown-item extra-service">
+                                                                        <span className="item-label">
+                                                                                <span className="icon">✨</span>
+                                                                                {service.name}
+                                                                        </span>
+                                                                        <span className="item-value">
+                                                                            {service.included ? (
+                                                                                <>
+                                                                                    <span className="service-price-crossed">€{service.price.toFixed(2)}</span>
+                                                                                    <span className="service-included">INCLUSO</span>
+                                                                                </>
+                                                                            ) : (
+                                                                                <>€{service.price.toFixed(2)}</>
+                                                                            )}
+                                                                        </span>
+                                                                </div>
+                                                        ))}
                         </>
                     )}
                 </div>

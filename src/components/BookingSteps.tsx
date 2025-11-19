@@ -61,6 +61,13 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
     setIsProcessing(false);
   };
 
+  // Calcolo importi
+  const quote = booking.quote;
+  const total = quote ? quote.totalAmount : 0;
+  const deposit = Math.round(total * 0.3 * 100) / 100;
+  const saldo = Math.round((total - deposit) * 100) / 100;
+  const isDeposit = booking.formData.payment_type === 'deposit';
+
   return (
     <div className="booking-step">
       <div className="step-header">
@@ -70,6 +77,82 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
         </h3>
         <p>{getSafeTranslation(t, 'booking.step3.subtitle', 'Conferma la tua prenotazione')}</p>
       </div>
+
+      {/* Riepilogo importi */}
+      <div className="payment-summary">
+        <div className="summary-row">
+          <span>Totale soggiorno:</span>
+          <span><strong>€{total.toFixed(2)}</strong></span>
+        </div>
+        <div className="summary-row">
+          <span>Acconto (30%):</span>
+          <span>€{deposit.toFixed(2)}</span>
+        </div>
+        <div className="summary-row">
+          <span>Saldo al check-in:</span>
+          <span>€{saldo.toFixed(2)}</span>
+        </div>
+      </div>
+
+      {/* Scelta acconto/totale */}
+      <div className="payment-choice">
+        <label>
+          <input
+            type="radio"
+            name="payment_type"
+            value="deposit"
+            checked={booking.formData.payment_type === 'deposit'}
+            onChange={() => booking.setFormData({ payment_type: 'deposit' })}
+          />
+          Acconto 30% ora, saldo al check-in
+        </label>
+        <label className="ml-24">
+          <input
+            type="radio"
+            name="payment_type"
+            value="full"
+            checked={booking.formData.payment_type === 'full'}
+            onChange={() => booking.setFormData({ payment_type: 'full' })}
+          />
+          Paga l'intero importo ora
+        </label>
+      </div>
+
+      {/* Scelta metodo di pagamento */}
+      <div className="payment-choice">
+        <label>
+          <input
+            type="radio"
+            name="payment_method"
+            value="stripe"
+            checked={booking.formData.payment_method === 'stripe'}
+            onChange={() => booking.setFormData({ payment_method: 'stripe' })}
+          />
+          Carta di credito (Stripe)
+        </label>
+        <label className="ml-24">
+          <input
+            type="radio"
+            name="payment_method"
+            value="paypal"
+            checked={booking.formData.payment_method === 'paypal'}
+            onChange={() => booking.setFormData({ payment_method: 'paypal' })}
+          />
+          PayPal
+        </label>
+        <label className="ml-24">
+          <input
+            type="radio"
+            name="payment_method"
+            value="bank_transfer"
+            checked={booking.formData.payment_method === 'bank_transfer'}
+            onChange={() => booking.setFormData({ payment_method: 'bank_transfer' })}
+          />
+          Bonifico bancario
+        </label>
+      </div>
+
+      {/* Sezione pagamento effettivo */}
       <div className="payment-methods">
         {/* Stripe Elements */}
         {booking.formData.payment_method === 'stripe' && stripeClientSecret && !stripeSuccess && (
@@ -94,7 +177,7 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
             <h4>Paga con PayPal</h4>
             <div className="payment-form-wrapper">
               <PayPalPaymentButton
-                amount={booking.formData.payment_type === 'deposit' && booking.quote ? booking.quote.totalAmount * 0.3 : (booking.quote?.totalAmount || 0)}
+                amount={isDeposit && booking.quote ? booking.quote.totalAmount * 0.3 : (booking.quote?.totalAmount || 0)}
                 currency="EUR"
                 onSuccess={handlePayPalSuccess}
                 onError={handlePayPalError}
@@ -106,7 +189,24 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
         {paypalSuccess && (
           <div className="success-message"><span className="icon">✅</span> Pagamento completato! Prenotazione in corso...</div>
         )}
+
+        {/* Bonifico bancario */}
+        {booking.formData.payment_method === 'bank_transfer' && (
+          <div className="payment-block">
+            <h4>Dati per Bonifico Bancario</h4>
+            <div className="bank-details">
+              <p><strong>Intestatario:</strong> Vincanto Srl</p>
+              <p><strong>IBAN:</strong> IT00X0000000000000000000000</p>
+              <p><strong>Causale:</strong> Prenotazione {booking.formData.guest_name} {booking.formData.guest_surname} - {booking.formData.check_in_date ? new Date(booking.formData.check_in_date).toLocaleDateString('it-IT') : ''}</p>
+              <p><strong>Importo da versare:</strong> €{isDeposit ? deposit.toFixed(2) : total.toFixed(2)}</p>
+            </div>
+            <div className="info-message info-mt-12">
+              Dopo aver effettuato il bonifico, invia la ricevuta a <a href="mailto:info@vincantomaori.it">info@vincantomaori.it</a> per confermare la prenotazione.
+            </div>
+          </div>
+        )}
       </div>
+
       <div className="booking-navigation">
         <button 
           type="button" 
@@ -118,12 +218,12 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
           {getSafeTranslation(t, 'booking.navigation.back', 'Indietro')}
         </button>
         {/* Mostra il bottone conferma solo se non Stripe, Stripe lo gestisce dal form */}
-        {booking.formData.payment_method !== 'stripe' && (
+        {booking.formData.payment_method === 'bank_transfer' && (
           <button 
             type="button" 
             onClick={handleConfirmBooking}
             className="btn btn-primary btn-confirm"
-            disabled={isProcessing || (!stripeSuccess && !paypalSuccess)}
+            disabled={isProcessing}
           >
             {isProcessing ? (
               <>
