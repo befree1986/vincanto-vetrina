@@ -170,24 +170,6 @@ export default async function handler(req, res) {
             return res.status(500).json({ success: false, error: err.message });
           }
         }
-      // Restituisce tutti gli eventi da calendar_events (per unificazione prenotazioni)
-      if (action === 'calendar-events') {
-        try {
-          const eventsResult = await pool.query(`
-            SELECT id, uid, calendar_source, summary, description, start_date, end_date, location, is_demo, created_at, updated_at
-            FROM calendar_events
-            WHERE start_date >= NOW() - INTERVAL '1 year'
-            ORDER BY start_date ASC
-          `);
-          return res.status(200).json({
-            success: true,
-            events: eventsResult.rows
-          });
-        } catch (error) {
-          console.error('❌ Errore fetch calendar_events:', error.message);
-          return res.status(500).json({ success: false, error: error.message });
-        }
-      }
   // CORS Headers - Setup universale
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -210,13 +192,35 @@ export default async function handler(req, res) {
     });
   }
 
-  // Ottieni action da query params o body
+
+  // Ottieni action da query params o body (dichiarazione UNA SOLA VOLTA)
   let { action } = req.query;
   if (req.method === 'POST' && req.body && req.body.action) {
     action = req.body.action;
   }
 
   console.log('🎯 API UNIFICATA CONSOLIDATA - Action:', action, 'Method:', req.method);
+
+  // Restituisce tutti gli eventi da calendar_events (per unificazione prenotazioni)
+  if (action === 'calendar-events') {
+    try {
+      const eventsResult = await pool.query(`
+        SELECT id, uid, calendar_source, summary, description, start_date, end_date, location, is_demo, created_at, updated_at
+        FROM calendar_events
+        WHERE start_date >= NOW() - INTERVAL '1 year'
+        ORDER BY start_date ASC
+      `);
+      return res.status(200).json({
+        success: true,
+        events: eventsResult.rows
+      });
+    } catch (error) {
+      console.error('❌ Errore fetch calendar_events:', error.message);
+      return res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  // ...continua con la logica esistente senza ridichiarare 'action'
 
   try {
     // ========================================
