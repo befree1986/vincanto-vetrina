@@ -21,6 +21,7 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
   const [stripeSuccess, setStripeSuccess] = useState(false);
   const [paypalSuccess, setPaypalSuccess] = useState(false);
   const [paypalError, setPaypalError] = useState<string | null>(null);
+  const [bookingConfirmed, setBookingConfirmed] = useState(false);
 
   React.useEffect(() => {
     if (booking.formData.payment_method === 'stripe' && booking.quote && !stripeClientSecret) {
@@ -47,6 +48,7 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
   const handleStripeSuccess = () => {
     setStripeSuccess(true);
     setStripeError(null);
+    handleConfirmBooking();
   };
   const handlePayPalSuccess = () => {
     setPaypalSuccess(true);
@@ -59,6 +61,7 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
     setIsProcessing(true);
     // ...logica di conferma prenotazione...
     setIsProcessing(false);
+    setBookingConfirmed(true); 
   };
 
   // Calcolo importi
@@ -67,6 +70,15 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
   const deposit = Math.round(total * 0.3 * 100) / 100;
   const saldo = Math.round((total - deposit) * 100) / 100;
   const isDeposit = booking.formData.payment_type === 'deposit';
+
+  if (bookingConfirmed) {
+    return (
+      <div className="booking-confirmed-message">
+        <h2>{getSafeTranslation(t, 'booking.confirmed', 'Prenotazione confermata!')}</h2>
+        <p>{getSafeTranslation(t, 'booking.thank_you', 'Grazie per aver prenotato con noi.')}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="booking-step payment-step-box">

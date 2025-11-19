@@ -1,3 +1,33 @@
+/* Conferma prenotazione - stile visivo */
+.booking-confirmed-message {
+  background: #f6ffed;
+  border: 2px solid #52c41a;
+  border-radius: 16px;
+  padding: 48px 32px;
+  margin: 32px auto;
+  max-width: 420px;
+  text-align: center;
+  box-shadow: 0 4px 24px rgba(82,196,26,0.08);
+}
+.booking-confirmed-message h2 {
+  color: #389e0d;
+  font-size: 2rem;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.booking-confirmed-message h2::before {
+  content: '✅';
+  font-size: 2.2rem;
+  display: inline-block;
+}
+.booking-confirmed-message p {
+  color: #237804;
+  font-size: 1.15rem;
+  margin-bottom: 0;
+}
 .btn-pay-margin {
   margin-top: 16px;
 }
