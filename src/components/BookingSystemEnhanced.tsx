@@ -529,28 +529,90 @@ const BookingSystemEnhanced: React.FC = () => {
                             </h3>
                             <p>{getSafeTranslation(t, 'booking.step2.subtitle', 'Inserisci i tuoi dati personali per la prenotazione')}</p>
                         </div>
-                        {/* Qui puoi inserire il form dati personali custom o un placeholder */}
-                        <div className="personal-form-placeholder">
-                            <p>Form dati personali da implementare.</p>
-                        </div>
-                        <div className="step-navigation">
-                            <button 
-                                type="button"
-                                onClick={() => setCurrentStep(2)}
-                                className="btn btn-secondary"
-                            >
-                                <span className="icon">⬅️</span>
-                                {getSafeTranslation(t, 'booking.navigation.back', 'Indietro')}
-                            </button>
-                            <button 
-                                type="button"
-                                onClick={() => setCurrentStep(4)}
-                                className="btn btn-primary"
-                            >
-                                {getSafeTranslation(t, 'booking.navigation.next', 'Continua')}
-                                <span className="icon">➡️</span>
-                            </button>
-                        </div>
+                        <form
+                            className="personal-form"
+                            onSubmit={e => {
+                                e.preventDefault();
+                                setCurrentStep(4);
+                            }}
+                        >
+                            <div className="form-group">
+                                <label htmlFor="guest_name">Nome</label>
+                                <input
+                                    id="guest_name"
+                                    type="text"
+                                    value={booking.formData.guest_name || ''}
+                                    onChange={e => booking.setFormData({ guest_name: e.target.value })}
+                                    required
+                                    placeholder="Mario"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="guest_surname">Cognome</label>
+                                <input
+                                    id="guest_surname"
+                                    type="text"
+                                    value={booking.formData.guest_surname || ''}
+                                    onChange={e => booking.setFormData({ guest_surname: e.target.value })}
+                                    required
+                                    placeholder="Rossi"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="guest_email">Email</label>
+                                <input
+                                    id="guest_email"
+                                    type="email"
+                                    value={booking.formData.guest_email || ''}
+                                    onChange={e => booking.setFormData({ guest_email: e.target.value })}
+                                    required
+                                    placeholder="mario.rossi@email.com"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="guest_phone">Telefono</label>
+                                <input
+                                    id="guest_phone"
+                                    type="tel"
+                                    value={booking.formData.guest_phone || ''}
+                                    onChange={e => booking.setFormData({ guest_phone: e.target.value })}
+                                    required
+                                    placeholder="+39 333 1234567"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="special_requests">Note (opzionale)</label>
+                                <textarea
+                                    id="special_requests"
+                                    value={booking.formData.special_requests || ''}
+                                    onChange={e => booking.setFormData({ special_requests: e.target.value })}
+                                    placeholder="Richieste particolari, allergie, orari..."
+                                />
+                            </div>
+                            <div className="step-navigation">
+                                <button
+                                    type="button"
+                                    onClick={() => setCurrentStep(2)}
+                                    className="btn btn-secondary"
+                                >
+                                    <span className="icon">⬅️</span>
+                                    {getSafeTranslation(t, 'booking.navigation.back', 'Indietro')}
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="btn btn-primary"
+                                    disabled={
+                                        !booking.formData.guest_name ||
+                                        !booking.formData.guest_surname ||
+                                        !booking.formData.guest_email ||
+                                        !booking.formData.guest_phone
+                                    }
+                                >
+                                    {getSafeTranslation(t, 'booking.navigation.next', 'Continua')}
+                                    <span className="icon">➡️</span>
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 )}
 

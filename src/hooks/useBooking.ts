@@ -27,6 +27,7 @@ export interface BookingFormData {
     payment_method: 'stripe' | 'paypal' | 'bank_transfer';
     payment_type: 'deposit' | 'full';
     guest_message: string;
+    special_requests?: string;
 }
 
 export interface BookingState {
@@ -81,7 +82,8 @@ const initialFormData: BookingFormData = {
     parking_option: 'none',
     payment_method: 'stripe',
     payment_type: 'deposit',
-    guest_message: ''
+    guest_message: '',
+    special_requests: ''
 };
 
 export function useBooking(): BookingState {
