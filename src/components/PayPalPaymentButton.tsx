@@ -24,21 +24,22 @@ const PayPalPaymentButton: React.FC<PayPalPaymentButtonProps> = ({ amount, curre
   }, [amount, currency]);
 
   function renderButton() {
-    if (!window.paypal || !paypalRef.current) return;
-    window.paypal.Buttons({
-      createOrder: (data: any, actions: any) => {
-        return actions.order.create({
-          purchase_units: [{ amount: { value: amount.toFixed(2) } }]
-        });
-      },
-      onApprove: async (data: any, actions: any) => {
-        const details = await actions.order.capture();
-        onSuccess(details.id);
-      },
-      onError: (err: any) => {
-        onError(err.message || 'Errore PayPal');
-      }
-    }).render(paypalRef.current);
+    if (typeof window !== 'undefined' && window.paypal && paypalRef.current) {
+      (window.paypal as any).Buttons({
+        createOrder: (_data: any, actions: any) => {
+          return actions.order.create({
+            purchase_units: [{ amount: { value: amount.toFixed(2) } }]
+          });
+        },
+        onApprove: async (_data: any, actions: any) => {
+          const details = await actions.order.capture();
+          onSuccess(details.id);
+        },
+        onError: (err: any) => {
+          onError(err.message || 'Errore PayPal');
+        }
+      }).render(paypalRef.current);
+    }
   }
 
   return <div ref={paypalRef} />;

@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { useBooking } from '../hooks/useBooking';
 import { getSafeTranslation } from '../i18n';
 import StripePaymentForm from './StripePaymentForm';
-import PayPalPaymentButton from './PayPalPaymentButton';
 import './BookingSteps.css';
+import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 
 type BookingStep3Props = {
   booking?: any;
@@ -185,12 +185,27 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
           <div className="payment-block">
             <h4>Paga con PayPal</h4>
             <div className="payment-form-wrapper">
-              <PayPalPaymentButton
-                amount={isDeposit && booking.quote ? booking.quote.totalAmount * 0.3 : (booking.quote?.totalAmount || 0)}
-                currency="EUR"
-                onSuccess={handlePayPalSuccess}
-                onError={handlePayPalError}
-              />
+              <PayPalScriptProvider options={{ "client-id": process.env.REACT_APP_PAYPAL_CLIENT_ID || '', clientId: process.env.REACT_APP_PAYPAL_CLIENT_ID || '', currency: 'EUR' }}>
+                <PayPalButtons
+                  createOrder={(_data, actions) => {
+                    return actions.order.create({
+                      intent: 'CAPTURE',
+                      purchase_units: [{
+                        amount: {
+                          value: (isDeposit && booking.quote ? (booking.quote.totalAmount * 0.3) : (booking.quote?.totalAmount || 0)).toFixed(2),
+                          currency_code: 'EUR'
+                        }
+                      }]
+                    });
+                  }}
+                  onApprove={(_data, actions) => {
+                    return actions.order!.capture().then((_details: any) => {
+                      handlePayPalSuccess();
+                    });
+                  }}
+                  onError={(err: any) => handlePayPalError(err?.message || 'Errore PayPal')}
+                />
+              </PayPalScriptProvider>
             </div>
             {paypalError && <div className="error-message"><span className="icon">⚠️</span> {paypalError}</div>}
             <button
