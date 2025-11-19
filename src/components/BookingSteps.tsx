@@ -69,17 +69,16 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
   const isDeposit = booking.formData.payment_type === 'deposit';
 
   return (
-    <div className="booking-step">
-      <div className="step-header">
-        <h3>
-          <span className="step-icon">💳</span>
-          {getSafeTranslation(t, 'booking.step3.title', 'Pagamento')}
-        </h3>
-        <p>{getSafeTranslation(t, 'booking.step3.subtitle', 'Conferma la tua prenotazione')}</p>
+    <div className="booking-step payment-step-box">
+      <div className="payment-header">
+        <span className="step-icon">💳</span>
+        <div>
+          <h3>{getSafeTranslation(t, 'booking.step3.title', 'Pagamento')}</h3>
+          <p>{getSafeTranslation(t, 'booking.step3.subtitle', 'Conferma la tua prenotazione')}</p>
+        </div>
       </div>
 
-      {/* Riepilogo importi */}
-      <div className="payment-summary">
+      <div className="payment-summary-box">
         <div className="summary-row">
           <span>Totale soggiorno:</span>
           <span><strong>€{total.toFixed(2)}</strong></span>
@@ -94,68 +93,66 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
         </div>
       </div>
 
-      {/* Scelta acconto/totale */}
-      <div className="payment-choice">
-        <label>
-          <input
-            type="radio"
-            name="payment_type"
-            value="deposit"
-            checked={booking.formData.payment_type === 'deposit'}
-            onChange={() => booking.setFormData({ payment_type: 'deposit' })}
-          />
-          Acconto 30% ora, saldo al check-in
-        </label>
-        <label className="ml-24">
-          <input
-            type="radio"
-            name="payment_type"
-            value="full"
-            checked={booking.formData.payment_type === 'full'}
-            onChange={() => booking.setFormData({ payment_type: 'full' })}
-          />
-          Paga l'intero importo ora
-        </label>
+      <div className="payment-choice-box">
+        <div className="payment-choice-group">
+          <label>
+            <input
+              type="radio"
+              name="payment_type"
+              value="deposit"
+              checked={booking.formData.payment_type === 'deposit'}
+              onChange={() => booking.setFormData({ payment_type: 'deposit' })}
+            />
+            Acconto 30% ora, saldo al check-in
+          </label>
+          <label className="ml-24">
+            <input
+              type="radio"
+              name="payment_type"
+              value="full"
+              checked={booking.formData.payment_type === 'full'}
+              onChange={() => booking.setFormData({ payment_type: 'full' })}
+            />
+            Paga l'intero importo ora
+          </label>
+        </div>
+        <div className="payment-choice-group">
+          <label>
+            <input
+              type="radio"
+              name="payment_method"
+              value="stripe"
+              checked={booking.formData.payment_method === 'stripe'}
+              onChange={() => booking.setFormData({ payment_method: 'stripe' })}
+            />
+            Carta di credito (Stripe)
+          </label>
+          <label className="ml-24">
+            <input
+              type="radio"
+              name="payment_method"
+              value="paypal"
+              checked={booking.formData.payment_method === 'paypal'}
+              onChange={() => booking.setFormData({ payment_method: 'paypal' })}
+            />
+            PayPal
+          </label>
+          <label className="ml-24">
+            <input
+              type="radio"
+              name="payment_method"
+              value="bank_transfer"
+              checked={booking.formData.payment_method === 'bank_transfer'}
+              onChange={() => booking.setFormData({ payment_method: 'bank_transfer' })}
+            />
+            Bonifico bancario
+          </label>
+        </div>
       </div>
 
-      {/* Scelta metodo di pagamento */}
-      <div className="payment-choice">
-        <label>
-          <input
-            type="radio"
-            name="payment_method"
-            value="stripe"
-            checked={booking.formData.payment_method === 'stripe'}
-            onChange={() => booking.setFormData({ payment_method: 'stripe' })}
-          />
-          Carta di credito (Stripe)
-        </label>
-        <label className="ml-24">
-          <input
-            type="radio"
-            name="payment_method"
-            value="paypal"
-            checked={booking.formData.payment_method === 'paypal'}
-            onChange={() => booking.setFormData({ payment_method: 'paypal' })}
-          />
-          PayPal
-        </label>
-        <label className="ml-24">
-          <input
-            type="radio"
-            name="payment_method"
-            value="bank_transfer"
-            checked={booking.formData.payment_method === 'bank_transfer'}
-            onChange={() => booking.setFormData({ payment_method: 'bank_transfer' })}
-          />
-          Bonifico bancario
-        </label>
-      </div>
-
-      {/* Sezione pagamento effettivo */}
       <div className="payment-methods">
-        {/* Stripe Elements */}
-        {booking.formData.payment_method === 'stripe' && stripeClientSecret && !stripeSuccess && (
+        {/* Stripe Elements: mostra sempre se selezionato e c'è un preventivo */}
+        {booking.formData.payment_method === 'stripe' && booking.quote && stripeClientSecret && !stripeSuccess && (
           <div className="payment-block">
             <h4>Paga con carta</h4>
             <div className="payment-form-wrapper">
