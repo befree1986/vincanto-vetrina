@@ -94,59 +94,48 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
       </div>
 
       <div className="payment-choice-box">
-        <div className="payment-choice-group">
-          <label>
-            <input
-              type="radio"
-              name="payment_type"
-              value="deposit"
-              checked={booking.formData.payment_type === 'deposit'}
-              onChange={() => booking.setFormData({ payment_type: 'deposit' })}
-            />
+        <div className="payment-choice-btn-group">
+          <button
+            type="button"
+            className={`choice-btn${booking.formData.payment_type === 'deposit' ? ' active' : ''}`}
+            onClick={() => booking.setFormData({ payment_type: 'deposit' })}
+          >
             Acconto 30% ora, saldo al check-in
-          </label>
-          <label className="ml-24">
-            <input
-              type="radio"
-              name="payment_type"
-              value="full"
-              checked={booking.formData.payment_type === 'full'}
-              onChange={() => booking.setFormData({ payment_type: 'full' })}
-            />
+          </button>
+          <button
+            type="button"
+            className={`choice-btn${booking.formData.payment_type === 'full' ? ' active' : ''}`}
+            onClick={() => {
+              booking.setFormData({ payment_type: 'full' });
+              // Logica: azzera acconto se si paga tutto
+              if (typeof booking.setDeposit === 'function') booking.setDeposit(0);
+            }}
+          >
             Paga l'intero importo ora
-          </label>
+          </button>
         </div>
-        <div className="payment-choice-group">
-          <label>
-            <input
-              type="radio"
-              name="payment_method"
-              value="stripe"
-              checked={booking.formData.payment_method === 'stripe'}
-              onChange={() => booking.setFormData({ payment_method: 'stripe' })}
-            />
+        <div className="payment-choice-btn-group">
+          <button
+            type="button"
+            className={`choice-btn${booking.formData.payment_method === 'stripe' ? ' active' : ''}`}
+            onClick={() => booking.setFormData({ payment_method: 'stripe' })}
+          >
             Carta di credito (Stripe)
-          </label>
-          <label className="ml-24">
-            <input
-              type="radio"
-              name="payment_method"
-              value="paypal"
-              checked={booking.formData.payment_method === 'paypal'}
-              onChange={() => booking.setFormData({ payment_method: 'paypal' })}
-            />
+          </button>
+          <button
+            type="button"
+            className={`choice-btn${booking.formData.payment_method === 'paypal' ? ' active' : ''}`}
+            onClick={() => booking.setFormData({ payment_method: 'paypal' })}
+          >
             PayPal
-          </label>
-          <label className="ml-24">
-            <input
-              type="radio"
-              name="payment_method"
-              value="bank_transfer"
-              checked={booking.formData.payment_method === 'bank_transfer'}
-              onChange={() => booking.setFormData({ payment_method: 'bank_transfer' })}
-            />
+          </button>
+          <button
+            type="button"
+            className={`choice-btn${booking.formData.payment_method === 'bank_transfer' ? ' active' : ''}`}
+            onClick={() => booking.setFormData({ payment_method: 'bank_transfer' })}
+          >
             Bonifico bancario
-          </label>
+          </button>
         </div>
       </div>
 
@@ -163,6 +152,17 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
               />
             </div>
             {stripeError && <div className="error-message"><span className="icon">⚠️</span> {stripeError}</div>}
+            <button
+              type="button"
+              className="btn btn-primary btn-pay btn-pay-margin"
+              onClick={() => {
+                const btn = document.querySelector('.StripePaymentForm button[type=submit]') as HTMLButtonElement | null;
+                btn?.click();
+              }}
+              disabled={isProcessing}
+            >
+              {isProcessing ? 'Elaborazione...' : 'Effettua pagamento'}
+            </button>
           </div>
         )}
         {stripeSuccess && (
@@ -181,6 +181,17 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
               />
             </div>
             {paypalError && <div className="error-message"><span className="icon">⚠️</span> {paypalError}</div>}
+            <button
+              type="button"
+              className="btn btn-primary btn-pay btn-pay-margin"
+              onClick={() => {
+                const btn = document.querySelector('.paypal-buttons button') as HTMLButtonElement | null;
+                btn?.click();
+              }}
+              disabled={isProcessing}
+            >
+              {isProcessing ? 'Elaborazione...' : 'Effettua pagamento'}
+            </button>
           </div>
         )}
         {paypalSuccess && (
@@ -200,6 +211,14 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
             <div className="info-message info-mt-12">
               Dopo aver effettuato il bonifico, invia la ricevuta a <a href="mailto:info@vincantomaori.it">info@vincantomaori.it</a> per confermare la prenotazione.
             </div>
+            <button
+              type="button"
+              className="btn btn-primary btn-confirm btn-pay-margin"
+              onClick={handleConfirmBooking}
+              disabled={isProcessing}
+            >
+              {isProcessing ? 'Elaborazione...' : 'Conferma prenotazione'}
+            </button>
           </div>
         )}
       </div>
@@ -214,27 +233,6 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
           <span className="icon">⬅️</span>
           {getSafeTranslation(t, 'booking.navigation.back', 'Indietro')}
         </button>
-        {/* Mostra il bottone conferma solo se non Stripe, Stripe lo gestisce dal form */}
-        {booking.formData.payment_method === 'bank_transfer' && (
-          <button 
-            type="button" 
-            onClick={handleConfirmBooking}
-            className="btn btn-primary btn-confirm"
-            disabled={isProcessing}
-          >
-            {isProcessing ? (
-              <>
-                <span className="loading-spinner">⏳</span>
-                Elaborazione...
-              </>
-            ) : (
-              <>
-                {getSafeTranslation(t, 'booking.navigation.confirm', 'Conferma Prenotazione')}
-                <span className="icon">✅</span>
-              </>
-            )}
-          </button>
-        )}
       </div>
     </div>
   );

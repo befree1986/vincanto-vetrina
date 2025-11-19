@@ -1,3 +1,40 @@
+.btn-pay-margin {
+  margin-top: 16px;
+}
+/* Pulsanti scelta pagamento/acconto */
+.payment-choice-btn-group {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+.choice-btn {
+  background: #f7fafc;
+  border: 1.5px solid #e2e8f0;
+  color: #2d3748;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.choice-btn.active, .choice-btn:focus {
+  background: #667eea;
+  color: #fff;
+  border-color: #667eea;
+  font-weight: 600;
+}
+.btn-pay {
+  width: 100%;
+  margin-top: 12px;
+  font-size: 1.1rem;
+  padding: 12px 0;
+}
+.btn-confirm {
+  width: 100%;
+  margin-top: 12px;
+  font-size: 1.1rem;
+  padding: 12px 0;
+}
 /* Box step pagamento coerente con UI */
 .payment-step-box {
   background: #fff;
