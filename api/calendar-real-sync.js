@@ -1,6 +1,8 @@
+
 // Modulo per gestione iCal e sincronizzazione calendari reali
 // Supporta parsing iCal da Airbnb, Booking.com, VRBO
 // e integrazione con Google Calendar API
+import { Pool } from 'pg';
 
 /**
  * Classe per gestire sincronizzazione calendario reale
@@ -301,10 +303,8 @@ export class RealCalendarSync {
       // Connessione al database
       let pool;
       try {
-        const { Pool } = require('pg');
         const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL || 
                      'postgresql://neondb_owner:npg_5TBySVaU7Ktf@ep-sweet-glitter-ag53yugd-pooler.c-2.eu-central-1.aws.neon.tech/neondb?sslmode=require';
-        
         pool = new Pool({
           connectionString: dbUrl,
           ssl: { rejectUnauthorized: false }
@@ -388,7 +388,6 @@ export class RealCalendarSync {
    */
   async getStatus() {
     try {
-      const { Pool } = require('pg');
       const pool = new Pool({
         connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
         ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false

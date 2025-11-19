@@ -421,6 +421,8 @@ export default async function handler(req, res) {
           // Crea nuova prenotazione nel database
           const bookingData = req.body;
           console.log('📝 Nuova prenotazione ricevuta:', JSON.stringify(bookingData, null, 2));
+          // DEBUG: Mostra tutti i dati ricevuti
+          console.log('DEBUG bookingData:', bookingData);
           
           // 🔧 NORMALIZZAZIONE CAMPI: supporta entrambi i formati (checkin/check_in, customerName/first_name, etc)
           const checkin = bookingData.checkin || bookingData.check_in;
@@ -430,8 +432,16 @@ export default async function handler(req, res) {
           const children = bookingData.children || 0;
           const email = bookingData.customerEmail || bookingData.email;
           const phone = bookingData.customerPhone || bookingData.phone;
-          const totalAmount = bookingData.totalPrice || bookingData.total_amount || 0;
+          // Normalizza e forza a numero
+          const totalAmount = Number(bookingData.totalPrice) || Number(bookingData.total_amount) || 0;
           const notes = bookingData.specialRequests || bookingData.notes || '';
+          // Log di debug per il totale
+          console.log('DEBUG totalAmount calcolato:', totalAmount);
+          // Blocca se il totale non è valido
+          if (!totalAmount || totalAmount <= 0) {
+            console.error('❌ Importo totale mancante o non valido:', totalAmount);
+            return res.status(400).json({ success: false, error: 'Importo totale mancante o non valido' });
+          }
           
           // Parsing nome/cognome da customerName o campi separati
           let firstName = 'Nome';
