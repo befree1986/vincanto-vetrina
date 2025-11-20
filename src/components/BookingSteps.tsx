@@ -187,7 +187,7 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
             className={`choice-btn${booking.formData.payment_method === 'stripe' ? ' active' : ''}`}
             onClick={() => booking.setFormData({ payment_method: 'stripe' })}
           >
-            <img src="/assets/b-logo.webp" alt="Stripe" className="payment-logo" />
+            <img src="/icons/stripe_icon.webp" alt="Stripe" className="payment-logo" />
             Carta di credito (Stripe)
           </button>
           <button
@@ -195,7 +195,7 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
             className={`choice-btn${booking.formData.payment_method === 'paypal' ? ' active' : ''}`}
             onClick={() => booking.setFormData({ payment_method: 'paypal' })}
           >
-            <img src="/assets/airbnb-logo.svg" alt="PayPal" className="payment-logo" />
+            <img src="/icons/paypal_icon.webp" alt="PayPal" className="payment-logo" />
             PayPal
           </button>
           <button
@@ -203,7 +203,7 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
             className={`choice-btn${booking.formData.payment_method === 'bank_transfer' ? ' active' : ''}`}
             onClick={() => booking.setFormData({ payment_method: 'bank_transfer' })}
           >
-            <img src="/assets/booking-logo.webp" alt="Bonifico" className="payment-logo" />
+            <img src="/icons/bonifico_icon.webp" alt="Bonifico" className="payment-logo" />
             Bonifico bancario
           </button>
         </div>
@@ -243,7 +243,7 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
           <div className="payment-block">
             <h4>Paga con PayPal</h4>
             <div className="payment-form-wrapper">
-              <PayPalScriptProvider options={{ "client-id": process.env.REACT_APP_PAYPAL_CLIENT_ID || '', clientId: process.env.REACT_APP_PAYPAL_CLIENT_ID || '', currency: 'EUR' }}>
+              <PayPalScriptProvider options={{ "client-id": import.meta.env.VITE_PAYPAL_CLIENT_ID || '', clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID || '', currency: 'EUR' }}>
                 <PayPalButtons
                   createOrder={(_data, actions) => {
                     return actions.order.create({
