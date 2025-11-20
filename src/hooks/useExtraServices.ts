@@ -5,7 +5,7 @@ export interface ExtraService {
   id: number;
   name: string;
   price: number;
-  unit: 'soggiorno' | 'notte' | 'persona';
+  unit: 'soggiorno' | 'per_stay' | 'notte' | 'per_night' | 'persona' | 'per_person' | 'per_person_per_day';
   description?: string;
   category: 'bambini' | 'animali' | 'comfort' | 'comodita' | 'parcheggio' | 'custom' | 'equipment' | 'convenience' | 'food' | 'gift';
   available: boolean;
@@ -153,12 +153,40 @@ export const useExtraServices = (): ExtraServicesData => {
     });
   };
 
-  const getTotalCost = () => {
+  /**
+   * Calcola il totale dei servizi extra selezionati, moltiplicando per notti/persone se necessario.
+   * @param opts opzionale: quote (notti, adulti, bambini) per calcoli corretti
+   */
+  const getTotalCost = (opts?: { nights?: number; adults?: number; children?: number; guests?: number }) => {
+    // fallback: 1 notte, 2 adulti, 0 bambini se non specificato
+    const nights = opts?.nights ?? 1;
+    const adults = opts?.adults ?? 2;
+    const children = opts?.children ?? 0;
+    const guests = opts?.guests ?? (adults + children);
+
     return selectedServices.reduce((total, serviceId) => {
       const service = services.find(s => s.id === serviceId);
-      // 🔥 NUOVO: Non aggiungere costo se il servizio è incluso
-      if (service?.included) return total;
-      return total + (service ? service.price : 0);
+      if (!service || service.included) return total;
+
+      let multiplier = 1;
+      switch (service.unit) {
+        case 'notte':
+        case 'per_night':
+          multiplier = nights;
+          break;
+        case 'persona':
+        case 'per_person':
+          multiplier = guests;
+          break;
+        case 'per_person_per_day':
+          multiplier = guests * nights;
+          break;
+        case 'soggiorno':
+        case 'per_stay':
+        default:
+          multiplier = 1;
+      }
+      return total + (service.price * multiplier);
     }, 0);
   };
 
