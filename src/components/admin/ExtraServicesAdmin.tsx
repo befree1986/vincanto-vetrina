@@ -15,7 +15,7 @@ const ExtraServicesAdmin: React.FC<ExtraServicesAdminProps> = ({ onClose }) => {
     name: '',
     description: '',
     price: 0,
-    unit: 'soggiorno' as 'soggiorno' | 'notte' | 'persona',
+    unit: 'soggiorno' as ExtraService['unit'],
     category: 'custom' as ExtraService['category'],
     active: true,
     included: false,
@@ -114,8 +114,12 @@ const ExtraServicesAdmin: React.FC<ExtraServicesAdminProps> = ({ onClose }) => {
 
   const unitOptions = [
     { value: 'soggiorno', label: 'Per soggiorno' },
+    { value: 'per_stay', label: 'Per soggiorno (alias)' },
     { value: 'notte', label: 'Per notte' },
-    { value: 'persona', label: 'Per persona' }
+    { value: 'per_night', label: 'Per notte (alias)' },
+    { value: 'persona', label: 'Per persona' },
+    { value: 'per_person', label: 'Per persona (alias)' },
+    { value: 'per_person_per_day', label: 'Per persona/giorno' }
   ];
 
   if (loading) {

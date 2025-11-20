@@ -154,6 +154,37 @@ const BookingSystem: React.FC = () => {
     const [extraServicesCost, setExtraServicesCost] = useState(0);
     const [selectedExtraServices, setSelectedExtraServices] = useState<any[]>([]);
 
+    // Aggiorna il costo extra ogni volta che cambia la quote o i servizi selezionati
+    useEffect(() => {
+        if (!quote) return;
+        // Calcola il costo extra usando i dati reali della quote
+        if (selectedExtraServices.length > 0 && selectedExtraServices[0]?.getTotalCost) {
+            // fallback, non usato normalmente
+            setExtraServicesCost(selectedExtraServices[0].getTotalCost({
+                nights: quote.nights,
+                adults: quote.guests,
+                children: 0,
+                guests: quote.guests
+            }));
+        } else {
+            // Ricerca hook useExtraServices
+            try {
+                // Import dinamico per evitare errori
+                const { useExtraServices } = require('../hooks/useExtraServices');
+                const hook = useExtraServices();
+                setExtraServicesCost(hook.getTotalCost({
+                    nights: quote.nights,
+                    adults: quote.guests,
+                    children: 0,
+                    guests: quote.guests
+                }));
+            } catch {
+                // fallback: somma semplice
+                setExtraServicesCost(selectedExtraServices.reduce((tot, s) => tot + (s.price || 0), 0));
+            }
+        }
+    }, [quote, selectedExtraServices]);
+
     // 📅 CARICA CALENDARIO AL MOUNT
     React.useEffect(() => {
         loadCalendar();

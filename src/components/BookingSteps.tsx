@@ -13,16 +13,35 @@ type BookingStep3Props = {
   extraServicesCost?: number;
 };
 
+
 const BookingStep3: React.FC<BookingStep3Props> = ({
   booking: propBooking,
   onBack,
   selectedExtraServices = [],
-  extraServicesCost = 0
+  extraServicesCost: _extraServicesCost = 0
 }) => {
   const { t } = useTranslation();
   const defaultBooking = useBooking();
   const booking = propBooking || defaultBooking;
   const quote = booking.quote;
+
+  // Calcola il costo extra dinamicamente in base a quote
+  const getExtraServicesCost = () => {
+    if (!quote) return 0;
+    try {
+      const { useExtraServices } = require('../hooks/useExtraServices');
+      const hook = useExtraServices();
+      return hook.getTotalCost({
+        nights: quote.nights,
+        adults: quote.guests,
+        children: 0,
+        guests: quote.guests
+      });
+    } catch {
+      return selectedExtraServices.reduce((tot, s) => tot + (s.price || 0), 0);
+    }
+  };
+  const extraServicesCost = getExtraServicesCost();
   const total = quote ? quote.totalAmount + extraServicesCost : 0;
   const deposit = Math.round(total * 0.3 * 100) / 100;
   const saldo = Math.round((total - deposit) * 100) / 100;
