@@ -17,9 +17,11 @@ const router = express.Router();
  */
 router.post('/booking/confirm', async (req, res) => {
   try {
+    console.log('Ricevuto booking/confirm:', req.body);
     const { payment_method, payment_status, payment_id, amount, booking_data } = req.body;
-    if (!payment_method || !payment_status || !amount || !booking_data) {
-      return res.status(400).json({ error: 'Dati mancanti' });
+    // Controllo più robusto
+    if (!payment_method || !payment_status || typeof amount !== 'number' || !booking_data || typeof booking_data !== 'object') {
+      return res.status(400).json({ error: 'Dati mancanti o non validi', received: req.body });
     }
     // Esempio: salva la prenotazione nel DB
     // const result = await db.query('INSERT INTO bookings ...', [...]);
