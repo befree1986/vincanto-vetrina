@@ -99,11 +99,27 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
                                 <span className="icon">🛎️</span>
                                 Servizi Extra
                             </div>
-                                                        {selectedExtraServices.map(service => (
-                                                                <div key={service.id} className="breakdown-item extra-service">
+                                                        {selectedExtraServices.map(service => {
+                                                                // Calcola il moltiplicatore in base all'unità
+                                                                let multiplier = 1;
+                                                                if (service.unit === 'notte' || service.unit === 'per_night') {
+                                                                    multiplier = costs.nights || 1;
+                                                                } else if (service.unit === 'persona' || service.unit === 'per_person') {
+                                                                    multiplier = costs.guests || 1;
+                                                                } else if (service.unit === 'per_person_per_day') {
+                                                                    multiplier = (costs.guests || 1) * (costs.nights || 1);
+                                                                }
+                                                                const total = (service.price || 0) * multiplier;
+                                                                return (
+                                                                    <div key={service.id} className="breakdown-item extra-service">
                                                                         <span className="item-label">
-                                                                                <span className="icon">✨</span>
-                                                                                {service.name}
+                                                                            <span className="icon">✨</span>
+                                                                            {service.name}
+                                                                            {multiplier > 1 && (
+                                                                                <span className="breakdown-multiplier">
+                                                                                    × {multiplier}
+                                                                                </span>
+                                                                            )}
                                                                         </span>
                                                                         <span className="item-value">
                                                                             {service.included ? (
@@ -112,11 +128,12 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
                                                                                     <span className="service-included">INCLUSO</span>
                                                                                 </>
                                                                             ) : (
-                                                                                <>€{service.price.toFixed(2)}</>
+                                                                                <>€{total.toFixed(2)}</>
                                                                             )}
                                                                         </span>
-                                                                </div>
-                                                        ))}
+                                                                    </div>
+                                                                );
+                                                        })}
                         </>
                     )}
                 </div>

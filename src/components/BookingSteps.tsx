@@ -177,12 +177,30 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
         {selectedExtraServices && selectedExtraServices.length > 0 && (
           <div className="extra-services-breakdown">
             <div className="summary-row extra-breakdown-title">Servizi extra:</div>
-            {selectedExtraServices.map((extra, idx) => (
-              <div className="summary-row extra-breakdown-item" key={idx}>
-                <span>{extra.name || extra.label || 'Extra'}</span>
-                <span>€{extra.price ? extra.price.toFixed(2) : '0.00'}</span>
-              </div>
-            ))}
+            {selectedExtraServices.map((extra, idx) => {
+              // Calcola il moltiplicatore in base all'unità
+              let multiplier = 1;
+              if (extra.unit === 'notte' || extra.unit === 'per_night') {
+                multiplier = booking.quote?.nights || 1;
+              } else if (extra.unit === 'persona' || extra.unit === 'per_person') {
+                multiplier = booking.quote?.guests || 1;
+              } else if (extra.unit === 'per_person_per_day') {
+                multiplier = (booking.quote?.guests || 1) * (booking.quote?.nights || 1);
+              }
+              const total = (extra.price || 0) * multiplier;
+              return (
+                <div className="summary-row extra-breakdown-item" key={idx}>
+                  <span>{extra.name || extra.label || 'Extra'}
+                    {multiplier > 1 && (
+                      <span className="extra-breakdown-multiplier">
+                        × {multiplier}
+                      </span>
+                    )}
+                  </span>
+                  <span>€{total.toFixed(2)}</span>
+                </div>
+              );
+            })}
             <div className="summary-row extra-breakdown-total">
               <span>Totale extra</span>
               <span>€{extraServicesCost.toFixed(2)}</span>

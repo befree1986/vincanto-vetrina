@@ -841,6 +841,12 @@
   color: #64748b;
 }
 
+.breakdown-multiplier {
+  color: #888;
+  font-size: 0.9em;
+  margin-left: 4px;
+}
+
 /* 🎨 Override ExtraServices per eleganza coerente */
 .booking-step .extra-services {
   background: transparent;

@@ -10,6 +10,12 @@
   font-size: 0.95em;
   color: #444;
 }
+
+.extra-breakdown-multiplier {
+  color: #888;
+  font-size: 0.9em;
+  margin-left: 4px;
+}
 .extra-breakdown-total {
   font-style: italic;
   color: #666;
