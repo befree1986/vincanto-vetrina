@@ -4,13 +4,34 @@
  */
 
 import { useEffect, useCallback, useRef } from 'react';
-import * as AdminAPI from '../services/adminApi';
+import AdminApiService from '../services/adminApiService';
+
+// Tipi base locali (estendili secondo necessità)
+export interface AdminCalendar {
+  id: number | string;
+  start: string;
+  end: string;
+  type?: string;
+  status?: string;
+  [key: string]: any;
+}
+
+export interface AdminBooking {
+  id: number | string;
+  check_in: string;
+  check_out: string;
+  guest_name?: string;
+  guest_email?: string;
+  guests?: number;
+  status?: string;
+  [key: string]: any;
+}
 
 interface UseRealTimeSyncOptions {
   enabled: boolean;
   pollingInterval: number; // in millisecondi
-  onCalendarsUpdate?: (calendars: AdminAPI.AdminCalendar[]) => void;
-  onBookingsUpdate?: (bookings: AdminAPI.AdminBooking[]) => void;
+  onCalendarsUpdate?: (calendars: AdminCalendar[]) => void;
+  onBookingsUpdate?: (bookings: AdminBooking[]) => void;
   onError?: (error: string) => void;
 }
 
@@ -24,6 +45,7 @@ export function useRealTimeSync({
   
   const intervalRef = useRef<NodeJS.Timeout>();
   const isActiveRef = useRef(false);
+  const adminApi = new AdminApiService();
 
   // Funzione per sincronizzazione completa
   const syncData = useCallback(async () => {
@@ -34,13 +56,13 @@ export function useRealTimeSync({
 
       // Sincronizza calendari
       if (onCalendarsUpdate) {
-        const calendars = await AdminAPI.getCalendars();
+        const calendars = await adminApi.getCalendarEvents();
         onCalendarsUpdate(calendars);
       }
 
       // Sincronizza prenotazioni
       if (onBookingsUpdate) {
-        const bookings = await AdminAPI.getBookings();
+        const bookings = await adminApi.getBookings();
         onBookingsUpdate(bookings);
       }
 
@@ -103,8 +125,8 @@ export function useRealTimeSync({
 
 // Hook semplificato per uso specifico dell'admin panel
 export function useAdminRealTimeSync(
-  setCalendars: (calendars: AdminAPI.AdminCalendar[]) => void,
-  setBookings: (bookings: AdminAPI.AdminBooking[]) => void,
+  setCalendars: (calendars: AdminCalendar[]) => void,
+  setBookings: (bookings: AdminBooking[]) => void,
   setError: (error: string) => void,
   enabled: boolean = true
 ) {

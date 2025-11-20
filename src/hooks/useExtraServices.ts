@@ -92,7 +92,7 @@ export const useExtraServices = (): ExtraServicesData => {
           available: true,
           included: false,
           minAge: 0,
-          maxAge: 7
+          maxAge: 6
         },
         { 
           id: 1, 
@@ -167,7 +167,10 @@ export const useExtraServices = (): ExtraServicesData => {
     const selected = selectedServices.map(serviceId => services.find(s => s.id === serviceId)).filter(Boolean);
     let debugTotal = 0;
     selected.forEach(service => {
-      if (!service || service.included) return;
+      if (!service || service.included) {
+        console.log('[EXTRA DEBUG][SKIP]', service?.name, 'included:', service?.included);
+        return;
+      }
       let multiplier = 1;
       switch (service.unit) {
         case 'notte':
@@ -186,7 +189,9 @@ export const useExtraServices = (): ExtraServicesData => {
         default:
           multiplier = 1;
       }
-      debugTotal += service.price * multiplier;
+      const partial = service.price * multiplier;
+      console.log('[EXTRA DEBUG][SOMMA]', service.name, '| unit:', service.unit, '| price:', service.price, '| multiplier:', multiplier, '| partial:', partial);
+      debugTotal += partial;
     });
     // LOG DEBUG
     console.log('[EXTRA DEBUG] getTotalCost:', {
