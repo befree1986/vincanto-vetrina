@@ -9,33 +9,37 @@ import { Pool } from 'pg';
  */
 export class RealCalendarSync {
   constructor() {
-    // Configurazione calendari con URL demo funzionanti
-    this.calendars = [
-      {
+    
+    this.calendars = [];
+    if (process.env.AIRBNB_ICAL_URL) {
+      this.calendars.push({
         id: 'airbnb',
         name: 'Airbnb',
         type: 'ical',
-        url: process.env.AIRBNB_ICAL_URL || 'https://calendar.google.com/calendar/ical/en.italian%23holiday%40group.v.calendar.google.com/public/basic.ics',
-        enabled: true,
-        demo: !process.env.AIRBNB_ICAL_URL
-      },
-      {
+        url: process.env.AIRBNB_ICAL_URL,
+        enabled: true
+      });
+    }
+    if (process.env.BOOKING_ICAL_URL) {
+      this.calendars.push({
         id: 'booking',
         name: 'Booking.com',
         type: 'ical',
-        url: process.env.BOOKING_ICAL_URL || 'https://calendar.google.com/calendar/ical/en.usa%23holiday%40group.v.calendar.google.com/public/basic.ics',
-        enabled: true,
-        demo: !process.env.BOOKING_ICAL_URL
-      },
-      {
-        id: 'vrbo',
-        name: 'VRBO',
+        url: process.env.BOOKING_ICAL_URL,
+        enabled: true
+      });
+    }
+    if (process.env.HOLIDU_ICAL_URL) {
+      this.calendars.push({
+        id: 'holidu',
+        name: 'Holidu',
         type: 'ical',
-        url: process.env.VRBO_ICAL_URL || 'https://calendar.google.com/calendar/ical/en.uk%23holiday%40group.v.calendar.google.com/public/basic.ics',
-        enabled: true,
-        demo: !process.env.VRBO_ICAL_URL
-      },
-      {
+        url: process.env.HOLIDU_ICAL_URL,
+        enabled: true
+      });
+    }
+    if (process.env.GOOGLE_CALENDAR_CLIENT_ID && process.env.GOOGLE_CALENDAR_REFRESH_TOKEN) {
+      this.calendars.push({
         id: 'google',
         name: 'Google Calendar',
         type: 'api',
@@ -43,12 +47,10 @@ export class RealCalendarSync {
         clientSecret: process.env.GOOGLE_CALENDAR_CLIENT_SECRET,
         refreshToken: process.env.GOOGLE_CALENDAR_REFRESH_TOKEN,
         calendarId: process.env.GOOGLE_CALENDAR_ID || 'primary',
-        enabled: !!(process.env.GOOGLE_CALENDAR_CLIENT_ID && process.env.GOOGLE_CALENDAR_REFRESH_TOKEN),
-        demo: false
-      }
-    ];
-
-    console.log('🗓️ Calendar Sync inizializzato con:', this.calendars.map(c => `${c.name} (${c.enabled ? 'attivo' : 'disattivo'}${c.demo ? ' - demo' : ''})`));
+        enabled: true
+      });
+    }
+    console.log('🗓️ Calendar Sync inizializzato con:', this.calendars.map(c => `${c.name} (${c.enabled ? 'attivo' : 'disattivo'})`));
   }
 
   /**
@@ -479,35 +481,26 @@ export class RealCalendarSync {
 export function validateCalendarConfig() {
   const issues = [];
   
-  // Verifica configurazione iCal
+  // Verifica configurazione iCal reale
   const icalConfigured = !!(
     process.env.AIRBNB_ICAL_URL || 
     process.env.BOOKING_ICAL_URL || 
     process.env.VRBO_ICAL_URL
   );
-  
-  // Verifica Google Calendar
+  // Verifica Google Calendar reale
   const googleConfigured = !!(
     process.env.GOOGLE_CALENDAR_CLIENT_ID && 
     process.env.GOOGLE_CALENDAR_REFRESH_TOKEN
   );
-  
   if (!icalConfigured && !googleConfigured) {
-    issues.push('Utilizzando calendari demo - configurare URL reali per produzione');
+    issues.push('Nessun calendario reale configurato.');
   }
-  
   if (process.env.GOOGLE_CALENDAR_CLIENT_ID && !process.env.GOOGLE_CALENDAR_REFRESH_TOKEN) {
     issues.push('Google Calendar: Client ID presente ma manca Refresh Token');
   }
-  
-  const isDemo = !icalConfigured;
-  
-  console.log(`🔧 Configurazione calendario: ${isDemo ? 'DEMO MODE' : 'PRODUZIONE'}`);
-  
   return {
-    isValid: true, // Sempre valido (demo o reale)
+    isValid: icalConfigured || googleConfigured,
     issues: issues,
-    demo: isDemo,
     icalConfigured: icalConfigured,
     googleConfigured: googleConfigured
   };
