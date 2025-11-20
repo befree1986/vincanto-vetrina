@@ -195,7 +195,7 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
             className={`choice-btn${booking.formData.payment_method === 'paypal' ? ' active' : ''}`}
             onClick={() => booking.setFormData({ payment_method: 'paypal' })}
           >
-            <img src="/icons/paypal_icon.webp" alt="PayPal" className="payment-logo" />
+            <img src="/icons/PayPal_icon.webp" alt="PayPal" className="payment-logo" />
             PayPal
           </button>
           <button
