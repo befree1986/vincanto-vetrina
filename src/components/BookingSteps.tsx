@@ -12,6 +12,8 @@ type BookingStep3Props = {
 };
 
 const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBack }) => {
+    // DEBUG: log variabile PayPal client-id
+    console.log('VITE_PAYPAL_CLIENT_ID:', import.meta.env.VITE_PAYPAL_CLIENT_ID);
   const { t } = useTranslation();
   const defaultBooking = useBooking();
   const booking = propBooking || defaultBooking;
@@ -243,27 +245,31 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
           <div className="payment-block">
             <h4>Paga con PayPal</h4>
             <div className="payment-form-wrapper">
-              <PayPalScriptProvider options={{ "client-id": import.meta.env.VITE_PAYPAL_CLIENT_ID || '', clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID || '', currency: 'EUR' }}>
-                <PayPalButtons
-                  createOrder={(_data, actions) => {
-                    return actions.order.create({
-                      intent: 'CAPTURE',
-                      purchase_units: [{
-                        amount: {
-                          value: (isDeposit && booking.quote ? (booking.quote.totalAmount * 0.3) : (booking.quote?.totalAmount || 0)).toFixed(2),
-                          currency_code: 'EUR'
-                        }
-                      }]
-                    });
-                  }}
-                  onApprove={(_data, actions) => {
-                    return actions.order!.capture().then((_details: any) => {
-                      handlePayPalSuccess();
-                    });
-                  }}
-                  onError={(err: any) => handlePayPalError(err?.message || 'Errore PayPal')}
-                />
-              </PayPalScriptProvider>
+              {import.meta.env.VITE_PAYPAL_CLIENT_ID ? (
+                <PayPalScriptProvider options={{ "client-id": import.meta.env.VITE_PAYPAL_CLIENT_ID, clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID, currency: 'EUR' }}>
+                  <PayPalButtons
+                    createOrder={(_data, actions) => {
+                      return actions.order.create({
+                        intent: 'CAPTURE',
+                        purchase_units: [{
+                          amount: {
+                            value: (isDeposit && booking.quote ? (booking.quote.totalAmount * 0.3) : (booking.quote?.totalAmount || 0)).toFixed(2),
+                            currency_code: 'EUR'
+                          }
+                        }]
+                      });
+                    }}
+                    onApprove={(_data, actions) => {
+                      return actions.order!.capture().then((_details: any) => {
+                        handlePayPalSuccess();
+                      });
+                    }}
+                    onError={(err: any) => handlePayPalError(err?.message || 'Errore PayPal')}
+                  />
+                </PayPalScriptProvider>
+              ) : (
+                <div className="error-message"><span className="icon">⚠️</span> Errore configurazione PayPal: client-id mancante.</div>
+              )}
             </div>
             {paypalError && <div className="error-message"><span className="icon">⚠️</span> {paypalError}</div>}
             <button
