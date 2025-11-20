@@ -48,20 +48,75 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
   const handleStripeSuccess = () => {
     setStripeSuccess(true);
     setStripeError(null);
-    handleConfirmBooking();
+    // Salva la prenotazione dopo pagamento Stripe
+    fetch('/api/booking/confirm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        payment_method: 'stripe',
+        payment_status: 'success',
+        payment_id: null, // puoi passare l'id Stripe se disponibile
+        amount: booking.formData.payment_type === 'deposit'
+          ? Math.round(booking.quote.totalAmount * 0.3 * 100) / 100
+          : Math.round(booking.quote.totalAmount * 100) / 100,
+        booking_data: booking.formData
+      })
+    })
+      .then(() => handleConfirmBooking())
+      .catch(() => handleConfirmBooking());
   };
   const handlePayPalSuccess = () => {
     setPaypalSuccess(true);
     setPaypalError(null);
+    // Salva la prenotazione dopo pagamento PayPal
+    fetch('/api/booking/confirm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        payment_method: 'paypal',
+        payment_status: 'success',
+        payment_id: null, // puoi passare l'id PayPal se disponibile
+        amount: booking.formData.payment_type === 'deposit'
+          ? Math.round(booking.quote.totalAmount * 0.3 * 100) / 100
+          : Math.round(booking.quote.totalAmount * 100) / 100,
+        booking_data: booking.formData
+      })
+    })
+      .then(() => handleConfirmBooking())
+      .catch(() => handleConfirmBooking());
   };
   const handlePayPalError = (err: string) => {
     setPaypalError(err);
   };
   const handleConfirmBooking = () => {
     setIsProcessing(true);
-    // ...logica di conferma prenotazione...
-    setIsProcessing(false);
-    setBookingConfirmed(true); 
+    // Se pagamento con bonifico, salva la prenotazione come pending
+    if (booking.formData.payment_method === 'bank_transfer') {
+      fetch('/api/booking/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          payment_method: 'bank_transfer',
+          payment_status: 'pending',
+          payment_id: null,
+          amount: booking.formData.payment_type === 'deposit'
+            ? Math.round(booking.quote.totalAmount * 0.3 * 100) / 100
+            : Math.round(booking.quote.totalAmount * 100) / 100,
+          booking_data: booking.formData
+        })
+      })
+        .then(() => {
+          setIsProcessing(false);
+          setBookingConfirmed(true);
+        })
+        .catch(() => {
+          setIsProcessing(false);
+          setBookingConfirmed(true);
+        });
+    } else {
+      setIsProcessing(false);
+      setBookingConfirmed(true);
+    }
   };
 
   // Calcolo importi
@@ -132,6 +187,7 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
             className={`choice-btn${booking.formData.payment_method === 'stripe' ? ' active' : ''}`}
             onClick={() => booking.setFormData({ payment_method: 'stripe' })}
           >
+            <img src="/assets/b-logo.webp" alt="Stripe" className="payment-logo" />
             Carta di credito (Stripe)
           </button>
           <button
@@ -139,6 +195,7 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
             className={`choice-btn${booking.formData.payment_method === 'paypal' ? ' active' : ''}`}
             onClick={() => booking.setFormData({ payment_method: 'paypal' })}
           >
+            <img src="/assets/airbnb-logo.svg" alt="PayPal" className="payment-logo" />
             PayPal
           </button>
           <button
@@ -146,6 +203,7 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
             className={`choice-btn${booking.formData.payment_method === 'bank_transfer' ? ' active' : ''}`}
             onClick={() => booking.setFormData({ payment_method: 'bank_transfer' })}
           >
+            <img src="/assets/booking-logo.webp" alt="Bonifico" className="payment-logo" />
             Bonifico bancario
           </button>
         </div>
