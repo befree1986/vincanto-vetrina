@@ -164,10 +164,10 @@ export const useExtraServices = (): ExtraServicesData => {
     const children = opts?.children ?? 0;
     const guests = opts?.guests ?? (adults + children);
 
-    return selectedServices.reduce((total, serviceId) => {
-      const service = services.find(s => s.id === serviceId);
-      if (!service || service.included) return total;
-
+    const selected = selectedServices.map(serviceId => services.find(s => s.id === serviceId)).filter(Boolean);
+    let debugTotal = 0;
+    selected.forEach(service => {
+      if (!service || service.included) return;
       let multiplier = 1;
       switch (service.unit) {
         case 'notte':
@@ -186,8 +186,15 @@ export const useExtraServices = (): ExtraServicesData => {
         default:
           multiplier = 1;
       }
-      return total + (service.price * multiplier);
-    }, 0);
+      debugTotal += service.price * multiplier;
+    });
+    // LOG DEBUG
+    console.log('[EXTRA DEBUG] getTotalCost:', {
+      opts: { nights, adults, children, guests },
+      selected,
+      result: debugTotal
+    });
+    return debugTotal;
   };
 
   const getSelectedServices = () => {
