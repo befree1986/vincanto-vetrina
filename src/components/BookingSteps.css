@@ -1,3 +1,19 @@
+/* Extra services breakdown styles */
+.extra-services-breakdown {
+  margin-top: 8px;
+}
+.extra-breakdown-title {
+  font-weight: bold;
+  margin-top: 8px;
+}
+.extra-breakdown-item {
+  font-size: 0.95em;
+  color: #444;
+}
+.extra-breakdown-total {
+  font-style: italic;
+  color: #666;
+}
 /* Logo pulsanti metodo pagamento */
 .payment-logo {
   width: 28px;

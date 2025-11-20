@@ -9,14 +9,24 @@ import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 type BookingStep3Props = {
   booking?: any;
   onBack: () => void;
+  selectedExtraServices?: any[];
+  extraServicesCost?: number;
 };
 
-const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBack }) => {
-    // DEBUG: log variabile PayPal client-id
-    console.log('VITE_PAYPAL_CLIENT_ID:', import.meta.env.VITE_PAYPAL_CLIENT_ID);
+const BookingStep3: React.FC<BookingStep3Props> = ({
+  booking: propBooking,
+  onBack,
+  selectedExtraServices = [],
+  extraServicesCost = 0
+}) => {
   const { t } = useTranslation();
   const defaultBooking = useBooking();
   const booking = propBooking || defaultBooking;
+  const quote = booking.quote;
+  const total = quote ? quote.totalAmount + extraServicesCost : 0;
+  const deposit = Math.round(total * 0.3 * 100) / 100;
+  const saldo = Math.round((total - deposit) * 100) / 100;
+  const isDeposit = booking.formData.payment_type === 'deposit';
   const [isProcessing, setIsProcessing] = useState(false);
   const [stripeClientSecret, setStripeClientSecret] = useState<string | null>(null);
   const [stripeError, setStripeError] = useState<string | null>(null);
@@ -121,13 +131,6 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
     }
   };
 
-  // Calcolo importi
-  const quote = booking.quote;
-  const total = quote ? quote.totalAmount : 0;
-  const deposit = Math.round(total * 0.3 * 100) / 100;
-  const saldo = Math.round((total - deposit) * 100) / 100;
-  const isDeposit = booking.formData.payment_type === 'deposit';
-
   if (bookingConfirmed) {
     return (
       <div className="booking-confirmed-message">
@@ -152,6 +155,21 @@ const BookingStep3: React.FC<BookingStep3Props> = ({ booking: propBooking, onBac
           <span>Totale soggiorno:</span>
           <span><strong>€{total.toFixed(2)}</strong></span>
         </div>
+        {selectedExtraServices && selectedExtraServices.length > 0 && (
+          <div className="extra-services-breakdown">
+            <div className="summary-row extra-breakdown-title">Servizi extra:</div>
+            {selectedExtraServices.map((extra, idx) => (
+              <div className="summary-row extra-breakdown-item" key={idx}>
+                <span>{extra.name || extra.label || 'Extra'}</span>
+                <span>€{extra.price ? extra.price.toFixed(2) : '0.00'}</span>
+              </div>
+            ))}
+            <div className="summary-row extra-breakdown-total">
+              <span>Totale extra</span>
+              <span>€{extraServicesCost.toFixed(2)}</span>
+            </div>
+          </div>
+        )}
         <div className="summary-row">
           <span>Acconto (30%):</span>
           <span>€{deposit.toFixed(2)}</span>
