@@ -27,7 +27,13 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
 
   React.useEffect(() => {
     if (onServicesChange) {
-      onServicesChange(getSelectedServices(), getTotalCost(calcOptions));
+      const selected = getSelectedServices();
+      const includedServices = services.filter(s => s.included);
+      const mergedServices = [
+        ...selected,
+        ...includedServices.filter(s => !selected.find(sel => sel.id === s.id))
+      ];
+      onServicesChange(mergedServices, getTotalCost(calcOptions));
     }
   }, [selectedServices, services, onServicesChange, calcOptions]);
 

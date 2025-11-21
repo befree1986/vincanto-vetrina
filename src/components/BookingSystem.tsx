@@ -326,6 +326,7 @@ const BookingSystem: React.FC = () => {
                     isDeposit={formData.payment_type === 'deposit'}
                     extraServicesCost={extraServicesCost}
                     selectedExtraServices={selectedExtraServices}
+                    allExtraServices={selectedExtraServices}
                 />
             )}
             
