@@ -188,6 +188,18 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
                 multiplier = (booking.quote?.guests || 1) * (booking.quote?.nights || 1);
               }
               const total = (extra.price || 0) * multiplier;
+              // LOG dettagliato per debug
+              if (typeof window !== 'undefined' && window.console) {
+                console.log('[BREAKDOWN][BookingSteps] Extra:', {
+                  id: extra.id,
+                  name: extra.name,
+                  price: extra.price,
+                  unit: extra.unit,
+                  multiplier,
+                  total,
+                  quote: booking.quote
+                });
+              }
               return (
                 <div className="summary-row extra-breakdown-item" key={idx}>
                   <span>{extra.name || extra.label || 'Extra'}

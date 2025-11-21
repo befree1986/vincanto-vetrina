@@ -110,6 +110,18 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
                                                                     multiplier = (costs.guests || 1) * (costs.nights || 1);
                                                                 }
                                                                 const total = (service.price || 0) * multiplier;
+                                                                // LOG dettagliato per debug
+                                                                if (typeof window !== 'undefined' && window.console) {
+                                                                    console.log('[BREAKDOWN][BookingSystemEnhanced] Extra:', {
+                                                                        id: service.id,
+                                                                        name: service.name,
+                                                                        price: service.price,
+                                                                        unit: service.unit,
+                                                                        multiplier,
+                                                                        total,
+                                                                        costs
+                                                                    });
+                                                                }
                                                                 return (
                                                                     <div key={service.id} className="breakdown-item extra-service">
                                                                         <span className="item-label">
