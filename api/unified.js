@@ -1337,8 +1337,8 @@ export default async function handler(req, res) {
 
         // Calcola costi aggiuntivi
         const cleaningFee = pricing.cleaningFee;
-        // 🔧 FIX: Parcheggio è un costo FISSO per soggiorno, NON per notte
-        const parkingCost = (includeParking === 'true') ? pricing.parkingFee : 0;
+        // 🔧 FIX: Parcheggio è un costo PER NOTTE
+        const parkingCost = (includeParking === 'true') ? (pricing.parkingFee * nights) : 0;
         
         // 🔧 FIX: Tassa soggiorno SOLO per adulti (bambini <12 anni gratis)
         const adultsNum = parseInt(adults) || parseInt(guests); // Fallback se adults non specificato
@@ -1374,7 +1374,7 @@ export default async function handler(req, res) {
             alloggio: `€${basePricePerNight}/notte × ${nights} notti = €${accommodationCost.toFixed(2)}`,
             sconto: discount > 0 ? `Sconto ${discount}%: -€${discountAmount.toFixed(2)}` : null,
             pulizie: `€${cleaningFee.toFixed(2)}`,
-            parcheggio: parkingCost > 0 ? `€${pricing.parkingFee}/soggiorno = €${parkingCost.toFixed(2)}` : null,
+            parcheggio: parkingCost > 0 ? `€${pricing.parkingFee}/notte × ${nights} notti = €${parkingCost.toFixed(2)}` : null,
             tassa: `€${pricing.touristTaxAdult}/adulto/notte × ${adultsNum} adulti × ${nights} notti = €${touristTax.toFixed(2)}`,
             totale: `€${totalAmount.toFixed(2)}`,
             acconto: `€${depositAmount.toFixed(2)} (30%)`

@@ -14,13 +14,15 @@ interface PriceBreakdownProps {
     isDeposit: boolean;
     extraServicesCost?: number;
     selectedExtraServices?: any[];
+    allExtraServices?: any[];
 }
 
 const PriceBreakdown: React.FC<PriceBreakdownProps> = ({ 
     costs, 
     isDeposit, 
     extraServicesCost = 0, 
-    selectedExtraServices = [] 
+    selectedExtraServices = [],
+    allExtraServices = []
 }) => {
     const { t } = useTranslation();
     
@@ -36,7 +38,7 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
             <div className="breakdown-items">
                 <div className="breakdown-item">
                     <span>{getSafeTranslation(t, 'booking.accommodationBase', 'Soggiorno base')}</span>
-                    <span>€{costs.baseCost?.toFixed(2) || costs.basePrice?.toFixed(2)}</span>
+                    <span>€{(costs.accommodationCost || costs.baseCost || costs.basePrice || 0).toFixed(2)}</span>
                 </div>
                 
                 {/* 🎯 MOSTRA SCONTO SE APPLICATO */}
@@ -47,13 +49,36 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
                     </div>
                 )}
                 
-                {costs.parkingCost > 0 && (
+                    {/* 🛎️ SERVIZI EXTRA - MOSTRA TUTTI (inclusi quelli inclusi a €0) */}
+                    {allExtraServices.length > 0 && (
+                        <>
+                            <div className="breakdown-separator"></div>
+                            <div className="breakdown-section-title">
+                                <span>🛎️ Servizi Extra</span>
+                            </div>
+                            {allExtraServices.map(service => (
+                                <div key={service.id} className={`breakdown-item extra-service ${service.included ? 'included-service' : ''}`}>
+                                    <span>
+                                        {service.name}
+                                        {service.included && ' ✨'}
+                                    </span>
+                                    <span className={service.included ? 'included-price' : ''}>
+                                        {service.included ? '€0.00 (Incluso)' : `€${service.price.toFixed(2)}`}
+                                    </span>
+                                </div>
+                            ))}
+                        </>
+                    )}
+                
+                    <div className="breakdown-separator"></div>
+                
+                    {/* 🚗 PARCHEGGIO - MOSTRA SEMPRE */}
                     <div className="breakdown-item">
                         <span>{getSafeTranslation(t, 'booking.parking', 'Parcheggio privato')}</span>
-                        <span>€{costs.parkingCost.toFixed(2)}</span>
+                        <span>€{(costs.parkingCost || 0).toFixed(2)}</span>
                     </div>
-                )}
                 
+                    {/* 🧹 PULIZIA FINALE - MOSTRA SEMPRE */}
                 <div className="breakdown-item">
                     <span>{getSafeTranslation(t, 'booking.cleaning', 'Pulizia finale')}</span>
                     <span>€{costs.cleaningFee.toFixed(2)}</span>
@@ -64,22 +89,6 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
                     <span>€{costs.touristTax.toFixed(2)}</span>
                 </div>
 
-                {/* 🛎️ SERVIZI EXTRA */}
-                {selectedExtraServices.length > 0 && (
-                    <>
-                        <div className="breakdown-separator"></div>
-                        <div className="breakdown-section-title">
-                            <span>🛎️ Servizi Extra</span>
-                        </div>
-                        {selectedExtraServices.map(service => (
-                            <div key={service.id} className="breakdown-item extra-service">
-                                <span>{service.name}</span>
-                                <span>€{service.price.toFixed(2)}</span>
-                            </div>
-                        ))}
-                    </>
-                )}
-                
                 <div className="breakdown-separator"></div>
                 
                 <div className="breakdown-item total">
@@ -99,9 +108,9 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
                 <p className="pricing-details">
                     {getSafeTranslation(t, 'booking.pricingNote', 'Prezzi finali tutto incluso. Pulizia e tassa di soggiorno incluse.')}
                 </p>
-                {selectedExtraServices.length > 0 && (
+                {allExtraServices.length > 0 && (
                     <p className="extra-services-note">
-                        ✅ {selectedExtraServices.length} servizio{selectedExtraServices.length > 1 ? 'i' : ''} extra selezionato{selectedExtraServices.length > 1 ? 'i' : ''}
+                    ✅ {allExtraServices.length} servizio{allExtraServices.length > 1 ? 'i' : ''} extra disponibil{allExtraServices.length > 1 ? 'i' : 'e'}
                     </p>
                 )}
             </div>
@@ -117,6 +126,7 @@ const BookingSystem: React.FC = () => {
     const [quoteError] = useState<string | null>(null);
     const [showPayment, setShowPayment] = useState(false);
     const [bookingResult, setBookingResult] = useState<any>(null);
+    const [showEditOptions, setShowEditOptions] = useState(false);
     
     // 🔥 HOOK SCROLL LOCK - DISABILITATO TEMPORANEAMENTE
     const [isTransitioning, setIsTransitioning] = useState(false);
@@ -435,7 +445,7 @@ const BookingSystem: React.FC = () => {
                         </div>
                         
                         {quote && formData.parking_option === 'private' && (
-                            <div className="parking-cost-preview">
+                                     <div className="parking-cost-preview hidden">
                                 <div className="cost-calculation">
                                     <span>Parcheggio per {quote.nights} {quote.nights === 1 ? 'notte' : 'notti'}:</span>
                                     <span className="cost-amount">€{quote.parkingCost.toFixed(2)}</span>
@@ -453,6 +463,7 @@ const BookingSystem: React.FC = () => {
                     setSelectedExtraServices(services);
                     setExtraServicesCost(totalCost);
                 }}
+                allExtraServices={selectedExtraServices}
             />
 
             <div className="guest-form">
@@ -638,6 +649,109 @@ const BookingSystem: React.FC = () => {
 
                 {currentStep === 'dates' && renderDateStep()}
                 {currentStep === 'details' && renderDetailsStep()}
+                {currentStep === 'payment' && (
+                    <div className="booking-step-content step-transition">
+                        <h2>Pagamento</h2>
+
+                        {/* Riepilogo costi sempre visibile anche nel pagamento */}
+                        {quote && (
+                            <PriceBreakdown 
+                                costs={quote}
+                                isDeposit={formData.payment_type === 'deposit'}
+                                extraServicesCost={extraServicesCost}
+                                selectedExtraServices={selectedExtraServices}
+                                allExtraServices={selectedExtraServices}
+                            />
+                        )}
+
+                        {/* Pannello modifica servizi e parcheggio */}
+                        <div className="edit-options-panel">
+                            <button 
+                                type="button" 
+                                className="btn-secondary"
+                                onClick={() => setShowEditOptions(v => !v)}
+                            >
+                                {showEditOptions ? 'Chiudi modifiche' : 'Modifica servizi e parcheggio'}
+                            </button>
+
+                            {showEditOptions && (
+                                <div className="edit-options-content">
+                                    <h3>Opzioni Parcheggio</h3>
+                                    <div className="radio-group">
+                                        <input
+                                            type="radio"
+                                            id="parking-none-pay"
+                                            name="parking_option_pay"
+                                            value="none"
+                                            checked={formData.parking_option === 'none'}
+                                            onChange={(e) => setFormData({ parking_option: e.target.value as any })}
+                                        />
+                                        <label htmlFor="parking-none-pay">
+                                            Nessun parcheggio
+                                            <small className="service-note">Puoi arrivare a piedi</small>
+                                        </label>
+                                    </div>
+
+                                    <div className="radio-group">
+                                        <input
+                                            type="radio"
+                                            id="parking-street-pay"
+                                            name="parking_option_pay"
+                                            value="street"
+                                            checked={formData.parking_option === 'street'}
+                                            onChange={(e) => setFormData({ parking_option: e.target.value as any })}
+                                        />
+                                        <label htmlFor="parking-street-pay">
+                                            Parcheggio su strada
+                                            <small className="service-note">Soggetto a disponibilità</small>
+                                        </label>
+                                    </div>
+
+                                    <div className="radio-group">
+                                        <input
+                                            type="radio"
+                                            id="parking-private-pay"
+                                            name="parking_option_pay"
+                                            value="private"
+                                            checked={formData.parking_option === 'private'}
+                                            onChange={(e) => setFormData({ parking_option: e.target.value as any })}
+                                        />
+                                        <label htmlFor="parking-private-pay">
+                                            Parcheggio privato riservato e custodito
+                                        </label>
+                                    </div>
+
+                                    {/* Servizi extra compatti */}
+                                    <h3>Servizi Extra</h3>
+                                    <ExtraServices 
+                                        showHeader={false}
+                                        childrenAges={formData.children_ages}
+                                        onServicesChange={(services, totalCost) => {
+                                            setSelectedExtraServices(services);
+                                            setExtraServicesCost(totalCost);
+                                        }}
+                                        calcOptions={quote ? { nights: quote.nights, adults: quote.guests, guests: quote.guests } : undefined}
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Azioni per tornare ai dettagli o procedere */}
+                        <div className="step-actions">
+                            <button 
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setIsTransitioning(true);
+                                    setCurrentStep('details');
+                                }} 
+                                className="btn-secondary"
+                                type="button"
+                            >
+                                Indietro ai Dettagli
+                            </button>
+                        </div>
+                    </div>
+                )}
                 
                 {currentStep === 'confirmation' && (
                     <div className="booking-step-content">

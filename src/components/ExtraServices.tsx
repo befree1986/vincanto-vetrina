@@ -6,12 +6,14 @@ interface ExtraServicesProps {
   onServicesChange?: (services: ExtraService[], totalCost: number) => void;
   childrenAges?: number[];
   showHeader?: boolean;
+  calcOptions?: { nights?: number; adults?: number; children?: number; guests?: number };
 }
 
 const ExtraServices: React.FC<ExtraServicesProps> = ({ 
   onServicesChange, 
   childrenAges = [],
-  showHeader = true
+  showHeader = true,
+  calcOptions
 }) => {
   const {
     services,
@@ -25,9 +27,9 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
 
   React.useEffect(() => {
     if (onServicesChange) {
-      onServicesChange(getSelectedServices(), getTotalCost());
+      onServicesChange(getSelectedServices(), getTotalCost(calcOptions));
     }
-  }, [selectedServices, services, onServicesChange]);
+  }, [selectedServices, services, onServicesChange, calcOptions]);
 
   const isServiceRelevant = (service: ExtraService): boolean => {
     // Se il servizio è per bambini, controlla le età

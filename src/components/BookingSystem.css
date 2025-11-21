@@ -845,6 +845,11 @@
   animation: slideIn 0.3s ease;
 }
 
+/* Nascondi il live preview del parcheggio */
+.parking-cost-preview.hidden {
+  display: none;
+}
+
 @keyframes slideIn {
   from {
     opacity: 0;
@@ -872,6 +877,19 @@
   padding: 8px 12px;
   border-radius: 6px;
   border: 2px solid #d2691e;
+}
+
+/* Servizi inclusi nel riepilogo */
+.breakdown-item.included-service {
+  background: #f0f9ff;
+  border-left: 3px solid #3b82f6;
+  padding-left: 12px;
+}
+
+.breakdown-item.included-service .included-price {
+  color: #3b82f6;
+  font-weight: 600;
+  font-style: italic;
 }
 
 /* Enhanced Price Breakdown */
