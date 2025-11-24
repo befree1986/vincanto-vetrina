@@ -40,35 +40,24 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
       return _extraServicesCost;
     }
     
-    try {
-      const { useExtraServices } = require('../hooks/useExtraServices');
-      const hook = useExtraServices();
-      const calculatedCost = hook.getTotalCost({
-        nights: quote.nights,
-        adults: quote.guests,
-        children: 0,
-        guests: quote.guests
-      });
-      console.log('[BookingSteps] Costo calcolato da useExtraServices:', calculatedCost);
-      return calculatedCost;
-    } catch (err) {
-      console.error('[BookingSteps] Errore useExtraServices, fallback a reduce:', err);
-      const reducedCost = selectedExtraServices.reduce((tot, s) => {
-        // Calcola moltiplicatore in base all'unità
-        let multiplier = 1;
-        if (s.unit === 'notte' || s.unit === 'per_night') {
-          multiplier = quote.nights || 1;
-        } else if (s.unit === 'persona' || s.unit === 'per_person') {
-          multiplier = quote.guests || 1;
-        } else if (s.unit === 'per_person_per_day') {
-          multiplier = (quote.guests || 1) * (quote.nights || 1);
-        }
-        const cost = s.included ? 0 : (s.price || 0) * multiplier;
-        return tot + cost;
-      }, 0);
-      console.log('[BookingSteps] Costo ridotto manualmente:', reducedCost);
-      return reducedCost;
-    }
+    // Calcola manualmente il costo dei servizi extra selezionati
+    const reducedCost = selectedExtraServices.reduce((tot, s) => {
+      // Calcola moltiplicatore in base all'unità
+      let multiplier = 1;
+      if (s.unit === 'notte' || s.unit === 'per_night') {
+        multiplier = quote.nights || 1;
+      } else if (s.unit === 'persona' || s.unit === 'per_person') {
+        multiplier = quote.guests || 1;
+      } else if (s.unit === 'per_person_per_day') {
+        multiplier = (quote.guests || 1) * (quote.nights || 1);
+      }
+      // I servizi inclusi non hanno costo aggiuntivo
+      const cost = s.included ? 0 : (s.price || 0) * multiplier;
+      console.log(`[BookingSteps] Servizio "${s.name}": €${s.price} × ${multiplier} = €${cost} ${s.included ? '(INCLUSO)' : ''}`);
+      return tot + cost;
+    }, 0);
+    console.log('[BookingSteps] Costo ridotto manualmente:', reducedCost);
+    return reducedCost;
   };
   const extraServicesCost = getExtraServicesCost();
   console.log('[BookingSteps] 💰 Totale extra servizi finale:', extraServicesCost);
