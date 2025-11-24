@@ -72,6 +72,65 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
   const [paypalSuccess, setPaypalSuccess] = useState(false);
   const [paypalError, setPaypalError] = useState<string | null>(null);
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
+  const [stripeResult, setStripeResult] = useState<'success' | 'cancel' | null>(null);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
+
+  // Rileva parametro payment nel hash (#/booking?payment=stripe_success)
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const hash = window.location.hash || '';
+    const queryPart = hash.includes('?') ? hash.split('?')[1] : '';
+    const params = new URLSearchParams(queryPart);
+    const paymentParam = params.get('payment');
+    if (paymentParam === 'stripe_success') {
+      setStripeResult('success');
+    } else if (paymentParam === 'stripe_cancel') {
+      setStripeResult('cancel');
+    }
+  }, []);
+
+  // Se successo Stripe, tenta conferma prenotazione usando dati locali
+  React.useEffect(() => {
+    const finalize = async () => {
+      if (stripeResult !== 'success') return;
+      try {
+        const rawData = localStorage.getItem('pendingBookingData');
+        const rawQuote = localStorage.getItem('pendingBookingQuote');
+        if (!rawData || !rawQuote) {
+          setConfirmError('Dati prenotazione non trovati dopo il pagamento.');
+          return;
+        }
+        const bookingData = JSON.parse(rawData);
+        const quoteData = JSON.parse(rawQuote);
+        const amountPaid = bookingData.payment_type === 'deposit'
+          ? Math.round(quoteData.totalAmount * 0.3 * 100) / 100
+          : Math.round(quoteData.totalAmount * 100) / 100;
+        const resp = await fetch('/api/booking/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            payment_method: 'stripe',
+            payment_status: 'success',
+            payment_id: null,
+            amount: amountPaid,
+            booking_data: bookingData
+          })
+        });
+        const data = await resp.json();
+        if (!data.success) {
+          setConfirmError(data.error || 'Errore conferma prenotazione');
+        } else {
+          setBookingConfirmed(true);
+          // Cleanup storage
+          localStorage.removeItem('pendingBookingData');
+          localStorage.removeItem('pendingBookingQuote');
+        }
+      } catch (e) {
+        setConfirmError('Eccezione conferma: ' + (e instanceof Error ? e.message : String(e)));
+      }
+    };
+    finalize();
+  }, [stripeResult]);
 
 
   const handlePayPalSuccess = () => {
@@ -139,6 +198,25 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
 
   return (
     <div className="booking-step payment-step-box">
+      {stripeResult === 'success' && (
+        <div className="stripe-result success-message-box">
+          <h3>✅ Pagamento completato</h3>
+          {bookingConfirmed ? (
+            <p>Prenotazione confermata! Riceverai una email a breve.</p>
+          ) : (
+            <p>Pagamento ricevuto. Conferma prenotazione in corso...</p>
+          )}
+          {confirmError && <p className="error-message-inline">⚠️ {confirmError}</p>}
+          <button type="button" className="btn btn-secondary" onClick={() => onBack()}>Torna alla prenotazione</button>
+        </div>
+      )}
+      {stripeResult === 'cancel' && (
+        <div className="stripe-result cancel-message-box">
+          <h3>❌ Pagamento annullato</h3>
+          <p>Il pagamento è stato annullato. Puoi riprovare scegliendo un metodo di pagamento.</p>
+          <button type="button" className="btn btn-primary" onClick={() => window.location.hash = '#/booking'}>Riprendi prenotazione</button>
+        </div>
+      )}
       <div className="payment-header">
         <span className="step-icon">💳</span>
         <div>
@@ -279,6 +357,15 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
                 onClick={async () => {
                   setIsProcessing(true);
                   try {
+                    // Salva dati prenotazione temporanei per recupero post-redirect
+                    try {
+                      localStorage.setItem('pendingBookingData', JSON.stringify(booking.formData));
+                      if (booking.quote) {
+                        localStorage.setItem('pendingBookingQuote', JSON.stringify(booking.quote));
+                      }
+                    } catch (e) {
+                      console.warn('Impossibile salvare dati prenotazione in localStorage:', e);
+                    }
                     const res = await fetch('/api/create-stripe-checkout-session', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },

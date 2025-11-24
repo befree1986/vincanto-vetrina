@@ -38,6 +38,18 @@
   gap: 6px;
   white-space: nowrap;
 }
+/* Stripe result messaging */
+.stripe-result {
+  border: 1px solid var(--border-color, #e0e0e0);
+  background: #fafafa;
+  padding: 16px 18px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+.stripe-result h3 { margin-top: 0; margin-bottom: 8px; }
+.success-message-box { border-color: #43a047; background: #f1faf1; }
+.cancel-message-box { border-color: #e53935; background: #fdf3f3; }
+.error-message-inline { color: #e53935; font-weight: 500; }
 /* Extra services breakdown styles */
 .extra-services-breakdown {
   margin-top: 8px;
