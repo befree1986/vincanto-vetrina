@@ -33,6 +33,98 @@
   margin: 0 auto 2rem;
 }
 
+/* 💰 HORIZONTAL PRICE BANNER */
+.price-banner-horizontal {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 2px solid #d2691e;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 32px;
+  box-shadow: 0 4px 12px rgba(210, 105, 30, 0.15);
+}
+
+.price-banner-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.price-summary {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.price-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.price-item .price-label {
+  font-size: 0.85rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.price-item .price-value {
+  font-size: 1.1rem;
+  color: #212529;
+  font-weight: 600;
+}
+
+.price-item.discount .price-value {
+  color: #28a745;
+}
+
+.price-total-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 32px;
+  border-left: 2px solid #d2691e;
+}
+
+.price-total {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.price-total .total-label {
+  font-size: 0.9rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.price-total .total-value {
+  font-size: 1.8rem;
+  color: #d2691e;
+  font-weight: 700;
+}
+
+.price-deposit {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding-top: 8px;
+  border-top: 1px solid #dee2e6;
+}
+
+.price-deposit .deposit-label {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.price-deposit .deposit-value {
+  font-size: 1.2rem;
+  color: #28a745;
+  font-weight: 600;
+}
+
 .selected-dates-summary {
   display: flex;
   gap: 2rem;
@@ -240,6 +332,117 @@
 }
 
 /* 👥 Sezione ospiti */
+.guests-section-modern {
+  margin-top: 32px;
+}
+
+.guests-section-modern h4 {
+  color: #212529;
+  margin-bottom: 20px;
+  font-size: 1.3rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.guests-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.guest-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.guest-card:hover {
+  border-color: #d2691e;
+  box-shadow: 0 4px 12px rgba(210, 105, 30, 0.15);
+  transform: translateY(-2px);
+}
+
+.guest-card .guest-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.guest-card .guest-info {
+  flex: 1;
+}
+
+.guest-card .guest-info label {
+  display: block;
+  font-weight: 600;
+  color: #212529;
+  margin-bottom: 4px;
+  font-size: 1rem;
+}
+
+.guest-card .guest-info .guest-desc {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.guest-card .number-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.guest-card .number-input button {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: #f8f9fa;
+  color: #495057;
+  font-size: 1.2rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.guest-card .number-input button:hover:not(:disabled) {
+  background: #d2691e;
+  color: white;
+}
+
+.guest-card .number-input button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.guest-card .number-input input {
+  width: 50px;
+  text-align: center;
+  border: none;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #212529;
+  background: transparent;
+}
+
+.guest-card .number-input input:focus {
+  outline: none;
+}
+
+/* 👥 Sezione ospiti OLD (manteniamo per compatibilità) */
 .guests-section {
   margin: 32px 0;
   padding: 24px;
@@ -761,6 +964,42 @@
     position: static;
     order: 1; /* ✅ Spostato DOPO il form invece di prima */
     margin-top: 20px;
+  }
+
+  /* Price banner mobile */
+  .price-banner-content {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .price-summary {
+    width: 100%;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .price-total-section {
+    width: 100%;
+    padding-left: 0;
+    border-left: none;
+    border-top: 2px solid #d2691e;
+    padding-top: 16px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .price-banner-horizontal {
+    padding: 20px;
+  }
+
+  .price-total .total-value {
+    font-size: 1.5rem;
+  }
+
+  /* Guest cards mobile */
+  .guests-grid {
+    grid-template-columns: 1fr;
   }
   
   /* Form principale viene prima */

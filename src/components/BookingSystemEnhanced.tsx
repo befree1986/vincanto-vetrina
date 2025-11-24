@@ -295,6 +295,52 @@ const BookingSystemEnhanced: React.FC = () => {
                             <p>{getSafeTranslation(t, 'booking.step1.subtitle', 'Quando vuoi soggiornare da noi?')}</p>
                         </div>
 
+                        {/* 💰 PREVENTIVO ORIZZONTALE */}
+                        {booking.quote && !booking.isLoadingQuote && (
+                            <div className="price-banner-horizontal">
+                                <div className="price-banner-content">
+                                    <div className="price-summary">
+                                        <div className="price-item">
+                                            <span className="price-label">Soggiorno ({booking.quote.nights} {booking.quote.nights === 1 ? 'notte' : 'notti'})</span>
+                                            <span className="price-value">€{(booking.quote.basePrice || 0).toFixed(2)}</span>
+                                        </div>
+                                        {booking.quote.discount && (
+                                            <div className="price-item discount">
+                                                <span className="price-label">🎉 Sconto {booking.quote.discount.percentage}%</span>
+                                                <span className="price-value">-€{booking.quote.discount.amount.toFixed(2)}</span>
+                                            </div>
+                                        )}
+                                        {booking.formData.parking_option === 'private' && booking.quote.parkingCost > 0 && (
+                                            <div className="price-item">
+                                                <span className="price-label">🚗 Parcheggio</span>
+                                                <span className="price-value">€{booking.quote.parkingCost.toFixed(2)}</span>
+                                            </div>
+                                        )}
+                                        {extraServicesCost > 0 && (
+                                            <div className="price-item">
+                                                <span className="price-label">🛎️ Servizi Extra</span>
+                                                <span className="price-value">€{extraServicesCost.toFixed(2)}</span>
+                                            </div>
+                                        )}
+                                        <div className="price-item">
+                                            <span className="price-label">🧹 Pulizia</span>
+                                            <span className="price-value">€{booking.quote.cleaningFee.toFixed(2)}</span>
+                                        </div>
+                                        <div className="price-item">
+                                            <span className="price-label">🏛️ Tassa soggiorno</span>
+                                            <span className="price-value">€{booking.quote.touristTax.toFixed(2)}</span>
+                                        </div>
+                                    </div>
+                                    <div className="price-total-section">
+                                        <div className="price-total">
+                                            <span className="total-label">Totale</span>
+                                            <span className="total-value">€{(booking.quote.totalAmount + extraServicesCost).toFixed(2)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="dates-section">
                             {/* Nuovo calendario con disponibilità */}
                             <AvailabilityCalendar 
@@ -360,18 +406,19 @@ const BookingSystemEnhanced: React.FC = () => {
                             </div>
                         )}
 
-                        <div className="guests-section">
+                        <div className="guests-section-modern">
                             <h4>
                                 <span className="icon">👥</span>
                                 {getSafeTranslation(t, 'booking.guests', 'Ospiti')}
                             </h4>
                             
-                            <div className="guests-controls">
-                                <div className="guest-control">
-                                    <label htmlFor="adults">
-                                        <span className="icon">👩‍🦳</span>
-                                        {getSafeTranslation(t, 'booking.adults', 'Adulti')}
-                                    </label>
+                            <div className="guests-grid">
+                                <div className="guest-card">
+                                    <div className="guest-icon">👨‍👩‍👧‍👦</div>
+                                    <div className="guest-info">
+                                        <label htmlFor="adults">{getSafeTranslation(t, 'booking.adults', 'Adulti')}</label>
+                                        <p className="guest-desc">Età 18+</p>
+                                    </div>
                                     <div className="number-input">
                                         <button 
                                             type="button"
@@ -407,11 +454,12 @@ const BookingSystemEnhanced: React.FC = () => {
                                     </div>
                                 </div>
 
-                                <div className="guest-control">
-                                    <label htmlFor="children">
-                                        <span className="icon">👶</span>
-                                        {getSafeTranslation(t, 'booking.children', 'Bambini')}
-                                    </label>
+                                <div className="guest-card">
+                                    <div className="guest-icon">👶</div>
+                                    <div className="guest-info">
+                                        <label htmlFor="children">{getSafeTranslation(t, 'booking.children', 'Bambini')}</label>
+                                        <p className="guest-desc">Età 0-17</p>
+                                    </div>
                                     <div className="number-input">
                                         <button 
                                             type="button"
