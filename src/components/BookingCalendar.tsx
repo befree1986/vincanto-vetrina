@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
-import { format, isBefore } from 'date-fns';
+import { format, isBefore, addDays } from 'date-fns';
 import { it } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
 import './BookingCalendar.css';
@@ -77,6 +77,51 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
         return 0;
     };
 
+    const isRangeAvailable = (start: Date, end: Date): boolean => {
+        let current = start;
+        while (current < end) {
+            if (isDateDisabled(current)) {
+                return false;
+            }
+            current = addDays(current, 1);
+        }
+        return true;
+    };
+
+    const getNextAvailableRange = (nights: number) => {
+        let start = addDays(new Date(), 1);
+        for (let i = 0; i < 120; i++) {
+            if (!isDateDisabled(start)) {
+                const end = addDays(start, nights);
+                if (isRangeAvailable(start, end)) {
+                    return { start, end };
+                }
+            }
+            start = addDays(start, 1);
+        }
+        return null;
+    };
+
+    const handleQuickSelect = (nights: number) => {
+        const range = getNextAvailableRange(nights);
+        if (!range) return;
+        setStartDate(range.start);
+        setEndDate(range.end);
+        onDateChange(range.start, range.end);
+    };
+
+    const resetSelection = () => {
+        setStartDate(null);
+        setEndDate(null);
+        onDateChange(null, null);
+    };
+
+    const quickOptions = [
+        { label: 'Weekend romantico', nights: 2, caption: '2 notti' },
+        { label: 'Settimana relax', nights: 7, caption: '7 notti' },
+        { label: 'Smart working stay', nights: 14, caption: '14 notti' }
+    ];
+
     if (isLoading) {
         return (
             <div className="booking-calendar-container loading">
@@ -93,6 +138,28 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
             <div className="calendar-header">
                 <h3>📅 Seleziona le Date del Soggiorno</h3>
                 <p>Scegli la data di arrivo e partenza per il tuo soggiorno</p>
+            </div>
+
+            <div className="calendar-toolbar">
+                <div className="quick-select-group">
+                    <p className="calendar-eyebrow">Scelte rapide</p>
+                    <div className="calendar-quick-actions">
+                        {quickOptions.map(option => (
+                            <button
+                                type="button"
+                                key={option.label}
+                                className="quick-option"
+                                onClick={() => handleQuickSelect(option.nights)}
+                            >
+                                <span>{option.label}</span>
+                                <small>{option.caption}</small>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+                <button type="button" className="calendar-reset" onClick={resetSelection}>
+                    Reset date
+                </button>
             </div>
 
             <div className="calendar-wrapper">

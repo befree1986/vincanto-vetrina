@@ -1,10 +1,10 @@
 /* BookingSystem.css */
 
 .booking-system {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
-  background: #f8f9fa;
+  padding: 32px 20px 60px;
+  background: #f5f6f8;
   min-height: calc(100vh - 200px);
 }
 
@@ -87,10 +87,10 @@
 
 /* Content Area */
 .booking-content {
-  background: white;
-  border-radius: 12px;
-  padding: 40px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  background: #fff;
+  border-radius: 20px;
+  padding: 48px;
+  box-shadow: 0 25px 80px rgba(15, 23, 42, 0.08);
 }
 
 .booking-step-content h2 {
@@ -99,6 +99,86 @@
   text-align: center;
   font-size: 1.8rem;
   font-weight: 600;
+}
+
+/* Two-column professional layout */
+.booking-layout-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.9fr);
+  gap: 40px;
+}
+
+.booking-main-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.booking-sidebar {
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-self: flex-start;
+}
+
+.booking-sidebar .price-breakdown {
+  margin: 0;
+  border-width: 1px;
+}
+
+.price-placeholder-card,
+.booking-trust-card {
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 10px 40px rgba(15, 23, 42, 0.06);
+}
+
+.price-placeholder-card h4 {
+  margin-bottom: 12px;
+  color: #111827;
+}
+
+.price-placeholder-card p {
+  color: #4b5563;
+  font-size: 0.95rem;
+  margin-bottom: 16px;
+}
+
+.price-placeholder-card ul {
+  padding-left: 18px;
+  color: #6b7280;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.booking-trust-card h4 {
+  margin-bottom: 16px;
+  color: #0f172a;
+}
+
+.booking-trust-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px 0;
+  color: #1f2937;
+  font-size: 0.95rem;
+  line-height: 1.8;
+}
+
+.booking-trust-card li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.booking-trust-card .trust-note {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.85rem;
 }
 
 /* Guests Selection */
@@ -366,6 +446,18 @@
   .booking-system {
     padding: 16px;
   }
+
+  .booking-content {
+    padding: 32px;
+  }
+
+  .booking-layout-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .booking-sidebar {
+    position: static;
+  }
 }
 
 @media (max-width: 768px) {
@@ -396,6 +488,10 @@
     width: 32px;
     height: 32px;
     font-size: 14px;
+  }
+
+  .booking-content {
+    padding: 24px;
   }
 }
 
@@ -847,7 +943,7 @@
 
 /* Nascondi il live preview del parcheggio */
 .parking-cost-preview.hidden {
-  display: none;
+  display: none !important;
 }
 
 @keyframes slideIn {
