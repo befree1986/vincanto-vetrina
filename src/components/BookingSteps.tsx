@@ -89,7 +89,7 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
     }
   }, []);
 
-  // Se successo Stripe, tenta conferma prenotazione usando dati locali
+  // Se successo Stripe, conferma prenotazione e invia email finale
   React.useEffect(() => {
     const finalize = async () => {
       if (stripeResult !== 'success') return;
@@ -113,6 +113,7 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
             payment_status: 'success',
             payment_id: null,
             amount: amountPaid,
+            total_amount: quoteData.totalAmount,
             booking_data: bookingData
           })
         });
@@ -121,7 +122,24 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
           setConfirmError(data.error || 'Errore conferma prenotazione');
         } else {
           setBookingConfirmed(true);
-          // Cleanup storage
+          try {
+            await fetch('/api/send-final-email', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                firstName: bookingData.guest_name || bookingData.first_name || '',
+                lastName: bookingData.guest_surname || bookingData.last_name || '',
+                bookingId: data.bookingId || data.id || 'N/D',
+                checkin: bookingData.check_in_date || bookingData.checkin || '',
+                checkout: bookingData.check_out_date || bookingData.checkout || '',
+                totalAmount: quoteData.totalAmount,
+                amountPaid,
+                guestEmail: bookingData.guest_email || bookingData.email || ''
+              })
+            });
+          } catch (emailErr) {
+            console.warn('Errore invio email finale:', emailErr);
+          }
           localStorage.removeItem('pendingBookingData');
           localStorage.removeItem('pendingBookingQuote');
         }
@@ -136,21 +154,43 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
   const handlePayPalSuccess = () => {
     setPaypalSuccess(true);
     setPaypalError(null);
-    // Salva la prenotazione dopo pagamento PayPal
+    const amountPaid = booking.formData.payment_type === 'deposit'
+      ? Math.round(booking.quote.totalAmount * 0.3 * 100) / 100
+      : Math.round(booking.quote.totalAmount * 100) / 100;
     fetch('/api/booking/confirm', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         payment_method: 'paypal',
         payment_status: 'success',
-        payment_id: null, // puoi passare l'id PayPal se disponibile
-        amount: booking.formData.payment_type === 'deposit'
-          ? Math.round(booking.quote.totalAmount * 0.3 * 100) / 100
-          : Math.round(booking.quote.totalAmount * 100) / 100,
+        payment_id: null,
+        amount: amountPaid,
+        total_amount: booking.quote.totalAmount,
         booking_data: booking.formData
       })
     })
-      .then(() => handleConfirmBooking())
+      .then(async (resp) => {
+        const data = await resp.json();
+        try {
+          await fetch('/api/send-final-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              firstName: booking.formData.guest_name || booking.formData.first_name || '',
+              lastName: booking.formData.guest_surname || booking.formData.last_name || '',
+              bookingId: data.bookingId || data.id || 'N/D',
+              checkin: booking.formData.check_in_date || booking.formData.checkin || '',
+              checkout: booking.formData.check_out_date || booking.formData.checkout || '',
+              totalAmount: booking.quote.totalAmount,
+              amountPaid,
+              guestEmail: booking.formData.guest_email || booking.formData.email || ''
+            })
+          });
+        } catch (e) {
+          console.warn('Errore email finale PayPal:', e);
+        }
+        handleConfirmBooking();
+      })
       .catch(() => handleConfirmBooking());
   };
   const handlePayPalError = (err: string) => {
@@ -170,6 +210,7 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
           amount: booking.formData.payment_type === 'deposit'
             ? Math.round(booking.quote.totalAmount * 0.3 * 100) / 100
             : Math.round(booking.quote.totalAmount * 100) / 100,
+          total_amount: booking.quote.totalAmount,
           booking_data: booking.formData
         })
       })
