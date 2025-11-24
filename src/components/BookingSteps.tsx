@@ -289,10 +289,12 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
             <span>€{deposit.toFixed(2)}</span>
           </div>
         )}
-        <div className="summary-row">
-          <span>Saldo al check-in:</span>
-          <span>€{saldo.toFixed(2)}</span>
-        </div>
+        {booking.formData.payment_type !== 'full' && (
+          <div className="summary-row">
+            <span>Saldo al check-in:</span>
+            <span>€{saldo.toFixed(2)}</span>
+          </div>
+        )}
       </div>
 
       <div className="payment-choice-box">
