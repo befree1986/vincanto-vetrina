@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useBooking } from '../hooks/useBooking';
 import { getSafeTranslation } from '../i18n';
-import StripePaymentForm from './StripePaymentForm';
 import './BookingSteps.css';
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 
@@ -69,55 +68,12 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
   const saldo = Math.round((total - deposit) * 100) / 100;
   const isDeposit = booking.formData.payment_type === 'deposit';
   const [isProcessing, setIsProcessing] = useState(false);
-  const [stripeClientSecret, setStripeClientSecret] = useState<string | null>(null);
-  const [stripeError, setStripeError] = useState<string | null>(null);
   const [stripeSuccess, setStripeSuccess] = useState(false);
   const [paypalSuccess, setPaypalSuccess] = useState(false);
   const [paypalError, setPaypalError] = useState<string | null>(null);
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
 
-  React.useEffect(() => {
-    if (booking.formData.payment_method === 'stripe' && booking.quote && !stripeClientSecret) {
-      setIsProcessing(true);
-      setStripeError(null);
-      fetch('/api/create-payment-intent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount: booking.formData.payment_type === 'deposit'
-            ? Math.round(booking.quote.totalAmount * 0.3 * 100) / 100
-            : Math.round(booking.quote.totalAmount * 100) / 100,
-          customer_email: booking.formData.guest_email,
-          customer_name: booking.formData.guest_name + ' ' + booking.formData.guest_surname
-        })
-      })
-        .then(res => res.json())
-        .then(data => setStripeClientSecret(data.clientSecret))
-        .catch(() => setStripeError('Errore nel recupero del pagamento Stripe.'))
-        .finally(() => setIsProcessing(false));
-    }
-  }, [booking.formData.payment_method, booking.quote, booking.formData.payment_type, booking.formData.guest_email, booking.formData.guest_name, booking.formData.guest_surname, stripeClientSecret]);
 
-  const handleStripeSuccess = () => {
-    setStripeSuccess(true);
-    setStripeError(null);
-    // Salva la prenotazione dopo pagamento Stripe
-    fetch('/api/booking/confirm', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        payment_method: 'stripe',
-        payment_status: 'success',
-        payment_id: null, // puoi passare l'id Stripe se disponibile
-        amount: booking.formData.payment_type === 'deposit'
-          ? Math.round(booking.quote.totalAmount * 0.3 * 100) / 100
-          : Math.round(booking.quote.totalAmount * 100) / 100,
-        booking_data: booking.formData
-      })
-    })
-      .then(() => handleConfirmBooking())
-      .catch(() => handleConfirmBooking());
-  };
   const handlePayPalSuccess = () => {
     setPaypalSuccess(true);
     setPaypalError(null);
@@ -224,14 +180,24 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
               }
               return (
                 <div className="summary-row extra-breakdown-item" key={idx}>
-                  <span>{extra.name || extra.label || 'Extra'}
-                    {multiplier > 1 && (
-                      <span className="extra-breakdown-multiplier">
-                        × {multiplier}
-                      </span>
+                  <span className={extra.included ? 'extra-included' : ''}>
+                    {extra.included ? (
+                      <>
+                        <span className="extra-strikethrough">€{total.toFixed(2)}</span>
+                        <span className="extra-included-label">INCLUSO</span>
+                      </>
+                    ) : (
+                      <>
+                        {extra.name || extra.label || 'Extra'}
+                        {multiplier > 1 && (
+                          <span className="extra-breakdown-multiplier">
+                            × {multiplier}
+                          </span>
+                        )}
+                        <span className="extra-price-right">€{total.toFixed(2)}</span>
+                      </>
                     )}
                   </span>
-                  <span>€{total.toFixed(2)}</span>
                 </div>
               );
             })}
@@ -241,10 +207,12 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
             </div>
           </div>
         )}
-        <div className="summary-row">
-          <span>Acconto (30%):</span>
-          <span>€{deposit.toFixed(2)}</span>
-        </div>
+        {booking.formData.payment_type !== 'full' && (
+          <div className="summary-row">
+            <span>Acconto (30%):</span>
+            <span>€{deposit.toFixed(2)}</span>
+          </div>
+        )}
         <div className="summary-row">
           <span>Saldo al check-in:</span>
           <span>€{saldo.toFixed(2)}</span>
@@ -302,28 +270,44 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
 
       <div className="payment-methods">
         {/* Stripe Elements: mostra sempre se selezionato e c'è un preventivo */}
-        {booking.formData.payment_method === 'stripe' && booking.quote && stripeClientSecret && !stripeSuccess && (
+        {booking.formData.payment_method === 'stripe' && booking.quote && !stripeSuccess && (
           <div className="payment-block">
             <h4>Paga con carta</h4>
             <div className="payment-form-wrapper">
-              <StripePaymentForm
-                clientSecret={stripeClientSecret}
-                onSuccess={handleStripeSuccess}
-                onError={setStripeError}
-              />
+              <button
+                type="button"
+                className="btn btn-primary btn-pay btn-pay-margin"
+                disabled={isProcessing}
+                onClick={async () => {
+                  setIsProcessing(true);
+                  try {
+                    const res = await fetch('/api/create-stripe-checkout-session', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        amount: booking.formData.payment_type === 'deposit'
+                          ? Math.round(total * 0.3 * 100) / 100
+                          : Math.round(total * 100) / 100,
+                        customer_email: booking.formData.guest_email,
+                        customer_name: booking.formData.guest_name + ' ' + booking.formData.guest_surname
+                      })
+                    });
+                    const data = await res.json();
+                    if (data.url) {
+                      window.location.href = data.url;
+                    } else {
+                      alert('Errore nel redirect a Stripe.');
+                    }
+                  } catch (err) {
+                    alert('Errore Stripe: ' + (typeof err === 'object' && err && 'message' in err ? (err as any).message : String(err)));
+                  } finally {
+                    setIsProcessing(false);
+                  }
+                }}
+              >
+                {isProcessing ? 'Elaborazione...' : 'Paga con Stripe'}
+              </button>
             </div>
-            {stripeError && <div className="error-message"><span className="icon">⚠️</span> {stripeError}</div>}
-            <button
-              type="button"
-              className="btn btn-primary btn-pay btn-pay-margin"
-              onClick={() => {
-                const btn = document.querySelector('.StripePaymentForm button[type=submit]') as HTMLButtonElement | null;
-                btn?.click();
-              }}
-              disabled={isProcessing}
-            >
-              {isProcessing ? 'Elaborazione...' : 'Effettua pagamento'}
-            </button>
           </div>
         )}
         {stripeSuccess && (

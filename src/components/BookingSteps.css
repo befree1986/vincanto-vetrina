@@ -1,3 +1,21 @@
+/* Extra services included style for payment summary */
+.extra-included {
+  display: flex;
+  align-items: center;
+}
+.extra-strikethrough {
+  color: #e53935;
+  text-decoration: line-through;
+  margin-right: 8px;
+}
+.extra-included-label {
+  color: #43a047;
+  font-weight: 600;
+  margin-left: 4px;
+}
+.extra-price-right {
+  margin-left: 8px;
+}
 /* Extra services breakdown styles */
 .extra-services-breakdown {
   margin-top: 8px;
