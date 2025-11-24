@@ -13,16 +13,20 @@ interface CalendarEvent {
 interface AvailabilityCalendarProps {
   onDateSelect?: (date: string) => void;
   selectedDate?: string;
+  checkOutDate?: string; // Aggiunto per range selection
   minDate?: string;
   maxDate?: string;
+  monthsShown?: number;
   className?: string;
 }
 
 const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
   onDateSelect,
   selectedDate,
+  checkOutDate,
   minDate,
   maxDate,
+  monthsShown = 1,
   className = ''
 }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -30,6 +34,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
   const [bookings, setBookings] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
 
   const today = new Date();
   const minDateObj = minDate ? new Date(minDate) : today;
@@ -234,15 +239,39 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
     const isCurrentMonth = date.getMonth() === currentMonth.getMonth();
     const isToday = date.toDateString() === today.toDateString();
     const isSelected = selectedDate === date.toISOString().split('T')[0];
+    const isCheckOut = checkOutDate === date.toISOString().split('T')[0];
     const isAvailable = isDateAvailable(date);
     const isBlocked = isDateBlocked(date);
     const isBooked = isDateBooked(date);
+
+    // Range hover effect: se c'è check-in selezionato ma non check-out, evidenzia range al mouse
+    let isInHoverRange = false;
+    if (selectedDate && !checkOutDate && hoveredDate && isAvailable) {
+      const checkIn = new Date(selectedDate);
+      const hovered = hoveredDate;
+      if (date > checkIn && date <= hovered) {
+        isInHoverRange = true;
+      }
+    }
+
+    // Range selezionato: tra check-in e check-out
+    let isInSelectedRange = false;
+    if (selectedDate && checkOutDate) {
+      const checkIn = new Date(selectedDate);
+      const checkOut = new Date(checkOutDate);
+      if (date > checkIn && date < checkOut) {
+        isInSelectedRange = true;
+      }
+    }
 
     let className = 'calendar-day';
     
     if (!isCurrentMonth) className += ' other-month';
     if (isToday) className += ' today';
-    if (isSelected) className += ' selected';
+    if (isSelected) className += ' selected check-in';
+    if (isCheckOut) className += ' selected check-out';
+    if (isInSelectedRange) className += ' in-range';
+    if (isInHoverRange) className += ' in-hover-range';
     if (isAvailable) className += ' available';
     if (isBlocked) className += ' blocked';
     if (isBooked) className += ' booked';
@@ -258,65 +287,136 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
 
   const weekDays = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
 
+  // Genera array di mesi da visualizzare
+  const getMonthsToShow = () => {
+    const months = [];
+    for (let i = 0; i < monthsShown; i++) {
+      const month = new Date(currentMonth);
+      month.setMonth(month.getMonth() + i);
+      months.push(month);
+    }
+    return months;
+  };
+
+  // Genera i giorni per un mese specifico
+  const generateCalendarDaysForMonth = (monthDate: Date) => {
+    const year = monthDate.getFullYear();
+    const month = monthDate.getMonth();
+    
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDate = new Date(firstDay);
+    startDate.setDate(startDate.getDate() - firstDay.getDay());
+    
+    const days = [];
+    const endDate = new Date(lastDay);
+    endDate.setDate(endDate.getDate() + (6 - lastDay.getDay()));
+    
+    for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+      days.push(new Date(date));
+    }
+    
+    return days;
+  };
+
   return (
-    <div className={`availability-calendar ${className}`}>
-      {/* Header del calendario */}
-      <div className="calendar-header">
-        <button 
-          className="nav-button"
-          onClick={() => navigateMonth('prev')}
-          disabled={loading}
-        >
-          ←
-        </button>
-        
-        <h3 className="month-year">
-          {monthYear.charAt(0).toUpperCase() + monthYear.slice(1)}
-        </h3>
-        
-        <button 
-          className="nav-button"
-          onClick={() => navigateMonth('next')}
-          disabled={loading}
-        >
-          →
-        </button>
-      </div>
+    <div className={`availability-calendar ${className} ${monthsShown > 1 ? 'multi-month' : ''}`}>
+      {/* Container per più mesi */}
+      <div className="calendars-container">
+        {getMonthsToShow().map((monthDate, monthIndex) => {
+          const monthYear = monthDate.toLocaleDateString('it-IT', { 
+            month: 'long', 
+            year: 'numeric' 
+          });
 
-      {/* Giorni della settimana */}
-      <div className="calendar-weekdays">
-        {weekDays.map(day => (
-          <div key={day} className="weekday">
-            {day}
-          </div>
-        ))}
-      </div>
+          return (
+            <div key={monthIndex} className="single-calendar">
+              {/* Header del calendario */}
+              <div className="calendar-header">
+                {monthIndex === 0 && (
+                  <button 
+                    className="nav-button"
+                    onClick={() => navigateMonth('prev')}
+                    disabled={loading}
+                  >
+                    ←
+                  </button>
+                )}
+                
+                {monthIndex === 0 && monthsShown === 1 && (
+                  <>
+                    <h3 className="month-year">
+                      {monthYear.charAt(0).toUpperCase() + monthYear.slice(1)}
+                    </h3>
+                    <button 
+                      className="nav-button"
+                      onClick={() => navigateMonth('next')}
+                      disabled={loading}
+                    >
+                      →
+                    </button>
+                  </>
+                )}
+                
+                {(monthsShown > 1 || monthIndex > 0) && (
+                  <h3 className="month-year centered">
+                    {monthYear.charAt(0).toUpperCase() + monthYear.slice(1)}
+                  </h3>
+                )}
+                
+                {monthIndex === monthsShown - 1 && monthsShown > 1 && (
+                  <button 
+                    className="nav-button"
+                    onClick={() => navigateMonth('next')}
+                    disabled={loading}
+                  >
+                    →
+                  </button>
+                )}
+              </div>
 
-      {/* Griglia calendario */}
-      <div className="calendar-grid">
-        {loading ? (
-          <div className="loading-overlay">
-            <div className="loading-spinner">🔄</div>
-            <span>Caricamento...</span>
-          </div>
-        ) : (
-          generateCalendarDays().map((date, index) => (
-            <button
-              key={index}
-              className={getDateClassName(date)}
-              onClick={() => handleDateClick(date)}
-              disabled={!isDateAvailable(date)}
-              title={
-                isDateBlocked(date) ? 'Data non disponibile' :
-                isDateBooked(date) ? 'Data già prenotata' :
-                isDateAvailable(date) ? 'Data disponibile' : 
-                'Data non selezionabile'
-              }
-            >
-              {date.getDate()}
-            </button>
-          ))
-        )}
+              {/* Giorni della settimana */}
+              <div className="calendar-weekdays">
+                {weekDays.map(day => (
+                  <div key={day} className="weekday">
+                    {day}
+                  </div>
+                ))}
+              </div>
+
+              {/* Griglia calendario */}
+              <div className="calendar-grid">
+                {loading ? (
+                  monthIndex === 0 && (
+                    <div className="loading-overlay">
+                      <div className="loading-spinner">🔄</div>
+                      <span>Caricamento...</span>
+                    </div>
+                  )
+                ) : (
+                  generateCalendarDaysForMonth(monthDate).map((date, index) => (
+                    <button
+                      key={index}
+                      className={getDateClassName(date)}
+                      onClick={() => handleDateClick(date)}
+                      onMouseEnter={() => setHoveredDate(date)}
+                      onMouseLeave={() => setHoveredDate(null)}
+                      disabled={!isDateAvailable(date)}
+                      title={
+                        isDateBlocked(date) ? 'Data non disponibile' :
+                        isDateBooked(date) ? 'Data già prenotata' :
+                        isDateAvailable(date) ? 'Data disponibile' : 
+                        'Data non selezionabile'
+                      }
+                    >
+                      {date.getDate()}
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Legenda */}

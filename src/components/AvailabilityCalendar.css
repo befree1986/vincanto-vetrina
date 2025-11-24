@@ -9,6 +9,29 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
+/* Multi-month layout */
+.availability-calendar.multi-month {
+  max-width: 100%;
+}
+
+.calendars-container {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.single-calendar {
+  flex: 1;
+  min-width: 320px;
+  max-width: 400px;
+}
+
+.month-year.centered {
+  text-align: center;
+  flex: 1;
+}
+
 /* Header del calendario */
 .calendar-header {
   display: flex;
@@ -126,6 +149,29 @@
   color: white;
   font-weight: 600;
   box-shadow: 0 0 0 2px rgba(39, 174, 96, 0.3);
+}
+
+/* Range selection styles */
+.calendar-day.check-in {
+  background: #27ae60;
+  border-radius: 8px 0 0 8px;
+}
+
+.calendar-day.check-out {
+  background: #27ae60;
+  border-radius: 0 8px 8px 0;
+}
+
+.calendar-day.in-range {
+  background: #d5eddb;
+  color: #27ae60;
+  border-radius: 0;
+}
+
+.calendar-day.in-hover-range {
+  background: rgba(39, 174, 96, 0.2);
+  color: #27ae60;
+  border-radius: 0;
 }
 
 .calendar-day.booked {

@@ -267,23 +267,14 @@
 .progress-fill.step-3 { width: 75%; }
 .progress-fill.step-4 { width: 100%; }
 
-/* 📝 Contenuto principale */
+/* 📝 Contenuto principale - FULL WIDTH senza sidebar */
 .booking-content {
-  display: grid;
-  grid-template-columns: 1fr 400px;
-  gap: 40px;
-  margin-bottom: 40px;
-  /* 🎯 DESKTOP: Aggiunto margine top per evitare sovrapposizione navbar */
-  margin-top: 60px;
+  display: block;
+  max-width: 1000px;
+  margin: 60px auto 40px;
 }
 
-/* 🎯 DESKTOP: Sidebar più spaziata dal contenuto principale */
-.booking-sidebar {
-  position: sticky;
-  top: 120px; /* ✅ Più in basso per evitare navbar */
-  align-self: flex-start;
-  z-index: 10;
-}
+/* Rimosso .booking-sidebar - non più necessario */
 
 .booking-step {
   background: white;
@@ -943,10 +934,6 @@
     grid-template-columns: 1fr 320px;
     gap: 20px;
   }
-  
-  .booking-sidebar {
-    position: static;
-  }
 }
 
 @media (max-width: 768px) {
@@ -955,15 +942,7 @@
   }
   
   .booking-content {
-    grid-template-columns: 1fr;
-    gap: 24px;
-  }
-  
-  /* 🎯 MOBILE: Live view DOPO la selezione (order: 1) */
-  .booking-sidebar {
-    position: static;
-    order: 1; /* ✅ Spostato DOPO il form invece di prima */
-    margin-top: 20px;
+    margin: 20px auto;
   }
 
   /* Price banner mobile */

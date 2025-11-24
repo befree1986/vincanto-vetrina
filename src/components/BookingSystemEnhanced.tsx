@@ -7,7 +7,8 @@ import ExtraServices from './ExtraServices';
 import './BookingSystemEnhanced.css';
 import { getSafeTranslation } from '../i18n';
 
-// Build: v2.0 - UI Redesign 24/11/2025
+// Build: v3.0 - Force cache bust 20251124123409
+// ⭐ NEW UI: Horizontal price banner + Modern guest cards
 
 // 🎯 Componente ottimizzato per il breakdown dei prezzi
 interface PriceBreakdownProps {
@@ -297,56 +298,21 @@ const BookingSystemEnhanced: React.FC = () => {
                             <p>{getSafeTranslation(t, 'booking.step1.subtitle', 'Quando vuoi soggiornare da noi?')}</p>
                         </div>
 
-                        {/* 💰 PREVENTIVO ORIZZONTALE */}
+                        {/* Preventivo verticale sopra calendario */}
                         {booking.quote && !booking.isLoadingQuote && (
-                            <div className="price-banner-horizontal">
-                                <div className="price-banner-content">
-                                    <div className="price-summary">
-                                        <div className="price-item">
-                                            <span className="price-label">Soggiorno ({booking.quote.nights} {booking.quote.nights === 1 ? 'notte' : 'notti'})</span>
-                                            <span className="price-value">€{(booking.quote.basePrice || 0).toFixed(2)}</span>
-                                        </div>
-                                        {booking.quote.discount && (
-                                            <div className="price-item discount">
-                                                <span className="price-label">🎉 Sconto {booking.quote.discount.percentage}%</span>
-                                                <span className="price-value">-€{booking.quote.discount.amount.toFixed(2)}</span>
-                                            </div>
-                                        )}
-                                        {booking.formData.parking_option === 'private' && booking.quote.parkingCost > 0 && (
-                                            <div className="price-item">
-                                                <span className="price-label">🚗 Parcheggio</span>
-                                                <span className="price-value">€{booking.quote.parkingCost.toFixed(2)}</span>
-                                            </div>
-                                        )}
-                                        {extraServicesCost > 0 && (
-                                            <div className="price-item">
-                                                <span className="price-label">🛎️ Servizi Extra</span>
-                                                <span className="price-value">€{extraServicesCost.toFixed(2)}</span>
-                                            </div>
-                                        )}
-                                        <div className="price-item">
-                                            <span className="price-label">🧹 Pulizia</span>
-                                            <span className="price-value">€{booking.quote.cleaningFee.toFixed(2)}</span>
-                                        </div>
-                                        <div className="price-item">
-                                            <span className="price-label">🏛️ Tassa soggiorno</span>
-                                            <span className="price-value">€{booking.quote.touristTax.toFixed(2)}</span>
-                                        </div>
-                                    </div>
-                                    <div className="price-total-section">
-                                        <div className="price-total">
-                                            <span className="total-label">Totale</span>
-                                            <span className="total-value">€{(booking.quote.totalAmount + extraServicesCost).toFixed(2)}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <PriceBreakdown 
+                                costs={booking.quote} 
+                                loading={booking.isLoadingQuote}
+                                extraServicesCost={extraServicesCost}
+                                selectedExtraServices={selectedExtraServices}
+                            />
                         )}
 
                         <div className="dates-section">
-                            {/* Nuovo calendario con disponibilità */}
+                            {/* Calendario con 2 mesi affiancati */}
                             <AvailabilityCalendar 
                                 selectedDate={booking.formData.check_in_date ? booking.formData.check_in_date.toISOString().split('T')[0] : undefined}
+                                checkOutDate={booking.formData.check_out_date ? booking.formData.check_out_date.toISOString().split('T')[0] : undefined}
                                 onDateSelect={(date) => {
                                     if (!booking.formData.check_in_date || booking.formData.check_out_date) {
                                         // Seleziona check-in
@@ -374,6 +340,7 @@ const BookingSystemEnhanced: React.FC = () => {
                                 }}
                                 minDate={new Date().toISOString().split('T')[0]}
                                 maxDate={new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]}
+                                monthsShown={2}
                                 className="booking-calendar"
                             />
 
@@ -566,6 +533,16 @@ const BookingSystemEnhanced: React.FC = () => {
                             <p>{getSafeTranslation(t, 'booking.extraServicesDesc', 'Personalizza il tuo soggiorno con i nostri servizi aggiuntivi')}</p>
                         </div>
 
+                        {/* Preventivo aggiornato con servizi extra */}
+                        {booking.quote && !booking.isLoadingQuote && (
+                            <PriceBreakdown 
+                                costs={booking.quote} 
+                                loading={booking.isLoadingQuote}
+                                extraServicesCost={extraServicesCost}
+                                selectedExtraServices={selectedExtraServices}
+                            />
+                        )}
+
                         <ExtraServices
                             childrenAges={booking.formData.children_ages}
                             showHeader={false}
@@ -607,7 +584,6 @@ const BookingSystemEnhanced: React.FC = () => {
                 )}
 
                 {/* Step 3: Dati Personali */}
-                {/* Step 3: Dati Personali */}
                 {currentStep === 3 && (
                     <div className="booking-step step-personal">
                         <div className="step-header">
@@ -617,6 +593,16 @@ const BookingSystemEnhanced: React.FC = () => {
                             </h3>
                             <p>{getSafeTranslation(t, 'booking.step2.subtitle', 'Inserisci i tuoi dati personali per la prenotazione')}</p>
                         </div>
+
+                        {/* Preventivo finale prima del pagamento */}
+                        {booking.quote && !booking.isLoadingQuote && (
+                            <PriceBreakdown 
+                                costs={booking.quote} 
+                                loading={booking.isLoadingQuote}
+                                extraServicesCost={extraServicesCost}
+                                selectedExtraServices={selectedExtraServices}
+                            />
+                        )}
                         <form
                             className="personal-form"
                             onSubmit={e => {
@@ -712,22 +698,13 @@ const BookingSystemEnhanced: React.FC = () => {
                     />
                 )}
 
-                {/* Sidebar con preventivo - sempre visibile */}
-                <div className="booking-sidebar">
-                    <PriceBreakdown 
-                        costs={booking.quote} 
-                        loading={booking.isLoadingQuote}
-                        extraServicesCost={extraServicesCost}
-                        selectedExtraServices={selectedExtraServices}
-                    />
-                    
-                    {booking.quoteError && (
-                        <div className="error-message">
-                            <span className="icon">⚠️</span>
-                            {booking.quoteError}
-                        </div>
-                    )}
-                </div>
+                {/* Errori preventivo */}
+                {booking.quoteError && (
+                    <div className="error-message">
+                        <span className="icon">⚠️</span>
+                        {booking.quoteError}
+                    </div>
+                )}
             </div>
         </div>
     );
