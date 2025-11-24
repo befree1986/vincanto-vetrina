@@ -3,6 +3,7 @@
 import { Pool } from 'pg';
 import { sendEmailWithAdminCopy } from '../email/emailSender.js';
 import { renderEmailTemplate } from '../email/templates/index.js';
+import { detectLanguage } from '../email/i18n.js';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
@@ -148,6 +149,7 @@ export default async function handler(req, res) {
     // Invia email di conferma (solo se successo pagamento)
     if (payment_status === 'success' && process.env.SMTP_HOST) {
       try {
+        const guestLanguage = detectLanguage(email, booking_data.language);
         const emailHtml = renderEmailTemplate('booking_confirmation', {
           firstName,
           lastName,
@@ -159,7 +161,8 @@ export default async function handler(req, res) {
           children,
           totalAmount,
           depositAmount: Math.round(totalAmount * 0.3 * 100) / 100,
-          fromEmail: process.env.SMTP_FROM
+          fromEmail: process.env.SMTP_FROM,
+          language: guestLanguage
         });
 
         await sendEmailWithAdminCopy({
@@ -167,7 +170,7 @@ export default async function handler(req, res) {
           subject: `Conferma Prenotazione ${bookingId}`,
           html: emailHtml,
           templateName: 'booking_confirmation',
-          metadata: { bookingId, totalAmount, paymentMethod: payment_method }
+          metadata: { bookingId, totalAmount, paymentMethod: payment_method, language: guestLanguage }
         });
 
         console.log('✅ Email conferma inviata');

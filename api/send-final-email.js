@@ -1,5 +1,6 @@
 import { renderEmailTemplate } from '../email/templates/index.js';
 import { sendEmailWithAdminCopy } from '../email/emailSender.js';
+import { detectLanguage } from '../email/i18n.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -13,7 +14,8 @@ export default async function handler(req, res) {
     checkout,
     totalAmount,
     amountPaid,
-    guestEmail
+    guestEmail,
+    language: userLanguage
   } = req.body || {};
 
   if (!guestEmail || !bookingId) {
@@ -25,6 +27,7 @@ export default async function handler(req, res) {
   }
 
   try {
+    const guestLanguage = detectLanguage(guestEmail, userLanguage);
     const html = renderEmailTemplate('booking_final_confirmation', {
       firstName,
       lastName,
@@ -33,7 +36,8 @@ export default async function handler(req, res) {
       checkout,
       totalAmount,
       amountPaid,
-      fromEmail: process.env.SMTP_FROM
+      fromEmail: process.env.SMTP_FROM,
+      language: guestLanguage
     });
 
     const results = await sendEmailWithAdminCopy({
@@ -41,7 +45,7 @@ export default async function handler(req, res) {
       subject: `Pagamento ricevuto - Prenotazione ${bookingId}`,
       html,
       templateName: 'booking_final_confirmation',
-      metadata: { bookingId, totalAmount, amountPaid }
+      metadata: { bookingId, totalAmount, amountPaid, language: guestLanguage }
     });
 
     const primarySuccess = results.find(r => r.recipient === guestEmail)?.success;

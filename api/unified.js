@@ -5,6 +5,7 @@ import nodemailer from 'nodemailer';
 import { renderEmailTemplate } from '../email/templates/index.js';
 import { sendEmailWithAdminCopy } from '../email/emailSender.js';
 import { initializeEmailLogsTable } from '../email/emailLogger.js';
+import { detectLanguage } from '../email/i18n.js';
 
 // Database connection
 const pool = new Pool({
@@ -509,6 +510,7 @@ export default async function handler(req, res) {
           // 📧 Invia email di conferma con retry e logging
           if (process.env.SMTP_HOST) {
             try {
+              const guestLanguage = detectLanguage(email);
               const emailHtml = renderEmailTemplate('booking_confirmation', {
                 firstName,
                 lastName,
@@ -520,14 +522,15 @@ export default async function handler(req, res) {
                 children,
                 totalAmount,
                 depositAmount: totalAmount * 0.3,
-                fromEmail: process.env.SMTP_FROM
+                fromEmail: process.env.SMTP_FROM,
+                language: guestLanguage
               });
               const emailResults = await sendEmailWithAdminCopy({
                 to: email,
                 subject: `Conferma Prenotazione ${result.rows[0].booking_id}`,
                 html: emailHtml,
                 templateName: 'booking_confirmation',
-                metadata: { bookingId: result.rows[0].booking_id, totalAmount }
+                metadata: { bookingId: result.rows[0].booking_id, totalAmount, language: guestLanguage }
               });
               const primarySuccess = emailResults.find(r => r.recipient === email)?.success;
               console.log(primarySuccess ? '✅ Email conferma inviata a:' : '⚠️ Email conferma fallita per:', email);

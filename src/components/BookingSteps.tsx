@@ -4,6 +4,7 @@ import { useBooking } from '../hooks/useBooking';
 import { getSafeTranslation } from '../i18n';
 import './BookingSteps.css';
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
+import i18n from '../i18n';
 
 type BookingStep3Props = {
   booking?: any;
@@ -134,7 +135,8 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
                 checkout: bookingData.check_out_date || bookingData.checkout || '',
                 totalAmount: quoteData.totalAmount,
                 amountPaid,
-                guestEmail: bookingData.guest_email || bookingData.email || ''
+                guestEmail: bookingData.guest_email || bookingData.email || '',
+                language: i18n.language || 'it'
               })
             });
           } catch (emailErr) {
@@ -183,7 +185,8 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
               checkout: booking.formData.check_out_date || booking.formData.checkout || '',
               totalAmount: booking.quote.totalAmount,
               amountPaid,
-              guestEmail: booking.formData.guest_email || booking.formData.email || ''
+              guestEmail: booking.formData.guest_email || booking.formData.email || '',
+              language: i18n.language || 'it'
             })
           });
         } catch (e) {
