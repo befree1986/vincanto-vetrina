@@ -13,6 +13,14 @@
       "destination": "/api/unified.js"
     },
     {
+      "source": "/api/booking/confirm",
+      "destination": "/api/booking-confirm.js"
+    },
+    {
+      "source": "/api/send-final-email",
+      "destination": "/api/send-final-email.js"
+    },
+    {
       "source": "/api/pricing",
       "destination": "/api/unified.js?action=pricing"
     },
