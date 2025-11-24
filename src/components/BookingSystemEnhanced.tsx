@@ -7,6 +7,8 @@ import ExtraServices from './ExtraServices';
 import './BookingSystemEnhanced.css';
 import { getSafeTranslation } from '../i18n';
 
+// Build: v2.0 - UI Redesign 24/11/2025
+
 // 🎯 Componente ottimizzato per il breakdown dei prezzi
 interface PriceBreakdownProps {
     costs: any;
