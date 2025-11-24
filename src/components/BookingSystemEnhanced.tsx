@@ -106,13 +106,13 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
                     </div>
 
                     {/* Servizi Extra */}
-                    {selectedExtraServices.length > 0 && (
+                    {selectedExtraServices.filter(s => !s.isParking && s.category !== 'parcheggio').length > 0 && (
                         <>
                             <div className="breakdown-subtitle">
                                 <span className="icon">🛎️</span>
                                 Servizi Extra
                             </div>
-                                                        {selectedExtraServices.map(service => {
+                                                        {selectedExtraServices.filter(s => !s.isParking && s.category !== 'parcheggio').map(service => {
                                                                 // Calcola il moltiplicatore in base all'unità
                                                                 let multiplier = 1;
                                                                 if (service.unit === 'notte' || service.unit === 'per_night') {
@@ -558,16 +558,33 @@ const BookingSystemEnhanced: React.FC = () => {
                             showHeader={false}
                             onServicesChange={(services, totalCost) => {
                                 setSelectedExtraServices(services);
-                                setExtraServicesCost(totalCost);
                                 
                                 // Sincronizza la selezione del parcheggio con parking_option
                                 const parkingService = services.find(service => service.isParking || service.category === 'parcheggio');
                                 if (parkingService) {
                                     booking.setFormData({ parking_option: 'private' });
                                 } else {
-                                    // Se non c'è parcheggio selezionato, imposta su "none" per default
                                     booking.setFormData({ parking_option: 'none' });
                                 }
+                                
+                                // 🔧 FIX: Escludi il parcheggio dal costo extra perché è già nel quote API
+                                const extraCostWithoutParking = services
+                                    .filter(s => !s.isParking && s.category !== 'parcheggio')
+                                    .reduce((tot, s) => {
+                                        if (s.included) return tot; // Servizi inclusi = €0
+                                        let multiplier = 1;
+                                        if (s.unit === 'notte' || s.unit === 'per_night') {
+                                            multiplier = booking.quote?.nights || 1;
+                                        } else if (s.unit === 'persona' || s.unit === 'per_person') {
+                                            multiplier = booking.quote?.guests || 1;
+                                        } else if (s.unit === 'per_person_per_day') {
+                                            multiplier = (booking.quote?.guests || 1) * (booking.quote?.nights || 1);
+                                        }
+                                        return tot + (s.price * multiplier);
+                                    }, 0);
+                                
+                                console.log('[BookingSystemEnhanced] 💰 Extra cost (senza parcheggio):', extraCostWithoutParking);
+                                setExtraServicesCost(extraCostWithoutParking);
                             }}
                         />
 

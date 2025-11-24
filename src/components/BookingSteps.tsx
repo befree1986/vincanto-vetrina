@@ -40,22 +40,24 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
       return _extraServicesCost;
     }
     
-    // Calcola manualmente il costo dei servizi extra selezionati
-    const reducedCost = selectedExtraServices.reduce((tot, s) => {
-      // Calcola moltiplicatore in base all'unità
-      let multiplier = 1;
-      if (s.unit === 'notte' || s.unit === 'per_night') {
-        multiplier = quote.nights || 1;
-      } else if (s.unit === 'persona' || s.unit === 'per_person') {
-        multiplier = quote.guests || 1;
-      } else if (s.unit === 'per_person_per_day') {
-        multiplier = (quote.guests || 1) * (quote.nights || 1);
-      }
-      // I servizi inclusi non hanno costo aggiuntivo
-      const cost = s.included ? 0 : (s.price || 0) * multiplier;
-      console.log(`[BookingSteps] Servizio "${s.name}": €${s.price} × ${multiplier} = €${cost} ${s.included ? '(INCLUSO)' : ''}`);
-      return tot + cost;
-    }, 0);
+    // Calcola manualmente il costo dei servizi extra selezionati (ESCLUSO PARCHEGGIO)
+    const reducedCost = selectedExtraServices
+      .filter(s => !s.isParking && s.category !== 'parcheggio') // Escludi parcheggio (già nel quote)
+      .reduce((tot, s) => {
+        // Calcola moltiplicatore in base all'unità
+        let multiplier = 1;
+        if (s.unit === 'notte' || s.unit === 'per_night') {
+          multiplier = quote.nights || 1;
+        } else if (s.unit === 'persona' || s.unit === 'per_person') {
+          multiplier = quote.guests || 1;
+        } else if (s.unit === 'per_person_per_day') {
+          multiplier = (quote.guests || 1) * (quote.nights || 1);
+        }
+        // I servizi inclusi non hanno costo aggiuntivo
+        const cost = s.included ? 0 : (s.price || 0) * multiplier;
+        console.log(`[BookingSteps] Servizio "${s.name}": €${s.price} × ${multiplier} = €${cost} ${s.included ? '(INCLUSO)' : ''}`);
+        return tot + cost;
+      }, 0);
     console.log('[BookingSteps] Costo ridotto manualmente:', reducedCost);
     return reducedCost;
   };
@@ -194,10 +196,10 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
           <span>Totale soggiorno:</span>
           <span><strong>€{total.toFixed(2)}</strong></span>
         </div>
-        {selectedExtraServices && selectedExtraServices.length > 0 && (
+        {selectedExtraServices && selectedExtraServices.filter(s => !s.isParking && s.category !== 'parcheggio').length > 0 && (
           <div className="extra-services-breakdown">
             <div className="summary-row extra-breakdown-title">Servizi extra:</div>
-            {selectedExtraServices.map((extra, idx) => {
+            {selectedExtraServices.filter(s => !s.isParking && s.category !== 'parcheggio').map((extra, idx) => {
               // Calcola il moltiplicatore in base all'unità
               let multiplier = 1;
               if (extra.unit === 'notte' || extra.unit === 'per_night') {
