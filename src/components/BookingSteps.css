@@ -16,6 +16,28 @@
 .extra-price-right {
   margin-left: 8px;
 }
+/* Payment summary alignment for extra services */
+.extra-breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.extra-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.extra-breakdown-multiplier {
+  font-size: 0.85em;
+  opacity: 0.75;
+  margin-left: 4px;
+}
+.extra-value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
 /* Extra services breakdown styles */
 .extra-services-breakdown {
   margin-top: 8px;

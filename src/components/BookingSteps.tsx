@@ -180,22 +180,20 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
               }
               return (
                 <div className="summary-row extra-breakdown-item" key={idx}>
-                  <span className={extra.included ? 'extra-included' : ''}>
+                  <span className="extra-label">
+                    {extra.name || extra.label || 'Extra'}
+                    {multiplier > 1 && (
+                      <span className="extra-breakdown-multiplier">× {multiplier}</span>
+                    )}
+                  </span>
+                  <span className="extra-value">
                     {extra.included ? (
                       <>
                         <span className="extra-strikethrough">€{total.toFixed(2)}</span>
                         <span className="extra-included-label">INCLUSO</span>
                       </>
                     ) : (
-                      <>
-                        {extra.name || extra.label || 'Extra'}
-                        {multiplier > 1 && (
-                          <span className="extra-breakdown-multiplier">
-                            × {multiplier}
-                          </span>
-                        )}
-                        <span className="extra-price-right">€{total.toFixed(2)}</span>
-                      </>
+                      <>€{total.toFixed(2)}</>
                     )}
                   </span>
                 </div>
