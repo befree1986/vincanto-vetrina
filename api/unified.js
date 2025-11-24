@@ -3,6 +3,8 @@
 import { Pool } from 'pg';
 import nodemailer from 'nodemailer';
 import { renderEmailTemplate } from '../email/templates/index.js';
+import { sendEmailWithAdminCopy } from '../email/emailSender.js';
+import { initializeEmailLogsTable } from '../email/emailLogger.js';
 
 // Database connection
 const pool = new Pool({
@@ -113,6 +115,9 @@ async function initializeTables() {
       )
     `);
     console.log('✅ Tabella extra_services inizializzata');
+
+    // 🆕 Crea tabella email_logs
+    await initializeEmailLogsTable();
 
     // 🔄 Aggiungi campi min_age e max_age se non esistono
     try {
@@ -501,8 +506,8 @@ export default async function handler(req, res) {
             'pending'
           ]);
           
-          // 📧 Invia email di conferma
-          if (emailTransporter) {
+          // 📧 Invia email di conferma con retry e logging
+          if (process.env.SMTP_HOST) {
             try {
               const emailHtml = renderEmailTemplate('booking_confirmation', {
                 firstName,
@@ -517,20 +522,15 @@ export default async function handler(req, res) {
                 depositAmount: totalAmount * 0.3,
                 fromEmail: process.env.SMTP_FROM
               });
-              const mailOptions = {
-                from: `"${process.env.SMTP_FROM_NAME || 'Vincanto Maori'}" <${process.env.SMTP_FROM}>`,
+              const emailResults = await sendEmailWithAdminCopy({
                 to: email,
                 subject: `Conferma Prenotazione ${result.rows[0].booking_id}`,
-                html: emailHtml
-              };
-              await emailTransporter.sendMail(mailOptions);
-              // Invia copia admin se configurata
-              const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_FROM;
-              if (adminEmail && adminEmail !== email) {
-                await emailTransporter.sendMail({ ...mailOptions, to: adminEmail, subject: `[COPIA ADMIN] Conferma Prenotazione ${result.rows[0].booking_id}` });
-              }
-              
-              console.log('✅ Email conferma inviata a:', email);
+                html: emailHtml,
+                templateName: 'booking_confirmation',
+                metadata: { bookingId: result.rows[0].booking_id, totalAmount }
+              });
+              const primarySuccess = emailResults.find(r => r.recipient === email)?.success;
+              console.log(primarySuccess ? '✅ Email conferma inviata a:' : '⚠️ Email conferma fallita per:', email);
             } catch (emailError) {
               console.error('⚠️ Errore invio email:', emailError.message);
             }
