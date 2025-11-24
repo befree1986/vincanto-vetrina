@@ -705,6 +705,8 @@ const BookingSystemEnhanced: React.FC = () => {
                     <BookingStep3WithStripe 
                         booking={booking}
                         onBack={() => setCurrentStep(3)}
+                        selectedExtraServices={selectedExtraServices}
+                        extraServicesCost={extraServicesCost}
                     />
                 )}
 
