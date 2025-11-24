@@ -1307,22 +1307,35 @@ export default async function handler(req, res) {
 
         // Calcola prezzo base per ospiti con LOGICA CORRETTA
         const guestsNum = parseInt(guests);
+        const adultsNum = parseInt(adults) || guestsNum;
+        const childrenNum = parseInt(children) || 0;
+        
+        console.log('🔢 PARAMETRI RICEVUTI:', {
+          guests: guestsNum,
+          adults: adultsNum,
+          children: childrenNum,
+          nights: nights,
+          includeParking: includeParking
+        });
+        console.log('💰 PRICING CONFIG:', pricing);
         
         // NUOVA LOGICA: Prezzo base 150€ per 1-2 persone + 20€ per ogni persona aggiuntiva
         let basePricePerNight;
         if (guestsNum <= 2) {
           // 1-2 persone: 150€ totale (75€ × 2)
           basePricePerNight = pricing.priceGroup1to2 * 2; // 75€ × 2 = 150€
+          console.log(`🔢 CALCOLO BASE (1-2 persone): ${pricing.priceGroup1to2} × 2 = ${basePricePerNight}€`);
         } else {
           // 3+ persone: 150€ base + 20€ per ogni persona aggiuntiva
           basePricePerNight = (pricing.priceGroup1to2 * 2) + ((guestsNum - 2) * 20);
+          console.log(`🔢 CALCOLO BASE (${guestsNum} persone): (${pricing.priceGroup1to2} × 2) + ((${guestsNum} - 2) × 20) = ${basePricePerNight}€`);
           // Esempi:
           // 3 persone: 150€ + (1 × 20€) = 170€
           // 4 persone: 150€ + (2 × 20€) = 190€
           // 5 persone: 150€ + (3 × 20€) = 210€
         }
         
-        console.log(`🔢 CALCOLO PREZZO BACKEND: ${guestsNum} persone = ${basePricePerNight}€ per notte`);
+        console.log(`🔢 PREZZO BASE PER NOTTE: ${basePricePerNight}€`);
 
         // Calcola subtotale alloggio
         const accommodationCost = basePricePerNight * nights;
@@ -1337,17 +1350,27 @@ export default async function handler(req, res) {
 
         // Calcola costi aggiuntivi
         const cleaningFee = pricing.cleaningFee;
+        console.log(`🧽 PULIZIA: €${cleaningFee}`);
+        
         // 🔧 FIX: Parcheggio è un costo PER NOTTE
         const parkingCost = (includeParking === 'true') ? (pricing.parkingFee * nights) : 0;
+        console.log(`🚗 PARCHEGGIO: ${includeParking === 'true' ? `€${pricing.parkingFee} × ${nights} notti = €${parkingCost}` : '€0 (non richiesto)'}`);
         
         // 🔧 FIX: Tassa soggiorno SOLO per adulti (bambini <12 anni gratis)
-        const adultsNum = parseInt(adults) || parseInt(guests); // Fallback se adults non specificato
         const touristTax = pricing.touristTaxAdult * adultsNum * nights;
-        
-        console.log(`🏛️ CALCOLO TASSA SOGGIORNO: ${adultsNum} adulti × €${pricing.touristTaxAdult} × ${nights} notti = €${touristTax}`);
+        console.log(`🏛️ TASSA SOGGIORNO: ${adultsNum} adulti × €${pricing.touristTaxAdult} × ${nights} notti = €${touristTax}`);
 
         // Calcola totale
         const totalAmount = discountedAccommodation + cleaningFee + parkingCost + touristTax;
+        console.log('💰 TOTALE:', {
+          accommodationCost: accommodationCost,
+          discount: discount > 0 ? `-${discountAmount}€ (${discount}%)` : '0€',
+          discountedAccommodation: discountedAccommodation,
+          cleaningFee: cleaningFee,
+          parkingCost: parkingCost,
+          touristTax: touristTax,
+          totalAmount: totalAmount
+        });
         const depositAmount = totalAmount * 0.30; // Acconto 30%
 
         // Risposta quote

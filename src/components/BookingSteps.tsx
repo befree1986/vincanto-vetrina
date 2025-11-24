@@ -28,21 +28,52 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
   // Calcola il costo extra dinamicamente in base a quote
   const getExtraServicesCost = () => {
     if (!quote) return 0;
+    
+    // 🐛 DEBUG: Calcolo servizi extra
+    console.log('[BookingSteps] getExtraServicesCost - Quote:', quote);
+    console.log('[BookingSteps] getExtraServicesCost - SelectedExtraServices:', selectedExtraServices);
+    console.log('[BookingSteps] getExtraServicesCost - _extraServicesCost prop:', _extraServicesCost);
+    
+    // 🔧 FIX: Usa il costo già calcolato invece di ricalcolarlo
+    if (_extraServicesCost > 0) {
+      console.log('[BookingSteps] Usando costo extra pre-calcolato:', _extraServicesCost);
+      return _extraServicesCost;
+    }
+    
     try {
       const { useExtraServices } = require('../hooks/useExtraServices');
       const hook = useExtraServices();
-      return hook.getTotalCost({
+      const calculatedCost = hook.getTotalCost({
         nights: quote.nights,
         adults: quote.guests,
         children: 0,
         guests: quote.guests
       });
-    } catch {
-      return selectedExtraServices.reduce((tot, s) => tot + (s.price || 0), 0);
+      console.log('[BookingSteps] Costo calcolato da useExtraServices:', calculatedCost);
+      return calculatedCost;
+    } catch (err) {
+      console.error('[BookingSteps] Errore useExtraServices, fallback a reduce:', err);
+      const reducedCost = selectedExtraServices.reduce((tot, s) => {
+        // Calcola moltiplicatore in base all'unità
+        let multiplier = 1;
+        if (s.unit === 'notte' || s.unit === 'per_night') {
+          multiplier = quote.nights || 1;
+        } else if (s.unit === 'persona' || s.unit === 'per_person') {
+          multiplier = quote.guests || 1;
+        } else if (s.unit === 'per_person_per_day') {
+          multiplier = (quote.guests || 1) * (quote.nights || 1);
+        }
+        const cost = s.included ? 0 : (s.price || 0) * multiplier;
+        return tot + cost;
+      }, 0);
+      console.log('[BookingSteps] Costo ridotto manualmente:', reducedCost);
+      return reducedCost;
     }
   };
   const extraServicesCost = getExtraServicesCost();
+  console.log('[BookingSteps] 💰 Totale extra servizi finale:', extraServicesCost);
   const total = quote ? quote.totalAmount + extraServicesCost : 0;
+  console.log('[BookingSteps] 💰 Totale soggiorno (quote + extra):', total);
   const deposit = Math.round(total * 0.3 * 100) / 100;
   const saldo = Math.round((total - deposit) * 100) / 100;
   const isDeposit = booking.formData.payment_type === 'deposit';

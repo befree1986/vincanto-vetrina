@@ -26,6 +26,16 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
 }) => {
     const { t } = useTranslation();
     
+    // 🐛 DEBUG: Log calcoli
+    React.useEffect(() => {
+        if (costs && !loading) {
+            console.log('[PriceBreakdown] 💰 Costs from API:', costs);
+            console.log('[PriceBreakdown] 💰 Extra services cost:', extraServicesCost);
+            console.log('[PriceBreakdown] 💰 Selected extra services:', selectedExtraServices);
+            console.log('[PriceBreakdown] 💰 Total with extras:', costs.totalAmount + extraServicesCost);
+        }
+    }, [costs, extraServicesCost, selectedExtraServices, loading]);
+    
     if (loading) {
         return (
             <div className="price-breakdown enhanced loading">
