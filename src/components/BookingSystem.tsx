@@ -335,45 +335,100 @@ const BookingSystem: React.FC = () => {
 
     const renderDetailsStep = () => (
         <div className="booking-step-content step-transition">
-            <div className="booking-layout-grid">
-                <div className="booking-main-panel">
-                    <h2>Dettagli Prenotazione</h2>
+            <h2>Dettagli Prenotazione</h2>
+            
+            {/* 💰 PREVENTIVO ORIZZONTALE IN ALTO */}
+            {isLoadingQuote && (
+                <div className="quote-loading-modern">
+                    <div className="loading-spinner"></div>
+                    <div className="loading-content">
+                        <h4>Calcolando il tuo preventivo...</h4>
+                        <p>Stiamo applicando le migliori tariffe disponibili</p>
+                    </div>
+                </div>
+            )}
 
-                    {isLoadingQuote && (
-                        <div className="quote-loading-modern">
-                            <div className="loading-spinner"></div>
-                            <div className="loading-content">
-                                <h4>Calcolando il tuo preventivo...</h4>
-                                <p>Stiamo applicando le migliori tariffe disponibili</p>
+            {quoteError && (
+                <div className="quote-error-modern">
+                    <div className="error-icon">⚠️</div>
+                    <div className="error-content">
+                        <h4>Problema nel calcolo del preventivo</h4>
+                        <p>{quoteError}</p>
+                        <button 
+                            onClick={() => window.location.reload()} 
+                            className="retry-btn"
+                        >
+                            🔄 Riprova
+                        </button>
+                    </div>
+                </div>
+            )}
+            
+            {quote && !isLoadingQuote && (
+                <div className="price-banner-horizontal">
+                    <div className="price-banner-content">
+                        <div className="price-summary">
+                            <div className="price-item">
+                                <span className="price-label">Soggiorno ({quote.nights} {quote.nights === 1 ? 'notte' : 'notti'})</span>
+                                <span className="price-value">€{(quote.accommodationCost || quote.baseCost || 0).toFixed(2)}</span>
+                            </div>
+                            {quote.discount && (
+                                <div className="price-item discount">
+                                    <span className="price-label">🎉 Sconto {quote.discount.percentage}%</span>
+                                    <span className="price-value">-€{quote.discount.amount.toFixed(2)}</span>
+                                </div>
+                            )}
+                            {formData.parking_option === 'private' && quote.parkingCost > 0 && (
+                                <div className="price-item">
+                                    <span className="price-label">🚗 Parcheggio</span>
+                                    <span className="price-value">€{quote.parkingCost.toFixed(2)}</span>
+                                </div>
+                            )}
+                            {extraServicesCost > 0 && (
+                                <div className="price-item">
+                                    <span className="price-label">🛎️ Servizi Extra</span>
+                                    <span className="price-value">€{extraServicesCost.toFixed(2)}</span>
+                                </div>
+                            )}
+                            <div className="price-item">
+                                <span className="price-label">🧹 Pulizia</span>
+                                <span className="price-value">€{quote.cleaningFee.toFixed(2)}</span>
+                            </div>
+                            <div className="price-item">
+                                <span className="price-label">🏛️ Tassa soggiorno</span>
+                                <span className="price-value">€{quote.touristTax.toFixed(2)}</span>
                             </div>
                         </div>
-                    )}
-
-                    {quoteError && (
-                        <div className="quote-error-modern">
-                            <div className="error-icon">⚠️</div>
-                            <div className="error-content">
-                                <h4>Problema nel calcolo del preventivo</h4>
-                                <p>{quoteError}</p>
-                                <button 
-                                    onClick={() => window.location.reload()} 
-                                    className="retry-btn"
-                                >
-                                    🔄 Riprova
-                                </button>
+                        <div className="price-total-section">
+                            <div className="price-total">
+                                <span className="total-label">Totale</span>
+                                <span className="total-value">€{(quote.totalAmount + extraServicesCost).toFixed(2)}</span>
                             </div>
+                            {formData.payment_type === 'deposit' && (
+                                <div className="price-deposit">
+                                    <span className="deposit-label">Acconto 30%</span>
+                                    <span className="deposit-value">€{((quote.totalAmount + extraServicesCost) * 0.30).toFixed(2)}</span>
+                                </div>
+                            )}
                         </div>
-                    )}
+                    </div>
+                </div>
+            )}
 
-                    <div className="guests-selection">
-                        <h3>Ospiti</h3>
-                        <div className="guests-inputs">
-                            <div className="input-group">
-                                <label htmlFor="adults">Adulti *</label>
+                    <div className="guests-selection-modern">
+                        <h3>👥 Seleziona Ospiti</h3>
+                        <div className="guests-grid">
+                            <div className="guest-card">
+                                <div className="guest-icon">👨‍👩‍👧‍👦</div>
+                                <div className="guest-info">
+                                    <label htmlFor="adults">Adulti</label>
+                                    <p className="guest-desc">Età 18+</p>
+                                </div>
                                 <select
                                     id="adults"
                                     value={formData.num_adults}
                                     onChange={(e) => setFormData({ num_adults: parseInt(e.target.value) })}
+                                    className="guest-select"
                                     aria-label="Numero di adulti"
                                 >
                                     {[1, 2, 3, 4, 5, 6].map(num => (
@@ -382,12 +437,17 @@ const BookingSystem: React.FC = () => {
                                 </select>
                             </div>
 
-                            <div className="input-group">
-                                <label htmlFor="children">Bambini</label>
+                            <div className="guest-card">
+                                <div className="guest-icon">👶</div>
+                                <div className="guest-info">
+                                    <label htmlFor="children">Bambini</label>
+                                    <p className="guest-desc">Età 0-17</p>
+                                </div>
                                 <select
                                     id="children"
                                     value={formData.num_children}
                                     onChange={(e) => setFormData({ num_children: parseInt(e.target.value) })}
+                                    className="guest-select"
                                     aria-label="Numero di bambini"
                                 >
                                     {[0, 1, 2, 3, 4].map(num => (
@@ -642,11 +702,6 @@ const BookingSystem: React.FC = () => {
                         </div>
                     </div>
                 </div>
-                <aside className="booking-sidebar">
-                    {renderSidebarPanel({ placeholder: true })}
-                    {renderTrustCard()}
-                </aside>
-            </div>
 
             <div className="step-actions">
                 <button 
