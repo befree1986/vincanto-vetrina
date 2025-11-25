@@ -4,24 +4,22 @@ import { useBooking } from '../hooks/useBooking';
 import { useDynamicPricing } from '../hooks/useDynamicPricing';
 import BookingCalendar from './BookingCalendar';
 import ExtraServices from './ExtraServices';
+import './BookingSystem.css';
 import StripePayment from './StripePayment';
 import PayPalPayment from './PayPalPayment';
-import './BookingSystem.css';
 import { getSafeTranslation } from '../i18n';
 
 interface PriceBreakdownProps {
     costs: any;
     isDeposit: boolean;
     extraServicesCost?: number;
-    selectedExtraServices?: any[];
     allExtraServices?: any[];
 }
 
 const PriceBreakdown: React.FC<PriceBreakdownProps> = ({ 
     costs, 
     isDeposit, 
-    extraServicesCost = 0, 
-    selectedExtraServices = [],
+    extraServicesCost = 0,
     allExtraServices = []
 }) => {
     const { t } = useTranslation();
@@ -123,10 +121,7 @@ type Step = 'dates' | 'details' | 'payment' | 'confirmation';
 const BookingSystem: React.FC = () => {
     const [currentStep, setCurrentStep] = useState<Step>('dates');
     const [error, setError] = useState<string | null>(null);
-    const [quoteError] = useState<string | null>(null);
-    const [showPayment, setShowPayment] = useState(false);
-    const [bookingResult, setBookingResult] = useState<any>(null);
-    const [showEditOptions, setShowEditOptions] = useState(false);
+    // quoteError rimosso (non utilizzato)
     
     // 🔥 HOOK SCROLL LOCK - DISABILITATO TEMPORANEAMENTE
     const [isTransitioning, setIsTransitioning] = useState(false);
@@ -163,6 +158,9 @@ const BookingSystem: React.FC = () => {
     // 🛎️ SERVIZI EXTRA
     const [extraServicesCost, setExtraServicesCost] = useState(0);
     const [selectedExtraServices, setSelectedExtraServices] = useState<any[]>([]);
+    const [showPayment, setShowPayment] = useState(false);
+    const [showEditOptions, setShowEditOptions] = useState(false);
+    const [bookingResult, setBookingResult] = useState<any | null>(null);
 
     // Aggiorna il costo extra ogni volta che cambia la quote o i servizi selezionati
     useEffect(() => {
@@ -213,47 +211,21 @@ const BookingSystem: React.FC = () => {
         setCurrentStep('details');
     };
 
-    const handleDetailsSubmit = async () => {
-        const errors = validateForm();
-        if (Object.keys(errors).length > 0) {
-            setError('Per favore completa tutti i campi obbligatori');
-            return;
+    const handlePaymentSuccess = (data: any) => {
+        if (data) {
+            setBookingResult({ ...bookingResult, ...data });
         }
-
-        try {
-            const result = await submitBooking();
-            setBookingResult(result);
-
-            if (formData.payment_method === 'bank_transfer') {
-                setCurrentStep('confirmation');
-                // Reset automatico dopo 4 secondi
-                setTimeout(() => startNewBooking(), 4000);
-            } else {
-                setShowPayment(true);
-                setCurrentStep('payment');
-            }
-        } catch (error: any) {
-            setError(error.message);
-        }
-    };
-
-    const handlePaymentSuccess = (result: any) => {
-        setBookingResult((prev: any) => ({ ...prev, ...result }));
-        setCurrentStep('confirmation');
         setShowPayment(false);
-        // Reset automatico dopo 4 secondi
-        setTimeout(() => startNewBooking(), 4000);
+        setCurrentStep('confirmation');
     };
 
     const startNewBooking = () => {
         resetForm();
         setCurrentStep('dates');
         setError(null);
-        setShowPayment(false);
-        setBookingResult(null);
     };
 
-    const renderStepIndicator = () => (
+    const renderStepIndicator = (): JSX.Element => (
         <div className="booking-steps">
             <div className={`step ${currentStep === 'dates' ? 'active' : ''} ${['details', 'payment', 'confirmation'].includes(currentStep) ? 'completed' : ''}`}>
                 <div className="step-number">1</div>
@@ -274,53 +246,9 @@ const BookingSystem: React.FC = () => {
         </div>
     );
 
-    const renderSidebarPanel = (options?: { placeholder?: boolean }) => {
-        if (quote && !isLoadingQuote) {
-            return (
-                <PriceBreakdown
-                    costs={quote}
-                    isDeposit={formData.payment_type === 'deposit'}
-                    extraServicesCost={extraServicesCost}
-                    selectedExtraServices={selectedExtraServices}
-                    allExtraServices={selectedExtraServices}
-                />
-            );
-        }
+    // Pannelli sidebar / trust card rimossi nella versione semplificata
 
-        if (options?.placeholder) {
-            return (
-                <div className="price-placeholder-card">
-                    <h4>Preventivo in tempo reale</h4>
-                    <p>
-                        Seleziona date e numero di ospiti per ottenere subito il costo dettagliato del soggiorno,
-                        comprensivo di servizi extra e tasse obbligatorie.
-                    </p>
-                    <ul>
-                        <li>Tariffe dynamic pricing aggiornate dal pannello Pro</li>
-                        <li>Possibilità di scegliere acconto o saldo</li>
-                        <li>Servizi extra modificabili in ogni momento</li>
-                    </ul>
-                </div>
-            );
-        }
-
-        return null;
-    };
-
-    const renderTrustCard = () => (
-        <div className="booking-trust-card">
-            <h4>Perché Vincanto</h4>
-            <ul>
-                <li>✔️ Assistenza locale 24/7 bilingue</li>
-                <li>✔️ Pagamenti sicuri con Stripe e PayPal</li>
-                <li>✔️ Pulizia professionale certificata</li>
-                <li>✔️ Check-in smart con guida digitale</li>
-            </ul>
-            <p className="trust-note">Più di 120 soggiorni confermati nell'ultimo anno.</p>
-        </div>
-    );
-
-    const renderDateStep = () => (
+    const renderDateStep = (): JSX.Element => (
         <div className="booking-step-content step-transition">
             <h2>Seleziona le Date</h2>
             <BookingCalendar
@@ -333,403 +261,217 @@ const BookingSystem: React.FC = () => {
         </div>
     );
 
-    const renderDetailsStep = () => (
-        <div className="booking-step-content step-transition">
-            <h2>Dettagli Prenotazione</h2>
-            
-            {/* 💰 PREVENTIVO ORIZZONTALE IN ALTO */}
-            {isLoadingQuote && (
-                <div className="quote-loading-modern">
-                    <div className="loading-spinner"></div>
-                    <div className="loading-content">
-                        <h4>Calcolando il tuo preventivo...</h4>
-                        <p>Stiamo applicando le migliori tariffe disponibili</p>
-                    </div>
-                </div>
-            )}
+    const handleDetailsSubmit = async () => {
+        const errors = validateForm();
+        if (Object.keys(errors).length > 0) {
+            setError('Per favore completa tutti i campi obbligatori');
+            return;
+        }
+        try {
+            const result: any = await submitBooking();
+            setBookingResult(result || null);
+            if (formData.payment_method === 'stripe' || formData.payment_method === 'paypal') {
+                setShowPayment(true);
+                setCurrentStep('payment');
+            } else {
+                setCurrentStep('confirmation');
+            }
+        } catch (e: any) {
+            setError(e.message || 'Errore inatteso');
+        }
+    };
 
-            {quoteError && (
-                <div className="quote-error-modern">
-                    <div className="error-icon">⚠️</div>
-                    <div className="error-content">
-                        <h4>Problema nel calcolo del preventivo</h4>
-                        <p>{quoteError}</p>
-                        <button 
-                            onClick={() => window.location.reload()} 
-                            className="retry-btn"
-                        >
-                            🔄 Riprova
-                        </button>
+    const renderDetailsStep = (): JSX.Element => {
+        const { t } = useTranslation();
+        return (
+            <div className="booking-step-content step-transition">
+                <h2>{getSafeTranslation(t, 'booking.detailsTitle', 'Dettagli Prenotazione')}</h2>
+                {isLoadingQuote && (
+                    <div className="quote-loading-modern">
+                        <div className="loading-spinner" />
+                        <div className="loading-content">
+                            <h4>{getSafeTranslation(t, 'booking.calculatingQuote', 'Calcolo preventivo...')}</h4>
+                            <p>{getSafeTranslation(t, 'booking.applyingBestRates', 'Applichiamo le migliori tariffe disponibili')}</p>
+                        </div>
                     </div>
-                </div>
-            )}
-            
-            {quote && !isLoadingQuote && (
-                <div className="price-banner-horizontal">
-                    <div className="price-banner-content">
-                        <div className="price-summary">
-                            <div className="price-item">
-                                <span className="price-label">Soggiorno ({quote.nights} {quote.nights === 1 ? 'notte' : 'notti'})</span>
-                                <span className="price-value">€{(quote.accommodationCost || quote.baseCost || 0).toFixed(2)}</span>
-                            </div>
-                            {quote.discount && (
-                                <div className="price-item discount">
-                                    <span className="price-label">🎉 Sconto {quote.discount.percentage}%</span>
-                                    <span className="price-value">-€{quote.discount.amount.toFixed(2)}</span>
-                                </div>
-                            )}
-                            {formData.parking_option === 'private' && quote.parkingCost > 0 && (
+                )}
+                {quote && !isLoadingQuote && (
+                    <div className="price-banner-horizontal">
+                        <div className="price-banner-content">
+                            <div className="price-summary">
                                 <div className="price-item">
-                                    <span className="price-label">🚗 Parcheggio</span>
-                                    <span className="price-value">€{quote.parkingCost.toFixed(2)}</span>
+                                    <span className="price-label">{getSafeTranslation(t, 'booking.accommodation', 'Soggiorno')} ({quote.nights} {quote.nights === 1 ? getSafeTranslation(t, 'booking.night', 'notte') : getSafeTranslation(t, 'booking.nights', 'notti')})</span>
+                                    <span className="price-value">€{quote.basePrice.toFixed(2)}</span>
                                 </div>
-                            )}
-                            {extraServicesCost > 0 && (
+                                {formData.parking_option === 'private' && quote.parkingCost > 0 && (
+                                    <div className="price-item">
+                                        <span className="price-label">🚗 {getSafeTranslation(t, 'booking.parking', 'Parcheggio')}</span>
+                                        <span className="price-value">€{quote.parkingCost.toFixed(2)}</span>
+                                    </div>
+                                )}
+                                {extraServicesCost > 0 && (
+                                    <div className="price-item">
+                                        <span className="price-label">🛎️ {getSafeTranslation(t, 'booking.extraServices', 'Servizi Extra')}</span>
+                                        <span className="price-value">€{extraServicesCost.toFixed(2)}</span>
+                                    </div>
+                                )}
                                 <div className="price-item">
-                                    <span className="price-label">🛎️ Servizi Extra</span>
-                                    <span className="price-value">€{extraServicesCost.toFixed(2)}</span>
+                                    <span className="price-label">🧹 {getSafeTranslation(t, 'booking.cleaning', 'Pulizia')}</span>
+                                    <span className="price-value">€{quote.cleaningFee.toFixed(2)}</span>
                                 </div>
-                            )}
-                            <div className="price-item">
-                                <span className="price-label">🧹 Pulizia</span>
-                                <span className="price-value">€{quote.cleaningFee.toFixed(2)}</span>
-                            </div>
-                            <div className="price-item">
-                                <span className="price-label">🏛️ Tassa soggiorno</span>
-                                <span className="price-value">€{quote.touristTax.toFixed(2)}</span>
-                            </div>
-                        </div>
-                        <div className="price-total-section">
-                            <div className="price-total">
-                                <span className="total-label">Totale</span>
-                                <span className="total-value">€{(quote.totalAmount + extraServicesCost).toFixed(2)}</span>
-                            </div>
-                            {formData.payment_type === 'deposit' && (
-                                <div className="price-deposit">
-                                    <span className="deposit-label">Acconto 30%</span>
-                                    <span className="deposit-value">€{((quote.totalAmount + extraServicesCost) * 0.30).toFixed(2)}</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-                    <div className="guests-selection-modern">
-                        <h3>👥 Seleziona Ospiti</h3>
-                        <div className="guests-grid">
-                            <div className="guest-card">
-                                <div className="guest-icon">👨‍👩‍👧‍👦</div>
-                                <div className="guest-info">
-                                    <label htmlFor="adults">Adulti</label>
-                                    <p className="guest-desc">Età 18+</p>
-                                </div>
-                                <select
-                                    id="adults"
-                                    value={formData.num_adults}
-                                    onChange={(e) => setFormData({ num_adults: parseInt(e.target.value) })}
-                                    className="guest-select"
-                                    aria-label="Numero di adulti"
-                                >
-                                    {[1, 2, 3, 4, 5, 6].map(num => (
-                                        <option key={num} value={num}>{num}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="guest-card">
-                                <div className="guest-icon">👶</div>
-                                <div className="guest-info">
-                                    <label htmlFor="children">Bambini</label>
-                                    <p className="guest-desc">Età 0-17</p>
-                                </div>
-                                <select
-                                    id="children"
-                                    value={formData.num_children}
-                                    onChange={(e) => setFormData({ num_children: parseInt(e.target.value) })}
-                                    className="guest-select"
-                                    aria-label="Numero di bambini"
-                                >
-                                    {[0, 1, 2, 3, 4].map(num => (
-                                        <option key={num} value={num}>{num}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-
-                        {formData.num_children > 0 && (
-                            <div className="children-ages">
-                                <h4>Età dei bambini</h4>
-                                <div className="ages-inputs">
-                                    {Array.from({ length: formData.num_children }, (_, i) => (
-                                        <div key={i} className="input-group age-input">
-                                            <label htmlFor={`child-${i}`}>Bambino {i + 1}</label>
-                                            <select
-                                                id={`child-${i}`}
-                                                value={formData.children_ages[i] || ''}
-                                                onChange={(e) => {
-                                                    const newAges = [...formData.children_ages];
-                                                    newAges[i] = parseInt(e.target.value);
-                                                    setFormData({ children_ages: newAges });
-                                                }}
-                                                aria-label={`Età bambino ${i + 1}`}
-                                            >
-                                                <option value="">Età</option>
-                                                {Array.from({ length: 18 }, (_, age) => (
-                                                    <option key={age} value={age}>{age} anni</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    ))}
+                                <div className="price-item">
+                                    <span className="price-label">🏛️ {getSafeTranslation(t, 'booking.touristTax', 'Tassa soggiorno')}</span>
+                                    <span className="price-value">€{quote.touristTax.toFixed(2)}</span>
                                 </div>
                             </div>
-                        )}
-                    </div>
-
-                    <div className="parking-selection">
-                        <h3>Servizi Extra</h3>
-                        <div className="service-options">
-                            <div className="service-option">
-                                <h4>🚗 Parcheggio</h4>
-                                <div className="radio-group">
-                                    <input
-                                        type="radio"
-                                        id="parking-none"
-                                        name="parking_option"
-                                        value="none"
-                                        checked={formData.parking_option === 'none'}
-                                        onChange={(e) => setFormData({ parking_option: e.target.value as any })}
-                                    />
-                                    <label htmlFor="parking-none">
-                                        Nessun parcheggio
-                                        <span className="service-price">Gratuito</span>
-                                    </label>
+                            <div className="price-total-section">
+                                <div className="price-total">
+                                    <span className="total-label">{getSafeTranslation(t, 'booking.total', 'Totale')}</span>
+                                    <span className="total-value">€{(quote.totalAmount + extraServicesCost).toFixed(2)}</span>
                                 </div>
-
-                                <div className="radio-group">
-                                    <input
-                                        type="radio"
-                                        id="parking-street"
-                                        name="parking_option"
-                                        value="street"
-                                        checked={formData.parking_option === 'street'}
-                                        onChange={(e) => setFormData({ parking_option: e.target.value as any })}
-                                    />
-                                    <label htmlFor="parking-street">
-                                        Parcheggio pubblico nelle vicinanze
-                                        <span className="service-price">Gratuito</span>
-                                        <small className="service-note">Soggetto a disponibilità</small>
-                                    </label>
-                                </div>
-
-                                <div className="radio-group">
-                                    <input
-                                        type="radio"
-                                        id="parking-private"
-                                        name="parking_option"
-                                        value="private"
-                                        checked={formData.parking_option === 'private'}
-                                        onChange={(e) => setFormData({ parking_option: e.target.value as any })}
-                                    />
-                                    <label htmlFor="parking-private">
-                                        Parcheggio privato riservato e custodito
-                                        <span className="service-price highlight">
-                                            +€{dynamicPricing.loading ? '...' : dynamicPricing.error ? '20' : dynamicPricing.parkingFee}/giorno
-                                        </span>
-                                        <small className="service-note">Prenotazione garantita</small>
-                                    </label>
-                                </div>
-                                
-                                {quote && formData.parking_option === 'private' && (
-                                    <div className="parking-cost-preview hidden">
-                                        <div className="cost-calculation">
-                                            <span>Parcheggio per {quote.nights} {quote.nights === 1 ? 'notte' : 'notti'}:</span>
-                                            <span className="cost-amount">€{quote.parkingCost.toFixed(2)}</span>
-                                        </div>
+                                {formData.payment_type === 'deposit' && (
+                                    <div className="price-deposit">
+                                        <span className="deposit-label">{getSafeTranslation(t, 'booking.depositRequired', 'Acconto 30%')}</span>
+                                        <span className="deposit-value">€{((quote.totalAmount + extraServicesCost) * 0.30).toFixed(2)}</span>
                                     </div>
                                 )}
                             </div>
                         </div>
                     </div>
-
-                    <ExtraServices 
-                        childrenAges={formData.children_ages}
-                        onServicesChange={(services, totalCost) => {
-                            setSelectedExtraServices(services);
-                            setExtraServicesCost(totalCost);
-                        }}
-                        calcOptions={quote ? { nights: quote.nights, adults: quote.guests, guests: quote.guests } : undefined}
-                    />
-
-                    <div className="guest-form">
-                        <h3>Informazioni Ospite</h3>
-                        <div className="form-row">
-                            <div className="input-group">
-                                <label htmlFor="name">Nome *</label>
-                                <input
-                                    id="name"
-                                    type="text"
-                                    value={formData.guest_name}
-                                    onChange={(e) => setFormData({ guest_name: e.target.value })}
-                                    className={formErrors.guest_name ? 'error' : ''}
-                                />
-                                {formErrors.guest_name && <span className="error-text">{formErrors.guest_name}</span>}
+                )}
+                <div className="guests-selection-modern">
+                    <h3>👥 {getSafeTranslation(t, 'booking.guests', 'Ospiti')}</h3>
+                    <div className="guests-grid">
+                        <div className="guest-card">
+                            <div className="guest-icon">👨‍👩‍👧‍👦</div>
+                            <div className="guest-info">
+                                <label htmlFor="adults">{getSafeTranslation(t, 'booking.adults', 'Adulti')}</label>
+                                <p className="guest-desc">{getSafeTranslation(t, 'booking.age18Plus', 'Età 18+')}</p>
                             </div>
-
-                            <div className="input-group">
-                                <label htmlFor="surname">Cognome *</label>
-                                <input
-                                    id="surname"
-                                    type="text"
-                                    value={formData.guest_surname}
-                                    onChange={(e) => setFormData({ guest_surname: e.target.value })}
-                                    className={formErrors.guest_surname ? 'error' : ''}
-                                />
-                                {formErrors.guest_surname && <span className="error-text">{formErrors.guest_surname}</span>}
-                            </div>
+                            <select id="adults" value={formData.num_adults} onChange={(e)=>setFormData({ num_adults: parseInt(e.target.value) })} className="guest-select">
+                                {[1,2,3,4,5,6].map(n=> <option key={n} value={n}>{n}</option>)}
+                            </select>
                         </div>
-
-                        <div className="form-row">
-                            <div className="input-group">
-                                <label htmlFor="email">Email *</label>
-                                <input
-                                    id="email"
-                                    type="email"
-                                    value={formData.guest_email}
-                                    onChange={(e) => setFormData({ guest_email: e.target.value })}
-                                    className={formErrors.guest_email ? 'error' : ''}
-                                />
-                                {formErrors.guest_email && <span className="error-text">{formErrors.guest_email}</span>}
+                        <div className="guest-card">
+                            <div className="guest-icon">👶</div>
+                            <div className="guest-info">
+                                <label htmlFor="children">{getSafeTranslation(t, 'booking.children', 'Bambini')}</label>
+                                <p className="guest-desc">{getSafeTranslation(t, 'booking.age0to17', 'Età 0-17')}</p>
                             </div>
-
-                            <div className="input-group">
-                                <label htmlFor="phone">Telefono *</label>
-                                <input
-                                    id="phone"
-                                    type="tel"
-                                    value={formData.guest_phone}
-                                    onChange={(e) => setFormData({ guest_phone: e.target.value })}
-                                    className={formErrors.guest_phone ? 'error' : ''}
-                                />
-                                {formErrors.guest_phone && <span className="error-text">{formErrors.guest_phone}</span>}
-                            </div>
-                        </div>
-
-                        <div className="input-group">
-                            <label htmlFor="message">Richieste Speciali</label>
-                            <textarea
-                                id="message"
-                                value={formData.guest_message}
-                                onChange={(e) => setFormData({ guest_message: e.target.value })}
-                                rows={3}
-                            />
+                            <select id="children" value={formData.num_children} onChange={(e)=>setFormData({ num_children: parseInt(e.target.value) })} className="guest-select">
+                                {[0,1,2,3,4].map(n=> <option key={n} value={n}>{n}</option>)}
+                            </select>
                         </div>
                     </div>
-
-                    <div className="payment-options">
-                        <h3>Modalità di Pagamento</h3>
-                        
-                        <div className="payment-type-selection">
-                            <div className="radio-group">
-                                <input
-                                    type="radio"
-                                    id="deposit"
-                                    name="payment_type"
-                                    value="deposit"
-                                    checked={formData.payment_type === 'deposit'}
-                                    onChange={(e) => setFormData({ payment_type: e.target.value as any })}
-                                />
-                                <label htmlFor="deposit">
-                                    Acconto 30% 
-                                    {quote && <span className="amount">€{quote.depositAmount.toFixed(2)}</span>}
-                                </label>
-                            </div>
-
-                            <div className="radio-group">
-                                <input
-                                    type="radio"
-                                    id="full"
-                                    name="payment_type"
-                                    value="full"
-                                    checked={formData.payment_type === 'full'}
-                                    onChange={(e) => setFormData({ payment_type: e.target.value as any })}
-                                />
-                                <label htmlFor="full">
-                                    Saldo Completo
-                                    {quote && <span className="amount">€{quote.totalAmount.toFixed(2)}</span>}
-                                </label>
+                    {formData.num_children > 0 && (
+                        <div className="children-ages">
+                            <h4>{getSafeTranslation(t, 'booking.childrenAges', 'Età bambini')}</h4>
+                            <div className="ages-inputs">
+                                {Array.from({ length: formData.num_children }, (_, i) => (
+                                    <div key={i} className="input-group age-input">
+                                        <label htmlFor={`child-${i}`}>{getSafeTranslation(t, 'booking.child', 'Bambino')} {i+1}</label>
+                                        <select id={`child-${i}`} value={formData.children_ages[i] || ''} onChange={(e)=>{
+                                            const ages=[...formData.children_ages];
+                                            ages[i]=parseInt(e.target.value);
+                                            setFormData({ children_ages: ages });
+                                        }}>
+                                            <option value="">{getSafeTranslation(t, 'booking.age', 'Età')}</option>
+                                            {Array.from({ length: 18 }, (_, age) => <option key={age} value={age}>{age}</option>)}
+                                        </select>
+                                    </div>
+                                ))}
                             </div>
                         </div>
-
-                        <div className="payment-method-selection">
-                            <h4>Metodo di Pagamento</h4>
-                            
-                            <div className="radio-group">
-                                <input
-                                    type="radio"
-                                    id="stripe"
-                                    name="payment_method"
-                                    value="stripe"
-                                    checked={formData.payment_method === 'stripe'}
-                                    onChange={(e) => setFormData({ payment_method: e.target.value as any })}
-                                />
-                                <label htmlFor="stripe">💳 Carta di Credito/Debito</label>
-                            </div>
-
-                            <div className="radio-group">
-                                <input
-                                    type="radio"
-                                    id="paypal"
-                                    name="payment_method"
-                                    value="paypal"
-                                    checked={formData.payment_method === 'paypal'}
-                                    onChange={(e) => setFormData({ payment_method: e.target.value as any })}
-                                />
-                                <label htmlFor="paypal">🟡 PayPal</label>
-                            </div>
-
-                            <div className="radio-group">
-                                <input
-                                    type="radio"
-                                    id="bank_transfer"
-                                    name="payment_method"
-                                    value="bank_transfer"
-                                    checked={formData.payment_method === 'bank_transfer'}
-                                    onChange={(e) => setFormData({ payment_method: e.target.value as any })}
-                                />
-                                <label htmlFor="bank_transfer">🏦 Bonifico Bancario</label>
-                            </div>
+                    )}
+                </div>
+                <div className="parking-selection">
+                    <h3>🚗 {getSafeTranslation(t, 'booking.parkingOptions', 'Opzioni Parcheggio')}</h3>
+                    <div className="service-options">
+                        <div className="radio-group">
+                            <input type="radio" id="parking-none" name="parking_option" value="none" checked={formData.parking_option==='none'} onChange={(e)=>setFormData({ parking_option: e.target.value as any })} />
+                            <label htmlFor="parking-none">{getSafeTranslation(t, 'booking.noParking', 'Nessun parcheggio')} <span className="service-price">{getSafeTranslation(t, 'booking.free', 'Gratuito')}</span></label>
+                        </div>
+                        <div className="radio-group">
+                            <input type="radio" id="parking-street" name="parking_option" value="street" checked={formData.parking_option==='street'} onChange={(e)=>setFormData({ parking_option: e.target.value as any })} />
+                            <label htmlFor="parking-street">{getSafeTranslation(t, 'booking.streetParking', 'Parcheggio pubblico')} <span className="service-price">{getSafeTranslation(t, 'booking.free', 'Gratuito')}</span></label>
+                        </div>
+                        <div className="radio-group">
+                            <input type="radio" id="parking-private" name="parking_option" value="private" checked={formData.parking_option==='private'} onChange={(e)=>setFormData({ parking_option: e.target.value as any })} />
+                            <label htmlFor="parking-private">{getSafeTranslation(t, 'booking.privateParking', 'Parcheggio privato riservato')} <span className="service-price highlight">+€{dynamicPricing.loading ? '...' : dynamicPricing.error ? '20' : dynamicPricing.parkingFee}/{getSafeTranslation(t, 'booking.day', 'giorno')}</span></label>
                         </div>
                     </div>
                 </div>
-
-            <div className="step-actions">
-                <button 
-                    onClick={(e) => {
-                        e.preventDefault();
-                        setIsTransitioning(true);
-                        setCurrentStep('dates');
-                    }} 
-                    className="btn-secondary"
-                    type="button"
-                >
-                    Indietro
-                </button>
-                <button 
-                    onClick={(e) => {
-                        e.preventDefault();
-                        setIsTransitioning(true);
-                        handleDetailsSubmit();
-                    }}
-                    className="btn-primary"
-                    disabled={isLoadingQuote}
-                    type="button"
-                >
-                    {isLoadingQuote ? 'Elaborazione...' : 'Continua al Pagamento'}
-                </button>
+                <ExtraServices
+                    childrenAges={formData.children_ages}
+                    onServicesChange={(services,total)=>{setSelectedExtraServices(services);setExtraServicesCost(total);}}
+                    calcOptions={quote ? { nights: quote.nights, adults: quote.guests, guests: quote.guests } : undefined}
+                />
+                <div className="guest-form">
+                    <h3>{getSafeTranslation(t, 'booking.guestInfo', 'Informazioni Ospite')}</h3>
+                    <div className="form-row">
+                        <div className="input-group">
+                            <label htmlFor="name">{getSafeTranslation(t, 'booking.firstName', 'Nome')} *</label>
+                            <input id="name" value={formData.guest_name} onChange={(e)=>setFormData({ guest_name: e.target.value })} className={formErrors.guest_name? 'error':''} />
+                            {formErrors.guest_name && <span className="error-text">{formErrors.guest_name}</span>}
+                        </div>
+                        <div className="input-group">
+                            <label htmlFor="surname">{getSafeTranslation(t, 'booking.lastName', 'Cognome')} *</label>
+                            <input id="surname" value={formData.guest_surname} onChange={(e)=>setFormData({ guest_surname: e.target.value })} className={formErrors.guest_surname? 'error':''} />
+                            {formErrors.guest_surname && <span className="error-text">{formErrors.guest_surname}</span>}
+                        </div>
+                    </div>
+                    <div className="form-row">
+                        <div className="input-group">
+                            <label htmlFor="email">Email *</label>
+                            <input id="email" type="email" value={formData.guest_email} onChange={(e)=>setFormData({ guest_email: e.target.value })} className={formErrors.guest_email? 'error':''} />
+                            {formErrors.guest_email && <span className="error-text">{formErrors.guest_email}</span>}
+                        </div>
+                        <div className="input-group">
+                            <label htmlFor="phone">{getSafeTranslation(t, 'booking.phone', 'Telefono')} *</label>
+                            <input id="phone" value={formData.guest_phone} onChange={(e)=>setFormData({ guest_phone: e.target.value })} className={formErrors.guest_phone? 'error':''} />
+                            {formErrors.guest_phone && <span className="error-text">{formErrors.guest_phone}</span>}
+                        </div>
+                    </div>
+                    <div className="input-group">
+                        <label htmlFor="message">{getSafeTranslation(t, 'booking.specialRequests', 'Richieste Speciali')}</label>
+                        <textarea id="message" rows={3} value={formData.guest_message} onChange={(e)=>setFormData({ guest_message: e.target.value })} />
+                    </div>
+                </div>
+                <div className="payment-options">
+                    <h3>{getSafeTranslation(t, 'booking.paymentOptions', 'Modalità di Pagamento')}</h3>
+                    <div className="payment-type-selection">
+                        <div className="radio-group">
+                            <input type="radio" id="deposit" name="payment_type" value="deposit" checked={formData.payment_type==='deposit'} onChange={(e)=>setFormData({ payment_type: e.target.value as any })} />
+                            <label htmlFor="deposit">{getSafeTranslation(t, 'booking.deposit30', 'Acconto 30%')} {quote && <span className="amount">€{((quote.totalAmount)*0.30).toFixed(2)}</span>}</label>
+                        </div>
+                        <div className="radio-group">
+                            <input type="radio" id="full" name="payment_type" value="full" checked={formData.payment_type==='full'} onChange={(e)=>setFormData({ payment_type: e.target.value as any })} />
+                            <label htmlFor="full">{getSafeTranslation(t, 'booking.fullPayment', 'Saldo Completo')} {quote && <span className="amount">€{quote.totalAmount.toFixed(2)}</span>}</label>
+                        </div>
+                    </div>
+                    <div className="payment-method-selection">
+                        <h4>{getSafeTranslation(t, 'booking.paymentMethod', 'Metodo di Pagamento')}</h4>
+                        <div className="radio-group">
+                            <input type="radio" id="stripe" name="payment_method" value="stripe" checked={formData.payment_method==='stripe'} onChange={(e)=>setFormData({ payment_method: e.target.value as any })} />
+                            <label htmlFor="stripe">💳 {getSafeTranslation(t, 'booking.card', 'Carta')}</label>
+                        </div>
+                        <div className="radio-group">
+                            <input type="radio" id="paypal" name="payment_method" value="paypal" checked={formData.payment_method==='paypal'} onChange={(e)=>setFormData({ payment_method: e.target.value as any })} />
+                            <label htmlFor="paypal">🟡 PayPal</label>
+                        </div>
+                        <div className="radio-group">
+                            <input type="radio" id="bank_transfer" name="payment_method" value="bank_transfer" checked={formData.payment_method==='bank_transfer'} onChange={(e)=>setFormData({ payment_method: e.target.value as any })} />
+                            <label htmlFor="bank_transfer">🏦 {getSafeTranslation(t, 'booking.bankTransfer', 'Bonifico Bancario')}</label>
+                        </div>
+                    </div>
+                </div>
+                <div className="step-actions">
+                    <button type="button" className="btn-secondary" onClick={()=>setCurrentStep('dates')}>{getSafeTranslation(t, 'booking.back', 'Indietro')}</button>
+                    <button type="button" className="btn-primary" disabled={isLoadingQuote} onClick={handleDetailsSubmit}>{isLoadingQuote ? getSafeTranslation(t, 'booking.processing', 'Elaborazione...') : getSafeTranslation(t, 'booking.continueToPayment', 'Continua al Pagamento')}</button>
+                </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     return (
         <div className="booking-system">
@@ -755,7 +497,6 @@ const BookingSystem: React.FC = () => {
                                 costs={quote}
                                 isDeposit={formData.payment_type === 'deposit'}
                                 extraServicesCost={extraServicesCost}
-                                selectedExtraServices={selectedExtraServices}
                                 allExtraServices={selectedExtraServices}
                             />
                         )}
