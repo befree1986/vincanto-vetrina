@@ -246,7 +246,7 @@ export default async function handler(req, res) {
             calendar_type: 'airbnb',
             url: 'https://www.airbnb.it/calendar/ical/123456789.ics',
             is_active: true,
-            sync_frequency: 30,
+            sync_frequency: 120,
             last_sync: new Date().toISOString(),
             status: 'connected',
             events_synced: 15

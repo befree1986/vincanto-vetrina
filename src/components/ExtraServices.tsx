@@ -33,7 +33,7 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
         ...selected,
         ...includedServices.filter(s => !selected.find(sel => sel.id === s.id))
       ];
-      onServicesChange(mergedServices, getTotalCost(calcOptions));
+      onServicesChange(mergedServices, getTotalCost());
     }
   }, [selectedServices, services, onServicesChange, calcOptions]);
 

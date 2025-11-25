@@ -556,7 +556,7 @@ const BookingSystemEnhanced: React.FC = () => {
                         <ExtraServices
                             childrenAges={booking.formData.children_ages}
                             showHeader={false}
-                            onServicesChange={(services, totalCost) => {
+                            onServicesChange={(services) => {
                                 setSelectedExtraServices(services);
                                 
                                 // Sincronizza la selezione del parcheggio con parking_option
