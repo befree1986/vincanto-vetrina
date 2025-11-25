@@ -69,7 +69,7 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
   const saldo = Math.round((total - deposit) * 100) / 100;
   const isDeposit = booking.formData.payment_type === 'deposit';
   const [isProcessing, setIsProcessing] = useState(false);
-  const [stripeSuccess, setStripeSuccess] = useState(false);
+  const [stripeSuccess] = useState(false);
   const [paypalSuccess, setPaypalSuccess] = useState(false);
   const [paypalError, setPaypalError] = useState<string | null>(null);
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
