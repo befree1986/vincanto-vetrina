@@ -106,6 +106,27 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
         const amountPaid = bookingData.payment_type === 'deposit'
           ? Math.round(quoteData.totalAmount * 0.3 * 100) / 100
           : Math.round(quoteData.totalAmount * 100) / 100;
+
+        // Prepara i dati formattati per l'API
+        const formattedBookingData = {
+          guest_name: bookingData.guest_name,
+          guest_surname: bookingData.guest_surname || bookingData.last_name || '',
+          guest_email: bookingData.guest_email || bookingData.email,
+          guest_phone: bookingData.guest_phone || bookingData.phone || '',
+          check_in_date: bookingData.check_in_date || bookingData.checkin,
+          check_out_date: bookingData.check_out_date || bookingData.checkout,
+          adults: bookingData.num_adults || bookingData.adults || 1,
+          children: bookingData.num_children || bookingData.children || 0,
+          children_ages: bookingData.children_ages || [],
+          parking_option: bookingData.parking_option,
+          payment_method: 'stripe',
+          payment_type: bookingData.payment_type,
+          special_requests: bookingData.guest_message || bookingData.special_requests || '',
+          email: bookingData.guest_email || bookingData.email,
+          phone: bookingData.guest_phone || bookingData.phone || '',
+          guests: (bookingData.num_adults || bookingData.adults || 1) + (bookingData.num_children || bookingData.children || 0)
+        };
+
         const resp = await fetch('/api/booking/confirm', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -115,7 +136,7 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
             payment_id: null,
             amount: amountPaid,
             total_amount: quoteData.totalAmount,
-            booking_data: bookingData
+            booking_data: formattedBookingData
           })
         });
         const data = await resp.json();
@@ -123,6 +144,7 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
           setConfirmError(data.error || 'Errore conferma prenotazione');
         } else {
           setBookingConfirmed(true);
+          console.log('✅ Prenotazione Stripe salvata:', data.bookingId);
           try {
             await fetch('/api/send-final-email', {
               method: 'POST',
@@ -159,6 +181,26 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
     const amountPaid = booking.formData.payment_type === 'deposit'
       ? Math.round(booking.quote.totalAmount * 0.3 * 100) / 100
       : Math.round(booking.quote.totalAmount * 100) / 100;
+    
+    const bookingData = {
+      guest_name: booking.formData.guest_name,
+      guest_surname: booking.formData.guest_surname,
+      guest_email: booking.formData.guest_email || booking.formData.email,
+      guest_phone: booking.formData.guest_phone || booking.formData.phone,
+      check_in_date: booking.formData.check_in_date || booking.formData.checkin,
+      check_out_date: booking.formData.check_out_date || booking.formData.checkout,
+      adults: booking.formData.num_adults || booking.formData.adults || 1,
+      children: booking.formData.num_children || booking.formData.children || 0,
+      children_ages: booking.formData.children_ages || [],
+      parking_option: booking.formData.parking_option,
+      payment_method: 'paypal',
+      payment_type: booking.formData.payment_type,
+      special_requests: booking.formData.guest_message || booking.formData.special_requests || '',
+      email: booking.formData.guest_email || booking.formData.email,
+      phone: booking.formData.guest_phone || booking.formData.phone,
+      guests: (booking.formData.num_adults || booking.formData.adults || 1) + (booking.formData.num_children || booking.formData.children || 0)
+    };
+
     fetch('/api/booking/confirm', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -168,11 +210,14 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
         payment_id: null,
         amount: amountPaid,
         total_amount: booking.quote.totalAmount,
-        booking_data: booking.formData
+        booking_data: bookingData
       })
     })
       .then(async (resp) => {
         const data = await resp.json();
+        if (data.success) {
+          console.log('✅ Prenotazione PayPal salvata:', data.bookingId);
+        }
         try {
           await fetch('/api/send-final-email', {
             method: 'POST',
@@ -203,6 +248,25 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
     setIsProcessing(true);
     // Se pagamento con bonifico, salva la prenotazione come pending
     if (booking.formData.payment_method === 'bank_transfer') {
+      const bookingData = {
+        guest_name: booking.formData.guest_name,
+        guest_surname: booking.formData.guest_surname,
+        guest_email: booking.formData.guest_email || booking.formData.email,
+        guest_phone: booking.formData.guest_phone || booking.formData.phone,
+        check_in_date: booking.formData.check_in_date || booking.formData.checkin,
+        check_out_date: booking.formData.check_out_date || booking.formData.checkout,
+        adults: booking.formData.num_adults || booking.formData.adults || 1,
+        children: booking.formData.num_children || booking.formData.children || 0,
+        children_ages: booking.formData.children_ages || [],
+        parking_option: booking.formData.parking_option,
+        payment_method: 'bank_transfer',
+        payment_type: booking.formData.payment_type,
+        special_requests: booking.formData.guest_message || booking.formData.special_requests || '',
+        email: booking.formData.guest_email || booking.formData.email,
+        phone: booking.formData.guest_phone || booking.formData.phone,
+        guests: (booking.formData.num_adults || booking.formData.adults || 1) + (booking.formData.num_children || booking.formData.children || 0)
+      };
+
       fetch('/api/booking/confirm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -214,14 +278,21 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
             ? Math.round(booking.quote.totalAmount * 0.3 * 100) / 100
             : Math.round(booking.quote.totalAmount * 100) / 100,
           total_amount: booking.quote.totalAmount,
-          booking_data: booking.formData
+          booking_data: bookingData
         })
       })
-        .then(() => {
+        .then(async (resp) => {
+          const data = await resp.json();
+          if (data.success) {
+            console.log('✅ Prenotazione bonifico salvata:', data.bookingId);
+          } else {
+            console.error('❌ Errore salvataggio:', data.error);
+          }
           setIsProcessing(false);
           setBookingConfirmed(true);
         })
-        .catch(() => {
+        .catch((err) => {
+          console.error('❌ Errore rete:', err);
           setIsProcessing(false);
           setBookingConfirmed(true);
         });

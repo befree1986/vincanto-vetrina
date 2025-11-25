@@ -211,12 +211,68 @@ const BookingSystem: React.FC = () => {
         setCurrentStep('details');
     };
 
-    const handlePaymentSuccess = (data: any) => {
-        if (data) {
-            setBookingResult({ ...bookingResult, ...data });
+    const handlePaymentSuccess = async (data: any) => {
+        try {
+            // Calcola l'importo pagato (acconto o totale)
+            const amountPaid = formData.payment_type === 'deposit' && quote
+                ? Math.round(quote.totalAmount * 0.3 * 100) / 100
+                : quote?.totalAmount || 0;
+
+            // Prepara i dati per il salvataggio DB
+            const bookingData = {
+                guest_name: formData.guest_name,
+                guest_surname: formData.guest_surname,
+                guest_email: formData.guest_email,
+                guest_phone: formData.guest_phone,
+                check_in_date: formData.check_in_date?.toISOString().split('T')[0],
+                check_out_date: formData.check_out_date?.toISOString().split('T')[0],
+                adults: formData.num_adults,
+                children: formData.num_children,
+                children_ages: formData.children_ages,
+                parking_option: formData.parking_option,
+                payment_method: formData.payment_method,
+                payment_type: formData.payment_type,
+                special_requests: formData.guest_message,
+                email: formData.guest_email,
+                phone: formData.guest_phone,
+                guests: formData.num_adults + formData.num_children
+            };
+
+            // Chiama /api/booking/confirm per salvare nel DB
+            const response = await fetch('/api/booking/confirm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    payment_method: formData.payment_method,
+                    payment_status: 'success',
+                    payment_id: data?.payment_intent_id || data?.paymentId || null,
+                    amount: amountPaid,
+                    total_amount: quote?.totalAmount || 0,
+                    booking_data: bookingData
+                })
+            });
+
+            const result = await response.json();
+            
+            if (!result.success) {
+                throw new Error(result.error || 'Errore salvataggio prenotazione');
+            }
+
+            // Aggiorna il risultato con il booking ID reale dal database
+            setBookingResult({
+                ...bookingResult,
+                ...data,
+                booking_id: result.bookingId || result.booking?.bookingId,
+                id: result.id || result.booking?.id,
+                payment_amount: amountPaid
+            });
+
+            setShowPayment(false);
+            setCurrentStep('confirmation');
+        } catch (error: any) {
+            console.error('Errore conferma prenotazione:', error);
+            setError(`Pagamento riuscito ma errore nel salvataggio: ${error.message}. Contattaci per assistenza.`);
         }
-        setShowPayment(false);
-        setCurrentStep('confirmation');
     };
 
     const startNewBooking = () => {
