@@ -9,6 +9,14 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
+@media (max-width: 640px) {
+  .booking-calendar-container {
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  }
+}
+
 .calendar-header {
   text-align: center;
   margin-bottom: 30px;
@@ -31,11 +39,35 @@
   margin: 0;
 }
 
+@media (max-width: 640px) {
+  .calendar-header {
+    margin-bottom: 15px;
+    padding: 12px;
+    border-radius: 8px;
+  }
+  
+  .calendar-header h3 {
+    font-size: 1.1rem;
+    margin-bottom: 6px;
+  }
+  
+  .calendar-header p {
+    font-size: 0.85rem;
+  }
+}
+
 /* Calendar Wrapper - Più grande */
 .calendar-wrapper {
   display: flex;
   justify-content: center;
   margin: 30px 0;
+}
+
+@media (max-width: 640px) {
+  .calendar-wrapper {
+    margin: 15px 0;
+    overflow-x: auto;
+  }
 }
 
 /* React DatePicker Customization */
@@ -45,7 +77,16 @@
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
   font-family: inherit;
   background: white;
-  font-size: 16px; /* Aumenta dimensione font */
+  font-size: 16px;
+}
+
+@media (max-width: 640px) {
+  .react-datepicker {
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    font-size: 14px;
+    width: 100% !important;
+  }
 }
 
 .react-datepicker__header {
@@ -58,13 +99,25 @@
 .react-datepicker__current-month {
   color: white;
   font-weight: 700;
-  font-size: 1.3rem; /* Mese più grande */
+  font-size: 1.3rem;
   margin-bottom: 10px;
+}
+
+@media (max-width: 640px) {
+  .react-datepicker__header {
+    padding: 12px 0;
+    border-radius: 10px 10px 0 0;
+  }
+  
+  .react-datepicker__current-month {
+    font-size: 1rem;
+    margin-bottom: 8px;
+  }
 }
 
 .react-datepicker__navigation {
   top: 25px;
-  width: 20px; /* Navigazione più grande */
+  width: 20px;
   height: 20px;
   border: 10px solid transparent;
 }
@@ -77,6 +130,23 @@
 .react-datepicker__navigation--next {
   right: 25px;
   border-left-color: white;
+}
+
+@media (max-width: 640px) {
+  .react-datepicker__navigation {
+    top: 15px;
+    width: 16px;
+    height: 16px;
+    border: 8px solid transparent;
+  }
+  
+  .react-datepicker__navigation--previous {
+    left: 15px;
+  }
+  
+  .react-datepicker__navigation--next {
+    right: 15px;
+  }
 }
 
 .react-datepicker__navigation:hover {
@@ -94,16 +164,31 @@
 .react-datepicker__day-name {
   color: #495057;
   font-weight: 700;
-  font-size: 1rem; /* Nomi giorni più grandi */
+  font-size: 1rem;
   padding: 10px;
-  width: 3rem; /* Larghezza fissa */
+  width: 3rem;
   margin: 2px;
+}
+
+@media (max-width: 640px) {
+  .react-datepicker__day-name {
+    font-size: 0.75rem;
+    padding: 6px 2px;
+    width: 2.2rem;
+    margin: 1px;
+  }
 }
 
 /* Month Container */
 .react-datepicker__month {
   margin: 0;
   padding: 10px;
+}
+
+@media (max-width: 640px) {
+  .react-datepicker__month {
+    padding: 6px 4px;
+  }
 }
 
 .react-datepicker__week {
@@ -117,17 +202,28 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 3rem; /* Molto più grandi */
+  width: 3rem;
   height: 3rem;
   line-height: 1;
   text-align: center;
-  margin: 3px; /* Più spazio tra giorni */
+  margin: 3px;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
   font-weight: 600;
-  font-size: 1.1rem; /* Numeri più grandi */
+  font-size: 1.1rem;
   border: 2px solid transparent;
+}
+
+@media (max-width: 640px) {
+  .react-datepicker__day {
+    width: 2.2rem;
+    height: 2.2rem;
+    margin: 1px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    border-width: 1.5px;
+  }
 }
 
 .react-datepicker__day:hover {
@@ -677,7 +773,7 @@
 /* Responsive */
 @media (max-width: 768px) {
   .booking-calendar-container {
-    padding: 15px;
+    padding: 12px;
   }
   
   .vincanto-calendar {
@@ -685,44 +781,54 @@
   }
   
   .vincanto-calendar .react-datepicker__month-container {
-    margin: 0 5px;
-  }
-  
-  .vincanto-calendar .react-datepicker__day {
-    width: 30px;
-    height: 30px;
-    line-height: 30px;
+    margin: 0 3px;
   }
   
   .calendar-legend {
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     align-items: center;
   }
   
   .date-selection {
     grid-template-columns: 1fr;
+    gap: 10px;
   }
 }
 
 @media (max-width: 480px) {
   .booking-calendar-container {
-    padding: 10px;
+    padding: 8px;
   }
   
   .vincanto-calendar .react-datepicker__month-container {
     margin: 0;
+    display: block;
+    width: 100%;
   }
   
-  .vincanto-calendar .react-datepicker__day {
-    width: 25px;
-    height: 25px;
-    line-height: 25px;
+  .calendar-legend {
+    padding: 10px 5px;
+  }
+  
+  .calendar-legend .legend-item {
     font-size: 0.8rem;
   }
   
-  .booking-calendar-header h3 {
-    font-size: 1.2rem;
+  .date-selection {
+    padding: 10px;
+  }
+  
+  .check-in-date,
+  .check-out-date,
+  .nights-count {
+    padding: 8px;
+  }
+  
+  .check-in-date strong,
+  .check-out-date strong,
+  .nights-count strong {
+    font-size: 0.8rem;
   }
 }
 
