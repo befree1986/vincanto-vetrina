@@ -1189,10 +1189,10 @@ export default async function handler(req, res) {
 
         // Query prenotazioni dirette
         const bookingsQuery = await pool.query(`
-          SELECT id, checkin_date, checkout_date, guest_name, total_price, status
+          SELECT id, check_in, check_out, first_name, last_name, total_amount, status
           FROM bookings
           WHERE status != 'cancelled'
-          ORDER BY checkin_date DESC
+          ORDER BY check_in DESC
         `);
 
         // Query date bloccate admin
@@ -1236,14 +1236,18 @@ END:VTIMEZONE
 
         // Aggiungi eventi per prenotazioni dirette
         for (const booking of bookingsQuery.rows) {
-          const checkin = new Date(booking.checkin_date);
-          const checkout = new Date(booking.checkout_date);
+          const checkin = new Date(booking.check_in);
+          const checkout = new Date(booking.check_out);
+          
+          const guestName = booking.first_name && booking.last_name 
+            ? `${booking.first_name} ${booking.last_name}` 
+            : 'Ospite';
           
           const uid = generateUID('booking', booking.id, formatICalDateOnly(checkin));
           const dtstart = formatICalDateOnly(checkin);
           const dtend = formatICalDateOnly(checkout);
-          const summary = `Prenotato - ${booking.guest_name || 'Ospite'}`;
-          const description = `Prenotazione diretta sito\\nID: ${booking.id}\\nTotale: €${booking.total_price}\\nStatus: ${booking.status}`;
+          const summary = `Prenotato - ${guestName}`;
+          const description = `Prenotazione diretta sito\\nID: ${booking.id}\\nTotale: €${booking.total_amount}\\nStatus: ${booking.status}`;
 
           icalContent += `BEGIN:VEVENT
 UID:${uid}
