@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { log } from '../utils/logger';
 import { loadStripe, StripeElementsOptions } from '@stripe/stripe-js';
 import {
     Elements,
@@ -193,7 +194,7 @@ const StripePayment: React.FC<StripePaymentProps> = (props) => {
                 setIsLoading(true);
                 setError(null);
 
-                console.log('💳 Inizializzazione Payment Intent:', {
+                log('💳 Inizializzazione Payment Intent:', {
                     booking_id: props.bookingId,
                     amount: props.amount,
                     customer_email: props.customerEmail,
@@ -207,7 +208,7 @@ const StripePayment: React.FC<StripePaymentProps> = (props) => {
                     customer_name: props.customerName
                 });
 
-                console.log('✅ Payment Intent creato:', response);
+                log('✅ Payment Intent creato:', response);
                 setClientSecret(response.client_secret);
             } catch (error) {
                 console.error('❌ Errore Payment Intent:', error);

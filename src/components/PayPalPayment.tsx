@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { log } from '../utils/logger';
 import { useTranslation } from 'react-i18next';
 
 interface PayPalPaymentProps {
@@ -140,7 +141,7 @@ const PayPalPayment: React.FC<PayPalPaymentProps> = ({
       },
 
       onCancel: (data: any) => {
-        console.log('PayPal payment cancelled:', data);
+        log('PayPal payment cancelled:', data);
         onCancel();
       },
 

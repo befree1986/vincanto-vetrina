@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { log } from '../utils/logger';
 import { useTranslation } from 'react-i18next';
 import { useBooking } from '../hooks/useBooking';
 import { getSafeTranslation } from '../i18n';
@@ -30,13 +31,13 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
     if (!quote) return 0;
     
     // 🐛 DEBUG: Calcolo servizi extra
-    console.log('[BookingSteps] getExtraServicesCost - Quote:', quote);
-    console.log('[BookingSteps] getExtraServicesCost - SelectedExtraServices:', selectedExtraServices);
-    console.log('[BookingSteps] getExtraServicesCost - _extraServicesCost prop:', _extraServicesCost);
+    log('[BookingSteps] getExtraServicesCost - Quote:', quote);
+    log('[BookingSteps] getExtraServicesCost - SelectedExtraServices:', selectedExtraServices);
+    log('[BookingSteps] getExtraServicesCost - _extraServicesCost prop:', _extraServicesCost);
     
     // 🔧 FIX: Usa il costo già calcolato invece di ricalcolarlo
     if (_extraServicesCost > 0) {
-      console.log('[BookingSteps] Usando costo extra pre-calcolato:', _extraServicesCost);
+      log('[BookingSteps] Usando costo extra pre-calcolato:', _extraServicesCost);
       return _extraServicesCost;
     }
     
@@ -55,16 +56,16 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
         }
         // I servizi inclusi non hanno costo aggiuntivo
         const cost = s.included ? 0 : (s.price || 0) * multiplier;
-        console.log(`[BookingSteps] Servizio "${s.name}": €${s.price} × ${multiplier} = €${cost} ${s.included ? '(INCLUSO)' : ''}`);
+        log(`[BookingSteps] Servizio "${s.name}": €${s.price} × ${multiplier} = €${cost} ${s.included ? '(INCLUSO)' : ''}`);
         return tot + cost;
       }, 0);
-    console.log('[BookingSteps] Costo ridotto manualmente:', reducedCost);
+    log('[BookingSteps] Costo ridotto manualmente:', reducedCost);
     return reducedCost;
   };
   const extraServicesCost = getExtraServicesCost();
-  console.log('[BookingSteps] 💰 Totale extra servizi finale:', extraServicesCost);
+  log('[BookingSteps] 💰 Totale extra servizi finale:', extraServicesCost);
   const total = quote ? quote.totalAmount + extraServicesCost : 0;
-  console.log('[BookingSteps] 💰 Totale soggiorno (quote + extra):', total);
+  log('[BookingSteps] 💰 Totale soggiorno (quote + extra):', total);
   const deposit = Math.round(total * 0.3 * 100) / 100;
   const saldo = Math.round((total - deposit) * 100) / 100;
   const isDeposit = booking.formData.payment_type === 'deposit';
@@ -144,7 +145,7 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
           setConfirmError(data.error || 'Errore conferma prenotazione');
         } else {
           setBookingConfirmed(true);
-          console.log('✅ Prenotazione Stripe salvata:', data.bookingId);
+          log('✅ Prenotazione Stripe salvata:', data.bookingId);
           try {
             await fetch('/api/send-final-email', {
               method: 'POST',
@@ -216,7 +217,7 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
       .then(async (resp) => {
         const data = await resp.json();
         if (data.success) {
-          console.log('✅ Prenotazione PayPal salvata:', data.bookingId);
+          log('✅ Prenotazione PayPal salvata:', data.bookingId);
         }
         try {
           await fetch('/api/send-final-email', {
@@ -284,7 +285,7 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
         .then(async (resp) => {
           const data = await resp.json();
           if (data.success) {
-            console.log('✅ Prenotazione bonifico salvata:', data.bookingId);
+            log('✅ Prenotazione bonifico salvata:', data.bookingId);
           } else {
             console.error('❌ Errore salvataggio:', data.error);
           }
@@ -361,7 +362,7 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
               const total = (extra.price || 0) * multiplier;
               // LOG dettagliato per debug
               if (typeof window !== 'undefined' && window.console) {
-                console.log('[BREAKDOWN][BookingSteps] Extra:', {
+                log('[BREAKDOWN][BookingSteps] Extra:', {
                   id: extra.id,
                   name: extra.name,
                   price: extra.price,

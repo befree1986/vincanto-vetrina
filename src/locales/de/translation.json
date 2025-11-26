@@ -10,8 +10,7 @@
     "navbarLangAlt":"Wechseln Sie die Sprache der Website",
     "navbarMenu":"Menü umschalten",
     "navbarClose":"Menü schließen",
-    "navbarBooking":"Buchung",
-    "navbarBookingAlt":"Buchen Sie Ihren Aufenthalt bei Vincanto",
+    
     "navbarContactAlt":"Kontaktieren Sie Vincanto für Anfragen und Informationen",
     "navbarHomeAlt":"Zur Startseite von Vincanto zurückkehren",
     "navbarProprietyAlt":"Entdecken Sie die Unterkunft Vincanto",
@@ -36,8 +35,7 @@
     "navbarCurrentLanguage":"Aktuelle Sprache",
     "navbarTranslatePage":"Seite übersetzen",
     "navbarTranslatePageAlt":"Übersetzen Sie die aktuelle Seite in Ihre bevorzugte Sprache",
-    "navbarBookingPlatform":"Buchen auf",
-    "navbarBookingPlatformAlt":"Buchen Sie Ihren Aufenthalt auf {platform}",
+    
     "navbarViewBooking":"Buchung anzeigen",
     "navbarViewBookingAlt":"Zeigen Sie Ihre Buchungsdetails an",
     "navbarManageBooking":"Buchung verwalten",
@@ -78,8 +76,7 @@
     "navbarCurrentThemeMode":"Aktuelles Thema",
     "navbarTranslateThisPage":"Diese Seite übersetzen",
     "navbarTranslateThisPageAlt":"Übersetzen Sie die aktuelle Seite in Ihre bevorzugte Sprache",
-    "navbarBookingPlatforms":"Buchungsplattformen",
-    "navbarBookingPlatformsAlt":"Buchen Sie Ihren Aufenthalt auf den wichtigsten Online-Plattformen",
+    
     "navbarViewYourBooking":"Ihre Buchung anzeigen",
     "navbarViewYourBookingAlt":"Zeigen Sie Ihre Buchungsdetails an",
     "navbarManageYourBooking":"Ihre Buchung verwalten",
@@ -126,8 +123,7 @@
     "navbarCurrentThemeButtonAlt":"Aktuelles Thema anzeigen",
     "navbarTranslateThisPageButton":"Diese Seite übersetzen",
     "navbarTranslateThisPageButtonAlt":"Übersetzen Sie die aktuelle Seite in Ihre bevorzugte Sprache",
-    "navbarBookingPlatformButton":"Buchen auf",
-    "navbarBookingPlatformButtonAlt":"Buchen Sie Ihren Aufenthalt auf {platform}",
+    
     "navbarViewBookingButton":"Buchung anzeigen",
     "navbarViewBookingButtonAlt":"Zeigen Sie Ihre Buchungsdetails an",
     "navbarManageBookingButton":"Buchung verwalten",
@@ -172,9 +168,8 @@
     "navbarSelectThemeModeButton":"Wählen Sie Ihr bevorzugtes Thema",
     "navbarSelectThemeModeButtonAlt":"Wählen Sie Ihr bevorzugtes Thema",
     "navbarCurrentThemeModeButton":"Aktuelles Thema",
-    "navbarCurrentThemeModeButtonAlt":"Aktuelles Thema anzeigen",
-    "navbarTranslateThisPageButton":"Diese Seite übersetzen",
-    "navbarTranslateThisPageButtonAlt":"Übersetzen Sie die aktuelle Seite in Ihre bevorzugte Sprache"
+    "navbarCurrentThemeModeButtonAlt":"Aktuelles Thema anzeigen"
+    
   },
   "propriety.rates.touristTaxCost": "Kurtaxe: 2,00 € pro Person und Nacht (über 12 Jahre, bis zu 5 Nächte)",
   "propriety.rates.touristTaxExemptions": "Befreit: Kinder unter 12 Jahren, Behinderte und ihre Begleitpersonen, Fahrer und Reiseleiter von Touristengruppen.",

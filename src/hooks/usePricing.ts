@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { log } from '../utils/logger';
 
 export interface PriceData {
   basePrice: number;
@@ -52,7 +53,7 @@ export const usePricing = () => {
     setError(null);
     
     try {
-      console.log('🔥 Caricamento prezzi dal nuovo sistema unificato...');
+      log('🔥 Caricamento prezzi dal nuovo sistema unificato...');
       
       // 🎯 USA LA NUOVA API UNIFICATA
       const cacheBuster = new Date().getTime();
@@ -66,7 +67,7 @@ export const usePricing = () => {
       
       if (result.success && result.pricing) {
         const apiData = result.pricing;
-        console.log('🔍 Dati ricevuti dall\'API Unificata:', apiData);
+        log('🔍 Dati ricevuti dall\'API Unificata:', apiData);
         
         // 🔥 NUOVO: Gestione dati dal sistema pricing-config
         const transformedData = {
@@ -95,7 +96,7 @@ export const usePricing = () => {
             }
           };
           
-          console.log('🎯 Dati sistema base + aggiuntive trasformati:', transformedData);
+          log('🎯 Dati sistema base + aggiuntive trasformati:', transformedData);
           setCurrentPrice(transformedData);
       } else {
         throw new Error('Formato risposta API non valido');
@@ -180,7 +181,7 @@ export const usePricing = () => {
       totalPrice += 20; // €20 per la 8a persona
     }
     
-    console.log(`🔢 CALCOLO PREZZI: ${guests} persone = ${totalPrice}€ (base: ${basePrice}€ + aggiuntive: ${totalPrice - basePrice}€)`);
+    log(`🔢 CALCOLO PREZZI: ${guests} persone = ${totalPrice}€ (base: ${basePrice}€ + aggiuntive: ${totalPrice - basePrice}€)`);
     
     return totalPrice;
   };
@@ -251,7 +252,7 @@ export const usePricing = () => {
 
   // Carica dati all'avvio
   useEffect(() => {
-    console.log('🚀 usePricing hook (Sistema Gruppi) montato');
+    log('🚀 usePricing hook (Sistema Gruppi) montato');
     fetchCurrentPrice();
     fetchPriceHistory();
   }, []);

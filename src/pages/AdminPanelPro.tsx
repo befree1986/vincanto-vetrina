@@ -9,6 +9,7 @@ import AdminPricing from '../components/admin/AdminPricing';
 import ExtraServicesAdmin from '../components/admin/ExtraServicesAdmin';
 import { ExtraService } from '../hooks/useExtraServices';
 import { devLog, devError, debugLog } from '../utils/debug';
+import { log } from '../utils/logger';
 
 const AdminPanelPro = (): JSX.Element => {
   devLog('🚀 AdminPanelPro component rendering...');
@@ -127,7 +128,7 @@ const AdminPanelPro = (): JSX.Element => {
   // Servizio API - temporaneamente commentato
   // const [calendarApiService] = useState(() => {
   //   try {
-  //     console.log('📅 Inizializzazione GoogleCalendarApiService...');
+  //     log('📅 Inizializzazione GoogleCalendarApiService...');
   //     return new GoogleCalendarApiService();
   //   } catch (error) {
   //     console.error('❌ Errore GoogleCalendarApiService:', error);
@@ -238,7 +239,7 @@ const AdminPanelPro = (): JSX.Element => {
   const loadPricingConfig = async () => {
     try {
       if (!adminApiService) return;
-      console.log('💰 Caricamento configurazione prezzi per gruppi...');
+      log('💰 Caricamento configurazione prezzi per gruppi...');
       const result = await adminApiService.getPricingConfig();
       
       if (result && (result.priceGroup1to2 !== undefined || result.success)) {
@@ -271,9 +272,9 @@ const AdminPanelPro = (): JSX.Element => {
           advanceBookingDiscount: config.advanceBookingDiscount || 0,
           lastMinuteDiscount: config.lastMinuteDiscount || 0
         });
-        console.log('✅ Configurazione prezzi per gruppi caricata:', config);
+        log('✅ Configurazione prezzi per gruppi caricata:', config);
       } else {
-        console.log('⚠️ Nessuna configurazione trovata, uso valori predefiniti per gruppi');
+        log('⚠️ Nessuna configurazione trovata, uso valori predefiniti per gruppi');
       }
     } catch (error) {
       console.error('❌ Errore caricamento prezzi:', error);
@@ -288,23 +289,23 @@ const AdminPanelPro = (): JSX.Element => {
       }
 
       setIsUpdatingPricing(true);
-      console.log('🔥 ADMIN SAVE - Dati da salvare:', JSON.stringify(pricingConfig, null, 2));
-      console.log('🔗 URL API Unificata chiamata:', `${window.location.origin}/api/unified?action=pricing-config`);
+      log('🔥 ADMIN SAVE - Dati da salvare:', JSON.stringify(pricingConfig, null, 2));
+      log('🔗 URL API Unificata chiamata:', `${window.location.origin}/api/unified?action=pricing-config`);
       
       const result = await adminApiService.updatePricingConfig(pricingConfig);
       
-      console.log('🎯 RISPOSTA API UNIFICATA:', JSON.stringify(result, null, 2));
+      log('🎯 RISPOSTA API UNIFICATA:', JSON.stringify(result, null, 2));
       
       if (result.success) {
         alert('✅ Configurazione prezzi salvata con successo!');
-        console.log('✅ Prezzi salvati nel database:', result.saved_data || result.data);
+        log('✅ Prezzi salvati nel database:', result.saved_data || result.data);
         
         // 🔥 FORZA RICARICAMENTO IMMEDIATO DEI PREZZI
-        console.log('🔄 FORCE RELOAD: Ricarico configurazione prezzi...');
+        log('🔄 FORCE RELOAD: Ricarico configurazione prezzi...');
         await loadPricingConfig();
         
         // 🧪 TEST IMMEDIATO: Verifica che i prezzi siano salvati con API unificata
-        console.log('🧪 TEST: Verifica prezzi dal database...');
+        log('🧪 TEST: Verifica prezzi dal database...');
         setTimeout(async () => {
           try {
             const testResponse = await fetch(`/api/unified?action=pricing-config?t=${Date.now()}`, {
@@ -312,7 +313,7 @@ const AdminPanelPro = (): JSX.Element => {
               headers: { 'Cache-Control': 'no-cache' }
             });
             const testData = await testResponse.json();
-            console.log('🧪 TEST PREZZI POST-SALVATAGGIO (NO CACHE):', testData);
+            log('🧪 TEST PREZZI POST-SALVATAGGIO (NO CACHE):', testData);
           } catch (testError) {
             console.error('❌ Errore test post-salvataggio:', testError);
           }
@@ -351,7 +352,7 @@ const AdminPanelPro = (): JSX.Element => {
     if (!adminApiService) return;
     
     try {
-      console.log('🛎️ Caricamento servizi dal database...');
+      log('🛎️ Caricamento servizi dal database...');
       
       const services = await adminApiService.getExtraServices();
       
@@ -362,7 +363,7 @@ const AdminPanelPro = (): JSX.Element => {
       // 🔥 NUOVO: Carica TUTTI i servizi per permettere modifica di quelli hardcoded
       setAllServices(services);
       
-      console.log('✅ Servizi caricati - Custom:', customOnly.length, 'Totali:', services.length);
+      log('✅ Servizi caricati - Custom:', customOnly.length, 'Totali:', services.length);
     } catch (error) {
       console.error('❌ Errore caricamento servizi:', error);
     }
@@ -396,7 +397,7 @@ const AdminPanelPro = (): JSX.Element => {
         
         setNewServiceName('');
         setNewServicePrice(0);
-        console.log('✅ Servizio aggiunto e salvato nel database');
+        log('✅ Servizio aggiunto e salvato nel database');
       } else {
         alert('❌ Errore aggiunta servizio: ' + result.message);
       }
@@ -460,7 +461,7 @@ const AdminPanelPro = (): JSX.Element => {
       if (result.success) {
         // Ricarica i servizi dal database
         await loadCustomServices();
-        console.log('✅ Servizio eliminato dal database');
+        log('✅ Servizio eliminato dal database');
       } else {
         alert('❌ Errore eliminazione servizio: ' + result.message);
       }
@@ -478,7 +479,7 @@ const AdminPanelPro = (): JSX.Element => {
     }
 
     try {
-      console.log(`💰 Aggiornamento prezzo servizio ${serviceId}: €${newPrice}`);
+      log(`💰 Aggiornamento prezzo servizio ${serviceId}: €${newPrice}`);
 
       // Usa l'API di pricing-config per aggiornare il prezzo del servizio
       const result = await adminApiService.updatePricingConfig({
@@ -491,7 +492,7 @@ const AdminPanelPro = (): JSX.Element => {
           service.id === serviceId ? { ...service, price: newPrice } : service
         ));
         
-        console.log('✅ Prezzo servizio aggiornato nel database');
+        log('✅ Prezzo servizio aggiornato nel database');
       } else {
         alert('❌ Errore aggiornamento prezzo: ' + result.message);
       }
@@ -509,7 +510,7 @@ const AdminPanelPro = (): JSX.Element => {
     }
 
     try {
-      console.log(`🔄 ${active ? 'Attivazione' : 'Disattivazione'} servizio ${serviceId}`);
+      log(`🔄 ${active ? 'Attivazione' : 'Disattivazione'} servizio ${serviceId}`);
 
       const result = await adminApiService.updatePricingConfig({
         [`service_${serviceId}_active`]: active.toString()
@@ -520,7 +521,7 @@ const AdminPanelPro = (): JSX.Element => {
           service.id === serviceId ? { ...service, active } : service
         ));
         
-        console.log(`✅ Servizio ${active ? 'attivato' : 'disattivato'} nel database`);
+        log(`✅ Servizio ${active ? 'attivato' : 'disattivato'} nel database`);
       } else {
         alert(`❌ Errore ${active ? 'attivazione' : 'disattivazione'} servizio: ` + result.message);
       }
@@ -538,7 +539,7 @@ const AdminPanelPro = (): JSX.Element => {
     }
 
     try {
-      console.log(`🎁 ${included ? 'Impostazione come incluso' : 'Rimozione da inclusi'} servizio ${serviceId}`);
+      log(`🎁 ${included ? 'Impostazione come incluso' : 'Rimozione da inclusi'} servizio ${serviceId}`);
 
       const result = await adminApiService.updatePricingConfig({
         [`service_${serviceId}_included`]: included.toString()
@@ -549,7 +550,7 @@ const AdminPanelPro = (): JSX.Element => {
           service.id === serviceId ? { ...service, included } : service
         ));
         
-        console.log(`✅ Servizio ${included ? 'impostato come incluso' : 'rimosso da inclusi'} nel database`);
+        log(`✅ Servizio ${included ? 'impostato come incluso' : 'rimosso da inclusi'} nel database`);
       } else {
         alert(`❌ Errore modifica servizio incluso: ` + result.message);
       }
@@ -566,7 +567,7 @@ const AdminPanelPro = (): JSX.Element => {
     
     try {
       setIsLoadingCalendars(true);
-      console.log('📅 Caricamento configurazioni calendario...');
+      log('📅 Caricamento configurazioni calendario...');
       
       const result = await adminApiService.getCalendarConfigs();
       
@@ -578,7 +579,7 @@ const AdminPanelPro = (): JSX.Element => {
         external: result.stats?.external || 0,
         lastSyncSuccess: result.stats?.lastSyncSuccess || null
       });
-      console.log('✅ Calendari caricati:', result);
+      log('✅ Calendari caricati:', result);
     } catch (error) {
       console.error('❌ Errore caricamento calendari:', error);
     } finally {
@@ -594,7 +595,7 @@ const AdminPanelPro = (): JSX.Element => {
 
     try {
       setIsLoadingCalendars(true);
-      console.log('📅 Creazione nuovo calendario:', newCalendarData);
+      log('📅 Creazione nuovo calendario:', newCalendarData);
 
       const result = await adminApiService.createCalendarConfig(newCalendarData);
       
@@ -646,7 +647,7 @@ const AdminPanelPro = (): JSX.Element => {
   
   const handleEditCalendar = (calendar: any) => {
     alert(`✏️ Modifica calendario: ${calendar.name || 'Senza nome'}\n\nFunzionalità di modifica in fase di sviluppo.`);
-    console.log('📝 Editing calendario:', calendar);
+    log('📝 Editing calendario:', calendar);
   };
 
   const handleDeleteCalendar = async (id: string, name?: string) => {
@@ -660,7 +661,7 @@ const AdminPanelPro = (): JSX.Element => {
 
     try {
       setIsLoadingCalendars(true);
-      console.log('🗑️ Eliminazione calendario:', id);
+      log('🗑️ Eliminazione calendario:', id);
       
       // Simula eliminazione - TODO: implementare endpoint backend
       alert('✅ Calendario eliminato con successo!');
@@ -681,7 +682,7 @@ const AdminPanelPro = (): JSX.Element => {
 
     try {
       setIsLoadingCalendars(true);
-      console.log('⏸️ Sospensione calendario:', calendarId);
+      log('⏸️ Sospensione calendario:', calendarId);
       
       // Simula sospensione - TODO: implementare endpoint backend
       alert('✅ Calendario sospeso con successo!');
@@ -699,7 +700,7 @@ const AdminPanelPro = (): JSX.Element => {
 
     try {
       setIsLoadingCalendars(true);
-      console.log('🔄 Sincronizzazione calendario:', calendarId, calendarName);
+      log('🔄 Sincronizzazione calendario:', calendarId, calendarName);
       
       // Simula sincronizzazione - TODO: implementare endpoint backend
       alert(`✅ Calendario "${calendarName}" sincronizzato con successo!`);
@@ -758,7 +759,7 @@ const AdminPanelPro = (): JSX.Element => {
   const savePaymentSettings = async () => {
     try {
       setIsUpdatingPayments(true);
-      console.log('💳 Salvataggio configurazione pagamenti:', paymentSettings);
+      log('💳 Salvataggio configurazione pagamenti:', paymentSettings);
       
       // Simula salvataggio - TODO: implementare endpoint backend
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -777,7 +778,7 @@ const AdminPanelPro = (): JSX.Element => {
     if (!confirm) return;
 
     try {
-      console.log('💰 Elaborazione rimborso:', { transactionId, amount });
+      log('💰 Elaborazione rimborso:', { transactionId, amount });
       
       // Simula rimborso - TODO: implementare endpoint backend
       await new Promise(resolve => setTimeout(resolve, 1500));
@@ -792,7 +793,7 @@ const AdminPanelPro = (): JSX.Element => {
 
   const handleCapturePayment = async (transactionId: string) => {
     try {
-      console.log('💳 Cattura pagamento:', transactionId);
+      log('💳 Cattura pagamento:', transactionId);
       
       // Simula cattura pagamento - TODO: implementare endpoint backend
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -822,7 +823,7 @@ const AdminPanelPro = (): JSX.Element => {
   const saveEmailSettings = async () => {
     setLoading(true);
     try {
-      console.log('📧 Salvataggio configurazione email:', emailSettings);
+      log('📧 Salvataggio configurazione email:', emailSettings);
       await new Promise(resolve => setTimeout(resolve, 1000));
       alert('✅ Configurazione email salvata con successo!');
     } catch (error) {
@@ -836,7 +837,7 @@ const AdminPanelPro = (): JSX.Element => {
   const testEmailConnection = async () => {
     setLoading(true);
     try {
-      console.log('🔧 Test connessione SMTP...');
+      log('🔧 Test connessione SMTP...');
       await new Promise(resolve => setTimeout(resolve, 2000));
       alert('✅ Test email inviata con successo! Controlla la tua casella di posta.');
     } catch (error) {
@@ -849,14 +850,14 @@ const AdminPanelPro = (): JSX.Element => {
 
   const handleEditTemplate = (templateName: string) => {
     alert(`✏️ Apertura editor per template: ${templateName}\n\nFunzionalità editor template in fase di sviluppo.`);
-    console.log(`📝 Editing template: ${templateName}`);
+    log(`📝 Editing template: ${templateName}`);
   };
 
   const handleCreateTemplate = () => {
     const templateName = prompt('📝 Inserisci il nome del nuovo template:');
     if (templateName) {
       alert(`✅ Template "${templateName}" creato con successo!`);
-      console.log(`📧 Created new template: ${templateName}`);
+      log(`📧 Created new template: ${templateName}`);
     }
   };
 
@@ -865,7 +866,7 @@ const AdminPanelPro = (): JSX.Element => {
   const resetSystemSetting = async (key: string) => {
     if (window.confirm(`🔄 Confermi il reset del setting "${key}" al valore predefinito?`)) {
       try {
-        console.log(`🔄 Reset setting: ${key}`);
+        log(`🔄 Reset setting: ${key}`);
         await new Promise(resolve => setTimeout(resolve, 500));
         alert(`✅ Setting "${key}" resettato con successo!`);
         await loadRealApiData(); // Ricarica i settings
@@ -880,7 +881,7 @@ const AdminPanelPro = (): JSX.Element => {
     if (window.confirm('💾 Confermi la creazione di un backup completo del sistema?')) {
       setLoading(true);
       try {
-        console.log('💾 Creazione backup sistema...');
+        log('💾 Creazione backup sistema...');
         await new Promise(resolve => setTimeout(resolve, 3000));
         alert('✅ Backup sistema creato con successo!');
       } catch (error) {
@@ -896,7 +897,7 @@ const AdminPanelPro = (): JSX.Element => {
     if (window.confirm('⚠️ ATTENZIONE: Confermi il ripristino del sistema? Questa operazione sovrascriverà le configurazioni attuali.')) {
       setLoading(true);
       try {
-        console.log('🔄 Ripristino sistema...');
+        log('🔄 Ripristino sistema...');
         await new Promise(resolve => setTimeout(resolve, 3000));
         alert('✅ Sistema ripristinato con successo!');
         // Ricarica tutti i dati dopo il ripristino
@@ -927,7 +928,7 @@ const AdminPanelPro = (): JSX.Element => {
   const saveNotificationSettings = async () => {
     setLoading(true);
     try {
-      console.log('🔔 Salvataggio impostazioni notifiche:', notificationSettings);
+      log('🔔 Salvataggio impostazioni notifiche:', notificationSettings);
       await new Promise(resolve => setTimeout(resolve, 1000));
       alert('✅ Impostazioni notifiche salvate con successo!');
     } catch (error) {
@@ -942,21 +943,21 @@ const AdminPanelPro = (): JSX.Element => {
 
   const markAllNotificationsAsRead = () => {
     if (window.confirm('📖 Marcare tutte le notifiche come lette?')) {
-      console.log('📖 Tutte le notifiche marcate come lette');
+      log('📖 Tutte le notifiche marcate come lette');
       alert('✅ Tutte le notifiche sono state marcate come lette!');
     }
   };
 
   const deleteNotification = (notificationId: number) => {
     if (window.confirm(`🗑️ Eliminare la notifica #${notificationId}?`)) {
-      console.log(`🗑️ Eliminazione notifica ${notificationId}`);
+      log(`🗑️ Eliminazione notifica ${notificationId}`);
       alert(`✅ Notifica #${notificationId} eliminata con successo!`);
     }
   };
 
   const testNotification = () => {
     alert('🔔 Test Notifica!\n\nQuesta è una notifica di prova del sistema.\nSe vedi questo messaggio, il sistema notifiche funziona correttamente.');
-    console.log('🔔 Test notifica inviato');
+    log('🔔 Test notifica inviato');
   };
 
   const getNotificationIcon = (type: string) => {
@@ -987,12 +988,12 @@ const AdminPanelPro = (): JSX.Element => {
 
     setIsLoadingData(true);
     try {
-      console.log('🔄 Caricamento dati API reali...');
+      log('🔄 Caricamento dati API reali...');
       
       // Carica dati uno alla volta per debug
       try {
         const stats = await adminApiService.getDashboardStats();
-        console.log('✅ Stats caricate:', stats);
+        log('✅ Stats caricate:', stats);
         setDashboardStats(stats || {});
       } catch (err) {
         console.error('❌ Errore stats:', err);
@@ -1000,7 +1001,7 @@ const AdminPanelPro = (): JSX.Element => {
 
       try {
         const bookings = await adminApiService.getBookings();
-        console.log('✅ Prenotazioni caricate:', bookings);
+        log('✅ Prenotazioni caricate:', bookings);
         setRealBookings(bookings || []);
         setRecentBookings(bookings || []);
       } catch (err) {
@@ -1010,7 +1011,7 @@ const AdminPanelPro = (): JSX.Element => {
       // Carica eventi iCal esterni
       try {
         const events = await adminApiService.getCalendarEvents();
-        console.log('✅ Eventi iCal esterni caricati:', events);
+        log('✅ Eventi iCal esterni caricati:', events);
         setCalendarEvents(events || []);
       } catch (err) {
         console.error('❌ Errore eventi iCal:', err);
@@ -1019,7 +1020,7 @@ const AdminPanelPro = (): JSX.Element => {
 
       try {
         const settings = await adminApiService.getSystemSettings();
-        console.log('✅ Impostazioni caricate:', settings);
+        log('✅ Impostazioni caricate:', settings);
         setSystemSettings(settings || []);
       } catch (err) {
         console.error('❌ Errore impostazioni:', err);
@@ -1027,7 +1028,7 @@ const AdminPanelPro = (): JSX.Element => {
 
       try {
         const analyticsResult = await adminApiService.getAnalytics();
-        console.log('✅ Analytics caricate:', analyticsResult);
+        log('✅ Analytics caricate:', analyticsResult);
         setAnalytics(analyticsResult || []);
       } catch (err) {
         console.error('❌ Errore analytics:', err);
@@ -1035,7 +1036,7 @@ const AdminPanelPro = (): JSX.Element => {
 
       try {
         const notificationsResult = await adminApiService.getNotifications();
-        console.log('✅ Notifiche caricate:', notificationsResult);
+        log('✅ Notifiche caricate:', notificationsResult);
         setNotifications(notificationsResult || []);
       } catch (err) {
         console.error('❌ Errore notifiche:', err);
@@ -1043,7 +1044,7 @@ const AdminPanelPro = (): JSX.Element => {
 
       try {
         const blockedDatesResult = await adminApiService.getBlockedDates();
-        console.log('✅ Date bloccate caricate:', blockedDatesResult);
+        log('✅ Date bloccate caricate:', blockedDatesResult);
         setBlockedDates(blockedDatesResult || []);
       } catch (err) {
         console.error('❌ Errore date bloccate:', err);
@@ -1051,7 +1052,7 @@ const AdminPanelPro = (): JSX.Element => {
 
       try {
         const paymentsResult = await adminApiService.getPayments();
-        console.log('✅ Pagamenti caricati:', paymentsResult);
+        log('✅ Pagamenti caricati:', paymentsResult);
         setPaymentTransactions(paymentsResult || []);
       } catch (err) {
         console.error('❌ Errore pagamenti:', err);
@@ -1061,29 +1062,29 @@ const AdminPanelPro = (): JSX.Element => {
       // Carica configurazioni prezzi e calendari
       try {
         await loadPricingConfig();
-        console.log('✅ Prezzi caricati');
+        log('✅ Prezzi caricati');
       } catch (err) {
         console.error('❌ Errore prezzi:', err);
       }
 
       try {
         await loadCalendarConfigs();
-        console.log('✅ Calendari caricati');
+        log('✅ Calendari caricati');
       } catch (err) {
         console.error('❌ Errore calendari:', err);
       }
 
       try {
         await loadCustomServices();
-        console.log('✅ Servizi custom caricati');
+        log('✅ Servizi custom caricati');
       } catch (err) {
         console.error('❌ Errore servizi custom:', err);
       }
 
       // Tassa soggiorno: caricamento remoto disabilitato (gestita via `pricingConfig`)
-      console.log('ℹ️ Tassa soggiorno gestita tramite pricingConfig (caricamento remoto disabilitato)');
+      log('ℹ️ Tassa soggiorno gestita tramite pricingConfig (caricamento remoto disabilitato)');
 
-      console.log('✅ Dati API reali caricati completamente');
+      log('✅ Dati API reali caricati completamente');
     } catch (error) {
       console.error('❌ Errore nel caricamento dati API:', error);
     } finally {
@@ -1100,7 +1101,7 @@ const AdminPanelPro = (): JSX.Element => {
       setIsLoadingData(true);
       const result = await adminApiService.createBooking(bookingData);
       await loadRealApiData(); // Ricarica tutti i dati
-      console.log('✅ Prenotazione creata:', result);
+      log('✅ Prenotazione creata:', result);
       return result;
     } catch (error) {
       console.error('❌ Errore creazione prenotazione:', error);
@@ -1115,7 +1116,7 @@ const AdminPanelPro = (): JSX.Element => {
     try {
       const result = await adminApiService.updateBooking(id, updates);
       await loadRealApiData(); // Ricarica tutti i dati
-      console.log('✅ Prenotazione aggiornata:', result);
+      log('✅ Prenotazione aggiornata:', result);
       return result;
     } catch (error) {
       console.error('❌ Errore aggiornamento prenotazione:', error);
@@ -1128,7 +1129,7 @@ const AdminPanelPro = (): JSX.Element => {
     try {
       const result = await adminApiService.deleteBooking(id);
       await loadRealApiData(); // Ricarica tutti i dati
-      console.log('✅ Prenotazione eliminata:', result);
+      log('✅ Prenotazione eliminata:', result);
       return result;
     } catch (error) {
       console.error('❌ Errore eliminazione prenotazione:', error);
@@ -1141,7 +1142,7 @@ const AdminPanelPro = (): JSX.Element => {
     if (!adminApiService) return;
     try {
       const result = await adminApiService.updateSystemSetting(key, value);
-      console.log('✅ Impostazione aggiornata:', { key, value });
+      log('✅ Impostazione aggiornata:', { key, value });
       return result;
     } catch (error) {
       console.error('❌ Errore aggiornamento impostazione:', error);
@@ -1337,7 +1338,7 @@ const AdminPanelPro = (): JSX.Element => {
       
       const events = await adminApiService.getGoogleCalendarEvents();
       
-      console.log('Eventi Google Calendar caricati:', events);
+      log('Eventi Google Calendar caricati:', events);
       alert(`📅 Caricati ${events.length || 0} eventi da Google Calendar`);
       
       return events;
@@ -2146,7 +2147,7 @@ const AdminPanelPro = (): JSX.Element => {
   
   const markNotificationAsRead = async (id: string | number) => {
     if (typeof id === 'number') {
-      console.log(`📖 Notifica ${id} marcata come letta`);
+      log(`📖 Notifica ${id} marcata come letta`);
       alert(`✅ Notifica #${id} marcata come letta!`);
       return;
     }
@@ -2290,7 +2291,7 @@ const AdminPanelPro = (): JSX.Element => {
           <button 
             className={`admin-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
             onClick={() => {
-              console.log('🎯 Click su tab dashboard');
+              log('🎯 Click su tab dashboard');
               setActiveTab('dashboard');
             }}
           >
@@ -2300,7 +2301,7 @@ const AdminPanelPro = (): JSX.Element => {
           <button 
             className={`admin-nav-item ${activeTab === 'prezzi' ? 'active' : ''}`}
             onClick={() => {
-              console.log('🎯 Click su tab prezzi');
+              log('🎯 Click su tab prezzi');
               setActiveTab('prezzi');
             }}
           >
@@ -2310,7 +2311,7 @@ const AdminPanelPro = (): JSX.Element => {
           <button 
             className={`admin-nav-item ${activeTab === 'servizi-extra' ? 'active' : ''}`}
             onClick={() => {
-              console.log('🎯 Click su tab servizi-extra');
+              log('🎯 Click su tab servizi-extra');
               setActiveTab('servizi-extra');
             }}
           >
@@ -2320,7 +2321,7 @@ const AdminPanelPro = (): JSX.Element => {
           <button 
             className={`admin-nav-item ${activeTab === 'calendari' ? 'active' : ''}`}
             onClick={() => {
-              console.log('🎯 Click su tab calendari');
+              log('🎯 Click su tab calendari');
               setActiveTab('calendari');
             }}
           >
@@ -2330,7 +2331,7 @@ const AdminPanelPro = (): JSX.Element => {
           <button 
             className={`admin-nav-item ${activeTab === 'prenotazioni' ? 'active' : ''}`}
             onClick={() => {
-              console.log('🎯 Click su tab prenotazioni');
+              log('🎯 Click su tab prenotazioni');
               setActiveTab('prenotazioni');
             }}
           >
@@ -2340,7 +2341,7 @@ const AdminPanelPro = (): JSX.Element => {
           <button 
             className={`admin-nav-item ${activeTab === 'pagamenti' ? 'active' : ''}`}
             onClick={() => {
-              console.log('🎯 Click su tab pagamenti');
+              log('🎯 Click su tab pagamenti');
               setActiveTab('pagamenti');
             }}
           >

@@ -4,7 +4,6 @@
  */
 
 let adminPanelPreloaded = false;
-let bookingSystemPreloaded = false;
 
 export const preloadAdminPanel = async () => {
   if (!adminPanelPreloaded) {
@@ -13,12 +12,7 @@ export const preloadAdminPanel = async () => {
   }
 };
 
-export const preloadBookingSystem = async () => {
-  if (!bookingSystemPreloaded) {
-    bookingSystemPreloaded = true;
-    return import('../components/BookingSystem');
-  }
-};
+// BookingSystem non più precaricato: import diretto elimina duplicazioni/warning
 
 export const preloadOAuthCallback = async () => {
   return import('../pages/OAuthCallback');
@@ -30,10 +24,7 @@ export const handleMouseEnterAdmin = () => {
   preloadAdminPanel();
 };
 
-export const handleMouseEnterBooking = () => {
-  // Preload quando l'utente naviga verso la sezione booking
-  preloadBookingSystem();
-};
+// Rimosso handler mouse per booking (non necessario)
 
 // Preload intelligente basato su viewport
 export const setupIntelligentPreload = () => {
@@ -41,11 +32,7 @@ export const setupIntelligentPreload = () => {
   const onScroll = () => {
     const scrollPercent = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
     
-    if (scrollPercent > 30 && !bookingSystemPreloaded) {
-      preloadBookingSystem();
-    }
-    
-    // Se l'utente è molto attivo (scroll veloce), preload tutto
+    // Se l'utente è molto attivo (scroll veloce), preload Admin
     if (scrollPercent > 70) {
       preloadAdminPanel();
     }
@@ -71,15 +58,10 @@ export const setupIntelligentPreload = () => {
 export const preloadOnIdle = () => {
   if ('requestIdleCallback' in window) {
     requestIdleCallback(() => {
-      preloadBookingSystem();
-    });
-    
-    requestIdleCallback(() => {
       preloadAdminPanel();
-    }, { timeout: 5000 });
+    });
   } else {
     // Fallback per browser che non supportano requestIdleCallback
-    setTimeout(preloadBookingSystem, 2000);
-    setTimeout(preloadAdminPanel, 4000);
+    setTimeout(preloadAdminPanel, 2000);
   }
 };

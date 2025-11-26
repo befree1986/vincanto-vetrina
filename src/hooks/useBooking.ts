@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { log } from '../utils/logger';
 import {
     BookingQuoteRequest,
     BookingQuoteResponse,
@@ -172,7 +173,7 @@ export function useBooking(): BookingState {
     
     // Quote request
     const requestQuote = useCallback(async () => {
-        console.log('📋 Requesting quote with data:', {
+        log('📋 Requesting quote with data:', {
             checkIn: formData.check_in_date,
             checkOut: formData.check_out_date,
             adults: formData.num_adults,
@@ -181,7 +182,7 @@ export function useBooking(): BookingState {
         });
         
         if (!formData.check_in_date || !formData.check_out_date) {
-            console.log('⚠️ Quote request aborted - missing dates');
+            log('⚠️ Quote request aborted - missing dates');
             setQuoteError('Date check-in e check-out obbligatorie');
             return;
         }
@@ -200,9 +201,9 @@ export function useBooking(): BookingState {
                 includeParking: formData.parking_option === 'private'
             };
             
-            console.log('🚀 Sending quote request:', quoteRequest);
+            log('🚀 Sending quote request:', quoteRequest);
             const response = await getBookingQuote(quoteRequest);
-            console.log('✅ Quote response received:', response);
+            log('✅ Quote response received:', response);
             setQuote(response);
         } catch (error) {
             console.error('❌ Quote request failed:', error);
@@ -313,7 +314,7 @@ export function useBooking(): BookingState {
     // Auto-request quote when dates and guests change
     useEffect(() => {
         if (formData.check_in_date && formData.check_out_date && formData.num_adults > 0) {
-            console.log('🔄 Trigger auto-quote request:', {
+            log('🔄 Trigger auto-quote request:', {
                 checkIn: formData.check_in_date,
                 checkOut: formData.check_out_date,
                 adults: formData.num_adults,
@@ -327,7 +328,7 @@ export function useBooking(): BookingState {
             
             return () => clearTimeout(timer);
         } else {
-            console.log('⚠️ Auto-quote skipped - missing data:', {
+            log('⚠️ Auto-quote skipped - missing data:', {
                 hasCheckIn: !!formData.check_in_date,
                 hasCheckOut: !!formData.check_out_date,
                 adults: formData.num_adults
