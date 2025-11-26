@@ -2,7 +2,7 @@ name: Sync Calendari Automatico
 
 on:
   schedule:
-    - cron: '*/5 * * * *' # ogni 5 minuti (UTC)
+    - cron: '*/30 * * * *' # ogni 30 minuti (UTC) - frequenza ottimizzata
   workflow_dispatch: # permette di lanciare manualmente
 
 jobs:
@@ -12,8 +12,53 @@ jobs:
       AIRBNB_ICAL_URL: ${{ secrets.AIRBNB_ICAL_URL }}
       BOOKING_ICAL_URL: ${{ secrets.BOOKING_ICAL_URL }}
       HOLIDU_ICAL_URL: ${{ secrets.HOLIDU_ICAL_URL }}
+    
     steps:
-      - name: Chiamata endpoint di sync calendari (DEV)
+      - name: 🔄 Sincronizzazione Calendari Esterni
+        id: sync
         run: |
-          # In produzione sostituire con https://vincantomaori.it/api/calendar-real-sync
-          curl -X POST "https://vincanto-vetrina.vercel.app/api/calendar-real-sync"
+          echo "🚀 Avvio sincronizzazione calendari $(date '+%Y-%m-%d %H:%M:%S UTC')"
+          
+          # Endpoint produzione
+          SYNC_URL="https://www.vincantomaori.it/api/calendar-real-sync"
+          # Fallback DEV
+          # SYNC_URL="https://vincanto-vetrina.vercel.app/api/calendar-real-sync"
+          
+          # Chiamata con timeout e retry
+          RESPONSE=$(curl -X POST "$SYNC_URL" \
+            --max-time 30 \
+            --retry 3 \
+            --retry-delay 5 \
+            --fail-with-body \
+            -w "\n%{http_code}" \
+            -H "User-Agent: GitHub-Actions-Calendar-Sync/1.0" \
+            2>&1)
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+          
+          echo "📡 HTTP Status: $HTTP_CODE"
+          echo "📦 Response: $BODY"
+          
+          if [ "$HTTP_CODE" -eq 200 ]; then
+            echo "✅ Sincronizzazione completata con successo"
+            # Parsing risposta JSON per statistiche
+            echo "$BODY" | jq -r '.result[] | "  - \(.name): \(.eventsFound) eventi trovati, \(.eventsUpdated) salvati"' || echo "$BODY"
+            exit 0
+          else
+            echo "❌ Errore sincronizzazione (HTTP $HTTP_CODE)"
+            echo "$BODY"
+            exit 1
+          fi
+      
+      - name: 📊 Verifica Status Calendari
+        if: success()
+        run: |
+          echo "✅ Sincronizzazione riuscita alle $(date '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "📅 Prossimo sync programmato tra 30 minuti"
+      
+      - name: 🚨 Notifica Errore Sincronizzazione
+        if: failure()
+        run: |
+          echo "::error::❌ Sincronizzazione calendari fallita!"
+          echo "::warning::Verificare configurazione secrets e endpoint API"
