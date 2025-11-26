@@ -18,7 +18,7 @@
     },
     {
       "source": "/api/booking/confirm",
-      "destination": "/api/unified.js"
+      "destination": "/api/booking-confirm.js"
     },
     {
       "source": "/api/send-final-email",
