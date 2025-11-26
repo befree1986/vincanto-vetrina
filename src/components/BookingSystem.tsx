@@ -161,6 +161,7 @@ const BookingSystem: React.FC = () => {
     const [showPayment, setShowPayment] = useState(false);
     const [showEditOptions, setShowEditOptions] = useState(false);
     const [bookingResult, setBookingResult] = useState<any | null>(null);
+    const [paymentCompleted, setPaymentCompleted] = useState(false);
 
     // Aggiorna il costo extra ogni volta che cambia la quote o i servizi selezionati
     useEffect(() => {
@@ -267,6 +268,8 @@ const BookingSystem: React.FC = () => {
                 payment_amount: amountPaid
             });
 
+            // Segna il pagamento come completato
+            setPaymentCompleted(true);
             setShowPayment(false);
             setCurrentStep('confirmation');
         } catch (error: any) {
@@ -279,6 +282,8 @@ const BookingSystem: React.FC = () => {
         resetForm();
         setCurrentStep('dates');
         setError(null);
+        setPaymentCompleted(false);
+        setShowPayment(false);
     };
 
     const renderStepIndicator = (): JSX.Element => (
@@ -326,14 +331,86 @@ const BookingSystem: React.FC = () => {
         try {
             const result: any = await submitBooking();
             setBookingResult(result || null);
+            
+            // Reset flag pagamento completato quando si richiede un nuovo pagamento
+            setPaymentCompleted(false);
+            
+            // Controlla il metodo di pagamento per determinare il flusso
             if (formData.payment_method === 'stripe' || formData.payment_method === 'paypal') {
+                // Pagamenti online: mostra form pagamento
                 setShowPayment(true);
                 setCurrentStep('payment');
+            } else if (formData.payment_method === 'bank_transfer') {
+                // Bonifico bancario: salva come pending e mostra istruzioni
+                await handleBankTransferBooking();
             } else {
-                setCurrentStep('confirmation');
+                // Metodo non riconosciuto: errore
+                setError('Metodo di pagamento non valido. Seleziona Carta, PayPal o Bonifico.');
             }
         } catch (e: any) {
             setError(e.message || 'Errore inatteso');
+        }
+    };
+
+    const handleBankTransferBooking = async () => {
+        try {
+            const amountPaid = formData.payment_type === 'deposit' && quote
+                ? Math.round(quote.totalAmount * 0.3 * 100) / 100
+                : quote?.totalAmount || 0;
+
+            const bookingData = {
+                guest_name: formData.guest_name,
+                guest_surname: formData.guest_surname,
+                guest_email: formData.guest_email,
+                guest_phone: formData.guest_phone,
+                check_in_date: formData.check_in_date?.toISOString().split('T')[0],
+                check_out_date: formData.check_out_date?.toISOString().split('T')[0],
+                adults: formData.num_adults,
+                children: formData.num_children,
+                children_ages: formData.children_ages,
+                parking_option: formData.parking_option,
+                payment_method: 'bank_transfer',
+                payment_type: formData.payment_type,
+                special_requests: formData.guest_message,
+                email: formData.guest_email,
+                phone: formData.guest_phone,
+                guests: formData.num_adults + formData.num_children
+            };
+
+            // Salva la prenotazione come "pending" in attesa del bonifico
+            const response = await fetch('/api/booking/confirm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    payment_method: 'bank_transfer',
+                    payment_status: 'pending',
+                    payment_id: null,
+                    amount: amountPaid,
+                    total_amount: quote?.totalAmount || 0,
+                    booking_data: bookingData
+                })
+            });
+
+            const result = await response.json();
+            
+            if (!result.success) {
+                throw new Error(result.error || 'Errore salvataggio prenotazione');
+            }
+
+            // Aggiorna il risultato con il booking ID reale
+            setBookingResult({
+                ...bookingResult,
+                booking_id: result.bookingId || result.booking?.bookingId,
+                id: result.id || result.booking?.id,
+                payment_amount: amountPaid,
+                payment_method: 'bank_transfer',
+                payment_status: 'pending'
+            });
+
+            setCurrentStep('confirmation');
+        } catch (error: any) {
+            console.error('Errore prenotazione bonifico:', error);
+            setError(`Errore nel salvataggio della prenotazione: ${error.message}`);
         }
     };
 
@@ -497,26 +574,46 @@ const BookingSystem: React.FC = () => {
                     <h3>{getSafeTranslation(t, 'booking.paymentOptions', 'Modalità di Pagamento')}</h3>
                     <div className="payment-type-selection">
                         <div className="radio-group">
-                            <input type="radio" id="deposit" name="payment_type" value="deposit" checked={formData.payment_type==='deposit'} onChange={(e)=>setFormData({ payment_type: e.target.value as any })} />
+                            <input type="radio" id="deposit" name="payment_type" value="deposit" checked={formData.payment_type==='deposit'} onChange={(e)=>{
+                                setFormData({ payment_type: e.target.value as any });
+                                setPaymentCompleted(false);
+                                setShowPayment(false);
+                            }} />
                             <label htmlFor="deposit">{getSafeTranslation(t, 'booking.deposit30', 'Acconto 30%')} {quote && <span className="amount">€{((quote.totalAmount)*0.30).toFixed(2)}</span>}</label>
                         </div>
                         <div className="radio-group">
-                            <input type="radio" id="full" name="payment_type" value="full" checked={formData.payment_type==='full'} onChange={(e)=>setFormData({ payment_type: e.target.value as any })} />
+                            <input type="radio" id="full" name="payment_type" value="full" checked={formData.payment_type==='full'} onChange={(e)=>{
+                                setFormData({ payment_type: e.target.value as any });
+                                setPaymentCompleted(false);
+                                setShowPayment(false);
+                            }} />
                             <label htmlFor="full">{getSafeTranslation(t, 'booking.fullPayment', 'Saldo Completo')} {quote && <span className="amount">€{quote.totalAmount.toFixed(2)}</span>}</label>
                         </div>
                     </div>
                     <div className="payment-method-selection">
                         <h4>{getSafeTranslation(t, 'booking.paymentMethod', 'Metodo di Pagamento')}</h4>
                         <div className="radio-group">
-                            <input type="radio" id="stripe" name="payment_method" value="stripe" checked={formData.payment_method==='stripe'} onChange={(e)=>setFormData({ payment_method: e.target.value as any })} />
+                            <input type="radio" id="stripe" name="payment_method" value="stripe" checked={formData.payment_method==='stripe'} onChange={(e)=>{
+                                setFormData({ payment_method: e.target.value as any });
+                                setPaymentCompleted(false);
+                                setShowPayment(false);
+                            }} />
                             <label htmlFor="stripe">💳 {getSafeTranslation(t, 'booking.card', 'Carta')}</label>
                         </div>
                         <div className="radio-group">
-                            <input type="radio" id="paypal" name="payment_method" value="paypal" checked={formData.payment_method==='paypal'} onChange={(e)=>setFormData({ payment_method: e.target.value as any })} />
+                            <input type="radio" id="paypal" name="payment_method" value="paypal" checked={formData.payment_method==='paypal'} onChange={(e)=>{
+                                setFormData({ payment_method: e.target.value as any });
+                                setPaymentCompleted(false);
+                                setShowPayment(false);
+                            }} />
                             <label htmlFor="paypal">🟡 PayPal</label>
                         </div>
                         <div className="radio-group">
-                            <input type="radio" id="bank_transfer" name="payment_method" value="bank_transfer" checked={formData.payment_method==='bank_transfer'} onChange={(e)=>setFormData({ payment_method: e.target.value as any })} />
+                            <input type="radio" id="bank_transfer" name="payment_method" value="bank_transfer" checked={formData.payment_method==='bank_transfer'} onChange={(e)=>{
+                                setFormData({ payment_method: e.target.value as any });
+                                setPaymentCompleted(false);
+                                setShowPayment(false);
+                            }} />
                             <label htmlFor="bank_transfer">🏦 {getSafeTranslation(t, 'booking.bankTransfer', 'Bonifico Bancario')}</label>
                         </div>
                     </div>
@@ -648,42 +745,73 @@ const BookingSystem: React.FC = () => {
                 
                 {currentStep === 'confirmation' && (
                     <div className="booking-step-content">
-                        <div className="confirmation-success">
-                            <div className="success-icon">✅</div>
-                            <h2>Prenotazione Confermata!</h2>
-                            <p>Grazie per aver scelto Vincanto Maori. Ti abbiamo inviato una email di conferma.</p>
-                            
-                            {bookingResult && (
-                                <div className="booking-summary">
-                                    <h3>Riepilogo Prenotazione</h3>
-                                    <p><strong>ID Prenotazione:</strong> {bookingResult.booking_id}</p>
-                                    <p><strong>Check-in:</strong> {formData.check_in_date?.toLocaleDateString()}</p>
-                                    <p><strong>Check-out:</strong> {formData.check_out_date?.toLocaleDateString()}</p>
-                                    <p><strong>Ospiti:</strong> {formData.num_adults} adulti {formData.num_children > 0 && `, ${formData.num_children} bambini`}</p>
-                                    <p><strong>Totale Pagato:</strong> €{bookingResult.payment_amount}</p>
+                        {/* Protezione contro bypass del pagamento */}
+                        {!paymentCompleted && formData.payment_method !== 'bank_transfer' ? (
+                            <div className="error-message">
+                                <h3>⚠️ Pagamento non completato</h3>
+                                <p>Non hai completato il processo di pagamento. Per confermare la prenotazione devi prima effettuare il pagamento.</p>
+                                <button 
+                                    onClick={() => {
+                                        setCurrentStep('details');
+                                        setShowPayment(false);
+                                    }} 
+                                    className="btn-primary"
+                                >
+                                    Torna ai Dettagli
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="confirmation-success">
+                                <div className="success-icon">
+                                    {formData.payment_method === 'bank_transfer' ? '⏳' : '✅'}
                                 </div>
-                            )}
-
-                            {formData.payment_method === 'bank_transfer' && (
-                                <div className="bank-transfer-instructions">
-                                    <h3>🏦 Istruzioni per il Bonifico</h3>
-                                    <div className="bank-details">
-                                        <p><strong>Beneficiario:</strong> Vincanto Maori S.r.l.</p>
-                                        <p><strong>IBAN:</strong> IT60 X054 2811 101 000000123456</p>
-                                        <p><strong>Causale:</strong> Prenotazione {bookingResult?.booking_id}</p>
-                                        <p><strong>Importo:</strong> €{bookingResult?.payment_amount}</p>
+                                <h2>
+                                    {formData.payment_method === 'bank_transfer' 
+                                        ? 'Prenotazione Registrata!' 
+                                        : 'Prenotazione Confermata!'}
+                                </h2>
+                                <p>
+                                    {formData.payment_method === 'bank_transfer'
+                                        ? 'La tua prenotazione è stata registrata. Riceverai conferma dopo la verifica del bonifico.'
+                                        : 'Grazie per aver scelto Vincanto Maori. Ti abbiamo inviato una email di conferma.'}
+                                </p>
+                                
+                                {bookingResult && (
+                                    <div className="booking-summary">
+                                        <h3>Riepilogo Prenotazione</h3>
+                                        <p><strong>ID Prenotazione:</strong> {bookingResult.booking_id}</p>
+                                        <p><strong>Check-in:</strong> {formData.check_in_date?.toLocaleDateString()}</p>
+                                        <p><strong>Check-out:</strong> {formData.check_out_date?.toLocaleDateString()}</p>
+                                        <p><strong>Ospiti:</strong> {formData.num_adults} adulti {formData.num_children > 0 && `, ${formData.num_children} bambini`}</p>
+                                        <p><strong>{formData.payment_method === 'bank_transfer' ? 'Importo da Pagare' : 'Totale Pagato'}:</strong> €{bookingResult.payment_amount?.toFixed(2)}</p>
+                                        {formData.payment_method === 'bank_transfer' && (
+                                            <p className="pending-status"><strong>Stato:</strong> In attesa di pagamento</p>
+                                        )}
                                     </div>
-                                    <p className="bank-note">
-                                        Ti abbiamo inviato una email con tutti i dettagli. 
-                                        La prenotazione sarà confermata dopo la ricezione del pagamento.
-                                    </p>
-                                </div>
-                            )}
-                            
-                            <button onClick={startNewBooking} className="btn-primary">
-                                Nuova Prenotazione
-                            </button>
-                        </div>
+                                )}
+
+                                {formData.payment_method === 'bank_transfer' && (
+                                    <div className="bank-transfer-instructions">
+                                        <h3>🏦 Istruzioni per il Bonifico</h3>
+                                        <div className="bank-details">
+                                            <p><strong>Beneficiario:</strong> Vincanto Maori S.r.l.</p>
+                                            <p><strong>IBAN:</strong> IT60 X054 2811 101 000000123456</p>
+                                            <p><strong>Causale:</strong> Prenotazione {bookingResult?.booking_id}</p>
+                                            <p><strong>Importo da versare:</strong> €{bookingResult?.payment_amount?.toFixed(2)}</p>
+                                        </div>
+                                        <p className="bank-note">
+                                            ⚠️ <strong>Importante:</strong> Ti abbiamo inviato una email con tutti i dettagli. 
+                                            La prenotazione sarà confermata definitivamente dopo la ricezione e verifica del bonifico bancario.
+                                            Ti contatteremo entro 24-48 ore dalla ricezione del pagamento.
+                                        </p>
+                                    </div>
+                                )}
+                                
+                                <button onClick={startNewBooking} className="btn-primary">
+                                    Nuova Prenotazione
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
 

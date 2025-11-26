@@ -112,6 +112,7 @@
   "section.booking.rules.paymentTitle": "Confirmer la Réservation",
   "section.booking.rules.paymentList1": "Pour confirmer la réservation, un acompte de 30% est requis. Le solde restant doit être payé lors du check-in. Plus de détails seront fournis au moment de la réservation par email.",
   "section.booking.openButton": "Réserver Maintenant",
+  "section.booking.ctaSubtitle": "Système de réservation sécurisé, rapide et facile à utiliser.",
   
   "section.includedServices.title": "🛎️ Services Inclus",
   "section.includedServices.comfortTitle": "Confort",
