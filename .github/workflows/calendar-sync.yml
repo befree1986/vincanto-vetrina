@@ -19,11 +19,7 @@ jobs:
         run: |
           echo "🚀 Avvio sincronizzazione calendari $(date '+%Y-%m-%d %H:%M:%S UTC')"
           
-          # Test connettività
-          echo "🔍 Test DNS e connettività..."
-          nslookup www.vincantomaori.it || echo "⚠️ DNS lookup fallito"
-          
-          # Prova endpoint Vercel (più affidabile)
+          # Endpoint Vercel
           SYNC_URL="https://vincanto-vetrina.vercel.app/api/calendar-real-sync"
           echo "📡 Chiamata a: $SYNC_URL"
           
