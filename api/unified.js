@@ -1197,9 +1197,9 @@ export default async function handler(req, res) {
 
         // Query date bloccate admin
         const blockedQuery = await pool.query(`
-          SELECT id, date, reason
+          SELECT id, start_date, end_date, reason
           FROM blocked_dates
-          ORDER BY date DESC
+          ORDER BY start_date DESC
         `);
 
         const now = new Date();
@@ -1264,15 +1264,18 @@ END:VEVENT
 
         // Aggiungi eventi per date bloccate admin
         for (const blocked of blockedQuery.rows) {
-          const date = new Date(blocked.date);
-          const nextDay = new Date(date);
-          nextDay.setDate(nextDay.getDate() + 1);
+          const startDate = new Date(blocked.start_date);
+          const endDate = new Date(blocked.end_date);
+          
+          // Aggiungi 1 giorno all'end_date per iCal (end date è esclusivo in iCal)
+          const icalEndDate = new Date(endDate);
+          icalEndDate.setDate(icalEndDate.getDate() + 1);
 
-          const uid = generateUID('blocked', blocked.id, formatICalDateOnly(date));
-          const dtstart = formatICalDateOnly(date);
-          const dtend = formatICalDateOnly(nextDay);
+          const uid = generateUID('blocked', blocked.id, formatICalDateOnly(startDate));
+          const dtstart = formatICalDateOnly(startDate);
+          const dtend = formatICalDateOnly(icalEndDate);
           const summary = `Bloccato - ${blocked.reason || 'Non disponibile'}`;
-          const description = `Data bloccata da admin\\nMotivo: ${blocked.reason || 'N/A'}`;
+          const description = `Date bloccate da admin\\nMotivo: ${blocked.reason || 'N/A'}\\nDal: ${blocked.start_date}\\nAl: ${blocked.end_date}`;
 
           icalContent += `BEGIN:VEVENT
 UID:${uid}
