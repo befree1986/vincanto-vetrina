@@ -1887,3 +1887,108 @@
   border: 1px solid #ffeaa7;
   color: #856404;
 }
+/* === PRENOTAZIONI CALENDARIO ESTERNI === */
+.admin-bookings-table-wrapper {
+  overflow-x: auto;
+  margin-top: 15px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.admin-bookings-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.admin-bookings-table thead {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+}
+
+.admin-bookings-table th {
+  padding: 12px 15px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.admin-bookings-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.admin-bookings-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.admin-bookings-table tbody tr.booking-current {
+  background: #fef3c7;
+}
+
+.platform-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.platform-badge.platform-airbnb {
+  background: #ff5a5f;
+  color: white;
+}
+
+.platform-badge.platform-booking {
+  background: #003580;
+  color: white;
+}
+
+.platform-badge.platform-holidu {
+  background: #00a699;
+  color: white;
+}
+
+.platform-badge.platform-google {
+  background: #4285f4;
+  color: white;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.status-badge.status-current {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.status-badge.status-upcoming {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.status-badge.status-past {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+}
+
+.calendar-bookings-info {
+  margin-bottom: 15px;
+  color: #666;
+}
+
+.calendar-bookings-footer {
+  margin-top: 10px;
+  color: #666;
+  font-size: 0.9em;
+}
+
+.booking-description { font-size: 0.85em; color: #666; }

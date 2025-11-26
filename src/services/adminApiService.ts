@@ -486,6 +486,27 @@ class AdminApiService {
     }
   }
 
+  // Recupera prenotazioni da calendari esterni sincronizzati
+  async getCalendarBookings(params: { limit?: number; futureOnly?: boolean; platform?: string } = {}) {
+    try {
+      const queryParams = new URLSearchParams({
+        limit: (params.limit || 50).toString(),
+        futureOnly: (params.futureOnly !== false).toString(),
+        ...(params.platform && { platform: params.platform })
+      });
+      
+      console.log('📅 Recupero prenotazioni da calendari esterni...');
+      const response = await fetch(`${this.baseUrl}/unified?action=calendar-bookings&${queryParams}`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      const result = await response.json();
+      console.log('✅ Prenotazioni calendari esterni:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Error fetching calendar bookings:', error);
+      return { success: false, bookings: [], total: 0 };
+    }
+  }
+
   // Forza sincronizzazione calendario
   async forceCalendarSync(calendarId?: string) {
     try {

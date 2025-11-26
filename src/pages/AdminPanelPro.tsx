@@ -1008,13 +1008,17 @@ const AdminPanelPro = (): JSX.Element => {
         console.error('❌ Errore prenotazioni:', err);
       }
 
-      // Carica eventi iCal esterni
+      // Carica eventi iCal esterni sincronizzati (Airbnb, Booking, etc)
       try {
-        const events = await adminApiService.getCalendarEvents();
-        log('✅ Eventi iCal esterni caricati:', events);
-        setCalendarEvents(events || []);
+        const calendarBookingsResult = await adminApiService.getCalendarBookings({ futureOnly: true, limit: 100 });
+        log('✅ Prenotazioni calendari esterni caricate:', calendarBookingsResult);
+        if (calendarBookingsResult && calendarBookingsResult.bookings) {
+          setCalendarEvents(calendarBookingsResult.bookings);
+        } else {
+          setCalendarEvents([]);
+        }
       } catch (err) {
-        console.error('❌ Errore eventi iCal:', err);
+        console.error('❌ Errore prenotazioni calendari esterni:', err);
         setCalendarEvents([]);
       }
 
@@ -1271,6 +1275,12 @@ const AdminPanelPro = (): JSX.Element => {
       // Carica prenotazioni dal sistema per mostrare nel calendario
       const bookings = await adminApiService.getBookings() || [];
 
+      // Carica eventi sincronizzati da calendari esterni (Airbnb, Booking, etc)
+      const externalBookings = await adminApiService.getCalendarBookings({ futureOnly: true, limit: 100 });
+      if (externalBookings && externalBookings.bookings) {
+        setCalendarEvents(externalBookings.bookings);
+        log(`📅 Caricate ${externalBookings.bookings.length} prenotazioni da calendari esterni`);
+      }
       
     } catch (error) {
       console.error('Errore caricamento calendario:', error);
@@ -3262,6 +3272,73 @@ const AdminPanelPro = (): JSX.Element => {
                 </div>
               </div>
             </div>
+
+            {/* Prenotazioni da Calendari Esterni Sincronizzati */}
+            {calendarEvents && calendarEvents.length > 0 && (
+              <div className="admin-pricing-section">
+                <h3>🌐 Prenotazioni Sincronizzate da Piattaforme Esterne</h3>
+                <p className="calendar-bookings-info">
+                  📅 {calendarEvents.length} prenotazioni sincronizzate automaticamente da Airbnb, Booking.com e altre piattaforme
+                </p>
+                <div className="admin-bookings-table-wrapper">
+                  <table className="admin-bookings-table">
+                    <thead>
+                      <tr>
+                        <th>Piattaforma</th>
+                        <th>Titolo</th>
+                        <th>Check-in</th>
+                        <th>Check-out</th>
+                        <th>Notti</th>
+                        <th>Stato</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {calendarEvents.slice(0, 20).map((event, idx) => {
+                        const checkIn = new Date(event.checkIn);
+                        const checkOut = new Date(event.checkOut);
+                        const isUpcoming = event.status === 'upcoming';
+                        const isCurrent = event.status === 'current';
+                        
+                        return (
+                          <tr key={idx} className={isCurrent ? 'booking-current' : ''}>
+                            <td>
+                              <span className={`platform-badge platform-${event.platform}`}>
+                                {event.platform === 'airbnb' && '📱 Airbnb'}
+                                {event.platform === 'booking' && '🏨 Booking.com'}
+                                {event.platform === 'holidu' && '🏖️ Holidu'}
+                                {event.platform === 'google' && '📅 Google'}
+                              </span>
+                            </td>
+                            <td>
+                              <strong>{event.title || 'Prenotazione'}</strong>
+                              {event.description && (
+                                <div className="booking-description">
+                                  {event.description.substring(0, 50)}
+                                  {event.description.length > 50 && '...'}
+                                </div>
+                              )}
+                            </td>
+                            <td>{checkIn.toLocaleDateString('it-IT')}</td>
+                            <td>{checkOut.toLocaleDateString('it-IT')}</td>
+                            <td>{event.nights} {event.nights === 1 ? 'notte' : 'notti'}</td>
+                            <td>
+                              {isCurrent && <span className="status-badge status-current">🔄 In corso</span>}
+                              {isUpcoming && <span className="status-badge status-upcoming">📅 Prossima</span>}
+                              {!isCurrent && !isUpcoming && <span className="status-badge status-past">✅ Passata</span>}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                {calendarEvents.length > 20 && (
+                  <p className="calendar-bookings-footer">
+                    Mostrate le prime 20 prenotazioni di {calendarEvents.length} totali
+                  </p>
+                )}
+              </div>
+            )}
             
             {/* Form Creazione/Modifica Prenotazione */}
             {showBookingForm && (

@@ -983,25 +983,183 @@ export default async function handler(req, res) {
       }
     }
 
-    // Stato sincronizzazione calendari
+    // Stato sincronizzazione calendari - DATI REALI DA DATABASE
     if (action === 'calendar-sync-status') {
-      return res.status(200).json({
-        success: true,
-        stats: {
-          totalCalendars: 4,
-          activeCalendars: 4,
-          lastSync: new Date(Date.now() - 1800000).toISOString(),
-          nextSync: new Date(Date.now() + 1800000).toISOString(),
-          totalEvents: 32,
-          syncErrors: 0,
-          calendars: [
-            { name: 'Google Calendar', status: 'active', events: 8, lastSync: new Date().toISOString() },
-            { name: 'Booking.com', status: 'active', events: 12, lastSync: new Date().toISOString() },
-            { name: 'Holidu', status: 'active', events: 7, lastSync: new Date().toISOString() },
-            { name: 'Airbnb', status: 'active', events: 5, lastSync: new Date().toISOString() }
-          ]
+      try {
+        // Verifica esistenza tabella
+        const tableCheck = await pool.query(`
+          SELECT EXISTS (
+            SELECT FROM information_schema.tables 
+            WHERE table_name = 'calendar_events'
+          );
+        `);
+
+        if (!tableCheck.rows[0].exists) {
+          return res.status(200).json({
+            success: true,
+            stats: {
+              totalCalendars: 0,
+              activeCalendars: 0,
+              lastSync: null,
+              nextSync: new Date(Date.now() + 1800000).toISOString(),
+              totalEvents: 0,
+              syncErrors: 0,
+              calendars: []
+            },
+            message: 'Database non ancora inizializzato. Primo sync in attesa.'
+          });
         }
-      });
+
+        // Statistiche reali per piattaforma
+        const platformStats = await pool.query(`
+          SELECT 
+            calendar_source,
+            COUNT(*) as event_count,
+            COUNT(CASE WHEN start_date >= CURRENT_DATE THEN 1 END) as future_events,
+            MAX(updated_at) as last_sync
+          FROM calendar_events
+          GROUP BY calendar_source
+          ORDER BY calendar_source;
+        `);
+
+        // Totali
+        const totals = await pool.query(`
+          SELECT 
+            COUNT(*) as total,
+            COUNT(CASE WHEN start_date >= CURRENT_DATE THEN 1 END) as future_events
+          FROM calendar_events;
+        `);
+
+        const calendars = platformStats.rows.map(row => ({
+          name: row.calendar_source.charAt(0).toUpperCase() + row.calendar_source.slice(1),
+          status: 'active',
+          events: parseInt(row.future_events),
+          totalEvents: parseInt(row.event_count),
+          lastSync: row.last_sync
+        }));
+
+        return res.status(200).json({
+          success: true,
+          stats: {
+            totalCalendars: calendars.length,
+            activeCalendars: calendars.length,
+            lastSync: calendars.length > 0 ? calendars[0].lastSync : null,
+            nextSync: new Date(Date.now() + 1800000).toISOString(),
+            totalEvents: parseInt(totals.rows[0].future_events),
+            allEvents: parseInt(totals.rows[0].total),
+            syncErrors: 0,
+            calendars: calendars
+          }
+        });
+
+      } catch (error) {
+        console.error('❌ Errore calendar-sync-status:', error);
+        return res.status(500).json({
+          success: false,
+          error: error.message
+        });
+      }
+    }
+
+    // Lista prenotazioni calendario - NUOVO ENDPOINT
+    if (action === 'calendar-bookings') {
+      try {
+        const { limit = 50, futureOnly = true, platform } = req.query;
+
+        // Verifica esistenza tabella
+        const tableCheck = await pool.query(`
+          SELECT EXISTS (
+            SELECT FROM information_schema.tables 
+            WHERE table_name = 'calendar_events'
+          );
+        `);
+
+        if (!tableCheck.rows[0].exists) {
+          return res.status(200).json({
+            success: true,
+            bookings: [],
+            total: 0,
+            message: 'Nessuna prenotazione sincronizzata ancora'
+          });
+        }
+
+        // Costruisci query
+        let query = `
+          SELECT 
+            id,
+            uid,
+            calendar_source,
+            summary,
+            description,
+            start_date,
+            end_date,
+            location,
+            created_at,
+            updated_at,
+            EXTRACT(DAY FROM (end_date - start_date)) as nights
+          FROM calendar_events
+          WHERE 1=1
+        `;
+
+        const params = [];
+        let paramCount = 1;
+
+        if (futureOnly === 'true' || futureOnly === true) {
+          query += ` AND start_date >= CURRENT_DATE`;
+        }
+
+        if (platform && platform !== 'all') {
+          query += ` AND calendar_source = $${paramCount}`;
+          params.push(platform);
+          paramCount++;
+        }
+
+        query += ` ORDER BY start_date ASC LIMIT $${paramCount}`;
+        params.push(parseInt(limit));
+
+        const result = await pool.query(query, params);
+
+        // Conta totale
+        let countQuery = 'SELECT COUNT(*) as total FROM calendar_events WHERE 1=1';
+        if (futureOnly === 'true' || futureOnly === true) {
+          countQuery += ' AND start_date >= CURRENT_DATE';
+        }
+        if (platform && platform !== 'all') {
+          countQuery += ` AND calendar_source = '${platform}'`;
+        }
+        const countResult = await pool.query(countQuery);
+
+        const bookings = result.rows.map(row => ({
+          id: row.id,
+          uid: row.uid,
+          platform: row.calendar_source,
+          platformName: row.calendar_source.charAt(0).toUpperCase() + row.calendar_source.slice(1),
+          title: row.summary,
+          description: row.description,
+          checkIn: row.start_date,
+          checkOut: row.end_date,
+          nights: parseInt(row.nights) || 0,
+          location: row.location,
+          createdAt: row.created_at,
+          updatedAt: row.updated_at,
+          status: new Date(row.start_date) > new Date() ? 'upcoming' : 
+                  new Date(row.end_date) < new Date() ? 'past' : 'current'
+        }));
+
+        return res.status(200).json({
+          success: true,
+          bookings: bookings,
+          total: parseInt(countResult.rows[0].total),
+          returned: bookings.length
+        });
+
+      } catch (error) {
+        console.error('❌ Errore calendar-bookings:', error);
+        return res.status(500).json({
+          success: false,
+          error: error.message
+        });
+      }
     }
 
     // Forza sincronizzazione calendario
