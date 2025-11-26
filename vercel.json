@@ -14,11 +14,11 @@
     },
     {
       "source": "/api/ical-export",
-      "destination": "/api/ical-export.js"
+      "destination": "/api/unified.js?action=ical-export"
     },
     {
       "source": "/api/booking/confirm",
-      "destination": "/api/booking-confirm.js"
+      "destination": "/api/unified.js"
     },
     {
       "source": "/api/send-final-email",

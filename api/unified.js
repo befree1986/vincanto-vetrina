@@ -1162,6 +1162,143 @@ export default async function handler(req, res) {
       }
     }
 
+    // Export iCal per sincronizzazione piattaforme esterne
+    if (action === 'ical-export') {
+      if (req.method !== 'GET') {
+        return res.status(405).json({ error: 'Method Not Allowed' });
+      }
+
+      try {
+        // Helper: Genera UID unico
+        const generateUID = (type, id, date) => `${type}-${id}-${date}@vincantomaori.it`;
+
+        // Helper: Formatta data per iCal (YYYYMMDDTHHMMSSZ)
+        const formatICalDate = (dateStr) => {
+          const date = new Date(dateStr);
+          return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+        };
+
+        // Helper: Formatta solo data (YYYYMMDD)
+        const formatICalDateOnly = (dateStr) => {
+          const date = new Date(dateStr);
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}${month}${day}`;
+        };
+
+        // Query prenotazioni dirette
+        const bookingsQuery = await pool.query(`
+          SELECT id, checkin_date, checkout_date, guest_name, total_price, status
+          FROM bookings
+          WHERE status != 'cancelled'
+          ORDER BY checkin_date DESC
+        `);
+
+        // Query date bloccate admin
+        const blockedQuery = await pool.query(`
+          SELECT id, date, reason
+          FROM blocked_dates
+          ORDER BY date DESC
+        `);
+
+        const now = new Date();
+        const timestamp = formatICalDate(now.toISOString());
+
+        // Costruisci file iCal
+        let icalContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Vincanto Maori//Booking System//IT
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Vincanto Maori - Prenotazioni
+X-WR-TIMEZONE:Europe/Rome
+X-WR-CALDESC:Calendario prenotazioni dirette e date bloccate
+
+BEGIN:VTIMEZONE
+TZID:Europe/Rome
+BEGIN:DAYLIGHT
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0200
+TZNAME:CEST
+DTSTART:19700329T020000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:+0200
+TZOFFSETTO:+0100
+TZNAME:CET
+DTSTART:19701025T030000
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU
+END:STANDARD
+END:VTIMEZONE
+`;
+
+        // Aggiungi eventi per prenotazioni dirette
+        for (const booking of bookingsQuery.rows) {
+          const checkin = new Date(booking.checkin_date);
+          const checkout = new Date(booking.checkout_date);
+          
+          const uid = generateUID('booking', booking.id, formatICalDateOnly(checkin));
+          const dtstart = formatICalDateOnly(checkin);
+          const dtend = formatICalDateOnly(checkout);
+          const summary = `Prenotato - ${booking.guest_name || 'Ospite'}`;
+          const description = `Prenotazione diretta sito\\nID: ${booking.id}\\nTotale: €${booking.total_price}\\nStatus: ${booking.status}`;
+
+          icalContent += `BEGIN:VEVENT
+UID:${uid}
+DTSTAMP:${timestamp}
+DTSTART;VALUE=DATE:${dtstart}
+DTEND;VALUE=DATE:${dtend}
+SUMMARY:${summary}
+DESCRIPTION:${description}
+STATUS:CONFIRMED
+TRANSP:OPAQUE
+END:VEVENT
+`;
+        }
+
+        // Aggiungi eventi per date bloccate admin
+        for (const blocked of blockedQuery.rows) {
+          const date = new Date(blocked.date);
+          const nextDay = new Date(date);
+          nextDay.setDate(nextDay.getDate() + 1);
+
+          const uid = generateUID('blocked', blocked.id, formatICalDateOnly(date));
+          const dtstart = formatICalDateOnly(date);
+          const dtend = formatICalDateOnly(nextDay);
+          const summary = `Bloccato - ${blocked.reason || 'Non disponibile'}`;
+          const description = `Data bloccata da admin\\nMotivo: ${blocked.reason || 'N/A'}`;
+
+          icalContent += `BEGIN:VEVENT
+UID:${uid}
+DTSTAMP:${timestamp}
+DTSTART;VALUE=DATE:${dtstart}
+DTEND;VALUE=DATE:${dtend}
+SUMMARY:${summary}
+DESCRIPTION:${description}
+STATUS:CONFIRMED
+TRANSP:OPAQUE
+END:VEVENT
+`;
+        }
+
+        icalContent += `END:VCALENDAR`;
+
+        // Imposta header per download file .ics
+        res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+        res.setHeader('Content-Disposition', 'attachment; filename="vincanto-calendar.ics"');
+        return res.status(200).send(icalContent);
+
+      } catch (error) {
+        console.error('❌ Errore ical-export:', error);
+        return res.status(500).json({
+          success: false,
+          error: error.message
+        });
+      }
+    }
+
     // Forza sincronizzazione calendario
     if (action === 'force-calendar-sync') {
       if (req.method === 'POST') {
