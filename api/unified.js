@@ -2292,6 +2292,7 @@ END:VEVENT
         'login', 'dashboard-stats', 'analytics', 'notifications', 
         'booking', 'payments', 'stripe-payment-intent', 'stripe-confirm-payment', 
         'payment-methods', 'calendar-configs', 'calendar-sync', 'calendar-auto-sync',
+        'calendar-bookings', 'ical-export',
         'blocked-dates', 'pricing-config', 'quote', 'extra-services', 'contact', 'settings',
         'google-auth', 'google-auth-url', 'google-auth-callback', 'google-auth-status',
         'google-calendars', 'google-events', 'google-sync', 'google-test', 'google-booking-events',
