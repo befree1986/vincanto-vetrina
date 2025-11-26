@@ -1,8 +1,7 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import './BookingModal.css';
-
-const BookingSystemEnhanced = lazy(() => import('./BookingSystemEnhanced'));
+import BookingSystem from './BookingSystem';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -104,14 +103,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
 
         {/* Contenuto scrollabile */}
         <div className="booking-modal-content">
-          <Suspense fallback={
-            <div className="booking-modal-loading">
-              <div className="spinner"></div>
-              <span>Caricamento sistema prenotazioni...</span>
-            </div>
-          }>
-            <BookingSystemEnhanced />
-          </Suspense>
+          <BookingSystem />
         </div>
       </div>
     </div>

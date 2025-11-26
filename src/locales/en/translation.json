@@ -1,5 +1,7 @@
  {
   
+
+
   "booking.title": "Book Your Stay",
   "booking.platforms": "We are present on the main online platforms.",
   "booking.priceBreakdown": "Price breakdown",
@@ -219,4 +221,28 @@
     "accessibility": "Site Accessibility",
     "cookieSettings": "Manage Cookie Preferences"
   }
+  ,
+  "booking.payment": "Payment",
+  "booking.backToDetails": "Back to Details",
+  "booking.paymentIncomplete.title": "Payment not completed",
+  "booking.paymentIncomplete.message": "You did not complete the payment. Please complete the payment to confirm your booking.",
+  "booking.confirmation.registeredTitle": "Booking Registered!",
+  "booking.confirmation.confirmedTitle": "Booking Confirmed!",
+  "booking.confirmation.registeredSubtitle": "Your booking has been recorded. You will receive confirmation after bank transfer verification.",
+  "booking.confirmation.confirmedSubtitle": "Thank you for choosing Vincanto Maori. We have sent you a confirmation email.",
+  "booking.summary.title": "Booking Summary",
+  "booking.summary.bookingId": "Booking ID",
+  "booking.summary.checkIn": "Check-in",
+  "booking.summary.checkOut": "Check-out",
+  "booking.summary.amountToPay": "Amount to Pay",
+  "booking.summary.totalPaid": "Total Paid",
+  "booking.summary.statusPending": "Status: Pending payment",
+  "booking.bank.instructionsTitle": "Bank Transfer Instructions",
+  "booking.bank.beneficiary": "Beneficiary",
+  "booking.bank.iban": "IBAN",
+  "booking.bank.reason": "Reason",
+  "booking.bank.reason.booking": "Booking",
+  "booking.bank.amountToTransfer": "Amount to transfer",
+  "booking.bank.note": "Important: We have sent you an email with all details. The booking will be finally confirmed after receiving and verifying the bank transfer. We will contact you within 24–48 hours after receiving the payment.",
+  "booking.newBooking": "New Booking"
 }

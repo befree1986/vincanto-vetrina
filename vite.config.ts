@@ -22,8 +22,7 @@ export default defineConfig({
           'vendor-payments': ['@stripe/stripe-js', '@stripe/react-stripe-js'],
           // Utilities e data
           'vendor-utils': ['axios', 'date-fns'],
-          // Analytics e monitoring
-          'vendor-analytics': ['@vercel/analytics', '@vercel/speed-insights'],
+          // (Rimosso chunk analytics vuoto non referenziato per alleggerire bundle)
         },
         // Ottimizza la generazione dei nomi dei chunk
         chunkFileNames: (chunkInfo) => {

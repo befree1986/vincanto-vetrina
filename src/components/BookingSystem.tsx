@@ -119,6 +119,7 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
 type Step = 'dates' | 'details' | 'payment' | 'confirmation';
 
 const BookingSystem: React.FC = () => {
+    const { t } = useTranslation();
     const [currentStep, setCurrentStep] = useState<Step>('dates');
     const [error, setError] = useState<string | null>(null);
     // quoteError rimosso (non utilizzato)
@@ -642,7 +643,7 @@ const BookingSystem: React.FC = () => {
                 {currentStep === 'details' && renderDetailsStep()}
                 {currentStep === 'payment' && (
                     <div className="booking-step-content step-transition">
-                        <h2>Pagamento</h2>
+                        <h2>{getSafeTranslation(t, 'booking.payment', 'Pagamento')}</h2>
 
                         {/* Riepilogo costi sempre visibile anche nel pagamento */}
                         {quote && (
@@ -737,7 +738,7 @@ const BookingSystem: React.FC = () => {
                                 className="btn-secondary"
                                 type="button"
                             >
-                                Indietro ai Dettagli
+                                {getSafeTranslation(t, 'booking.backToDetails', 'Indietro ai Dettagli')}
                             </button>
                         </div>
                     </div>
@@ -748,8 +749,8 @@ const BookingSystem: React.FC = () => {
                         {/* Protezione contro bypass del pagamento */}
                         {!paymentCompleted && formData.payment_method !== 'bank_transfer' ? (
                             <div className="error-message">
-                                <h3>⚠️ Pagamento non completato</h3>
-                                <p>Non hai completato il processo di pagamento. Per confermare la prenotazione devi prima effettuare il pagamento.</p>
+                                <h3>⚠️ {getSafeTranslation(t, 'booking.paymentIncomplete.title', 'Pagamento non completato')}</h3>
+                                <p>{getSafeTranslation(t, 'booking.paymentIncomplete.message', 'Non hai completato il processo di pagamento. Per confermare la prenotazione devi prima effettuare il pagamento.')}</p>
                                 <button 
                                     onClick={() => {
                                         setCurrentStep('details');
@@ -757,7 +758,7 @@ const BookingSystem: React.FC = () => {
                                     }} 
                                     className="btn-primary"
                                 >
-                                    Torna ai Dettagli
+                                    {getSafeTranslation(t, 'booking.backToDetails', 'Torna ai Dettagli')}
                                 </button>
                             </div>
                         ) : (
@@ -767,48 +768,44 @@ const BookingSystem: React.FC = () => {
                                 </div>
                                 <h2>
                                     {formData.payment_method === 'bank_transfer' 
-                                        ? 'Prenotazione Registrata!' 
-                                        : 'Prenotazione Confermata!'}
+                                        ? getSafeTranslation(t, 'booking.confirmation.registeredTitle', 'Prenotazione Registrata!') 
+                                        : getSafeTranslation(t, 'booking.confirmation.confirmedTitle', 'Prenotazione Confermata!')}
                                 </h2>
                                 <p>
                                     {formData.payment_method === 'bank_transfer'
-                                        ? 'La tua prenotazione è stata registrata. Riceverai conferma dopo la verifica del bonifico.'
-                                        : 'Grazie per aver scelto Vincanto Maori. Ti abbiamo inviato una email di conferma.'}
+                                        ? getSafeTranslation(t, 'booking.confirmation.registeredSubtitle', 'La tua prenotazione è stata registrata. Riceverai conferma dopo la verifica del bonifico.')
+                                        : getSafeTranslation(t, 'booking.confirmation.confirmedSubtitle', 'Grazie per aver scelto Vincanto Maori. Ti abbiamo inviato una email di conferma.')}
                                 </p>
                                 
                                 {bookingResult && (
                                     <div className="booking-summary">
-                                        <h3>Riepilogo Prenotazione</h3>
-                                        <p><strong>ID Prenotazione:</strong> {bookingResult.booking_id}</p>
-                                        <p><strong>Check-in:</strong> {formData.check_in_date?.toLocaleDateString()}</p>
-                                        <p><strong>Check-out:</strong> {formData.check_out_date?.toLocaleDateString()}</p>
-                                        <p><strong>Ospiti:</strong> {formData.num_adults} adulti {formData.num_children > 0 && `, ${formData.num_children} bambini`}</p>
-                                        <p><strong>{formData.payment_method === 'bank_transfer' ? 'Importo da Pagare' : 'Totale Pagato'}:</strong> €{bookingResult.payment_amount?.toFixed(2)}</p>
+                                        <h3>{getSafeTranslation(t, 'booking.summary.title', 'Riepilogo Prenotazione')}</h3>
+                                        <p><strong>{getSafeTranslation(t, 'booking.summary.bookingId', 'ID Prenotazione')}:</strong> {bookingResult.booking_id}</p>
+                                        <p><strong>{getSafeTranslation(t, 'booking.summary.checkIn', 'Check-in')}:</strong> {formData.check_in_date?.toLocaleDateString()}</p>
+                                        <p><strong>{getSafeTranslation(t, 'booking.summary.checkOut', 'Check-out')}:</strong> {formData.check_out_date?.toLocaleDateString()}</p>
+                                        <p><strong>{getSafeTranslation(t, 'booking.guests', 'Ospiti')}:</strong> {formData.num_adults} adulti {formData.num_children > 0 && `, ${formData.num_children} bambini`}</p>
+                                        <p><strong>{formData.payment_method === 'bank_transfer' ? getSafeTranslation(t, 'booking.summary.amountToPay', 'Importo da Pagare') : getSafeTranslation(t, 'booking.summary.totalPaid', 'Totale Pagato')}:</strong> €{bookingResult.payment_amount?.toFixed(2)}</p>
                                         {formData.payment_method === 'bank_transfer' && (
-                                            <p className="pending-status"><strong>Stato:</strong> In attesa di pagamento</p>
+                                            <p className="pending-status">{getSafeTranslation(t, 'booking.summary.statusPending', 'Stato: In attesa di pagamento')}</p>
                                         )}
                                     </div>
                                 )}
 
                                 {formData.payment_method === 'bank_transfer' && (
                                     <div className="bank-transfer-instructions">
-                                        <h3>🏦 Istruzioni per il Bonifico</h3>
+                                        <h3>🏦 {getSafeTranslation(t, 'booking.bank.instructionsTitle', 'Istruzioni per il Bonifico')}</h3>
                                         <div className="bank-details">
-                                            <p><strong>Beneficiario:</strong> Vincanto Maori S.r.l.</p>
-                                            <p><strong>IBAN:</strong> IT60 X054 2811 101 000000123456</p>
-                                            <p><strong>Causale:</strong> Prenotazione {bookingResult?.booking_id}</p>
-                                            <p><strong>Importo da versare:</strong> €{bookingResult?.payment_amount?.toFixed(2)}</p>
+                                            <p><strong>{getSafeTranslation(t, 'booking.bank.beneficiary', 'Beneficiario')}:</strong> Vincanto Maori S.r.l.</p>
+                                            <p><strong>{getSafeTranslation(t, 'booking.bank.iban', 'IBAN')}:</strong> IT60 X054 2811 101 000000123456</p>
+                                            <p><strong>{getSafeTranslation(t, 'booking.bank.reason', 'Causale')}:</strong> {getSafeTranslation(t, 'booking.bank.reason.booking', 'Prenotazione')} {bookingResult?.booking_id}</p>
+                                            <p><strong>{getSafeTranslation(t, 'booking.bank.amountToTransfer', 'Importo da versare')}:</strong> €{bookingResult?.payment_amount?.toFixed(2)}</p>
                                         </div>
-                                        <p className="bank-note">
-                                            ⚠️ <strong>Importante:</strong> Ti abbiamo inviato una email con tutti i dettagli. 
-                                            La prenotazione sarà confermata definitivamente dopo la ricezione e verifica del bonifico bancario.
-                                            Ti contatteremo entro 24-48 ore dalla ricezione del pagamento.
-                                        </p>
+                                        <p className="bank-note">⚠️ {getSafeTranslation(t, 'booking.bank.note', 'Importante: Ti abbiamo inviato una email con tutti i dettagli. La prenotazione sarà confermata definitivamente dopo la ricezione e verifica del bonifico bancario. Ti contatteremo entro 24-48 ore dalla ricezione del pagamento.')}</p>
                                     </div>
                                 )}
                                 
                                 <button onClick={startNewBooking} className="btn-primary">
-                                    Nuova Prenotazione
+                                    {getSafeTranslation(t, 'booking.newBooking', 'Nuova Prenotazione')}
                                 </button>
                             </div>
                         )}

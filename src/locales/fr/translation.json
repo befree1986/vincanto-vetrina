@@ -27,6 +27,18 @@
   "contact.transports.salerno": "Depuis Salerne : Ferry pour Maiori (45 min) | Bus (60 min)",
   "contact.transports.amalfi": "Depuis Amalfi : Bus local (40 min)",
   
+  "navbar": {
+  "navbar.language": "Langue",
+  "navbar.home": "Accueil",
+  "navbar.about": "À Propos",
+  "navbar.proprieta": "La Propriété",
+  "navbar.contact": "Contacts",
+  "navbar.bookNow": "Réserver Maintenant",
+  "navbar.closeMenu": "Fermer le Menu",
+  "navbar.openMenu": "Ouvrir le Menu",
+  "navbar.bookNowShort": "Réserver"
+  },
+
   "about":{
     "positionTitle": "Notre Position",
     "positionDesc1": "Situé à seulement 2 km du centre du village, profitez de la tranquillité de la campagne avec la commodité des services à proximité, facilement accessibles grâce au service de navette municipal et aux bus locaux.",
@@ -214,4 +226,28 @@
     "about": "À Propos",
     "proprieta": "La Propriété"
   }
+  ,
+  "booking.payment": "Paiement",
+  "booking.backToDetails": "Retour aux détails",
+  "booking.paymentIncomplete.title": "Paiement non terminé",
+  "booking.paymentIncomplete.message": "Vous n'avez pas terminé le paiement. Veuillez effectuer le paiement pour confirmer votre réservation.",
+  "booking.confirmation.registeredTitle": "Réservation enregistrée !",
+  "booking.confirmation.confirmedTitle": "Réservation confirmée !",
+  "booking.confirmation.registeredSubtitle": "Votre réservation a été enregistrée. Vous recevrez une confirmation après la vérification du virement bancaire.",
+  "booking.confirmation.confirmedSubtitle": "Merci d'avoir choisi Vincanto Maori. Nous vous avons envoyé un email de confirmation.",
+  "booking.summary.title": "Récapitulatif de la réservation",
+  "booking.summary.bookingId": "ID de Réservation",
+  "booking.summary.checkIn": "Check-in",
+  "booking.summary.checkOut": "Check-out",
+  "booking.summary.amountToPay": "Montant à payer",
+  "booking.summary.totalPaid": "Total payé",
+  "booking.summary.statusPending": "Statut : Paiement en attente",
+  "booking.bank.instructionsTitle": "Instructions pour le virement bancaire",
+  "booking.bank.beneficiary": "Bénéficiaire",
+  "booking.bank.iban": "IBAN",
+  "booking.bank.reason": "Motif",
+  "booking.bank.reason.booking": "Réservation",
+  "booking.bank.amountToTransfer": "Montant à transférer",
+  "booking.bank.note": "Important : Nous vous avons envoyé un email avec tous les détails. La réservation sera définitivement confirmée après la réception et la vérification du virement bancaire. Nous vous contacterons dans les 24 à 48 heures suivant la réception du paiement.",
+  "booking.newBooking": "Nouvelle Réservation"
 }
