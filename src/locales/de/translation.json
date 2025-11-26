@@ -110,6 +110,8 @@
   "section.booking.rules.checkinoutList2": "Check-out: bis 10:00 Uhr",
   "section.booking.rules.paymentTitle": "Buchung bestätigen",
   "section.booking.rules.paymentList1": "Zur Bestätigung der Buchung ist eine Anzahlung von 30% erforderlich. Der Restbetrag ist beim Check-in zu zahlen. Weitere Details werden bei der Buchung per E-Mail mitgeteilt.",
+  "section.booking.openButton": "Jetzt Buchen",
+  
   "section.includedServices.title": "🛎️ Inkludierte Leistungen",
   "section.includedServices.comfortTitle": "Komfort",
   "section.includedServices.comfortList1": "Bettwäsche und Handtücher",
