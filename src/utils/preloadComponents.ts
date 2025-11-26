@@ -16,7 +16,7 @@ export const preloadAdminPanel = async () => {
 export const preloadBookingSystem = async () => {
   if (!bookingSystemPreloaded) {
     bookingSystemPreloaded = true;
-    return import('../components/BookingSystemEnhanced');
+    return import('../components/BookingSystem');
   }
 };
 
