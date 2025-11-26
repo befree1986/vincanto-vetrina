@@ -37,7 +37,13 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
   const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
 
   const today = new Date();
-  const minDateObj = minDate ? new Date(minDate) : today;
+  today.setHours(0, 0, 0, 0); // Reset ore per confronto preciso
+  
+  // Minimo check-in: domani (NO same-day booking)
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  
+  const minDateObj = minDate ? new Date(minDate) : tomorrow;
   const maxDateObj = maxDate ? new Date(maxDate) : new Date(today.getFullYear() + 1, today.getMonth(), today.getDate());
 
   // Carica date bloccate e prenotazioni per il mese corrente
@@ -60,10 +66,11 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
       // 🎯 AGGIORNATO: Usa endpoint unificato per tutti i servizi calendario
       console.log(`📅 Caricamento disponibilità per ${year}-${month}...`);
       
-      // Carica sia date bloccate che prenotazioni  
-      const [blockedResponse, bookingsResponse] = await Promise.all([
+      // Carica date bloccate, prenotazioni dirette E prenotazioni calendari esterni (Airbnb/Booking/etc)
+      const [blockedResponse, bookingsResponse, externalBookingsResponse] = await Promise.all([
         fetch(`/api/unified?action=blocked-dates&start_date=${startDate}&end_date=${endDate}`),
-        fetch(`/api/unified?action=booking&start_date=${startDate}&end_date=${endDate}`)
+        fetch(`/api/unified?action=booking&start_date=${startDate}&end_date=${endDate}`),
+        fetch(`/api/unified?action=calendar-bookings&futureOnly=true&limit=200`)
       ]);
       
       if (!blockedResponse.ok || !bookingsResponse.ok) {
@@ -72,12 +79,13 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
       
       const blockedData = await blockedResponse.json();
       const bookingsData = await bookingsResponse.json();
+      const externalBookingsData = externalBookingsResponse.ok ? await externalBookingsResponse.json() : { success: true, bookings: [] };
       
       if (blockedData.success && bookingsData.success) {
         // Crea array date bloccate da date manuali
         const manualBlockedDates = (blockedData.blockedDates || []).map((block: any) => block.start_date);
         
-        // Crea array date bloccate da prenotazioni
+        // Crea array date bloccate da prenotazioni dirette
         const bookingBlockedDates = (bookingsData.bookings || []).map((booking: any) => {
           const checkIn = new Date(booking.check_in);
           const checkOut = new Date(booking.check_out);
@@ -87,9 +95,20 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
           }
           return dates;
         }).flat();
+
+        // Crea array date bloccate da calendari esterni (Airbnb/Booking/Holidu)
+        const externalBlockedDates = (externalBookingsData.bookings || []).map((booking: any) => {
+          const checkIn = new Date(booking.checkIn);
+          const checkOut = new Date(booking.checkOut);
+          const dates = [];
+          for (let d = new Date(checkIn); d < checkOut; d.setDate(d.getDate() + 1)) {
+            dates.push(d.toISOString().split('T')[0]);
+          }
+          return dates;
+        }).flat();
         
-        // Combina tutte le date bloccate
-        const allBlockedDates = [...manualBlockedDates, ...bookingBlockedDates];
+        // Combina tutte le date bloccate (manuali + dirette + esterne)
+        const allBlockedDates = [...manualBlockedDates, ...bookingBlockedDates, ...externalBlockedDates];
         setBlockedDates(allBlockedDates);
         
         // Crea eventi calendario combinati
@@ -108,11 +127,20 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
           check_in_date: booking.check_in.split('T')[0],
           check_out_date: booking.check_out.split('T')[0]
         }));
+
+        const externalEvents: CalendarEvent[] = (externalBookingsData.bookings || []).map((booking: any) => ({
+          date: booking.checkIn.split('T')[0],
+          type: 'booking' as const,
+          reason: `${booking.platformName} - ${booking.title || 'Prenotazione'}`,
+          source: 'external',
+          check_in_date: booking.checkIn.split('T')[0],
+          check_out_date: booking.checkOut.split('T')[0]
+        }));
         
-        const allEvents = [...manualEvents, ...bookingEvents];
+        const allEvents = [...manualEvents, ...bookingEvents, ...externalEvents];
         setBookings(allEvents);
         
-        console.log(`✅ ${allBlockedDates.length} date bloccate caricate (${manualBlockedDates.length} manuali + ${bookingBlockedDates.length} prenotazioni)`);
+        console.log(`✅ ${allBlockedDates.length} date bloccate caricate (${manualBlockedDates.length} manuali + ${bookingBlockedDates.length} dirette + ${externalBlockedDates.length} esterne)`);
       } else {
         // Se success è false, usa modalità aperta senza errore
         console.log('⚠️ API non disponibile, modalità calendario aperto');

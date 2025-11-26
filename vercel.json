@@ -45,6 +45,10 @@
       "destination": "/api/create-payment-intent.js"
     },
     {
+      "source": "/api/ical-export",
+      "destination": "/api/ical-export.js"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/unified.js?action=$1"
     },
