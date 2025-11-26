@@ -19,35 +19,45 @@ jobs:
         run: |
           echo "🚀 Avvio sincronizzazione calendari $(date '+%Y-%m-%d %H:%M:%S UTC')"
           
-          # Endpoint produzione
-          SYNC_URL="https://www.vincantomaori.it/api/calendar-real-sync"
-          # Fallback DEV
-          # SYNC_URL="https://vincanto-vetrina.vercel.app/api/calendar-real-sync"
+          # Test connettività
+          echo "🔍 Test DNS e connettività..."
+          nslookup www.vincantomaori.it || echo "⚠️ DNS lookup fallito"
           
-          # Chiamata con timeout e retry
-          RESPONSE=$(curl -X POST "$SYNC_URL" \
+          # Prova endpoint Vercel (più affidabile)
+          SYNC_URL="https://vincanto-vetrina.vercel.app/api/calendar-real-sync"
+          echo "📡 Chiamata a: $SYNC_URL"
+          
+          # Chiamata semplificata con verbose output
+          HTTP_CODE=$(curl -X POST "$SYNC_URL" \
             --max-time 30 \
             --retry 3 \
             --retry-delay 5 \
-            --fail-with-body \
-            -w "\n%{http_code}" \
+            -H "Content-Type: application/json" \
             -H "User-Agent: GitHub-Actions-Calendar-Sync/1.0" \
-            2>&1)
-          
-          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
-          BODY=$(echo "$RESPONSE" | head -n -1)
+            -w "%{http_code}" \
+            -o response.json \
+            -s)
           
           echo "📡 HTTP Status: $HTTP_CODE"
-          echo "📦 Response: $BODY"
           
-          if [ "$HTTP_CODE" -eq 200 ]; then
+          if [ -f response.json ]; then
+            echo "📦 Response Body:"
+            cat response.json
+            echo ""
+          fi
+          
+          if [ "$HTTP_CODE" = "200" ]; then
             echo "✅ Sincronizzazione completata con successo"
-            # Parsing risposta JSON per statistiche
-            echo "$BODY" | jq -r '.result[] | "  - \(.name): \(.eventsFound) eventi trovati, \(.eventsUpdated) salvati"' || echo "$BODY"
+            
+            # Parsing risposta JSON per statistiche (se disponibile)
+            if command -v jq &> /dev/null && [ -f response.json ]; then
+              jq -r '.result[]? | "  - \(.name): \(.eventsFound) eventi trovati, \(.eventsUpdated) salvati"' response.json 2>/dev/null || true
+            fi
+            
             exit 0
           else
             echo "❌ Errore sincronizzazione (HTTP $HTTP_CODE)"
-            echo "$BODY"
+            [ -f response.json ] && cat response.json
             exit 1
           fi
       
