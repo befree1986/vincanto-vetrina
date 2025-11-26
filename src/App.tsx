@@ -31,7 +31,8 @@ const LazyLoadingSpinner = () => (
 
 import './App.css';
 import { Routes, Route, useLocation } from 'react-router-dom';
-import { Analytics } from "@vercel/analytics/react";
+// Rimosso Analytics per alleggerire bundle e perché chunk dedicato eliminato
+// import { Analytics } from "@vercel/analytics/react";
 import GoogleAnalytics from "./utils/GoogleAnalytics";
 import SafeSeo from './components/SafeSeo';
 import { suppressPerformanceWarnings } from './utils/eventListenerOptimizer';
@@ -78,7 +79,7 @@ function App() {
             <Route path="/oauth/callback" element={<OAuthCallback />} />
           </Routes>
         </Suspense>
-        <Analytics />
+        {/* Analytics rimosso */}
       </>
     );
   }
