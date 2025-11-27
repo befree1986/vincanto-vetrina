@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import './BookingModal.css';
 import BookingSystem from './BookingSystem';
+import ErrorBoundary from './ErrorBoundary';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -103,7 +104,9 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
 
         {/* Contenuto scrollabile */}
         <div className="booking-modal-content">
-          <BookingSystem />
+          <ErrorBoundary>
+            <BookingSystem />
+          </ErrorBoundary>
         </div>
       </div>
     </div>
