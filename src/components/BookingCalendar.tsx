@@ -140,6 +140,7 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
                 <p>Scegli la data di arrivo e partenza per il tuo soggiorno</p>
             </div>
 
+            {/* Toolbar nascosta - Scelte rapide non necessarie */}
             <div className="calendar-toolbar">
                 <div className="quick-select-group">
                     <p className="calendar-eyebrow">Scelte rapide</p>
