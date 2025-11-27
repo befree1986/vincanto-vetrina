@@ -122,6 +122,15 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
         { label: 'Smart working stay', nights: 14, caption: '14 notti' }
     ];
 
+    // ✅ FIX CRITICO: Sposta useCallback fuori dal JSX (top level)
+    const getDayClassName = useCallback((date: Date) => {
+        if (isDateDisabled(date)) return 'disabled-date';
+        if (startDate && endDate && date >= startDate && date <= endDate) {
+            return 'selected-range';
+        }
+        return '';
+    }, [isDateDisabled, startDate, endDate]);
+
     // ✅ FIX: Rendering condizionale DENTRO il return invece di early return
     // Questo previene la violazione delle React Hooks Rules
     return (
@@ -178,14 +187,7 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
                     monthsShown={2}
                     showDisabledMonthNavigation
                     calendarClassName="vincanto-calendar"
-                    dayClassName={useCallback((date: Date) => {
-                        if (isDateDisabled(date)) return 'disabled-date';
-                        if (startDate && endDate && date >= startDate && date <= endDate) {
-                            return 'selected-range';
-                        }
-                        return '';
-                    }, [isDateDisabled, startDate, endDate])}
-                    // 🔥 FIX: Previeni autoScroll del DatePicker
+                    dayClassName={getDayClassName}
                     shouldCloseOnSelect={false}
                     preventOpenOnFocus={true}
                 />
