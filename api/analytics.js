@@ -101,24 +101,58 @@ async function aggregateDate(req, res) {
 }
 
 async function aggregateDateData(date) {
+  // Check if platform column exists
+  let hasPlatformColumn = false;
+  try {
+    const columns = await sql`
+      SELECT column_name FROM information_schema.columns 
+      WHERE table_name = 'bookings' AND column_name = 'platform'
+    `;
+    hasPlatformColumn = columns.length > 0;
+  } catch (e) {
+    console.log('Platform column check failed:', e.message);
+  }
+
   // Get bookings for the date
-  const bookings = await sql`
-    SELECT 
-      COUNT(*) as total_bookings,
-      COALESCE(SUM(total_amount), 0) as total_revenue,
-      COALESCE(AVG((check_out::date - check_in::date)), 0) as avg_stay,
-      COUNT(CASE WHEN platform = 'airbnb' THEN 1 END) as airbnb_count,
-      COUNT(CASE WHEN platform = 'booking' THEN 1 END) as booking_count,
-      COUNT(CASE WHEN platform = 'holidu' THEN 1 END) as holidu_count,
-      COUNT(CASE WHEN platform = 'direct' THEN 1 END) as direct_count,
-      COALESCE(SUM(CASE WHEN platform = 'airbnb' THEN total_amount ELSE 0 END), 0) as airbnb_revenue,
-      COALESCE(SUM(CASE WHEN platform = 'booking' THEN total_amount ELSE 0 END), 0) as booking_revenue,
-      COALESCE(SUM(CASE WHEN platform = 'holidu' THEN total_amount ELSE 0 END), 0) as holidu_revenue,
-      COALESCE(SUM(CASE WHEN platform = 'direct' THEN total_amount ELSE 0 END), 0) as direct_revenue
-    FROM bookings
-    WHERE check_in::date <= ${date}::date AND check_out::date > ${date}::date
-      AND status NOT IN ('cancelled')
-  `;
+  let bookings;
+  if (hasPlatformColumn) {
+    bookings = await sql`
+      SELECT 
+        COUNT(*) as total_bookings,
+        COALESCE(SUM(total_amount), 0) as total_revenue,
+        COALESCE(AVG((check_out::date - check_in::date)), 0) as avg_stay,
+        COUNT(CASE WHEN platform = 'airbnb' THEN 1 END) as airbnb_count,
+        COUNT(CASE WHEN platform = 'booking' THEN 1 END) as booking_count,
+        COUNT(CASE WHEN platform = 'holidu' THEN 1 END) as holidu_count,
+        COUNT(CASE WHEN platform = 'direct' THEN 1 END) as direct_count,
+        COALESCE(SUM(CASE WHEN platform = 'airbnb' THEN total_amount ELSE 0 END), 0) as airbnb_revenue,
+        COALESCE(SUM(CASE WHEN platform = 'booking' THEN total_amount ELSE 0 END), 0) as booking_revenue,
+        COALESCE(SUM(CASE WHEN platform = 'holidu' THEN total_amount ELSE 0 END), 0) as holidu_revenue,
+        COALESCE(SUM(CASE WHEN platform = 'direct' THEN total_amount ELSE 0 END), 0) as direct_revenue
+      FROM bookings
+      WHERE check_in::date <= ${date}::date AND check_out::date > ${date}::date
+        AND (status IS NULL OR status NOT IN ('cancelled'))
+    `;
+  } else {
+    // Fallback without platform column
+    bookings = await sql`
+      SELECT 
+        COUNT(*) as total_bookings,
+        COALESCE(SUM(total_amount), 0) as total_revenue,
+        COALESCE(AVG((check_out::date - check_in::date)), 0) as avg_stay,
+        0 as airbnb_count,
+        0 as booking_count,
+        0 as holidu_count,
+        0 as direct_count,
+        0 as airbnb_revenue,
+        0 as booking_revenue,
+        0 as holidu_revenue,
+        0 as direct_revenue
+      FROM bookings
+      WHERE check_in::date <= ${date}::date AND check_out::date > ${date}::date
+        AND (status IS NULL OR status NOT IN ('cancelled'))
+    `;
+  }
 
   const booking = bookings[0] || {};
 
