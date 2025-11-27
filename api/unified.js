@@ -1461,60 +1461,76 @@ END:VEVENT
           await pool.query('SELECT 1');
           console.log('✅ Database connection OK');
           
-          // Prima tenta di droppare e ricreare la tabella con lo schema corretto
-          console.log('🔧 Reset tabella pricing_config...');
-          await pool.query('DROP TABLE IF EXISTS pricing_config CASCADE');
+          // Verifica se esiste già una configurazione
+          const existingConfig = await pool.query('SELECT id FROM pricing_config LIMIT 1');
           
-          await pool.query(`
-            CREATE TABLE pricing_config (
-              id SERIAL PRIMARY KEY,
-              price_group_1to2 DECIMAL(10,2),
-              price_group_3to4 DECIMAL(10,2),
-              price_group_5to6 DECIMAL(10,2),
-              price_group_7to8 DECIMAL(10,2),
-              cleaning_fee DECIMAL(10,2),
-              parking_fee DECIMAL(10,2),
-              tourist_tax_adult DECIMAL(10,2),
-              tourist_tax_child DECIMAL(10,2),
-              weekend_surcharge DECIMAL(10,2),
-              weekly_discount DECIMAL(5,2),
-              monthly_discount DECIMAL(5,2),
-              min_stay INTEGER,
-              max_stay INTEGER,
-              max_guests INTEGER,
-              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-              updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-          `);
-          console.log('✅ Tabella pricing_config ricreata');
-
-          // Inserisci nuova configurazione prezzi
-          console.log('💾 Inserimento configurazione prezzi...');
-          console.log('🔍 Dati ricevuti:', JSON.stringify(pricingData, null, 2));
+          let result;
+          if (existingConfig.rows.length > 0) {
+            // UPDATE configurazione esistente
+            console.log('🔄 Aggiornamento configurazione prezzi esistente...');
+            result = await pool.query(`
+              UPDATE pricing_config SET
+                price_group_1to2 = $1,
+                price_group_3to4 = $2,
+                price_group_5to6 = $3,
+                price_group_7to8 = $4,
+                cleaning_fee = $5,
+                parking_fee = $6,
+                tourist_tax_adult = $7,
+                tourist_tax_child = $8,
+                weekend_surcharge = $9,
+                weekly_discount = $10,
+                monthly_discount = $11,
+                min_stay = $12,
+                max_stay = $13,
+                max_guests = $14,
+                updated_at = CURRENT_TIMESTAMP
+              WHERE id = (SELECT id FROM pricing_config ORDER BY id DESC LIMIT 1)
+              RETURNING *
+            `, [
+              pricingData.priceGroup1to2 || pricingData.price_group_1to2 || 75,
+              pricingData.priceGroup3to4 || pricingData.price_group_3to4 || 95,
+              pricingData.priceGroup5to6 || pricingData.price_group_5to6 || 115,
+              pricingData.priceGroup7to8 || pricingData.price_group_7to8 || 135,
+              pricingData.cleaningFee || pricingData.cleaning_fee || 50,
+              pricingData.parkingFee || pricingData.parking_fee || 20,
+              pricingData.touristTaxAdult || pricingData.tourist_tax_adult || 2.00,
+              pricingData.touristTaxChild || pricingData.tourist_tax_child || 0,
+              pricingData.weekendSurcharge || pricingData.weekend_surcharge || 0,
+              pricingData.weeklyDiscount || pricingData.weekly_discount || 10,
+              pricingData.monthlyDiscount || pricingData.monthly_discount || 15,
+              pricingData.minStay || pricingData.min_stay || 2,
+              pricingData.maxStay || pricingData.max_stay || 14,
+              pricingData.maxGuests || pricingData.max_guests || 8
+            ]);
+          } else {
+            // INSERT nuova configurazione (solo se tabella vuota)
+            console.log('➕ Inserimento nuova configurazione prezzi...');
+            result = await pool.query(`
+              INSERT INTO pricing_config (
+                price_group_1to2, price_group_3to4, price_group_5to6, price_group_7to8,
+                cleaning_fee, parking_fee, tourist_tax_adult, tourist_tax_child,
+                weekend_surcharge, weekly_discount, monthly_discount, min_stay, max_stay, max_guests
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+              RETURNING *
+            `, [
+              pricingData.priceGroup1to2 || pricingData.price_group_1to2 || 75,
+              pricingData.priceGroup3to4 || pricingData.price_group_3to4 || 95,
+              pricingData.priceGroup5to6 || pricingData.price_group_5to6 || 115,
+              pricingData.priceGroup7to8 || pricingData.price_group_7to8 || 135,
+              pricingData.cleaningFee || pricingData.cleaning_fee || 50,
+              pricingData.parkingFee || pricingData.parking_fee || 20,
+              pricingData.touristTaxAdult || pricingData.tourist_tax_adult || 2.00,
+              pricingData.touristTaxChild || pricingData.tourist_tax_child || 0,
+              pricingData.weekendSurcharge || pricingData.weekend_surcharge || 0,
+              pricingData.weeklyDiscount || pricingData.weekly_discount || 10,
+              pricingData.monthlyDiscount || pricingData.monthly_discount || 15,
+              pricingData.minStay || pricingData.min_stay || 2,
+              pricingData.maxStay || pricingData.max_stay || 14,
+              pricingData.maxGuests || pricingData.max_guests || 8
+            ]);
+          }
           
-          const result = await pool.query(`
-            INSERT INTO pricing_config (
-              price_group_1to2, price_group_3to4, price_group_5to6, price_group_7to8,
-              cleaning_fee, parking_fee, tourist_tax_adult, tourist_tax_child,
-              weekend_surcharge, weekly_discount, monthly_discount, min_stay, max_stay, max_guests
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
-            RETURNING *
-          `, [
-            pricingData.priceGroup1to2 || pricingData.price_group_1to2 || 75,
-            pricingData.priceGroup3to4 || pricingData.price_group_3to4 || 95,
-            pricingData.priceGroup5to6 || pricingData.price_group_5to6 || 115,
-            pricingData.priceGroup7to8 || pricingData.price_group_7to8 || 135,
-            pricingData.cleaningFee || pricingData.cleaning_fee || 50,
-            pricingData.parkingFee || pricingData.parking_fee || 20,
-            pricingData.touristTaxAdult || pricingData.tourist_tax_adult || 2.00,
-            pricingData.touristTaxChild || pricingData.tourist_tax_child || 0,
-            pricingData.weekendSurcharge || pricingData.weekend_surcharge || 0,
-            pricingData.weeklyDiscount || pricingData.weekly_discount || 10,
-            pricingData.monthlyDiscount || pricingData.monthly_discount || 15,
-            pricingData.minStay || pricingData.min_stay || 2,
-            pricingData.maxStay || pricingData.max_stay || 14,
-            pricingData.maxGuests || pricingData.max_guests || 8
-          ]);
           console.log('✅ Configurazione prezzi salvata:', result.rows[0]);
 
           return res.status(200).json({
