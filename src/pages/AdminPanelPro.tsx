@@ -1565,24 +1565,6 @@ const AdminPanelPro = (): JSX.Element => {
     }
   };
 
-  const handleTestHoliduURL = async () => {
-    const testUrl = 'https://api.host.holidu.com/pmc/rest/apartments/65376863/ical.ics?key=72d27a56f3e8836f690500877301d000';
-    
-    try {
-      // Test connessione URL Holidu
-      const response = await fetch(testUrl, { method: 'HEAD' });
-      
-      if (response.ok) {
-        alert(`✅ Test URL Holidu riuscito!\n\n🔗 URL: Accessibile\n📊 Status: ${response.status}\n📅 Pronto per l'integrazione`);
-      } else {
-        alert(`❌ Test URL fallito\n\n📊 Status: ${response.status}\n🚨 URL non accessibile`);
-      }
-    } catch (error) {
-      console.error('Errore test URL Holidu:', error);
-      alert('❌ Errore nel test dell\'URL Holidu. Verifica la connessione internet.');
-    }
-  };
-
   const handleTestGeneralConnection = async () => {
     try {
       if (!adminApiService) return;
