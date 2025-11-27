@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import DatePicker from 'react-datepicker';
 import { format, isBefore, addDays } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -53,8 +53,8 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
         // Non chiamiamo onDateChange con date incomplete
     };
 
-    // Verifica se una data è disabilitata
-    const isDateDisabled = (date: Date): boolean => {
+    // Verifica se una data è disabilitata (memoized per evitare re-render)
+    const isDateDisabled = useCallback((date: Date): boolean => {
         // Non permettere date nel passato
         if (isBefore(date, new Date())) {
             return true;
@@ -66,18 +66,18 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
             const endOccupied = new Date(occupied.end);
             return date >= startOccupied && date <= endOccupied;
         });
-    };
+    }, [occupiedDates]);
 
-    // Calcola il numero di notti
-    const calculateNights = (): number => {
+    // Calcola il numero di notti (memoized)
+    const calculateNights = useCallback((): number => {
         if (startDate && endDate) {
             const timeDiff = endDate.getTime() - startDate.getTime();
             return Math.ceil(timeDiff / (1000 * 3600 * 24));
         }
         return 0;
-    };
+    }, [startDate, endDate]);
 
-    const isRangeAvailable = (start: Date, end: Date): boolean => {
+    const isRangeAvailable = useCallback((start: Date, end: Date): boolean => {
         let current = start;
         while (current < end) {
             if (isDateDisabled(current)) {
@@ -86,9 +86,9 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
             current = addDays(current, 1);
         }
         return true;
-    };
+    }, [isDateDisabled]);
 
-    const getNextAvailableRange = (nights: number) => {
+    const getNextAvailableRange = useCallback((nights: number) => {
         let start = addDays(new Date(), 1);
         for (let i = 0; i < 120; i++) {
             if (!isDateDisabled(start)) {
@@ -100,21 +100,21 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
             start = addDays(start, 1);
         }
         return null;
-    };
+    }, [isDateDisabled, isRangeAvailable]);
 
-    const handleQuickSelect = (nights: number) => {
+    const handleQuickSelect = useCallback((nights: number) => {
         const range = getNextAvailableRange(nights);
         if (!range) return;
         setStartDate(range.start);
         setEndDate(range.end);
         onDateChange(range.start, range.end);
-    };
+    }, [getNextAvailableRange, onDateChange]);
 
-    const resetSelection = () => {
+    const resetSelection = useCallback(() => {
         setStartDate(null);
         setEndDate(null);
         onDateChange(null, null);
-    };
+    }, [onDateChange]);
 
     const quickOptions = [
         { label: 'Weekend romantico', nights: 2, caption: '2 notti' },
@@ -178,13 +178,13 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
                     monthsShown={2}
                     showDisabledMonthNavigation
                     calendarClassName="vincanto-calendar"
-                    dayClassName={(date) => {
+                    dayClassName={useCallback((date: Date) => {
                         if (isDateDisabled(date)) return 'disabled-date';
                         if (startDate && endDate && date >= startDate && date <= endDate) {
                             return 'selected-range';
                         }
                         return '';
-                    }}
+                    }, [isDateDisabled, startDate, endDate])}
                     // 🔥 FIX: Previeni autoScroll del DatePicker
                     shouldCloseOnSelect={false}
                     preventOpenOnFocus={true}
