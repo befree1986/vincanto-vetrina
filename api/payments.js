@@ -123,21 +123,37 @@ async function sendReceipt(req, res) {
 async function verifyPaymentStatus(req, res) {
   const { payment_id } = req.query;
 
-  const paymentIntent = await stripe.paymentIntents.retrieve(payment_id);
+  if (!payment_id) {
+    // No payment_id provided, return Stripe configuration status
+    return res.status(200).json({ 
+      success: true,
+      configured: !!process.env.STRIPE_SECRET_KEY,
+      message: process.env.STRIPE_SECRET_KEY ? 'Stripe configurato correttamente' : 'Stripe non configurato'
+    });
+  }
 
-  // Update DB with latest status
-  await sql`
-    UPDATE payment_transactions 
-    SET status = ${paymentIntent.status}, updated_at = NOW()
-    WHERE stripe_payment_id = ${payment_id}
-  `;
+  try {
+    const paymentIntent = await stripe.paymentIntents.retrieve(payment_id);
 
-  return res.status(200).json({ 
-    status: paymentIntent.status,
-    amount: paymentIntent.amount / 100,
-    currency: paymentIntent.currency,
-    customer_email: paymentIntent.receipt_email
-  });
+    // Update DB with latest status
+    await sql`
+      UPDATE payment_transactions 
+      SET status = ${paymentIntent.status}, updated_at = NOW()
+      WHERE stripe_payment_id = ${payment_id}
+    `;
+
+    return res.status(200).json({ 
+      status: paymentIntent.status,
+      amount: paymentIntent.amount / 100,
+      currency: paymentIntent.currency,
+      customer_email: paymentIntent.receipt_email
+    });
+  } catch (error) {
+    return res.status(500).json({ 
+      error: error.message,
+      configured: !!process.env.STRIPE_SECRET_KEY
+    });
+  }
 }
 
 async function configureStripe(req, res) {

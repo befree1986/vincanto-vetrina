@@ -5,7 +5,8 @@ const sql = neon(process.env.DATABASE_URL);
 
 // Create transporter
 const createTransporter = () => {
-  return nodemailer.createTransporter({
+  // Use default export directly
+  return nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
     port: parseInt(process.env.SMTP_PORT || '587'),
     secure: process.env.SMTP_SECURE === 'true',
