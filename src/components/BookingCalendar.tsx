@@ -122,18 +122,18 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
         { label: 'Smart working stay', nights: 14, caption: '14 notti' }
     ];
 
-    if (isLoading) {
-        return (
-            <div className="booking-calendar-container loading">
-                <div className="calendar-loading">
-                    <div className="spinner"></div>
-                    <p>Caricamento calendario...</p>
-                </div>
-            </div>
-        );
-    }
-
+    // ✅ FIX: Rendering condizionale DENTRO il return invece di early return
+    // Questo previene la violazione delle React Hooks Rules
     return (
+        <>
+            {isLoading ? (
+                <div className="booking-calendar-container loading">
+                    <div className="calendar-loading">
+                        <div className="spinner"></div>
+                        <p>Caricamento calendario...</p>
+                    </div>
+                </div>
+            ) : (
         <div className={`booking-calendar-container ${className}`}>
             <div className="calendar-header">
                 <h3>📅 Seleziona le Date del Soggiorno</h3>
@@ -236,6 +236,8 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
                 </div>
             </div>
         </div>
+            )}
+        </>
     );
 };
 
