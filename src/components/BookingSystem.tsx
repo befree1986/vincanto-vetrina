@@ -403,7 +403,7 @@ const BookingSystem: React.FC = () => {
     };
 
     const renderDetailsStep = (): JSX.Element => {
-        const { t } = useTranslation();
+        // ⚡ FIX: Rimuovo useTranslation() da qui - usiamo il t definito al top level del componente
         return (
             <div className="booking-step-content step-transition">
                 <h2>{getSafeTranslation(t, 'booking.detailsTitle', 'Dettagli Prenotazione')}</h2>
