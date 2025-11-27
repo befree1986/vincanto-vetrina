@@ -31,85 +31,117 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
     const depositWithExtras = isDeposit ? totalWithExtras * 0.30 : totalWithExtras;
 
     return (
-        <div className="price-breakdown">
-            <h4>{getSafeTranslation(t, 'booking.priceBreakdown', 'Riepilogo Costi')}</h4>
-            <div className="breakdown-items">
-                <div className="breakdown-item">
-                    <span>{getSafeTranslation(t, 'booking.accommodationBase', 'Soggiorno base')}</span>
-                    <span>€{(costs.accommodationCost || costs.baseCost || costs.basePrice || 0).toFixed(2)}</span>
-                </div>
-                
-                {/* 🎯 MOSTRA SCONTO SE APPLICATO */}
-                {costs.discount && (
-                    <div className="breakdown-item discount">
-                        <span>🎉 {costs.discount.type} (-{costs.discount.percentage}%)</span>
-                        <span className="discount-amount">-€{costs.discount.amount.toFixed(2)}</span>
+        <div className="price-breakdown-professional">
+            <div className="breakdown-header">
+                <h4>{getSafeTranslation(t, 'booking.priceBreakdown', 'Riepilogo Prenotazione')}</h4>
+                <span className="breakdown-subtitle">Dettaglio costi del soggiorno</span>
+            </div>
+
+            <div className="breakdown-body">
+                {/* SOGGIORNO BASE */}
+                <div className="breakdown-group">
+                    <div className="breakdown-item primary">
+                        <div className="item-label">
+                            <span className="item-icon">🏠</span>
+                            <span>{getSafeTranslation(t, 'booking.accommodationBase', 'Soggiorno base')}</span>
+                        </div>
+                        <span className="item-value">€{(costs.accommodationCost || costs.baseCost || costs.basePrice || 0).toFixed(2)}</span>
                     </div>
-                )}
-                
-                    {/* 🛎️ SERVIZI EXTRA - MOSTRA TUTTI (inclusi quelli inclusi a €0) */}
-                    {allExtraServices.length > 0 && (
-                        <>
-                            <div className="breakdown-separator"></div>
-                            <div className="breakdown-section-title">
-                                <span>🛎️ Servizi Extra</span>
+
+                    {/* SCONTO SE APPLICATO */}
+                    {costs.discount && (
+                        <div className="breakdown-item discount-applied">
+                            <div className="item-label">
+                                <span className="item-icon">🎉</span>
+                                <span>{costs.discount.type} (-{costs.discount.percentage}%)</span>
                             </div>
-                            {allExtraServices.map(service => (
-                                <div key={service.id} className={`breakdown-item extra-service ${service.included ? 'included-service' : ''}`}>
-                                    <span>
-                                        {service.name}
-                                        {service.included && ' ✨'}
-                                    </span>
-                                    <span className={service.included ? 'included-price' : ''}>
-                                        {service.included ? '€0.00 (Incluso)' : `€${service.price.toFixed(2)}`}
-                                    </span>
-                                </div>
-                            ))}
-                        </>
+                            <span className="item-value discount">-€{costs.discount.amount.toFixed(2)}</span>
+                        </div>
                     )}
-                
-                    <div className="breakdown-separator"></div>
-                
-                    {/* 🚗 PARCHEGGIO - MOSTRA SEMPRE */}
-                    <div className="breakdown-item">
-                        <span>{getSafeTranslation(t, 'booking.parking', 'Parcheggio privato')}</span>
-                        <span>€{(costs.parkingCost || 0).toFixed(2)}</span>
-                    </div>
-                
-                    {/* 🧹 PULIZIA FINALE - MOSTRA SEMPRE */}
-                <div className="breakdown-item">
-                    <span>{getSafeTranslation(t, 'booking.cleaning', 'Pulizia finale')}</span>
-                    <span>€{costs.cleaningFee.toFixed(2)}</span>
-                </div>
-                
-                <div className="breakdown-item">
-                    <span>{getSafeTranslation(t, 'booking.touristTax', 'Tassa di soggiorno')}</span>
-                    <span>€{costs.touristTax.toFixed(2)}</span>
                 </div>
 
-                <div className="breakdown-separator"></div>
-                
-                <div className="breakdown-item total">
-                    <span>{getSafeTranslation(t, 'booking.total', 'Totale')}</span>
-                    <span>€{totalWithExtras.toFixed(2)}</span>
-                </div>
-                
-                {isDeposit && (
-                    <div className="breakdown-item deposit">
-                        <span>{getSafeTranslation(t, 'booking.depositRequired', 'Acconto richiesto (30%)')}</span>
-                        <span className="highlight">€{depositWithExtras.toFixed(2)}</span>
+                {/* SERVIZI EXTRA */}
+                {allExtraServices.length > 0 && (
+                    <div className="breakdown-group">
+                        <div className="group-title">
+                            <span className="group-icon">🛎️</span>
+                            <span>Servizi Extra Selezionati</span>
+                        </div>
+                        {allExtraServices.map(service => (
+                            <div key={service.id} className={`breakdown-item ${service.included ? 'included' : ''}`}>
+                                <div className="item-label">
+                                    <span>{service.name}</span>
+                                    {service.included && <span className="badge-included">Incluso</span>}
+                                </div>
+                                <span className="item-value">
+                                    {service.included ? '€0.00' : `€${service.price.toFixed(2)}`}
+                                </span>
+                            </div>
+                        ))}
                     </div>
                 )}
+
+                {/* COSTI AGGIUNTIVI */}
+                <div className="breakdown-group">
+                    <div className="group-title">
+                        <span className="group-icon">💼</span>
+                        <span>Costi Aggiuntivi</span>
+                    </div>
+
+                    <div className="breakdown-item">
+                        <div className="item-label">
+                            <span className="item-icon">🚗</span>
+                            <span>{getSafeTranslation(t, 'booking.parking', 'Parcheggio privato')}</span>
+                        </div>
+                        <span className="item-value">€{(costs.parkingCost || 0).toFixed(2)}</span>
+                    </div>
+
+                    <div className="breakdown-item">
+                        <div className="item-label">
+                            <span className="item-icon">🧹</span>
+                            <span>{getSafeTranslation(t, 'booking.cleaning', 'Pulizia finale')}</span>
+                        </div>
+                        <span className="item-value">€{costs.cleaningFee.toFixed(2)}</span>
+                    </div>
+
+                    <div className="breakdown-item">
+                        <div className="item-label">
+                            <span className="item-icon">🏛️</span>
+                            <span>{getSafeTranslation(t, 'booking.touristTax', 'Tassa di soggiorno')}</span>
+                        </div>
+                        <span className="item-value">€{costs.touristTax.toFixed(2)}</span>
+                    </div>
+                </div>
+
+                {/* TOTALE */}
+                <div className="breakdown-total">
+                    <div className="total-line"></div>
+                    <div className="total-item">
+                        <span className="total-label">Totale Soggiorno</span>
+                        <span className="total-value">€{totalWithExtras.toFixed(2)}</span>
+                    </div>
+
+                    {isDeposit && (
+                        <div className="deposit-item">
+                            <div className="deposit-badge">
+                                <span className="deposit-label">Acconto richiesto (30%)</span>
+                                <span className="deposit-percentage">Da pagare ora</span>
+                            </div>
+                            <span className="deposit-value">€{depositWithExtras.toFixed(2)}</span>
+                        </div>
+                    )}
+                </div>
             </div>
-            
-            <div className="breakdown-info">
-                <p className="pricing-details">
-                    {getSafeTranslation(t, 'booking.pricingNote', 'Prezzi finali tutto incluso. Pulizia e tassa di soggiorno incluse.')}
-                </p>
+
+            <div className="breakdown-footer">
+                <div className="footer-note">
+                    <span className="note-icon">✓</span>
+                    <span>Prezzi finali tutto incluso. Nessun costo nascosto.</span>
+                </div>
                 {allExtraServices.length > 0 && (
-                    <p className="extra-services-note">
-                    ✅ {allExtraServices.length} servizio{allExtraServices.length > 1 ? 'i' : ''} extra disponibil{allExtraServices.length > 1 ? 'i' : 'e'}
-                    </p>
+                    <div className="footer-services">
+                        {allExtraServices.length} servizio{allExtraServices.length > 1 ? 'i' : ''} extra selezionat{allExtraServices.length > 1 ? 'i' : 'o'}
+                    </div>
                 )}
             </div>
         </div>

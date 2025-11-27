@@ -27,32 +27,25 @@ export const useDynamicPricing = (): PricingData => {
       try {
         console.log('🔄 DYNAMIC PRICING: Caricamento prezzi dal server...');
         
-        // 🎯 USA LA NUOVA API UNIFICATA per i prezzi dinamici
+        // 🎯 USA API PRICING-CONFIG (stessa usata dall'admin)
         const timestamp = new Date().getTime();
-        const response = await fetch(`/api/unified?action=quote&checkIn=2025-12-01&checkOut=2025-12-02&guests=2&includeParking=false&_t=${timestamp}`);
+        const response = await fetch(`/api/unified?action=pricing-config&_t=${timestamp}`);
         
         if (response.ok) {
           const data = await response.json();
-          console.log('💰 DYNAMIC PRICING: Risposta API quote ricevuta:', data);
-          console.log('🔍 DYNAMIC PRICING: Struttura dati:', {
-            success: data.success,
-            parkingPerNight: data.parkingPerNight,
-            cleaningFee: data.cleaningFee,
-            pricingConfig: data.pricingConfig
-          });
+          console.log('💰 DYNAMIC PRICING: Risposta API pricing-config:', data);
           
-          if (data.success && data.quote) {
-            // L'API quote restituisce i dati direttamente in data.quote
-            const config = data.quote || {};
+          if (data.success && data.pricing) {
+            const config = data.pricing;
             console.log('🔍 DYNAMIC PRICING: Configurazione trovata:', config);
             
             setPricing(prev => ({
               ...prev,
-              basePrice: parseFloat(config.basePrice) || prev.basePrice,
-              parkingFee: parseFloat(config.parkingCost) || prev.parkingFee,
+              basePrice: parseFloat(config.priceGroup1to2) || prev.basePrice,
+              parkingFee: parseFloat(config.parkingFee) || prev.parkingFee,
               cleaningFee: parseFloat(config.cleaningFee) || prev.cleaningFee,
-              touristTax: parseFloat(config.touristTax) || prev.touristTax,
-              additionalGuestPrice: 0, // Quote API non ha questo campo
+              touristTax: parseFloat(config.touristTaxAdult) || prev.touristTax,
+              additionalGuestPrice: parseFloat(config.priceGroup1to2) || prev.additionalGuestPrice,
               loading: false,
               error: null
             }));
@@ -74,17 +67,13 @@ export const useDynamicPricing = (): PricingData => {
     };
 
   useEffect(() => {
-    // Carica inizialmente
+    // ✅ Carica prezzi SOLO UNA VOLTA all'init
+    console.log('📋 DYNAMIC PRICING: Caricamento iniziale prezzi...');
     fetchPricing();
     
-    // 🔄 Ricarica ogni 10 secondi per test
-    const interval = setInterval(() => {
-      console.log('🔄 DYNAMIC PRICING: Auto-refresh prezzi...');
-      fetchPricing();
-    }, 10000);
-    
-    return () => clearInterval(interval);
-  }, []);
+    // ❌ RIMOSSO LOOP INFINITO - causava sovraccarico
+    // Il caricamento avviene solo al mount del componente
+  }, []); // ✅ Empty deps = esegue solo al mount
 
   return pricing;
 };

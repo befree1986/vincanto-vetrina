@@ -435,6 +435,271 @@
   color: #868e96;
 }
 
+/* ========================================
+   💼 RIEPILOGO PREZZI PROFESSIONALE 
+   ======================================== */
+
+.price-breakdown-professional {
+  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 0;
+  margin: 32px 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.breakdown-header {
+  background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+  padding: 24px 28px;
+  color: white;
+}
+
+.breakdown-header h4 {
+  margin: 0 0 6px 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: white;
+}
+
+.breakdown-subtitle {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  font-weight: 400;
+}
+
+.breakdown-body {
+  padding: 24px 28px;
+}
+
+.breakdown-group {
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.breakdown-group:last-of-type {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.group-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #2d3748;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.group-icon {
+  font-size: 1.1rem;
+}
+
+.breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  transition: background 0.2s;
+}
+
+.breakdown-item:hover {
+  background: #f8f9fa;
+  margin: 0 -12px;
+  padding: 12px 12px;
+  border-radius: 8px;
+}
+
+.breakdown-item.primary {
+  background: #f0f9ff;
+  margin: 0 -12px 12px -12px;
+  padding: 16px 12px;
+  border-radius: 12px;
+  border: 1px solid #bae6fd;
+}
+
+.breakdown-item.discount-applied {
+  background: #d4edda;
+  margin: 0 -12px 12px -12px;
+  padding: 12px 12px;
+  border-radius: 10px;
+  border: 1px solid #c3e6cb;
+}
+
+.breakdown-item.included {
+  opacity: 0.75;
+}
+
+.item-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+  color: #2d3748;
+}
+
+.item-icon {
+  font-size: 1.1rem;
+  width: 24px;
+  text-align: center;
+}
+
+.item-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a365d;
+}
+
+.item-value.discount {
+  color: #28a745;
+  font-weight: 700;
+}
+
+.badge-included {
+  background: #48a69a;
+  color: white;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.breakdown-total {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 2px solid #e2e8f0;
+}
+
+.total-line {
+  height: 2px;
+  background: linear-gradient(90deg, #1a365d 0%, #48a69a 100%);
+  margin-bottom: 20px;
+  border-radius: 2px;
+}
+
+.total-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-radius: 12px;
+  border: 2px solid #90cdf4;
+}
+
+.total-label {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1a365d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.total-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #1a365d;
+}
+
+.deposit-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding: 20px;
+  background: linear-gradient(135deg, #ffeaa7 0%, #f9d423 100%);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(249, 212, 35, 0.3);
+}
+
+.deposit-badge {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.deposit-label {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a202c;
+}
+
+.deposit-percentage {
+  font-size: 0.85rem;
+  color: #d97706;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.deposit-value {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #1a202c;
+}
+
+.breakdown-footer {
+  background: #f8f9fa;
+  padding: 20px 28px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.footer-note {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.9rem;
+  color: #2d3748;
+  margin-bottom: 8px;
+}
+
+.note-icon {
+  width: 24px;
+  height: 24px;
+  background: #48a69a;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.footer-services {
+  text-align: center;
+  font-size: 0.85rem;
+  color: #718096;
+  margin-top: 8px;
+  font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .breakdown-header {
+    padding: 20px;
+  }
+  
+  .breakdown-body {
+    padding: 20px;
+  }
+  
+  .total-value {
+    font-size: 1.5rem;
+  }
+  
+  .deposit-value {
+    font-size: 1.6rem;
+  }
+}
+
 /* 🔄 Loading moderno per calcolo prezzi */
 .quote-loading-modern {
   display: flex;
