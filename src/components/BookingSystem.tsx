@@ -119,26 +119,23 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
 type Step = 'dates' | 'details' | 'payment' | 'confirmation';
 
 const BookingSystem: React.FC = () => {
+    // ⚡ TUTTI GLI HOOK DEVONO ESSERE CHIAMATI ALL'INIZIO (React Rules of Hooks)
     const { t } = useTranslation();
+    
+    // 📊 Stati base
     const [currentStep, setCurrentStep] = useState<Step>('dates');
     const [error, setError] = useState<string | null>(null);
-    // quoteError rimosso (non utilizzato)
-    
-    // 🔥 HOOK SCROLL LOCK - DISABILITATO TEMPORANEAMENTE
     const [isTransitioning, setIsTransitioning] = useState(false);
     
-    useEffect(() => {
-        // SCROLL LOCK DISABILITATO - causava problemi
-        // if (isTransitioning) {
-        //     document.body.style.overflow = 'hidden';
-        //     const timer = setTimeout(() => {
-        //         document.body.style.overflow = 'unset';
-        //         setIsTransitioning(false);
-        //     }, 100);
-        //     return () => clearTimeout(timer);
-        // }
-    }, [isTransitioning]);
+    // 🛎️ Servizi extra
+    const [extraServicesCost, setExtraServicesCost] = useState(0);
+    const [selectedExtraServices, setSelectedExtraServices] = useState<any[]>([]);
+    const [showPayment, setShowPayment] = useState(false);
+    const [showEditOptions, setShowEditOptions] = useState(false);
+    const [bookingResult, setBookingResult] = useState<any | null>(null);
+    const [paymentCompleted, setPaymentCompleted] = useState(false);
     
+    // 🎯 Custom hooks (dopo tutti gli useState)
     const {
         formData,
         setFormData,
@@ -153,25 +150,28 @@ const BookingSystem: React.FC = () => {
         loadCalendar
     } = useBooking();
     
-    // 🎯 PREZZI DINAMICI dal pannello admin
     const dynamicPricing = useDynamicPricing();
     
-    // 🛎️ SERVIZI EXTRA
-    const [extraServicesCost, setExtraServicesCost] = useState(0);
-    const [selectedExtraServices, setSelectedExtraServices] = useState<any[]>([]);
-    const [showPayment, setShowPayment] = useState(false);
-    const [showEditOptions, setShowEditOptions] = useState(false);
-    const [bookingResult, setBookingResult] = useState<any | null>(null);
-    const [paymentCompleted, setPaymentCompleted] = useState(false);
+    // 🔥 Effects (sempre dopo tutti gli hooks)
+    useEffect(() => {
+        // SCROLL LOCK DISABILITATO - causava problemi
+        // if (isTransitioning) {
+        //     document.body.style.overflow = 'hidden';
+        //     const timer = setTimeout(() => {
+        //         document.body.style.overflow = 'unset';
+        //         setIsTransitioning(false);
+        //     }, 100);
+        //     return () => clearTimeout(timer);
+        // }
+    }, [isTransitioning]);
 
-    // Aggiorna il costo extra ogni volta che cambia la quote o i servizi selezionati
+    // Calcola costo servizi extra
     useEffect(() => {
         if (!quote || selectedExtraServices.length === 0) {
             setExtraServicesCost(0);
             return;
         }
         
-        // Calcola somma semplice dei prezzi dei servizi selezionati
         const totalCost = selectedExtraServices.reduce((total, service) => {
             return total + (service.price || 0);
         }, 0);
@@ -179,10 +179,12 @@ const BookingSystem: React.FC = () => {
         setExtraServicesCost(totalCost);
     }, [quote, selectedExtraServices]);
 
-    // 📅 CARICA CALENDARIO AL MOUNT
-    React.useEffect(() => {
+    // Carica calendario al mount
+    useEffect(() => {
         loadCalendar();
     }, [loadCalendar]);
+
+    // 🎬 HANDLER FUNCTIONS
 
     const handleDateSelection = async (checkIn: Date | null, checkOut: Date | null) => {
         if (!checkIn || !checkOut) return;
