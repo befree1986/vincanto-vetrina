@@ -123,6 +123,12 @@ const BookingSystem: React.FC = () => {
     // All hooks MUST be called at component top level in consistent order
     const { t } = useTranslation();
     
+    // 🔍 DEBUG: Log mount/unmount
+    React.useEffect(() => {
+        console.log('✅ BookingSystem mounted');
+        return () => console.log('❌ BookingSystem unmounted');
+    }, []);
+    
     // 📊 Stati base
     const [currentStep, setCurrentStep] = useState<Step>('dates');
     const [error, setError] = useState<string | null>(null);
@@ -186,6 +192,13 @@ const BookingSystem: React.FC = () => {
     }, [loadCalendar]);
 
     // 🎬 HANDLER FUNCTIONS
+    
+    // ⚡ FIX: Memoize onServicesChange to prevent infinite loop in ExtraServices
+    const handleServicesChange = React.useCallback((services: any[], totalCost: number) => {
+        console.log('🛎️ Services changed:', services.length, 'Total:', totalCost);
+        setSelectedExtraServices(services);
+        setExtraServicesCost(totalCost);
+    }, []); // Empty deps: la funzione è stabile
 
     const handleDateSelection = async (checkIn: Date | null, checkOut: Date | null) => {
         if (!checkIn || !checkOut) return;
@@ -524,7 +537,7 @@ const BookingSystem: React.FC = () => {
                 </div>
                 <ExtraServices
                     childrenAges={formData.children_ages}
-                    onServicesChange={(services,total)=>{setSelectedExtraServices(services);setExtraServicesCost(total);}}
+                    onServicesChange={handleServicesChange}
                     calcOptions={quote ? { nights: quote.nights, adults: quote.guests, guests: quote.guests } : undefined}
                 />
                 <div className="guest-form">
@@ -704,10 +717,7 @@ const BookingSystem: React.FC = () => {
                                     <ExtraServices 
                                         showHeader={false}
                                         childrenAges={formData.children_ages}
-                                        onServicesChange={(services, totalCost) => {
-                                            setSelectedExtraServices(services);
-                                            setExtraServicesCost(totalCost);
-                                        }}
+                                        onServicesChange={handleServicesChange}
                                         calcOptions={quote ? { nights: quote.nights, adults: quote.guests, guests: quote.guests } : undefined}
                                     />
                                 </div>
