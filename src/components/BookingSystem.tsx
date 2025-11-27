@@ -134,7 +134,7 @@ const BookingSystem: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
     
-    // 🛎️ Servizi extra
+    // 🛎️ Servizi extra - INIZIALIZZATI A ZERO
     const [extraServicesCost, setExtraServicesCost] = useState(0);
     const [selectedExtraServices, setSelectedExtraServices] = useState<any[]>([]);
     const [showPayment, setShowPayment] = useState(false);
@@ -310,6 +310,20 @@ const BookingSystem: React.FC = () => {
 
     // Pannelli sidebar / trust card rimossi nella versione semplificata
 
+    // ✅ VALIDAZIONE FORM IN TEMPO REALE
+    const isFormValid = (): boolean => {
+        return !!(
+            formData.guest_name?.trim() &&
+            formData.guest_surname?.trim() &&
+            formData.guest_email?.trim() &&
+            formData.guest_email.includes('@') &&
+            formData.guest_phone?.trim() &&
+            formData.guest_phone.length >= 8 &&
+            formData.payment_method &&
+            formData.num_adults > 0
+        );
+    };
+
     const renderDateStep = (): JSX.Element => (
         <div className="booking-step-content step-transition">
             <h2>Seleziona le Date</h2>
@@ -324,9 +338,36 @@ const BookingSystem: React.FC = () => {
     );
 
     const handleDetailsSubmit = async () => {
+        // ✅ VALIDAZIONE COMPLETA FORM
         const errors = validateForm();
         if (Object.keys(errors).length > 0) {
-            setError('Per favore completa tutti i campi obbligatori');
+            const errorMessages = Object.values(errors).join(', ');
+            setError(`Campi obbligatori mancanti: ${errorMessages}`);
+            // Scroll al primo errore
+            const firstErrorField = document.querySelector('.form-group.error');
+            firstErrorField?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+        
+        // ✅ VALIDAZIONE CAMPI ESSENZIALI
+        if (!formData.guest_name?.trim()) {
+            setError('Nome obbligatorio');
+            return;
+        }
+        if (!formData.guest_surname?.trim()) {
+            setError('Cognome obbligatorio');
+            return;
+        }
+        if (!formData.guest_email?.trim() || !formData.guest_email.includes('@')) {
+            setError('Email valida obbligatoria');
+            return;
+        }
+        if (!formData.guest_phone?.trim() || formData.guest_phone.length < 8) {
+            setError('Telefono valido obbligatorio (min 8 cifre)');
+            return;
+        }
+        if (!formData.payment_method) {
+            setError('Seleziona un metodo di pagamento');
             return;
         }
         try {
@@ -621,7 +662,15 @@ const BookingSystem: React.FC = () => {
                 </div>
                 <div className="step-actions">
                     <button type="button" className="btn-secondary" onClick={()=>setCurrentStep('dates')}>{getSafeTranslation(t, 'booking.back', 'Indietro')}</button>
-                    <button type="button" className="btn-primary" disabled={isLoadingQuote} onClick={handleDetailsSubmit}>{isLoadingQuote ? getSafeTranslation(t, 'booking.processing', 'Elaborazione...') : getSafeTranslation(t, 'booking.continueToPayment', 'Continua al Pagamento')}</button>
+                    <button 
+                        type="button" 
+                        className="btn-primary" 
+                        disabled={isLoadingQuote || !isFormValid()} 
+                        onClick={handleDetailsSubmit}
+                        title={!isFormValid() ? 'Compila tutti i campi obbligatori' : ''}
+                    >
+                        {isLoadingQuote ? getSafeTranslation(t, 'booking.processing', 'Elaborazione...') : getSafeTranslation(t, 'booking.continueToPayment', 'Continua al Pagamento')}
+                    </button>
                 </div>
             </div>
         );
