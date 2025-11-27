@@ -119,7 +119,7 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
 type Step = 'dates' | 'details' | 'payment' | 'confirmation';
 
 const BookingSystem: React.FC = () => {
-    // ⚡ TUTTI GLI HOOK DEVONO ESSERE CHIAMATI ALL'INIZIO (React Rules of Hooks)
+    // ⚡ HOOK ORDER FIX - All hooks must be called at the top level
     const { t } = useTranslation();
     
     // 📊 Stati base
