@@ -22,6 +22,9 @@ const AdminPanelPro = (): JSX.Element => {
   const [calendarEvents, setCalendarEvents] = useState<any[]>([]); // Eventi iCal esterni
   const [paymentTransactions, setPaymentTransactions] = useState<any[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(false);
+
+  // Filtro piattaforma prenotazioni (direct, airbnb, booking, holidu)
+  const [platformFilter, setPlatformFilter] = useState<'all'|'direct'|'airbnb'|'booking'|'holidu'>('all');
   
 
 
@@ -2045,6 +2048,111 @@ const AdminPanelPro = (): JSX.Element => {
     alert(`✅ Setup PayPal Completato!\n\n📧 Email: ${paypalConfig.email}\n🔗 Link: ${paypalConfig.link}\n📊 Commissione: ${paypalConfig.commission}%\n💰 Valute: ${paypalConfig.currency.join(', ')}\n🔔 Webhook: ${paypalConfig.webhooks ? 'Attivi' : 'Disattivi'}\n\n🎉 PayPal Business è ora completamente configurato!`);
   };
 
+  // === ADVANCED PAYMENT HANDLERS ===
+
+  const handleProcessRefund = async (paymentId: string, amount?: number) => {
+    if (!confirm(`⚠️ Confermi il rimborso${amount ? ` di €${amount.toFixed(2)}` : ' totale'}?`)) return;
+    
+    setLoading(true);
+    try {
+      const response = await fetch('/api/payments?action=refund', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          payment_intent_id: paymentId,
+          amount,
+          reason: 'requested_by_customer'
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        alert(`✅ Rimborso Processato!\n\n💰 Importo: €${data.amount}\n🆔 Refund ID: ${data.refund_id}\n⏱️ Il rimborso sarà visibile sul conto del cliente entro 5-10 giorni lavorativi.`);
+        await loadRealApiData(); // Reload transactions
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (error) {
+      console.error('❌ Errore rimborso:', error);
+      alert(`❌ Errore nel processare il rimborso: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendPaymentReceipt = async (paymentId: string, customerEmail: string) => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/payments?action=send-receipt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payment_id: paymentId, customer_email: customerEmail })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.receipt_url) {
+        alert(`✅ Ricevuta Inviata!\n\n📧 Email: ${customerEmail}\n🔗 URL Ricevuta: ${data.receipt_url}\n\nLa ricevuta è stata inviata con successo.`);
+      } else {
+        throw new Error(data.error || 'Ricevuta non disponibile');
+      }
+    } catch (error) {
+      console.error('❌ Errore invio ricevuta:', error);
+      alert(`❌ Errore: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyPaymentStatus = async (paymentId: string) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/payments?action=verify-status&payment_id=${paymentId}`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        alert(`💳 Stato Pagamento\n\n🆔 ID: ${paymentId}\n📊 Stato: ${data.status}\n💰 Importo: €${data.amount}\n💵 Valuta: ${data.currency.toUpperCase()}\n📧 Cliente: ${data.customer_email}`);
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (error) {
+      console.error('❌ Errore verifica pagamento:', error);
+      alert(`❌ Errore: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConfigurePaymentGateway = async (gateway: 'stripe' | 'paypal') => {
+    const config = gateway === 'stripe' 
+      ? prompt(`⚙️ Configurazione Stripe\n\nInserisci JSON con:\n- publishable_key\n- secret_key\n- webhook_secret`)
+      : prompt(`⚙️ Configurazione PayPal\n\nInserisci JSON con:\n- client_id\n- client_secret\n- mode (sandbox/live)`);
+    
+    if (!config) return;
+    
+    try {
+      const parsedConfig = JSON.parse(config);
+      const action = gateway === 'stripe' ? 'configure-stripe' : 'configure-paypal';
+      
+      const response = await fetch(`/api/payments?action=${action}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(parsedConfig)
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        alert(`✅ ${gateway === 'stripe' ? 'Stripe' : 'PayPal'} configurato con successo!`);
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (error) {
+      alert(`❌ Errore configurazione: ${error instanceof Error ? error.message : 'Formato JSON non valido'}`);
+    }
+  };
+
   // === NUOVE FUNZIONI EMAIL AGGIUNTE ===
 
   const handleShowEmailStats = (templateName: string) => {
@@ -2608,8 +2716,6 @@ const AdminPanelPro = (): JSX.Element => {
             <ExtraServicesAdmin />
           </div>
         )}
-
-        {/* === SEZIONE CALENDARI COMPLETA === */}
         {activeTab === 'calendari' && (
           <div className="admin-calendari">
             <h2>🗓️ Gestione Calendari {isLoadingCalendars && '(Caricamento...)'}</h2>
@@ -2620,7 +2726,7 @@ const AdminPanelPro = (): JSX.Element => {
               <div className="pricing-controls">
                 <div className="pricing-preview">
                   <div className="preview-item">
-                    <span>Totali Configurati:</span>
+                    <span>Totale Calendari:</span>
                     <strong>{calendarStats.total || 0}</strong>
                   </div>
                   <div className="preview-item">
@@ -2634,10 +2740,6 @@ const AdminPanelPro = (): JSX.Element => {
                   <div className="preview-item">
                     <span>Calendari Esterni:</span>
                     <strong className="status-warning">{calendarStats.external || 0}</strong>
-                  </div>
-                  <div className="preview-item">
-                    <span>Ultima Sincronizzazione:</span>
-                    <strong>{calendarStats.lastSyncSuccess ? new Date(calendarStats.lastSyncSuccess).toLocaleString('it-IT') : 'Mai'}</strong>
                   </div>
                 </div>
               </div>
@@ -3245,10 +3347,7 @@ const AdminPanelPro = (): JSX.Element => {
         )}
 
         {/* Sezione Prenotazioni Professionale */}
-        {activeTab === 'prenotazioni' && (() => {
-          try {
-            devLog('🎯 Rendering sezione prenotazioni...');
-            return (
+        {activeTab === 'prenotazioni' && (
           <div className="admin-prenotazioni">
             <div className="admin-header">
               <h2>📅 Gestione Prenotazioni Avanzata</h2>
@@ -3313,12 +3412,17 @@ const AdminPanelPro = (): JSX.Element => {
                     <input type="date" className="admin-input-small" aria-label="Data fine filtro" />
                     
                     <label>Piattaforma:</label>
-                    <select className="admin-select" aria-label="Filtro piattaforma">
-                      <option>Tutte le piattaforme</option>
-                      <option>🌐 Sito Diretto</option>
-                      <option>📱 Airbnb</option>
-                      <option>🏨 Booking.com</option>
-                      <option>🌐 Expedia</option>
+                    <select
+                      className="admin-select"
+                      aria-label="Filtro piattaforma"
+                      value={platformFilter}
+                      onChange={(e) => setPlatformFilter(e.target.value as 'all'|'direct'|'airbnb'|'booking'|'holidu')}
+                    >
+                      <option value="all">Tutte le piattaforme</option>
+                      <option value="direct">🌐 Sito Diretto</option>
+                      <option value="airbnb">📱 Airbnb</option>
+                      <option value="booking">🏨 Booking.com</option>
+                      <option value="holidu">🏖️ Holidu</option>
                     </select>
                   </div>
                 </div>
@@ -3345,7 +3449,10 @@ const AdminPanelPro = (): JSX.Element => {
                       </tr>
                     </thead>
                     <tbody>
-                      {calendarEvents.slice(0, 20).map((event, idx) => {
+                      {calendarEvents
+                        .filter(ev => platformFilter === 'all' ? true : ev.platform === platformFilter)
+                        .slice(0, 20)
+                        .map((event, idx) => {
                         const checkIn = new Date(event.checkIn);
                         const checkOut = new Date(event.checkOut);
                         const isUpcoming = event.status === 'upcoming';
@@ -3739,28 +3846,10 @@ const AdminPanelPro = (): JSX.Element => {
               <button className="admin-btn-secondary" onClick={() => handleSyncAllPlatforms()}>🔄 Sincronizza Piattaforme</button>
             </div>
           </div>
-            );
-          } catch (error) {
-            console.error('❌ Errore nel rendering sezione prenotazioni:', error);
-            return (
-              <div className="admin-prenotazioni">
-                <div className="error-message">
-                  <h2>⚠️ Errore nella sezione prenotazioni</h2>
-                  <p>Errore: {error instanceof Error ? error.message : 'Errore sconosciuto'}</p>
-                  <button onClick={() => window.location.reload()} className="admin-btn-primary">
-                    🔄 Ricarica Pagina
-                  </button>
-                </div>
-              </div>
-            );
-          }
-        })()}
+        )}
 
         {/* Sezione Pagamenti Professionale */}
-        {activeTab === 'pagamenti' && (() => {
-          try {
-            devLog('🎯 Rendering sezione pagamenti...');
-            return (
+        {activeTab === 'pagamenti' && (
           <div className="admin-pagamenti">
             <h2>💳 Gestione Pagamenti Avanzata</h2>
             
@@ -4122,22 +4211,7 @@ const AdminPanelPro = (): JSX.Element => {
               </button>
             </div>
           </div>
-            );
-          } catch (error) {
-            console.error('❌ Errore nel rendering sezione pagamenti:', error);
-            return (
-              <div className="admin-pagamenti">
-                <div className="error-message">
-                  <h2>⚠️ Errore nella sezione pagamenti</h2>
-                  <p>Errore: {error instanceof Error ? error.message : 'Errore sconosciuto'}</p>
-                  <button onClick={() => window.location.reload()} className="admin-btn-primary">
-                    🔄 Ricarica Pagina
-                  </button>
-                </div>
-              </div>
-            );
-          }
-        })()}
+        )}
 
         {/* Sezione Email */}
         {activeTab === 'email' && (
@@ -4276,7 +4350,7 @@ const AdminPanelPro = (): JSX.Element => {
                 onClick={saveEmailSettings}
                 disabled={loading}
               >
-                � {loading ? 'Salvataggio...' : 'Salva Configurazione'}
+                💾 {loading ? 'Salvataggio...' : 'Salva Configurazione'}
               </button>
               <button className="admin-btn-secondary" onClick={() => handleEmailDetailedReport()}>📊 Report Dettagliato</button>
               <button className="admin-btn-secondary" onClick={() => handleMassEmailSend()}>📧 Invio Massivo</button>
@@ -4591,7 +4665,7 @@ const AdminPanelPro = (): JSX.Element => {
                   className="admin-btn-secondary" 
                   onClick={testNotification}
                 >
-                  � Test Notifica
+                  🔔 Test Notifica
                 </button>
               </div>
               

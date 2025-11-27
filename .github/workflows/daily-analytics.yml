@@ -1,0 +1,32 @@
+name: Daily Analytics Aggregation
+
+on:
+  schedule:
+    # Run every day at 2 AM UTC (3 AM CET)
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  aggregate-analytics:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Aggregate Today's Analytics
+        run: |
+          curl -X POST "https://vincanto-vetrina.vercel.app/api/analytics?action=aggregate-today" \
+            -H "Content-Type: application/json"
+          
+      - name: Aggregate Yesterday's Analytics (backup)
+        run: |
+          YESTERDAY=$(date -d "yesterday" +%Y-%m-%d)
+          curl -X POST "https://vincanto-vetrina.vercel.app/api/analytics?action=aggregate-date" \
+            -H "Content-Type: application/json" \
+            -d "{\"date\": \"$YESTERDAY\"}"
+
+      - name: Log Success
+        if: success()
+        run: echo "✅ Analytics aggregation completed successfully"
+
+      - name: Log Failure
+        if: failure()
+        run: echo "❌ Analytics aggregation failed"

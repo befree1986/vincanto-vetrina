@@ -49,6 +49,18 @@
       "destination": "/api/create-payment-intent.js"
     },
     {
+      "source": "/api/payments",
+      "destination": "/api/payments.js"
+    },
+    {
+      "source": "/api/emails",
+      "destination": "/api/emails.js"
+    },
+    {
+      "source": "/api/analytics",
+      "destination": "/api/analytics.js"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/unified.js?action=$1"
     },
