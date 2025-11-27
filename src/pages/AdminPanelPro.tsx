@@ -114,6 +114,56 @@ const AdminPanelPro = (): JSX.Element => {
   });
   const [isLoadingCalendars, setIsLoadingCalendars] = useState(false);
   const [showNewCalendarForm, setShowNewCalendarForm] = useState(false);
+
+  // === Holidu: Handler azioni calendario ===
+  const handleTestHoliduURL = async () => {
+    try {
+      devLog('🔍 Test URL Holidu - iCal export');
+      const res = await fetch('/api/unified?action=ical-export');
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+      const text = await res.text();
+      log('✅ Holidu URL OK, bytes:', text.length);
+      alert('✅ URL iCal del sito valido e raggiungibile. Copialo su Holidu: https://vincanto-vetrina.vercel.app/api/unified?action=ical-export');
+    } catch (e) {
+      devError('❌ Test URL Holidu fallito', e);
+      alert('❌ Test URL Holidu fallito: controlla endpoint /api/unified?action=ical-export');
+    }
+  };
+
+  const handleSyncHoliduCalendar = async () => {
+    try {
+      devLog('🔄 Sincronizzazione eventi Holidu (import)');
+      setIsLoadingData(true);
+      const res = await fetch('/api/calendar-real-sync', { method: 'POST' });
+      const json = await res.json();
+      log('✅ Holidu sync risposta:', json);
+      alert(`✅ Holidu sincronizzato. Eventi aggiornati: ${json?.synced || 'OK'}`);
+      typeof loadRealApiData === 'function' && loadRealApiData();
+    } catch (e) {
+      devError('❌ Holidu sync errore', e);
+      alert('❌ Errore sincronizzazione Holidu');
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
+
+  const handleLoadHoliduEvents = async () => {
+    try {
+      devLog('📅 Carico eventi calendario (tutte piattaforme, include Holidu)');
+      setIsLoadingData(true);
+      const res = await fetch('/api/unified?action=calendar-bookings');
+      const json = await res.json();
+      setCalendarEvents(json?.events || []);
+      alert(`📅 Eventi caricati: ${json?.events?.length || 0}`);
+    } catch (e) {
+      devError('❌ Caricamento eventi Holidu fallito', e);
+      alert('❌ Errore caricamento eventi Holidu');
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
   
   // Form nuovo calendario
   const [newCalendarData, setNewCalendarData] = useState({
@@ -3126,6 +3176,8 @@ const AdminPanelPro = (): JSX.Element => {
                       setShowNewCalendarForm(true);
                     }}>⚡ Configura Subito</button>
                     <button className="admin-btn-secondary admin-btn-small" onClick={() => handleTestHoliduURL()}>🔍 Test URL</button>
+                    <button className="admin-btn-secondary admin-btn-small" onClick={() => handleSyncHoliduCalendar()}>🔄 Sincronizza Holidu</button>
+                    <button className="admin-btn-secondary admin-btn-small" onClick={() => handleLoadHoliduEvents()}>📅 Carica Eventi Holidu</button>
                   </div>
                 </div>
               </div>
