@@ -1518,6 +1518,156 @@
   font-weight: 700 !important;
 }
 
+/* =======================================
+   💳 PAYMENT METHOD CARDS PROFESSIONAL
+   ======================================= */
+
+.payment-method-selection-pro {
+  margin: 32px 0;
+}
+
+.payment-method-selection-pro h4 {
+  font-size: 1.2rem;
+  color: #2d3748;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.payment-methods-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.payment-card {
+  position: relative;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.payment-card:hover {
+  border-color: #48a69a;
+  box-shadow: 0 4px 12px rgba(72, 166, 154, 0.2);
+  transform: translateY(-2px);
+}
+
+.payment-card.active {
+  border-color: #48a69a;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  box-shadow: 0 4px 16px rgba(72, 166, 154, 0.3);
+}
+
+.payment-card input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.payment-card-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.payment-logo {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.payment-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.payment-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.payment-subtitle {
+  font-size: 0.85rem;
+  color: #718096;
+}
+
+.payment-checkmark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.payment-card.active .payment-checkmark {
+  background: #48a69a;
+  transform: scale(1.1);
+}
+
+/* Mobile responsive per payment cards */
+@media (max-width: 768px) {
+  .payment-methods-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .payment-card {
+    padding: 16px;
+  }
+  
+  .payment-logo {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .payment-title {
+    font-size: 0.95rem;
+  }
+  
+  .payment-subtitle {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .payment-card {
+    padding: 14px;
+    gap: 12px;
+  }
+  
+  .payment-logo {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .payment-card-content {
+    gap: 12px;
+  }
+  
+  .payment-checkmark {
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+  }
+}
+
 .pricing-details {
   background: rgba(210, 105, 30, 0.1);
   border-radius: 8px;

@@ -247,10 +247,11 @@ const BookingSystem: React.FC = () => {
 
     const handlePaymentSuccess = async (data: any) => {
         try {
-            // Calcola l'importo pagato (acconto o totale)
+            // Calcola l'importo pagato (acconto o totale) INCLUSI SERVIZI EXTRA
+            const totalWithExtras = (quote?.totalAmount || 0) + extraServicesCost;
             const amountPaid = formData.payment_type === 'deposit' && quote
-                ? Math.round(quote.totalAmount * 0.3 * 100) / 100
-                : quote?.totalAmount || 0;
+                ? Math.round(totalWithExtras * 0.3 * 100) / 100
+                : totalWithExtras;
 
             // Prepara i dati per il salvataggio DB
             const bookingData = {
@@ -442,9 +443,11 @@ const BookingSystem: React.FC = () => {
 
     const handleBankTransferBooking = async () => {
         try {
+            // Calcola importo INCLUSI SERVIZI EXTRA
+            const totalWithExtras = (quote?.totalAmount || 0) + extraServicesCost;
             const amountPaid = formData.payment_type === 'deposit' && quote
-                ? Math.round(quote.totalAmount * 0.3 * 100) / 100
-                : quote?.totalAmount || 0;
+                ? Math.round(totalWithExtras * 0.3 * 100) / 100
+                : totalWithExtras;
 
             const bookingData = {
                 guest_name: formData.guest_name,
@@ -657,7 +660,7 @@ const BookingSystem: React.FC = () => {
                                 setPaymentCompleted(false);
                                 setShowPayment(false);
                             }} />
-                            <label htmlFor="deposit">{getSafeTranslation(t, 'booking.deposit30', 'Acconto 30%')} {quote && <span className="amount">€{((quote.totalAmount)*0.30).toFixed(2)}</span>}</label>
+                            <label htmlFor="deposit">{getSafeTranslation(t, 'booking.deposit30', 'Acconto 30%')} {quote && <span className="amount">€{((quote.totalAmount + extraServicesCost)*0.30).toFixed(2)}</span>}</label>
                         </div>
                         <div className="radio-group">
                             <input type="radio" id="full" name="payment_type" value="full" checked={formData.payment_type==='full'} onChange={(e)=>{
@@ -665,34 +668,68 @@ const BookingSystem: React.FC = () => {
                                 setPaymentCompleted(false);
                                 setShowPayment(false);
                             }} />
-                            <label htmlFor="full">{getSafeTranslation(t, 'booking.fullPayment', 'Saldo Completo')} {quote && <span className="amount">€{quote.totalAmount.toFixed(2)}</span>}</label>
+                            <label htmlFor="full">{getSafeTranslation(t, 'booking.fullPayment', 'Saldo Completo')} {quote && <span className="amount">€{(quote.totalAmount + extraServicesCost).toFixed(2)}</span>}</label>
                         </div>
                     </div>
-                    <div className="payment-method-selection">
+                    <div className="payment-method-selection-pro">
                         <h4>{getSafeTranslation(t, 'booking.paymentMethod', 'Metodo di Pagamento')}</h4>
-                        <div className="radio-group">
-                            <input type="radio" id="stripe" name="payment_method" value="stripe" checked={formData.payment_method==='stripe'} onChange={(e)=>{
-                                setFormData({ payment_method: e.target.value as any });
-                                setPaymentCompleted(false);
-                                setShowPayment(false);
-                            }} />
-                            <label htmlFor="stripe">💳 {getSafeTranslation(t, 'booking.card', 'Carta')}</label>
-                        </div>
-                        <div className="radio-group">
-                            <input type="radio" id="paypal" name="payment_method" value="paypal" checked={formData.payment_method==='paypal'} onChange={(e)=>{
-                                setFormData({ payment_method: e.target.value as any });
-                                setPaymentCompleted(false);
-                                setShowPayment(false);
-                            }} />
-                            <label htmlFor="paypal">🟡 PayPal</label>
-                        </div>
-                        <div className="radio-group">
-                            <input type="radio" id="bank_transfer" name="payment_method" value="bank_transfer" checked={formData.payment_method==='bank_transfer'} onChange={(e)=>{
-                                setFormData({ payment_method: e.target.value as any });
-                                setPaymentCompleted(false);
-                                setShowPayment(false);
-                            }} />
-                            <label htmlFor="bank_transfer">🏦 {getSafeTranslation(t, 'booking.bankTransfer', 'Bonifico Bancario')}</label>
+                        <div className="payment-methods-grid">
+                            <div 
+                                className={`payment-card ${formData.payment_method === 'stripe' ? 'active' : ''}`}
+                                onClick={() => {
+                                    setFormData({ payment_method: 'stripe' });
+                                    setPaymentCompleted(false);
+                                    setShowPayment(false);
+                                }}
+                            >
+                                <input type="radio" id="stripe" name="payment_method" value="stripe" checked={formData.payment_method==='stripe'} readOnly />
+                                <div className="payment-card-content">
+                                    <img src="/icons/stripe_icon.webp" alt="Stripe" className="payment-logo" />
+                                    <div className="payment-info">
+                                        <span className="payment-title">{getSafeTranslation(t, 'booking.card', 'Carta di Credito/Debito')}</span>
+                                        <span className="payment-subtitle">Visa, Mastercard, Amex</span>
+                                    </div>
+                                </div>
+                                <div className="payment-checkmark">✓</div>
+                            </div>
+
+                            <div 
+                                className={`payment-card ${formData.payment_method === 'paypal' ? 'active' : ''}`}
+                                onClick={() => {
+                                    setFormData({ payment_method: 'paypal' });
+                                    setPaymentCompleted(false);
+                                    setShowPayment(false);
+                                }}
+                            >
+                                <input type="radio" id="paypal" name="payment_method" value="paypal" checked={formData.payment_method==='paypal'} readOnly />
+                                <div className="payment-card-content">
+                                    <img src="/icons/PayPal_icon.webp" alt="PayPal" className="payment-logo" />
+                                    <div className="payment-info">
+                                        <span className="payment-title">PayPal</span>
+                                        <span className="payment-subtitle">Pagamento sicuro</span>
+                                    </div>
+                                </div>
+                                <div className="payment-checkmark">✓</div>
+                            </div>
+
+                            <div 
+                                className={`payment-card ${formData.payment_method === 'bank_transfer' ? 'active' : ''}`}
+                                onClick={() => {
+                                    setFormData({ payment_method: 'bank_transfer' });
+                                    setPaymentCompleted(false);
+                                    setShowPayment(false);
+                                }}
+                            >
+                                <input type="radio" id="bank_transfer" name="payment_method" value="bank_transfer" checked={formData.payment_method==='bank_transfer'} readOnly />
+                                <div className="payment-card-content">
+                                    <img src="/icons/bonifico_icon.webp" alt="Bonifico" className="payment-logo" />
+                                    <div className="payment-info">
+                                        <span className="payment-title">{getSafeTranslation(t, 'booking.bankTransfer', 'Bonifico Bancario')}</span>
+                                        <span className="payment-subtitle">Conferma in 24-48h</span>
+                                    </div>
+                                </div>
+                                <div className="payment-checkmark">✓</div>
+                            </div>
                         </div>
                     </div>
                 </div>
