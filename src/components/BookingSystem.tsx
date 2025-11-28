@@ -616,23 +616,6 @@ const BookingSystem: React.FC = () => {
                         </div>
                     )}
                 </div>
-                <div className="parking-selection">
-                    <h3>🚗 {getSafeTranslation(t, 'booking.parkingOptions', 'Opzioni Parcheggio')}</h3>
-                    <div className="service-options">
-                        <div className="radio-group">
-                            <input type="radio" id="parking-none" name="parking_option" value="none" checked={formData.parking_option==='none'} onChange={(e)=>setFormData({ parking_option: e.target.value as any })} />
-                            <label htmlFor="parking-none">{getSafeTranslation(t, 'booking.noParking', 'Nessun parcheggio')} <span className="service-price">{getSafeTranslation(t, 'booking.free', 'Gratuito')}</span></label>
-                        </div>
-                        <div className="radio-group">
-                            <input type="radio" id="parking-street" name="parking_option" value="street" checked={formData.parking_option==='street'} onChange={(e)=>setFormData({ parking_option: e.target.value as any })} />
-                            <label htmlFor="parking-street">{getSafeTranslation(t, 'booking.streetParking', 'Parcheggio pubblico')} <span className="service-price">{getSafeTranslation(t, 'booking.free', 'Gratuito')}</span></label>
-                        </div>
-                        <div className="radio-group">
-                            <input type="radio" id="parking-private" name="parking_option" value="private" checked={formData.parking_option==='private'} onChange={(e)=>setFormData({ parking_option: e.target.value as any })} />
-                            <label htmlFor="parking-private">{getSafeTranslation(t, 'booking.privateParking', 'Parcheggio privato riservato')} <span className="service-price highlight">+€{dynamicPricing.loading ? '...' : dynamicPricing.error ? '20' : dynamicPricing.parkingFee}/{getSafeTranslation(t, 'booking.day', 'giorno')}</span></label>
-                        </div>
-                    </div>
-                </div>
                 {/* ExtraServices ora in step separato dopo le date */}
                 <div className="guest-form">
                     <h3>{getSafeTranslation(t, 'booking.guestInfo', 'Informazioni Ospite')}</h3>
