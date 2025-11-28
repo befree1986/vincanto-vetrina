@@ -107,6 +107,7 @@ export async function getBookingQuote(data: BookingQuoteRequest): Promise<Bookin
                 guests: data.guests,
                 adults: data.adults || data.guests, // Fallback per compatibilità
                 children: data.children || 0,
+                childrenAges: data.childrenAges ? data.childrenAges.join(',') : '', // Invia età bambini come stringa separata da virgole
                 includeParking: data.includeParking || false
             }
         });

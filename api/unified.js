@@ -439,13 +439,13 @@ export default async function handler(req, res) {
           const children = bookingData.children || 0;
           const email = bookingData.customerEmail || bookingData.email;
           const phone = bookingData.customerPhone || bookingData.phone;
-          // Normalizza e forza a numero
-          const totalAmount = Number(bookingData.totalPrice) || Number(bookingData.total_amount) || 0;
+          // Normalizza e forza a numero - accetta sia interi che decimali
+          const totalAmount = parseFloat(bookingData.totalPrice) || parseFloat(bookingData.total_amount) || 0;
           const notes = bookingData.specialRequests || bookingData.notes || '';
           // Log di debug per il totale
-          console.log('DEBUG totalAmount calcolato:', totalAmount);
-          // Blocca se il totale non è valido
-          if (!totalAmount || totalAmount <= 0) {
+          console.log('DEBUG totalAmount calcolato:', totalAmount, 'tipo:', typeof totalAmount);
+          // Blocca se il totale non è valido (solo se realmente 0 o NaN)
+          if (!totalAmount || isNaN(totalAmount) || totalAmount <= 0) {
             console.error('❌ Importo totale mancante o non valido:', totalAmount);
             return res.status(400).json({ success: false, error: 'Importo totale mancante o non valido' });
           }
@@ -1555,7 +1555,7 @@ END:VEVENT
     // ========================================
     if (action === 'quote') {
       try {
-        const { checkIn, checkOut, guests, adults, children, includeParking } = req.query;
+        const { checkIn, checkOut, guests, adults, children, includeParking, childrenAges } = req.query;
         
         // Validazione parametri
         if (!checkIn || !checkOut || !guests) {
@@ -1677,9 +1677,25 @@ END:VEVENT
         const parkingCost = (includeParking === 'true') ? (pricing.parkingFee * nights) : 0;
         console.log(`🚗 PARCHEGGIO: ${includeParking === 'true' ? `€${pricing.parkingFee} × ${nights} notti = €${parkingCost}` : '€0 (non richiesto)'}`);
         
-        // 🔧 FIX: Tassa soggiorno SOLO per adulti (bambini <12 anni gratis)
-        const touristTax = pricing.touristTaxAdult * adultsNum * nights;
-        console.log(`🏛️ TASSA SOGGIORNO: ${adultsNum} adulti × €${pricing.touristTaxAdult} × ${nights} notti = €${touristTax}`);
+        // 🔧 FIX: Tassa soggiorno per adulti + bambini >12 anni (bambini ≤12 anni gratis)
+        // Parse childrenAges: può essere stringa "8,14" o già array
+        let childrenAgesArray = [];
+        if (childrenAges) {
+          if (typeof childrenAges === 'string') {
+            childrenAgesArray = childrenAges.split(',').map(age => parseInt(age.trim())).filter(age => !isNaN(age));
+          } else if (Array.isArray(childrenAges)) {
+            childrenAgesArray = childrenAges.map(age => parseInt(age)).filter(age => !isNaN(age));
+          }
+        }
+        
+        // Conta bambini >12 anni che devono pagare la tassa
+        const childrenOver12 = childrenAgesArray.filter(age => age > 12).length;
+        const childrenUnder12 = childrenAgesArray.filter(age => age <= 12).length;
+        const taxableGuests = adultsNum + childrenOver12;
+        
+        const touristTax = pricing.touristTaxAdult * taxableGuests * nights;
+        console.log(`🏛️ TASSA SOGGIORNO: ${adultsNum} adulti + ${childrenOver12} bambini >12 anni (${childrenUnder12} bambini ≤12 gratis) = ${taxableGuests} ospiti × €${pricing.touristTaxAdult} × ${nights} notti = €${touristTax}`);
+
 
         // Calcola totale
         const totalAmount = discountedAccommodation + cleaningFee + parkingCost + touristTax;
