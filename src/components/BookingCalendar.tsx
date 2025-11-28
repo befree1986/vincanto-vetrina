@@ -212,15 +212,7 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
 
             {/* Informazioni selezione */}
             {minStayError && (
-                <div className="min-stay-error" style={{ 
-                    background: '#fee', 
-                    border: '1px solid #fcc', 
-                    padding: '12px', 
-                    borderRadius: '8px', 
-                    color: '#c00',
-                    fontWeight: 600,
-                    marginTop: '16px'
-                }}>
+                <div className="min-stay-error">
                     ⚠️ {minStayError}
                 </div>
             )}

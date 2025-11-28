@@ -361,15 +361,7 @@ const BookingSystem: React.FC = () => {
         <div className="booking-step-content step-transition">
             <h2>Seleziona le Date</h2>
             {dynamicPricing.minStay > 0 && (
-                <div className="min-stay-info" style={{
-                    background: '#e8f5e9',
-                    border: '1px solid #4caf50',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    marginBottom: '16px',
-                    color: '#2e7d32',
-                    fontWeight: 500
-                }}>
+                <div className="min-stay-info">
                     ℹ️ Soggiorno minimo richiesto: <strong>{dynamicPricing.minStay} {dynamicPricing.minStay === 1 ? 'notte' : 'notti'}</strong>
                 </div>
             )}
@@ -682,7 +674,7 @@ const BookingSystem: React.FC = () => {
                                     setShowPayment(false);
                                 }}
                             >
-                                <input type="radio" id="stripe" name="payment_method" value="stripe" checked={formData.payment_method==='stripe'} readOnly />
+                                <input type="radio" id="stripe" name="payment_method" value="stripe" checked={formData.payment_method==='stripe'} readOnly aria-label="Carta di Credito/Debito" />
                                 <div className="payment-card-content">
                                     <img src="/icons/stripe_icon.webp" alt="Stripe" className="payment-logo" />
                                     <div className="payment-info">
@@ -701,7 +693,7 @@ const BookingSystem: React.FC = () => {
                                     setShowPayment(false);
                                 }}
                             >
-                                <input type="radio" id="paypal" name="payment_method" value="paypal" checked={formData.payment_method==='paypal'} readOnly />
+                                <input type="radio" id="paypal" name="payment_method" value="paypal" checked={formData.payment_method==='paypal'} readOnly aria-label="PayPal" />
                                 <div className="payment-card-content">
                                     <img src="/icons/PayPal_icon.webp" alt="PayPal" className="payment-logo" />
                                     <div className="payment-info">
@@ -720,7 +712,7 @@ const BookingSystem: React.FC = () => {
                                     setShowPayment(false);
                                 }}
                             >
-                                <input type="radio" id="bank_transfer" name="payment_method" value="bank_transfer" checked={formData.payment_method==='bank_transfer'} readOnly />
+                                <input type="radio" id="bank_transfer" name="payment_method" value="bank_transfer" checked={formData.payment_method==='bank_transfer'} readOnly aria-label="Bonifico Bancario" />
                                 <div className="payment-card-content">
                                     <img src="/icons/bonifico_icon.webp" alt="Bonifico" className="payment-logo" />
                                     <div className="payment-info">

@@ -787,6 +787,27 @@
 
 /* 📱 RESPONSIVE DESIGN MODERNO */
 
+/* Min stay info e error messages */
+.min-stay-info {
+  background: #e8f5e9;
+  border: 1px solid #4caf50;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  color: #2e7d32;
+  font-weight: 500;
+}
+
+.min-stay-error {
+  background: #ffeeee;
+  border: 1px solid #ffcccc;
+  padding: 12px;
+  border-radius: 8px;
+  color: #cc0000;
+  font-weight: 600;
+  margin-top: 16px;
+}
+
 /* TABLET E NOTEBOOK */
 @media (max-width: 1024px) {
   .booking-system {
@@ -928,7 +949,7 @@
   .booking-system {
     padding: 8px;
     margin: 0;
-    min-height: auto;
+    min-height: 0;
   }
   
   .booking-steps {
