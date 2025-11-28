@@ -1696,6 +1696,21 @@ END:VEVENT
         const touristTax = pricing.touristTaxAdult * taxableGuests * nights;
         console.log(`🏛️ TASSA SOGGIORNO: ${adultsNum} adulti + ${childrenOver12} bambini >12 anni (${childrenUnder12} bambini ≤12 gratis) = ${taxableGuests} ospiti × €${pricing.touristTaxAdult} × ${nights} notti = €${touristTax}`);
 
+        // Genera descrizione tassa di soggiorno dettagliata
+        let taxDescription = '';
+        if (childrenOver12 > 0 && childrenUnder12 > 0) {
+          // Caso con bambini sia sopra che sotto i 12 anni
+          taxDescription = `€${pricing.touristTaxAdult}/persona/notte × ${taxableGuests} ospiti (${adultsNum} adulti + ${childrenOver12} bambini >12 anni, ${childrenUnder12} bambini ≤12 gratis) × ${nights} notti = €${touristTax.toFixed(2)}`;
+        } else if (childrenOver12 > 0) {
+          // Caso con bambini solo sopra i 12 anni
+          taxDescription = `€${pricing.touristTaxAdult}/persona/notte × ${taxableGuests} ospiti (${adultsNum} adulti + ${childrenOver12} bambini >12 anni) × ${nights} notti = €${touristTax.toFixed(2)}`;
+        } else if (childrenUnder12 > 0) {
+          // Caso con bambini solo sotto i 12 anni
+          taxDescription = `€${pricing.touristTaxAdult}/adulto/notte × ${adultsNum} adulti (${childrenUnder12} bambini ≤12 anni gratis) × ${nights} notti = €${touristTax.toFixed(2)}`;
+        } else {
+          // Caso solo adulti
+          taxDescription = `€${pricing.touristTaxAdult}/adulto/notte × ${adultsNum} adulti × ${nights} notti = €${touristTax.toFixed(2)}`;
+        }
 
         // Calcola totale
         const totalAmount = discountedAccommodation + cleaningFee + parkingCost + touristTax;
@@ -1735,7 +1750,7 @@ END:VEVENT
             sconto: discount > 0 ? `Sconto ${discount}%: -€${discountAmount.toFixed(2)}` : null,
             pulizie: `€${cleaningFee.toFixed(2)}`,
             parcheggio: parkingCost > 0 ? `€${pricing.parkingFee}/notte × ${nights} notti = €${parkingCost.toFixed(2)}` : null,
-            tassa: `€${pricing.touristTaxAdult}/adulto/notte × ${adultsNum} adulti × ${nights} notti = €${touristTax.toFixed(2)}`,
+            tassa: taxDescription,
             totale: `€${totalAmount.toFixed(2)}`,
             acconto: `€${depositAmount.toFixed(2)} (30%)`
           }
