@@ -85,7 +85,7 @@ export const useExtraServices = (): ExtraServicesData => {
         { 
           id: 6, 
           name: 'Culla per Bambini', 
-          price: 20, 
+          price: 30, // ✅ Allineato con database
           unit: 'soggiorno',
           description: 'Culla con biancheria per bambini fino a 7 anni',
           category: 'bambini',
