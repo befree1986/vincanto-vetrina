@@ -88,13 +88,15 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
                         <span>Costi Aggiuntivi</span>
                     </div>
 
-                    <div className="breakdown-item">
-                        <div className="item-label">
-                            <span className="item-icon">🚗</span>
-                            <span>{getSafeTranslation(t, 'booking.parking', 'Parcheggio privato')}</span>
+                    {costs.parkingCost > 0 && (
+                        <div className="breakdown-item">
+                            <div className="item-label">
+                                <span className="item-icon">🚗</span>
+                                <span>{getSafeTranslation(t, 'booking.parking', 'Parcheggio privato')}</span>
+                            </div>
+                            <span className="item-value">€{(costs.parkingCost || 0).toFixed(2)}</span>
                         </div>
-                        <span className="item-value">€{(costs.parkingCost || 0).toFixed(2)}</span>
-                    </div>
+                    )}
 
                     <div className="breakdown-item">
                         <div className="item-label">
@@ -506,69 +508,6 @@ const BookingSystem: React.FC = () => {
             <div className="booking-step-content step-transition">
                 <h2>{getSafeTranslation(t, 'booking.detailsTitle', 'Dettagli Prenotazione')}</h2>
                 
-                {/* SERVIZI EXTRA: Spostati qui da step dates */}
-                <div className="extra-services-section">
-                    <h3>{getSafeTranslation(t, 'booking.extraServices', 'Servizi Extra')}</h3>
-                    <ExtraServices
-                        childrenAges={formData.children_ages}
-                        onServicesChange={handleServicesChange}
-                        calcOptions={quote ? { nights: quote.nights, adults: quote.guests, guests: quote.guests } : undefined}
-                    />
-                </div>
-
-                {isLoadingQuote && (
-                    <div className="quote-loading-modern">
-                        <div className="loading-spinner" />
-                        <div className="loading-content">
-                            <h4>{getSafeTranslation(t, 'booking.calculatingQuote', 'Calcolo preventivo...')}</h4>
-                            <p>{getSafeTranslation(t, 'booking.applyingBestRates', 'Applichiamo le migliori tariffe disponibili')}</p>
-                        </div>
-                    </div>
-                )}
-                {quote && !isLoadingQuote && (
-                    <div className="price-banner-horizontal">
-                        <div className="price-banner-content">
-                            <div className="price-summary">
-                                <div className="price-item">
-                                    <span className="price-label">{getSafeTranslation(t, 'booking.accommodation', 'Soggiorno')} ({quote.nights} {quote.nights === 1 ? getSafeTranslation(t, 'booking.night', 'notte') : getSafeTranslation(t, 'booking.nights', 'notti')})</span>
-                                    <span className="price-value">€{quote.basePrice.toFixed(2)}</span>
-                                </div>
-                                {formData.parking_option === 'private' && quote.parkingCost > 0 && (
-                                    <div className="price-item">
-                                        <span className="price-label">🚗 {getSafeTranslation(t, 'booking.parking', 'Parcheggio')}</span>
-                                        <span className="price-value">€{quote.parkingCost.toFixed(2)}</span>
-                                    </div>
-                                )}
-                                {extraServicesCost > 0 && (
-                                    <div className="price-item">
-                                        <span className="price-label">🛎️ {getSafeTranslation(t, 'booking.extraServices', 'Servizi Extra')}</span>
-                                        <span className="price-value">€{extraServicesCost.toFixed(2)}</span>
-                                    </div>
-                                )}
-                                <div className="price-item">
-                                    <span className="price-label">🧹 {getSafeTranslation(t, 'booking.cleaning', 'Pulizia')}</span>
-                                    <span className="price-value">€{quote.cleaningFee.toFixed(2)}</span>
-                                </div>
-                                <div className="price-item">
-                                    <span className="price-label">🏛️ {getSafeTranslation(t, 'booking.touristTax', 'Tassa soggiorno')}</span>
-                                    <span className="price-value">€{quote.touristTax.toFixed(2)}</span>
-                                </div>
-                            </div>
-                            <div className="price-total-section">
-                                <div className="price-total">
-                                    <span className="total-label">{getSafeTranslation(t, 'booking.total', 'Totale')}</span>
-                                    <span className="total-value">€{(quote.totalAmount + extraServicesCost).toFixed(2)}</span>
-                                </div>
-                                {formData.payment_type === 'deposit' && (
-                                    <div className="price-deposit">
-                                        <span className="deposit-label">{getSafeTranslation(t, 'booking.depositRequired', 'Acconto 30%')}</span>
-                                        <span className="deposit-value">€{((quote.totalAmount + extraServicesCost) * 0.30).toFixed(2)}</span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
                 <div className="guests-selection-modern">
                     <h3>👥 {getSafeTranslation(t, 'booking.guests', 'Ospiti')}</h3>
                     <div className="guests-grid">
@@ -613,6 +552,60 @@ const BookingSystem: React.FC = () => {
                             </div>
                         </div>
                     )}
+                </div>
+                {/* Scelta parcheggio (facoltativo) */}
+                <div className="parking-selection">
+                    <h3>🚗 {getSafeTranslation(t, 'booking.parking', 'Parcheggio')}</h3>
+                    <div className="radio-group">
+                        <input
+                            type="radio"
+                            id="parking-none-details"
+                            name="parking_option_details"
+                            value="none"
+                            checked={formData.parking_option === 'none'}
+                            onChange={(e) => setFormData({ parking_option: e.target.value as any })}
+                        />
+                        <label htmlFor="parking-none-details">
+                            {getSafeTranslation(t, 'booking.noParking', 'Nessun parcheggio')}
+                        </label>
+                    </div>
+                    <div className="radio-group">
+                        <input
+                            type="radio"
+                            id="parking-street-details"
+                            name="parking_option_details"
+                            value="street"
+                            checked={formData.parking_option === 'street'}
+                            onChange={(e) => setFormData({ parking_option: e.target.value as any })}
+                        />
+                        <label htmlFor="parking-street-details">
+                            {getSafeTranslation(t, 'booking.streetParking', 'Parcheggio su strada')}
+                            <small className="service-note">{getSafeTranslation(t, 'booking.subjectToAvailability', 'Soggetto a disponibilità')}</small>
+                        </label>
+                    </div>
+                    <div className="radio-group">
+                        <input
+                            type="radio"
+                            id="parking-private-details"
+                            name="parking_option_details"
+                            value="private"
+                            checked={formData.parking_option === 'private'}
+                            onChange={(e) => setFormData({ parking_option: e.target.value as any })}
+                        />
+                        <label htmlFor="parking-private-details">
+                            {getSafeTranslation(t, 'booking.privateParking', 'Parcheggio privato riservato e custodito')}
+                        </label>
+                    </div>
+                </div>
+
+                {/* SERVIZI EXTRA dopo scelta ospiti e parcheggio */}
+                <div className="extra-services-section">
+                    <h3>{getSafeTranslation(t, 'booking.extraServices', 'Servizi Extra')}</h3>
+                    <ExtraServices
+                        childrenAges={formData.children_ages}
+                        onServicesChange={handleServicesChange}
+                        calcOptions={quote ? { nights: quote.nights, adults: quote.guests, guests: quote.guests } : undefined}
+                    />
                 </div>
                 {/* ExtraServices ora in step separato dopo le date */}
                 <div className="guest-form">
@@ -728,6 +721,60 @@ const BookingSystem: React.FC = () => {
                         </div>
                     </div>
                 </div>
+                {/* Riepilogo prezzi spostato in fondo per ridurre confusione */}
+                {isLoadingQuote && (
+                    <div className="quote-loading-modern">
+                        <div className="loading-spinner" />
+                        <div className="loading-content">
+                            <h4>{getSafeTranslation(t, 'booking.calculatingQuote', 'Calcolo preventivo...')}</h4>
+                            <p>{getSafeTranslation(t, 'booking.applyingBestRates', 'Applichiamo le migliori tariffe disponibili')}</p>
+                        </div>
+                    </div>
+                )}
+                {quote && !isLoadingQuote && (
+                    <div className="price-banner-horizontal">
+                        <div className="price-banner-content">
+                            <div className="price-summary">
+                                <div className="price-item">
+                                    <span className="price-label">{getSafeTranslation(t, 'booking.accommodation', 'Soggiorno')} ({quote.nights} {quote.nights === 1 ? getSafeTranslation(t, 'booking.night', 'notte') : getSafeTranslation(t, 'booking.nights', 'notti')})</span>
+                                    <span className="price-value">€{quote.basePrice.toFixed(2)}</span>
+                                </div>
+                                {formData.parking_option === 'private' && quote.parkingCost > 0 && (
+                                    <div className="price-item">
+                                        <span className="price-label">🚗 {getSafeTranslation(t, 'booking.parking', 'Parcheggio')}</span>
+                                        <span className="price-value">€{quote.parkingCost.toFixed(2)}</span>
+                                    </div>
+                                )}
+                                {extraServicesCost > 0 && (
+                                    <div className="price-item">
+                                        <span className="price-label">🛎️ {getSafeTranslation(t, 'booking.extraServices', 'Servizi Extra')}</span>
+                                        <span className="price-value">€{extraServicesCost.toFixed(2)}</span>
+                                    </div>
+                                )}
+                                <div className="price-item">
+                                    <span className="price-label">🧹 {getSafeTranslation(t, 'booking.cleaning', 'Pulizia')}</span>
+                                    <span className="price-value">€{quote.cleaningFee.toFixed(2)}</span>
+                                </div>
+                                <div className="price-item">
+                                    <span className="price-label">🏛️ {getSafeTranslation(t, 'booking.touristTax', 'Tassa soggiorno')}</span>
+                                    <span className="price-value">€{quote.touristTax.toFixed(2)}</span>
+                                </div>
+                            </div>
+                            <div className="price-total-section">
+                                <div className="price-total">
+                                    <span className="total-label">{getSafeTranslation(t, 'booking.total', 'Totale')}</span>
+                                    <span className="total-value">€{(quote.totalAmount + extraServicesCost).toFixed(2)}</span>
+                                </div>
+                                {formData.payment_type === 'deposit' && (
+                                    <div className="price-deposit">
+                                        <span className="deposit-label">{getSafeTranslation(t, 'booking.depositRequired', 'Acconto 30%')}</span>
+                                        <span className="deposit-value">€{((quote.totalAmount + extraServicesCost) * 0.30).toFixed(2)}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
                 <div className="step-actions">
                     <button type="button" className="btn-secondary" onClick={()=>setCurrentStep('dates')}>{getSafeTranslation(t, 'booking.back', 'Indietro')}</button>
                     <button 
