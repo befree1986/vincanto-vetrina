@@ -167,8 +167,9 @@ export const useExtraServices = (): ExtraServicesData => {
     const selected = selectedServices.map(serviceId => services.find(s => s.id === serviceId)).filter(Boolean);
     let debugTotal = 0;
     selected.forEach(service => {
-      if (!service || service.included) {
-        console.log('[EXTRA DEBUG][SKIP]', service?.name, 'included:', service?.included);
+      // ❌ SKIP servizi inclusi (gratuiti) - NON devono sommare al totale
+      if (!service || service.included || service.price === 0) {
+        console.log('[EXTRA DEBUG][SKIP INCLUDED]', service?.name, 'included:', service?.included, 'price:', service?.price);
         return;
       }
       let multiplier = 1;
@@ -231,11 +232,8 @@ export const useExtraServices = (): ExtraServicesData => {
     fetchServices();
   }, []);
 
-  // Ricarica servizi ogni 10 secondi per aggiornamenti admin più rapidi
-  useEffect(() => {
-    const interval = setInterval(fetchServices, 10000);
-    return () => clearInterval(interval);
-  }, []);
+  // 🔥 RIMOSSO LOOP REFRESH AUTOMATICO - causava troppi re-render
+  // Usa refreshServices() manualmente se serve aggiornare
 
   // 🔥 NUOVO: Filtra solo servizi attivi per il frontend
   const activeServices = services.filter(service => service.active !== false);

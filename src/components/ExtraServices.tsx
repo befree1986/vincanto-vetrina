@@ -28,12 +28,11 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
   React.useEffect(() => {
     if (onServicesChange) {
       const selected = getSelectedServices();
-      const includedServices = services.filter(s => s.included);
-      const mergedServices = [
-        ...selected,
-        ...includedServices.filter(s => !selected.find(sel => sel.id === s.id))
-      ];
-      onServicesChange(mergedServices, getTotalCost());
+      // ❌ ESCLUDI servizi inclusi (gratuiti) dal calcolo
+      const paidServices = selected.filter(s => !s.included && s.price > 0);
+      const totalCost = getTotalCost();
+      console.log('🛍️ ExtraServices onChange:', { selected: selected.length, paid: paidServices.length, totalCost });
+      onServicesChange(paidServices, totalCost);
     }
   }, [selectedServices, services, onServicesChange, calcOptions]);
 

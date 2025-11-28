@@ -211,10 +211,13 @@ const BookingSystem: React.FC = () => {
             return;
         }
         
-        const totalCost = selectedExtraServices.reduce((total, service) => {
+        // ❌ ESCLUDI servizi inclusi (gratuiti) dal calcolo - SICUREZZA DOPPIA
+        const paidServices = selectedExtraServices.filter(s => !s.included && s.price > 0);
+        const totalCost = paidServices.reduce((total, service) => {
             return total + (service.price || 0);
         }, 0);
         
+        console.log('💰 BookingSystem extraCost:', { total: selectedExtraServices.length, paid: paidServices.length, cost: totalCost });
         setExtraServicesCost(totalCost);
     }, [quote, selectedExtraServices]);
 
