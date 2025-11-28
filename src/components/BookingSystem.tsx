@@ -359,12 +359,26 @@ const BookingSystem: React.FC = () => {
     const renderDateStep = (): JSX.Element => (
         <div className="booking-step-content step-transition">
             <h2>Seleziona le Date</h2>
+            {dynamicPricing.minStay > 0 && (
+                <div className="min-stay-info" style={{
+                    background: '#e8f5e9',
+                    border: '1px solid #4caf50',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    marginBottom: '16px',
+                    color: '#2e7d32',
+                    fontWeight: 500
+                }}>
+                    ℹ️ Soggiorno minimo richiesto: <strong>{dynamicPricing.minStay} {dynamicPricing.minStay === 1 ? 'notte' : 'notti'}</strong>
+                </div>
+            )}
             <BookingCalendar
                 selectedCheckIn={formData.check_in_date}
                 selectedCheckOut={formData.check_out_date}
                 onDateChange={handleDateSelection}
                 occupiedDates={calendar?.occupied_dates || []}
                 isLoading={isLoadingCalendar}
+                minNights={dynamicPricing.minStay || 3}
             />
         </div>
     );
@@ -493,6 +507,17 @@ const BookingSystem: React.FC = () => {
         return (
             <div className="booking-step-content step-transition">
                 <h2>{getSafeTranslation(t, 'booking.detailsTitle', 'Dettagli Prenotazione')}</h2>
+                
+                {/* SERVIZI EXTRA: Spostati qui da step dates */}
+                <div className="extra-services-section">
+                    <h3>{getSafeTranslation(t, 'booking.extraServices', 'Servizi Extra')}</h3>
+                    <ExtraServices
+                        childrenAges={formData.children_ages}
+                        onServicesChange={handleServicesChange}
+                        calcOptions={quote ? { nights: quote.nights, adults: quote.guests, guests: quote.guests } : undefined}
+                    />
+                </div>
+
                 {isLoadingQuote && (
                     <div className="quote-loading-modern">
                         <div className="loading-spinner" />
@@ -608,11 +633,7 @@ const BookingSystem: React.FC = () => {
                         </div>
                     </div>
                 </div>
-                <ExtraServices
-                    childrenAges={formData.children_ages}
-                    onServicesChange={handleServicesChange}
-                    calcOptions={quote ? { nights: quote.nights, adults: quote.guests, guests: quote.guests } : undefined}
-                />
+                {/* ExtraServices ora in step separato dopo le date */}
                 <div className="guest-form">
                     <h3>{getSafeTranslation(t, 'booking.guestInfo', 'Informazioni Ospite')}</h3>
                     <div className="form-row">
@@ -704,6 +725,7 @@ const BookingSystem: React.FC = () => {
                         {isLoadingQuote ? getSafeTranslation(t, 'booking.processing', 'Elaborazione...') : getSafeTranslation(t, 'booking.continueToPayment', 'Continua al Pagamento')}
                     </button>
                 </div>
+                {/* ℹ️ NOTA: PriceBreakdown nascosto qui - visibile solo in step payment/confirmation */}
             </div>
         );
     };

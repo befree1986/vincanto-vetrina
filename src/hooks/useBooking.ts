@@ -256,12 +256,13 @@ export function useBooking(): BookingState {
     // Booking submission
     const submitBooking = useCallback(async () => {
         if (!validateForm()) {
-            return;
+            throw new Error('Form non valido');
         }
         
         if (!formData.check_in_date || !formData.check_out_date) {
-            setBookingError('Date check-in e check-out obbligatorie');
-            return;
+            const error = 'Date check-in e check-out obbligatorie';
+            setBookingError(error);
+            throw new Error(error);
         }
         
         setIsCreatingBooking(true);
@@ -286,8 +287,11 @@ export function useBooking(): BookingState {
             
             const response = await createBooking(bookingRequest);
             setBookingResult(response);
+            return response; // ✅ RETURN il risultato per BookingSystem
         } catch (error) {
-            setBookingError(handleApiError(error));
+            const errorMsg = handleApiError(error);
+            setBookingError(errorMsg);
+            throw new Error(errorMsg); // ✅ THROW errore per catch in BookingSystem
         } finally {
             setIsCreatingBooking(false);
         }

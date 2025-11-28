@@ -786,9 +786,12 @@
 }
 
 /* 📱 RESPONSIVE DESIGN MODERNO */
+
+/* TABLET E NOTEBOOK */
 @media (max-width: 1024px) {
   .booking-system {
     padding: 16px;
+    max-width: 100%;
   }
 
   .booking-content {
@@ -822,7 +825,12 @@
   }
 }
 
+/* MOBILE LARGE (TABLET) */
 @media (max-width: 768px) {
+  .booking-system {
+    padding: 12px;
+  }
+
   .quote-loading-modern,
   .quote-error-modern {
     flex-direction: column;
@@ -837,23 +845,33 @@
   }
   
   .booking-steps {
-    padding: 16px;
-    margin-bottom: 24px;
+    padding: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
   }
   
   .step {
-    padding: 0 12px;
-    font-size: 14px;
+    padding: 0 8px;
+    font-size: 13px;
+    min-width: 80px;
   }
   
   .step-number {
-    width: 32px;
-    height: 32px;
-    font-size: 14px;
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
+  }
+
+  .step-label {
+    font-size: 11px;
   }
 
   .booking-content {
-    padding: 24px;
+    padding: 20px;
+  }
+
+  .booking-step-content h2 {
+    font-size: 1.5rem;
   }
 
   .price-summary {
@@ -862,7 +880,7 @@
   }
 
   .price-banner-horizontal {
-    padding: 20px;
+    padding: 16px;
   }
 
   .price-total .total-value {
@@ -872,22 +890,88 @@
   .guests-grid {
     grid-template-columns: 1fr;
   }
+
+  .form-row {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .input-group {
+    width: 100%;
+  }
+
+  .step-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .step-actions button {
+    width: 100%;
+  }
+
+  .payment-method-selection,
+  .payment-type-selection {
+    gap: 12px;
+  }
+
+  .radio-group {
+    padding: 12px;
+  }
+
+  .extra-services-section {
+    padding: 16px;
+  }
 }
 
+/* MOBILE SMALL */
 @media (max-width: 480px) {
   .booking-system {
-    padding: 12px;
+    padding: 8px;
     margin: 0;
+    min-height: auto;
   }
   
   .booking-steps {
     flex-direction: column;
-    gap: 12px;
-    padding: 16px;
+    gap: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .step {
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 8px;
+    width: 100%;
+  }
+
+  .step-number {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+    margin-right: 12px;
+  }
+
+  .step-label {
+    font-size: 14px;
+    font-weight: 500;
   }
   
   .step:not(:last-child)::after {
     display: none;
+  }
+  
+  .booking-content {
+    padding: 16px;
+  }
+
+  .booking-step-content {
+    padding: 0;
+  }
+
+  .booking-step-content h2 {
+    font-size: 1.3rem;
+    margin-bottom: 16px;
   }
   
   .quote-loading-modern,

@@ -28,10 +28,12 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
     onDateChange,
     occupiedDates = [],
     isLoading = false,
+    minNights = 3, // Default 3 notti minime
     className = ''
 }) => {
     const [startDate, setStartDate] = useState<Date | null>(selectedCheckIn);
     const [endDate, setEndDate] = useState<Date | null>(selectedCheckOut);
+    const [minStayError, setMinStayError] = useState<string | null>(null);
 
     // Aggiorna lo stato interno quando cambiano le props
     useEffect(() => {
@@ -47,8 +49,23 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
         
         // 🔥 FIX: Chiama il callback SOLO quando abbiamo entrambe le date complete
         if (start && end) {
-            console.log('📅 Range completo selezionato:', { start, end });
+            // ✅ VALIDAZIONE MINIMO NOTTI
+            const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24));
+            
+            if (nights < minNights) {
+                setMinStayError(`Il soggiorno minimo è di ${minNights} notti. Hai selezionato solo ${nights} ${nights === 1 ? 'notte' : 'notti'}.`);
+                // Reset delle date se non rispettano il minimo
+                setStartDate(null);
+                setEndDate(null);
+                onDateChange(null, null);
+                return;
+            }
+            
+            setMinStayError(null);
+            console.log('📅 Range completo selezionato:', { start, end, nights });
             onDateChange(start, end);
+        } else {
+            setMinStayError(null);
         }
         // Non chiamiamo onDateChange con date incomplete
     };
@@ -194,7 +211,21 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
             </div>
 
             {/* Informazioni selezione */}
-            {startDate && endDate && (
+            {minStayError && (
+                <div className="min-stay-error" style={{ 
+                    background: '#fee', 
+                    border: '1px solid #fcc', 
+                    padding: '12px', 
+                    borderRadius: '8px', 
+                    color: '#c00',
+                    fontWeight: 600,
+                    marginTop: '16px'
+                }}>
+                    ⚠️ {minStayError}
+                </div>
+            )}
+
+            {startDate && endDate && !minStayError && (
                 <div className="selection-info">
                     <div className="date-display">
                         <div className="check-in">

@@ -7,6 +7,7 @@ interface PricingData {
   cleaningFee: number;
   touristTax: number;
   additionalGuestPrice: number;
+  minStay: number; // Minimo notti dal pannello admin
   loading: boolean;
   error: string | null;
 }
@@ -18,6 +19,7 @@ export const useDynamicPricing = (): PricingData => {
     cleaningFee: 50, // Fallback
     touristTax: 2, // Fallback
     additionalGuestPrice: 75, // Fallback
+    minStay: 3, // Fallback: 3 notti minime
     loading: true,
     error: null
   });
@@ -46,6 +48,7 @@ export const useDynamicPricing = (): PricingData => {
               cleaningFee: parseFloat(config.cleaningFee) || prev.cleaningFee,
               touristTax: parseFloat(config.touristTaxAdult) || prev.touristTax,
               additionalGuestPrice: parseFloat(config.priceGroup1to2) || prev.additionalGuestPrice,
+              minStay: parseInt(config.minStay) || 3, // Carica minStay dal DB, fallback a 3
               loading: false,
               error: null
             }));
