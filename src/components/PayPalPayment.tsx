@@ -3,11 +3,12 @@ import { log } from '../utils/logger';
 import { useTranslation } from 'react-i18next';
 
 interface PayPalPaymentProps {
+  bookingId: string;
   amount: number;
-  currency?: string;
-  bookingData: any;
-  onSuccess: (details: any) => void;
-  onError: (error: any) => void;
+  customerEmail: string;
+  customerName: string;
+  onPaymentSuccess: (result: any) => void;
+  onPaymentError: (error: string) => void;
   onCancel: () => void;
 }
 
@@ -18,11 +19,12 @@ interface PayPalWindow extends Window {
 declare const window: PayPalWindow;
 
 const PayPalPayment: React.FC<PayPalPaymentProps> = ({
+  bookingId,
   amount,
-  currency = 'EUR',
-  bookingData,
-  onSuccess,
-  onError,
+  customerEmail,
+  customerName,
+  onPaymentSuccess,
+  onPaymentError,
   onCancel
 }) => {
   const { t } = useTranslation();
@@ -41,7 +43,7 @@ const PayPalPayment: React.FC<PayPalPaymentProps> = ({
 
     // Load PayPal script
     const script = document.createElement('script');
-    script.src = `https://www.paypal.com/sdk/js?client-id=${import.meta.env.VITE_PAYPAL_CLIENT_ID}&currency=${currency}&components=buttons`;
+    script.src = `https://www.paypal.com/sdk/js?client-id=${import.meta.env.VITE_PAYPAL_CLIENT_ID}&currency=EUR&components=buttons`;
     script.async = true;
     
     script.onload = () => {
@@ -64,7 +66,7 @@ const PayPalPayment: React.FC<PayPalPaymentProps> = ({
         existingScript.remove();
       }
     };
-  }, [currency]);
+  }, []);
 
   const renderPayPalButtons = () => {
     if (!window.paypal || !paypalLoaded) return;
@@ -87,13 +89,13 @@ const PayPalPayment: React.FC<PayPalPaymentProps> = ({
       createOrder: (_data: any, actions: any) => {
         return actions.order.create({
           purchase_units: [{
-            description: `Prenotazione Vincanto - ${bookingData.checkIn} / ${bookingData.checkOut}`,
+            description: `Prenotazione Vincanto - ${customerName} - Booking ID: ${bookingId}`,
             amount: {
-              currency_code: currency,
+              currency_code: 'EUR',
               value: amount.toFixed(2)
             },
-            custom_id: bookingData.tempId || Date.now().toString(),
-            invoice_id: `VINCANTO-${Date.now()}`,
+            custom_id: bookingId,
+            invoice_id: `VINCANTO-${bookingId}`,
             soft_descriptor: 'VINCANTO'
           }],
           application_context: {
@@ -119,16 +121,18 @@ const PayPalPayment: React.FC<PayPalPaymentProps> = ({
             body: JSON.stringify({
               orderID: data.orderID,
               paypalOrder: order,
-              bookingData: bookingData
+              bookingId: bookingId,
+              customerEmail: customerEmail,
+              customerName: customerName
             }),
           });
 
           if (response.ok) {
             const result = await response.json();
-            onSuccess({
+            onPaymentSuccess({
               orderId: data.orderID,
               paypalOrder: order,
-              bookingId: result.bookingId
+              bookingId: bookingId
             });
           } else {
             throw new Error('Errore nel processamento del pagamento');
@@ -136,7 +140,7 @@ const PayPalPayment: React.FC<PayPalPaymentProps> = ({
           
         } catch (error) {
           console.error('PayPal payment error:', error);
-          onError(error);
+          onPaymentError(error instanceof Error ? error.message : String(error));
         }
       },
 
@@ -148,7 +152,7 @@ const PayPalPayment: React.FC<PayPalPaymentProps> = ({
       onError: (err: any) => {
         console.error('PayPal button error:', err);
         setError('Errore durante il pagamento PayPal');
-        onError(err);
+        onPaymentError(err instanceof Error ? err.message : String(err));
       }
     }).render('#paypal-button-container');
   };

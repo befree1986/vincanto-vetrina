@@ -889,6 +889,47 @@ const BookingSystem: React.FC = () => {
                             )}
                         </div>
 
+                        {/* Form di pagamento Stripe/PayPal */}
+                        {showPayment && bookingResult && formData.payment_method === 'stripe' && quote && (
+                            <div className="payment-form-section">
+                                <h3>💳 {getSafeTranslation(t, 'booking.cardPayment', 'Pagamento con Carta')}</h3>
+                                <StripePayment
+                                    bookingId={bookingResult.booking_id || bookingResult.id?.toString() || ''}
+                                    amount={formData.payment_type === 'deposit' 
+                                        ? Math.round(((quote.totalAmount + extraServicesCost) * 0.30) * 100) / 100
+                                        : (quote.totalAmount + extraServicesCost)}
+                                    customerEmail={formData.guest_email}
+                                    customerName={`${formData.guest_name} ${formData.guest_surname}`}
+                                    onPaymentSuccess={handlePaymentSuccess}
+                                    onPaymentError={(error) => setError(error)}
+                                    onCancel={() => {
+                                        setShowPayment(false);
+                                        setCurrentStep('details');
+                                    }}
+                                />
+                            </div>
+                        )}
+
+                        {showPayment && bookingResult && formData.payment_method === 'paypal' && quote && (
+                            <div className="payment-form-section">
+                                <h3>🅿️ {getSafeTranslation(t, 'booking.paypalPayment', 'Pagamento con PayPal')}</h3>
+                                <PayPalPayment
+                                    bookingId={bookingResult.booking_id || bookingResult.id?.toString() || ''}
+                                    amount={formData.payment_type === 'deposit' 
+                                        ? Math.round(((quote.totalAmount + extraServicesCost) * 0.30) * 100) / 100
+                                        : (quote.totalAmount + extraServicesCost)}
+                                    customerEmail={formData.guest_email}
+                                    customerName={`${formData.guest_name} ${formData.guest_surname}`}
+                                    onPaymentSuccess={handlePaymentSuccess}
+                                    onPaymentError={(error) => setError(error)}
+                                    onCancel={() => {
+                                        setShowPayment(false);
+                                        setCurrentStep('details');
+                                    }}
+                                />
+                            </div>
+                        )}
+
                         {/* Azioni per tornare ai dettagli o procedere */}
                         <div className="step-actions">
                             <button 
@@ -991,21 +1032,12 @@ const BookingSystem: React.FC = () => {
                 {showPayment && formData.payment_method === 'paypal' && bookingResult && (
                     <div className="booking-step-content">
                         <PayPalPayment
+                            bookingId={bookingResult.booking_id}
                             amount={bookingResult.payment_amount}
-                            bookingData={{
-                                tempId: bookingResult.booking_id,
-                                checkIn: formData.check_in_date?.toISOString().split('T')[0],
-                                checkOut: formData.check_out_date?.toISOString().split('T')[0],
-                                guestName: `${formData.guest_name} ${formData.guest_surname}`,
-                                guestEmail: formData.guest_email,
-                                guestPhone: formData.guest_phone,
-                                adults: formData.num_adults,
-                                children: formData.num_children,
-                                childrenAges: formData.children_ages,
-                                specialRequests: formData.guest_message
-                            }}
-                            onSuccess={handlePaymentSuccess}
-                            onError={(error: any) => setError(`Errore pagamento PayPal: ${error.message || 'Errore sconosciuto'}`)}
+                            customerEmail={formData.guest_email}
+                            customerName={`${formData.guest_name} ${formData.guest_surname}`}
+                            onPaymentSuccess={handlePaymentSuccess}
+                            onPaymentError={(error: string) => setError(`Errore pagamento PayPal: ${error}`)}
                             onCancel={() => setError('Pagamento PayPal annullato')}
                         />
                     </div>
