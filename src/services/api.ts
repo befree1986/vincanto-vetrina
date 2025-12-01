@@ -1,7 +1,8 @@
 import axios from 'axios';
 
-// Configurazione base URL semplificata per emergenza
-const API_BASE_URL = '/api';
+// Base URL: usa variabile d'ambiente se presente, altrimenti fallback a '/api'
+// In dev puoi impostare VITE_API_BASE_URL all'URL di produzione per evitare 404 locali
+const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL || '/api';
 
 // Configurazione Axios
 const api = axios.create({

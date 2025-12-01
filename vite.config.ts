@@ -39,54 +39,26 @@ export default defineConfig({
   },
   // 🔧 PROXY CONFIGURATION - API UNIFICATA (Consolidamento completo)
   server: {
-    proxy: {
-      // 🎯 API UNIFICATA - Tutte le chiamate API vanno alla stessa destinazione
-      '/api/unified': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-        secure: false
-      },
-      
-      // 🔄 BACKWARD COMPATIBILITY - Redirect automatico verso API unificata
-      '/api/pricing': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace('/api/pricing', '/api/unified?action=pricing')
-      },
-      '/api/booking': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace('/api/booking', '/api/unified?action=booking')
-      },
-      '/api/admin': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace('/api/admin', '/api/unified?action=settings')
-      },
-      '/api/quote': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace('/api/quote', '/api/unified?action=quote')
-      },
-      '/api/utilities': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace('/api/utilities', '/api/unified?action=sync-calendars')
-      },
-      
-      // 🏥 Health check endpoint
-      '/health': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-        secure: false
-      }
-      
-      // ✅ CONSOLIDAMENTO: 5 API → 1 API unificata con routing intelligente
-    }
+    proxy: (() => {
+      // Usa l'API di produzione in dev se USE_PROD_API=true
+      const useProd = process.env.USE_PROD_API === 'true';
+      const target = useProd
+        ? 'https://vincanto-vetrina.vercel.app'
+        : 'http://localhost:3000';
+      return {
+        // Proxy generico: tutte le chiamate /api/*
+        '/api': {
+          target,
+          changeOrigin: true,
+          secure: false,
+        },
+        // Health per comodità
+        '/health': {
+          target,
+          changeOrigin: true,
+          secure: false,
+        }
+      };
+    })()
   }
 });
