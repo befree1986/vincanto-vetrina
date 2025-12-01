@@ -724,6 +724,57 @@ export default async function handler(req, res) {
       }
     }
 
+    // ⚡ PAYPAL CAPTURE ENDPOINT (chiamato da PayPalPayment.tsx dopo onApprove)
+    if (action === 'paypal-capture') {
+      if (req.method === 'POST') {
+        try {
+          const { orderID, paypalOrder, bookingId, customerEmail, customerName } = req.body;
+          
+          console.log('📦 PayPal Capture ricevuto:', { orderID, bookingId, customerEmail });
+          
+          // Verifica che l'ordine PayPal sia stato catturato con successo
+          if (!paypalOrder || paypalOrder.status !== 'COMPLETED') {
+            return res.status(400).json({
+              success: false,
+              message: 'Ordine PayPal non completato',
+              status: paypalOrder?.status || 'unknown'
+            });
+          }
+
+          // Estrai amount dalla capture
+          const captureAmount = parseFloat(
+            paypalOrder.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.value || 0
+          );
+
+          console.log('✅ PayPal payment completato:', {
+            orderID,
+            amount: captureAmount,
+            status: paypalOrder.status
+          });
+
+          // Log del pagamento nel database (opzionale)
+          // Qui potresti salvare i dettagli PayPal nella tabella bookings
+          
+          return res.status(200).json({
+            success: true,
+            message: 'Pagamento PayPal confermato',
+            orderID: orderID,
+            amount: captureAmount,
+            status: 'completed',
+            paypalStatus: paypalOrder.status
+          });
+
+        } catch (error) {
+          console.error('❌ Errore PayPal capture:', error);
+          return res.status(500).json({
+            success: false,
+            message: 'Errore nella conferma del pagamento PayPal',
+            error: error.message
+          });
+        }
+      }
+    }
+
     // ⚡ NUOVO ENDPOINT: Aggiorna status booking dopo payment success
     if (action === 'update-booking-status') {
       if (req.method === 'POST') {

@@ -117,13 +117,14 @@ const PayPalPayment: React.FC<PayPalPaymentProps> = ({
         try {
           const order = await actions.order.capture();
           
-          // Send payment data to backend
-          const response = await fetch('/api/payment/paypal/capture', {
+          // Send payment data to backend - ⚡ Updated to use unified endpoint
+          const response = await fetch('/api/unified', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
+              action: 'paypal-capture',
               orderID: data.orderID,
               paypalOrder: order,
               bookingId: bookingId,
@@ -137,7 +138,8 @@ const PayPalPayment: React.FC<PayPalPaymentProps> = ({
             onPaymentSuccess({
               orderId: data.orderID,
               paypalOrder: order,
-              bookingId: bookingId
+              bookingId: bookingId,
+              paymentId: data.orderID // ⚡ Add paymentId for updateBookingStatus
             });
           } else {
             throw new Error('Errore nel processamento del pagamento');
