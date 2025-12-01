@@ -1,6 +1,7 @@
 // API COMPLETAMENTE UNIFICATA - Vincanto System
 // Consolidation of all API endpoints in a single file
 import { Pool } from 'pg';
+import Stripe from 'stripe'; // ⚡ ES Module import per Vercel serverless
 import nodemailer from 'nodemailer';
 import { renderEmailTemplate } from '../email/templates/index.js';
 import { sendEmailWithAdminCopy } from '../email/emailSender.js';
@@ -662,7 +663,7 @@ export default async function handler(req, res) {
       if (req.method === 'POST') {
         try {
           const { amount, currency, bookingId, guestEmail } = req.body;
-          const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+          const stripe = new Stripe(process.env.STRIPE_SECRET_KEY); // ⚡ Use imported Stripe
           const paymentIntent = await stripe.paymentIntents.create({
             amount: Math.round(amount * 100),
             currency,
