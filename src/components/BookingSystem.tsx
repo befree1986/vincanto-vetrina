@@ -898,8 +898,8 @@ const BookingSystem: React.FC = () => {
                                 <StripePayment
                                     bookingId={bookingResult.booking_id || bookingResult.id?.toString() || ''}
                                     amount={formData.payment_type === 'deposit' 
-                                        ? Math.round(((quote.totalAmount + extraServicesCost) * 0.30) * 100) / 100
-                                        : (quote.totalAmount + extraServicesCost)}
+                                        ? Math.round((((quote?.totalAmount || 0) + (extraServicesCost || 0)) * 0.30) * 100) / 100
+                                        : ((quote?.totalAmount || 0) + (extraServicesCost || 0))}
                                     customerEmail={formData.guest_email}
                                     customerName={`${formData.guest_name} ${formData.guest_surname}`}
                                     onPaymentSuccess={handlePaymentSuccess}
@@ -918,8 +918,8 @@ const BookingSystem: React.FC = () => {
                                 <PayPalPayment
                                     bookingId={bookingResult.booking_id || bookingResult.id?.toString() || ''}
                                     amount={formData.payment_type === 'deposit' 
-                                        ? Math.round(((quote.totalAmount + extraServicesCost) * 0.30) * 100) / 100
-                                        : (quote.totalAmount + extraServicesCost)}
+                                        ? Math.round((((quote?.totalAmount || 0) + (extraServicesCost || 0)) * 0.30) * 100) / 100
+                                        : ((quote?.totalAmount || 0) + (extraServicesCost || 0))}
                                     customerEmail={formData.guest_email}
                                     customerName={`${formData.guest_name} ${formData.guest_surname}`}
                                     onPaymentSuccess={handlePaymentSuccess}

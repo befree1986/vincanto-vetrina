@@ -87,12 +87,17 @@ const PayPalPayment: React.FC<PayPalPaymentProps> = ({
       },
       
       createOrder: (_data: any, actions: any) => {
+        // Controllo di sicurezza per amount
+        const safeAmount = typeof amount === 'number' && !isNaN(amount) && amount > 0 ? amount : 0;
+        if (safeAmount === 0) {
+          console.error('⚠️ PayPal: amount non valido:', amount);
+        }
         return actions.order.create({
           purchase_units: [{
             description: `Prenotazione Vincanto - ${customerName} - Booking ID: ${bookingId}`,
             amount: {
               currency_code: 'EUR',
-              value: amount.toFixed(2)
+              value: safeAmount.toFixed(2)
             },
             custom_id: bookingId,
             invoice_id: `VINCANTO-${bookingId}`,
