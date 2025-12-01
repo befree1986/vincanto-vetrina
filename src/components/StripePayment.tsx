@@ -187,8 +187,19 @@ const StripePayment: React.FC<StripePaymentProps> = (props) => {
     const [clientSecret, setClientSecret] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [retryCount, setRetryCount] = useState(0); // ⚡ Track retry attempts
+    const MAX_RETRIES = 3; // ⚡ Max retry limit
 
     useEffect(() => {
+        // ⚡ Stop infinite retries
+        if (retryCount >= MAX_RETRIES) {
+            const errorMsg = 'Impossibile inizializzare il pagamento dopo diversi tentativi. Verifica la connessione e riprova.';
+            setError(errorMsg);
+            setIsLoading(false);
+            props.onPaymentError(errorMsg);
+            return;
+        }
+
         const initializePayment = async () => {
             try {
                 setIsLoading(true);
@@ -198,7 +209,8 @@ const StripePayment: React.FC<StripePaymentProps> = (props) => {
                     booking_id: props.bookingId,
                     amount: props.amount,
                     customer_email: props.customerEmail,
-                    customer_name: props.customerName
+                    customer_name: props.customerName,
+                    attempt: retryCount + 1
                 });
 
                 const response = await createStripePaymentIntent({
@@ -210,18 +222,28 @@ const StripePayment: React.FC<StripePaymentProps> = (props) => {
 
                 log('✅ Payment Intent creato:', response);
                 setClientSecret(response.client_secret);
+                setRetryCount(0); // ⚡ Reset retry count on success
             } catch (error) {
-                console.error('❌ Errore Payment Intent:', error);
+                console.error(`❌ Errore Payment Intent (tentativo ${retryCount + 1}/${MAX_RETRIES}):`, error);
                 const errorMessage = handleApiError(error);
-                setError(errorMessage);
-                props.onPaymentError(errorMessage);
+                
+                // ⚡ Increment retry only if under limit
+                if (retryCount < MAX_RETRIES - 1) {
+                    setRetryCount(prev => prev + 1);
+                    // Will retry via useEffect dependency change
+                } else {
+                    // ⚡ Max retries reached, show permanent error
+                    setError(errorMessage);
+                    props.onPaymentError(errorMessage);
+                }
             } finally {
                 setIsLoading(false);
             }
         };
 
         initializePayment();
-    }, [props.bookingId, props.amount, props.onPaymentError]);
+    }, [props.bookingId, props.amount, retryCount]); // ⚡ Add retryCount dependency for auto-retry
+
 
     if (isLoading) {
         return (

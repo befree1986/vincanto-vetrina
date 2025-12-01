@@ -83,6 +83,7 @@ export interface CreateBookingRequest {
     payment_type: 'deposit' | 'full';
     guest_message?: string;
     total_amount?: number;
+    status?: 'draft' | 'pending' | 'confirmed'; // ⚡ Allow setting initial status
 }
 
 export interface CreateBookingResponse {
@@ -171,10 +172,28 @@ export async function createBooking(data: CreateBookingRequest): Promise<CreateB
         paymentMethod: data.payment_method,
         paymentType: data.payment_type,
         specialRequests: data.guest_message || '',
-        totalPrice: data.total_amount || 0
+        totalPrice: data.total_amount || 0,
+        status: data.status || 'pending' // ⚡ Pass status if provided
     };
     
     const response = await api.post('/unified?action=booking', adaptedData);
+    return response.data;
+}
+
+/**
+ * Aggiorna lo status di una prenotazione dopo pagamento
+ */
+export async function updateBookingStatus(bookingId: string, status: 'confirmed' | 'cancelled', paymentData?: {
+    payment_id?: string;
+    payment_status?: string;
+    amount_paid?: number;
+}): Promise<{ success: boolean; message: string }> {
+    const response = await api.post('/unified', {
+        action: 'update-booking-status',
+        booking_id: bookingId,
+        status: status,
+        ...paymentData
+    });
     return response.data;
 }
 
@@ -304,7 +323,8 @@ export interface StripePaymentIntentResponse {
  * Crea Payment Intent per Stripe
  */
 export async function createStripePaymentIntent(data: StripePaymentIntentRequest): Promise<StripePaymentIntentResponse> {
-    const response = await api.post('/stripe/create-payment-intent', {
+    const response = await api.post('/unified', {
+        action: 'stripe-payment-intent',
         booking_id: data.booking_id,
         amount: data.amount,
         customer_email: data.customer_email || '',
@@ -317,7 +337,8 @@ export async function createStripePaymentIntent(data: StripePaymentIntentRequest
  * Conferma pagamento Stripe
  */
 export async function confirmStripePayment(paymentIntentId: string) {
-    const response = await api.post('/stripe/confirm-payment', {
+    const response = await api.post('/unified', {
+        action: 'stripe-confirm-payment',
         payment_intent_id: paymentIntentId
     });
     return response.data;

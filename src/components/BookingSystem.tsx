@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useBooking } from '../hooks/useBooking';
 import { useDynamicPricing } from '../hooks/useDynamicPricing';
+import { updateBookingStatus } from '../services/api'; // ⚡ Import update function
 import BookingCalendar from './BookingCalendar';
 import ExtraServices from './ExtraServices';
 import './BookingSystem.css';
@@ -252,59 +253,40 @@ const BookingSystem: React.FC = () => {
 
     const handlePaymentSuccess = async (data: any) => {
         try {
+            // ⚡ NUOVO FLUSSO: Aggiorna booking DRAFT → CONFIRMED dopo payment success
+            // Non creare nuovo booking - esiste già come DRAFT da handleDetailsSubmit()
+            
+            if (!bookingResult?.booking_id) {
+                throw new Error('Booking ID mancante - impossibile confermare pagamento');
+            }
+
             // Calcola l'importo pagato (acconto o totale) INCLUSI SERVIZI EXTRA
             const totalWithExtras = (quote?.totalAmount || 0) + extraServicesCost;
             const amountPaid = formData.payment_type === 'deposit' && quote
                 ? Math.round(totalWithExtras * 0.3 * 100) / 100
                 : totalWithExtras;
 
-            // Prepara i dati per il salvataggio DB
-            const bookingData = {
-                guest_name: formData.guest_name,
-                guest_surname: formData.guest_surname,
-                guest_email: formData.guest_email,
-                guest_phone: formData.guest_phone,
-                check_in_date: formData.check_in_date?.toISOString().split('T')[0],
-                check_out_date: formData.check_out_date?.toISOString().split('T')[0],
-                adults: formData.num_adults,
-                children: formData.num_children,
-                children_ages: formData.children_ages,
-                parking_option: formData.parking_option,
-                payment_method: formData.payment_method,
-                payment_type: formData.payment_type,
-                special_requests: formData.guest_message,
-                email: formData.guest_email,
-                phone: formData.guest_phone,
-                guests: formData.num_adults + formData.num_children
-            };
-
-            // Chiama /api/booking/confirm per salvare nel DB
-            const response = await fetch('/api/booking/confirm', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    payment_method: formData.payment_method,
-                    payment_status: 'success',
+            // Aggiorna booking da DRAFT a CONFIRMED con dati pagamento
+            const updateResult = await updateBookingStatus(
+                bookingResult.booking_id,
+                'confirmed',
+                {
                     payment_id: data?.payment_intent_id || data?.paymentId || null,
-                    amount: amountPaid,
-                    total_amount: quote?.totalAmount || 0,
-                    booking_data: bookingData
-                })
-            });
+                    payment_status: 'success',
+                    amount_paid: amountPaid
+                }
+            );
 
-            const result = await response.json();
-            
-            if (!result.success) {
-                throw new Error(result.error || 'Errore salvataggio prenotazione');
+            if (!updateResult.success) {
+                throw new Error(updateResult.message || 'Errore aggiornamento booking');
             }
 
-            // Aggiorna il risultato con il booking ID reale dal database
+            // Aggiorna stato locale con dati pagamento
             setBookingResult({
                 ...bookingResult,
                 ...data,
-                booking_id: result.bookingId || result.booking?.bookingId,
-                id: result.id || result.booking?.id,
-                payment_amount: amountPaid
+                payment_amount: amountPaid,
+                payment_status: 'success'
             });
 
             // Segna il pagamento come completato
@@ -313,7 +295,7 @@ const BookingSystem: React.FC = () => {
             setCurrentStep('confirmation');
         } catch (error: any) {
             console.error('Errore conferma prenotazione:', error);
-            setError(`Pagamento riuscito ma errore nel salvataggio: ${error.message}. Contattaci per assistenza.`);
+            setError(`Pagamento riuscito ma errore nel salvataggio: ${error.message}. Contattaci con il codice prenotazione ${bookingResult?.booking_id || 'N/A'}.`);
         }
     };
 
@@ -417,19 +399,22 @@ const BookingSystem: React.FC = () => {
         try {
             // ✅ Calcola totale completo (quote + servizi extra)
             const totalAmount = quote ? (quote.totalAmount + extraServicesCost) : 0;
-            const result: any = await submitBooking(totalAmount);
-            setBookingResult(result || null);
             
             // Reset flag pagamento completato quando si richiede un nuovo pagamento
             setPaymentCompleted(false);
             
             // Controlla il metodo di pagamento per determinare il flusso
             if (formData.payment_method === 'stripe' || formData.payment_method === 'paypal') {
-                // Pagamenti online: mostra form pagamento
+                // ⚡ PAGAMENTI ONLINE: Crea booking DRAFT (serve bookingId per payment intent)
+                // Verrà aggiornato a CONFIRMED in handlePaymentSuccess() dopo verifica pagamento
+                const result: any = await submitBooking(totalAmount, { status: 'draft' });
+                setBookingResult(result || null);
                 setShowPayment(true);
                 setCurrentStep('payment');
             } else if (formData.payment_method === 'bank_transfer') {
-                // Bonifico bancario: salva come pending e mostra istruzioni
+                // Bonifico bancario: crea booking subito come PENDING (pagamento offline)
+                const result: any = await submitBooking(totalAmount, { status: 'pending' });
+                setBookingResult(result || null);
                 await handleBankTransferBooking();
             } else {
                 // Metodo non riconosciuto: errore

@@ -482,6 +482,9 @@ export default async function handler(req, res) {
           
           console.log('✅ Dati normalizzati:', { checkin, checkout, guests, adults, children, firstName, lastName, email, phone, totalAmount });
           
+          // ⚡ Estrai status dal payload (default 'pending' se non specificato)
+          const bookingStatus = bookingData.status || 'pending';
+          
           const result = await pool.query(`
             INSERT INTO bookings (
               booking_id, check_in, check_out, guests, adults, children,
@@ -503,12 +506,12 @@ export default async function handler(req, res) {
             totalAmount,
             totalAmount * 0.3, // 30% acconto
             notes,
-            'pending',
+            bookingStatus, // ⚡ Usa status dal payload invece di hardcoded 'pending'
             'pending'
           ]);
           
-          // 📧 Invia email di conferma con retry e logging
-          if (process.env.SMTP_HOST) {
+          // 📧 Invia email di conferma SOLO se status non è DRAFT
+          if (bookingStatus !== 'draft' && process.env.SMTP_HOST) {
             try {
               const guestLanguage = detectLanguage(email);
               const emailHtml = renderEmailTemplate('booking_confirmation', {
@@ -714,6 +717,136 @@ export default async function handler(req, res) {
           return res.status(500).json({
             success: false,
             message: 'Errore nella conferma del pagamento',
+            error: error.message
+          });
+        }
+      }
+    }
+
+    // ⚡ NUOVO ENDPOINT: Aggiorna status booking dopo payment success
+    if (action === 'update-booking-status') {
+      if (req.method === 'POST') {
+        try {
+          const { booking_id, status, payment_id, payment_status, amount_paid } = req.body;
+          
+          if (!booking_id || !status) {
+            return res.status(400).json({
+              success: false,
+              message: 'booking_id e status obbligatori'
+            });
+          }
+
+          // Valida status
+          const validStatuses = ['draft', 'pending', 'confirmed', 'cancelled'];
+          if (!validStatuses.includes(status)) {
+            return res.status(400).json({
+              success: false,
+              message: `Status non valido. Valori accettati: ${validStatuses.join(', ')}`
+            });
+          }
+
+          // Prepara update query con dati payment opzionali
+          const updateFields = ['status = $1', 'updated_at = NOW()'];
+          const values = [status];
+          let paramIndex = 2;
+
+          if (payment_id) {
+            updateFields.push(`stripe_payment_intent = $${paramIndex}`);
+            values.push(payment_id);
+            paramIndex++;
+          }
+
+          if (payment_status) {
+            updateFields.push(`payment_status = $${paramIndex}`);
+            values.push(payment_status === 'success' ? 'paid_deposit' : payment_status);
+            paramIndex++;
+          }
+
+          if (amount_paid) {
+            updateFields.push(`deposit_amount = $${paramIndex}`);
+            values.push(amount_paid);
+            paramIndex++;
+          }
+
+          values.push(booking_id); // WHERE condition
+
+          const updateQuery = `
+            UPDATE bookings 
+            SET ${updateFields.join(', ')}
+            WHERE booking_id = $${paramIndex}
+          `;
+
+          const result = await pool.query(updateQuery, values);
+
+          if (result.rowCount === 0) {
+            return res.status(404).json({
+              success: false,
+              message: `Booking ${booking_id} non trovato`
+            });
+          }
+
+          console.log(`✅ Booking ${booking_id} aggiornato: ${status}`);
+
+          // 📧 INVIA EMAIL CONFERMA quando status = confirmed
+          if (status === 'confirmed' && process.env.SMTP_HOST) {
+            try {
+              // Fetch booking data per email
+              const bookingData = await pool.query(
+                'SELECT * FROM bookings WHERE booking_id = $1',
+                [booking_id]
+              );
+
+              if (bookingData.rows.length > 0) {
+                const booking = bookingData.rows[0];
+                const guestLanguage = detectLanguage(booking.email);
+                const emailHtml = renderEmailTemplate('booking_confirmation', {
+                  firstName: booking.name?.split(' ')[0] || 'Cliente',
+                  lastName: booking.name?.split(' ')[1] || '',
+                  bookingId: booking.booking_id,
+                  checkin: booking.check_in,
+                  checkout: booking.check_out,
+                  guests: booking.guests || 0,
+                  adults: booking.adults || booking.guests || 0,
+                  children: booking.children || 0,
+                  totalAmount: parseFloat(booking.total_amount) || 0,
+                  depositAmount: parseFloat(booking.deposit_amount) || parseFloat(booking.total_amount) * 0.3,
+                  fromEmail: process.env.SMTP_FROM,
+                  language: guestLanguage
+                });
+
+                const emailResults = await sendEmailWithAdminCopy({
+                  to: booking.email,
+                  subject: `Conferma Prenotazione ${booking.booking_id}`,
+                  html: emailHtml,
+                  templateName: 'booking_confirmation',
+                  metadata: { 
+                    bookingId: booking.booking_id, 
+                    totalAmount: booking.total_amount, 
+                    language: guestLanguage,
+                    paymentConfirmed: true
+                  }
+                });
+
+                const primarySuccess = emailResults.find(r => r.recipient === booking.email)?.success;
+                console.log(primarySuccess ? `✅ Email conferma inviata a: ${booking.email}` : `⚠️ Email conferma fallita per: ${booking.email}`);
+              }
+            } catch (emailError) {
+              console.error('⚠️ Errore invio email conferma:', emailError.message);
+              // Non bloccare la risposta anche se email fallisce
+            }
+          }
+
+          return res.status(200).json({
+            success: true,
+            message: `Booking aggiornato a ${status}`,
+            booking_id: booking_id
+          });
+
+        } catch (error) {
+          console.error('❌ Errore update booking status:', error);
+          return res.status(500).json({
+            success: false,
+            message: 'Errore aggiornamento booking',
             error: error.message
           });
         }
