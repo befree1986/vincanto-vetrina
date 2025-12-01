@@ -81,6 +81,7 @@ export interface CreateBookingRequest {
     payment_method: 'stripe' | 'paypal' | 'bank_transfer';
     payment_type: 'deposit' | 'full';
     guest_message?: string;
+    total_amount?: number;
 }
 
 export interface CreateBookingResponse {
@@ -155,13 +156,6 @@ export async function getBookingQuote(data: BookingQuoteRequest): Promise<Bookin
  */
 export async function createBooking(data: CreateBookingRequest): Promise<CreateBookingResponse> {
     // 🔧 Adatta i dati per l'API backend
-    // Calcola il totale dal quote se disponibile
-    let totalPrice = 0;
-    if (typeof (data as any).quote === 'object' && (data as any).quote.totalAmount) {
-        totalPrice = (data as any).quote.totalAmount;
-    } else if ((data as any).totalPrice) {
-        totalPrice = (data as any).totalPrice;
-    }
     const adaptedData = {
         customerName: `${data.guest_name} ${data.guest_surname}`,
         customerEmail: data.guest_email,
@@ -171,8 +165,12 @@ export async function createBooking(data: CreateBookingRequest): Promise<CreateB
         guests: data.num_adults + data.num_children,
         adults: data.num_adults,
         children: data.num_children,
-        specialRequests: data.guest_message,
-        totalPrice
+        childrenAges: data.children_ages?.join(',') || '',
+        parkingOption: data.parking_option,
+        paymentMethod: data.payment_method,
+        paymentType: data.payment_type,
+        specialRequests: data.guest_message || '',
+        totalPrice: data.total_amount || 0
     };
     
     const response = await api.post('/unified?action=booking', adaptedData);

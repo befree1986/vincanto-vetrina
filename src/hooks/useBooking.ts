@@ -58,7 +58,7 @@ export interface BookingState {
     isCreatingBooking: boolean;
     bookingError: string | null;
     bookingResult: any | null;
-    submitBooking: () => Promise<void>;
+    submitBooking: (totalAmount?: number) => Promise<void>;
     
     // Validation
     formErrors: Record<string, string>;
@@ -254,7 +254,7 @@ export function useBooking(): BookingState {
     }, []);
     
     // Booking submission
-    const submitBooking = useCallback(async () => {
+    const submitBooking = useCallback(async (totalAmount?: number) => {
         if (!validateForm()) {
             throw new Error('Form non valido');
         }
@@ -282,7 +282,8 @@ export function useBooking(): BookingState {
                 parking_option: formData.parking_option,
                 payment_method: formData.payment_method,
                 payment_type: formData.payment_type,
-                guest_message: formData.guest_message
+                guest_message: formData.guest_message,
+                total_amount: totalAmount
             };
             
             const response = await createBooking(bookingRequest);

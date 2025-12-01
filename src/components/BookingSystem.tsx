@@ -415,7 +415,9 @@ const BookingSystem: React.FC = () => {
             return;
         }
         try {
-            const result: any = await submitBooking();
+            // ✅ Calcola totale completo (quote + servizi extra)
+            const totalAmount = quote ? (quote.totalAmount + extraServicesCost) : 0;
+            const result: any = await submitBooking(totalAmount);
             setBookingResult(result || null);
             
             // Reset flag pagamento completato quando si richiede un nuovo pagamento
