@@ -46,7 +46,7 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
                             <span className="item-icon">🏠</span>
                             <span>{getSafeTranslation(t, 'booking.accommodationBase', 'Soggiorno base')}</span>
                         </div>
-                        <span className="item-value">€{(costs.accommodationCost || costs.baseCost || costs.basePrice || 0).toFixed(2)}</span>
+                        <span className="item-value">€{Number(costs.accommodationCost || costs.baseCost || costs.basePrice || 0).toFixed(2)}</span>
                     </div>
 
                     {/* SCONTO SE APPLICATO */}
@@ -56,7 +56,7 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
                                 <span className="item-icon">🎉</span>
                                 <span>{costs.discount.type} (-{costs.discount.percentage}%)</span>
                             </div>
-                            <span className="item-value discount">-€{costs.discount.amount.toFixed(2)}</span>
+                            <span className="item-value discount">-€{Number(costs.discount.amount || 0).toFixed(2)}</span>
                         </div>
                     )}
                 </div>
@@ -75,7 +75,7 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
                                     {service.included && <span className="badge-included">Incluso</span>}
                                 </div>
                                 <span className="item-value">
-                                    {service.included ? '€0.00' : `€${service.price.toFixed(2)}`}
+                                    {service.included ? '€0.00' : `€${Number(service.price || 0).toFixed(2)}`}
                                 </span>
                             </div>
                         ))}
@@ -95,7 +95,7 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
                                 <span className="item-icon">🚗</span>
                                 <span>{getSafeTranslation(t, 'booking.parking', 'Parcheggio privato')}</span>
                             </div>
-                            <span className="item-value">€{(costs.parkingCost || 0).toFixed(2)}</span>
+                            <span className="item-value">€{Number(costs.parkingCost || 0).toFixed(2)}</span>
                         </div>
                     )}
 
@@ -104,7 +104,7 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
                             <span className="item-icon">🧹</span>
                             <span>{getSafeTranslation(t, 'booking.cleaning', 'Pulizia finale')}</span>
                         </div>
-                        <span className="item-value">€{costs.cleaningFee.toFixed(2)}</span>
+                        <span className="item-value">€{Number(costs.cleaningFee || 0).toFixed(2)}</span>
                     </div>
 
                     <div className="breakdown-item">
@@ -112,7 +112,7 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
                             <span className="item-icon">🏛️</span>
                             <span>{getSafeTranslation(t, 'booking.touristTax', 'Tassa di soggiorno')}</span>
                         </div>
-                        <span className="item-value">€{costs.touristTax.toFixed(2)}</span>
+                        <span className="item-value">€{Number(costs.touristTax || 0).toFixed(2)}</span>
                     </div>
                 </div>
 
@@ -121,7 +121,7 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
                     <div className="total-line"></div>
                     <div className="total-item">
                         <span className="total-label">Totale Soggiorno</span>
-                        <span className="total-value">€{totalWithExtras.toFixed(2)}</span>
+                        <span className="total-value">€{Number(totalWithExtras || 0).toFixed(2)}</span>
                     </div>
 
                     {isDeposit && (
@@ -130,7 +130,7 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
                                 <span className="deposit-label">Acconto richiesto (30%)</span>
                                 <span className="deposit-percentage">Da pagare ora</span>
                             </div>
-                            <span className="deposit-value">€{depositWithExtras.toFixed(2)}</span>
+                            <span className="deposit-value">€{Number(depositWithExtras || 0).toFixed(2)}</span>
                         </div>
                     )}
                 </div>
@@ -176,6 +176,8 @@ const BookingSystem: React.FC = () => {
     const [showEditOptions, setShowEditOptions] = useState(false);
     const [bookingResult, setBookingResult] = useState<any | null>(null);
     const [paymentCompleted, setPaymentCompleted] = useState(false);
+    // 💰 Payment amount - stored before submitBooking to avoid quote state issues
+    const [paymentAmount, setPaymentAmount] = useState<number>(0);
     
     // 🎯 Custom hooks (dopo tutti gli useState)
     const {
@@ -399,6 +401,20 @@ const BookingSystem: React.FC = () => {
         try {
             // ✅ Calcola totale completo (quote + servizi extra)
             const totalAmount = quote ? (quote.totalAmount + extraServicesCost) : 0;
+            
+            // 🔍 DEBUG: Verifica valori PRIMA di salvare paymentAmount
+            console.log('🔍 PRE-PAYMENT DEBUG:', {
+                quote_exists: !!quote,
+                quote_totalAmount: quote?.totalAmount,
+                extraServicesCost,
+                calculated_totalAmount: totalAmount,
+                payment_method: formData.payment_method,
+                payment_type: formData.payment_type
+            });
+            
+            // 💰 STORE AMOUNT BEFORE submitBooking - quote might become undefined after
+            setPaymentAmount(totalAmount);
+            console.log('💰 Saved paymentAmount:', totalAmount);
             
             // Reset flag pagamento completato quando si richiede un nuovo pagamento
             setPaymentCompleted(false);
@@ -797,6 +813,17 @@ const BookingSystem: React.FC = () => {
                     <div className="booking-step-content step-transition">
                         <h2>{getSafeTranslation(t, 'booking.payment', 'Pagamento')}</h2>
 
+                        {/* Messaggio visivo: conferma solo dopo pagamento */}
+                        <div style={{ background: '#fffbe6', border: '1px solid #ffe58f', padding: '16px', borderRadius: '8px', marginBottom: '18px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <span style={{ fontSize: '2rem' }}>⏳</span>
+                            <div>
+                                <strong style={{ color: '#ad8b00' }}>La tua prenotazione sarà confermata solo dopo il pagamento.</strong>
+                                <div style={{ fontSize: '0.95rem', color: '#ad8b00', marginTop: '4px' }}>
+                                    Le date selezionate restano disponibili fino al completamento del pagamento.
+                                </div>
+                            </div>
+                        </div>
+
                         {/* Riepilogo costi sempre visibile anche nel pagamento */}
                         {quote && (
                             <PriceBreakdown 
@@ -877,21 +904,16 @@ const BookingSystem: React.FC = () => {
                         </div>
 
                         {/* Form di pagamento Stripe/PayPal */}
-                        {showPayment && bookingResult && formData.payment_method === 'stripe' && quote && (
+                        {showPayment && bookingResult && formData.payment_method === 'stripe' && paymentAmount > 0 && (
                             <div className="payment-form-section">
                                 <h3>💳 {getSafeTranslation(t, 'booking.cardPayment', 'Pagamento con Carta')}</h3>
                                 {(() => {
-                                    // ⚡ DEBUG: Calcolo amount con log dettagliato
-                                    const quoteTotal = quote?.totalAmount || 0;
-                                    const extraCost = extraServicesCost || 0;
-                                    const totalWithExtras = quoteTotal + extraCost;
-                                    const depositAmount = Math.round(totalWithExtras * 0.30 * 100) / 100;
-                                    const finalAmount = formData.payment_type === 'deposit' ? depositAmount : totalWithExtras;
+                                    // 💰 Use stored paymentAmount instead of recalculating
+                                    const depositAmount = Math.round(paymentAmount * 0.30 * 100) / 100;
+                                    const finalAmount = formData.payment_type === 'deposit' ? depositAmount : paymentAmount;
                                     
                                     console.log('💳 Stripe Amount Calculation:', {
-                                        quoteTotal,
-                                        extraCost,
-                                        totalWithExtras,
+                                        storedPaymentAmount: paymentAmount,
                                         depositAmount,
                                         payment_type: formData.payment_type,
                                         finalAmount
@@ -915,21 +937,16 @@ const BookingSystem: React.FC = () => {
                             </div>
                         )}
 
-                        {showPayment && bookingResult && formData.payment_method === 'paypal' && quote && (
+                        {showPayment && bookingResult && formData.payment_method === 'paypal' && paymentAmount > 0 && (
                             <div className="payment-form-section">
                                 <h3>🅿️ {getSafeTranslation(t, 'booking.paypalPayment', 'Pagamento con PayPal')}</h3>
                                 {(() => {
-                                    // ⚡ DEBUG: Calcolo amount con log dettagliato
-                                    const quoteTotal = quote?.totalAmount || 0;
-                                    const extraCost = extraServicesCost || 0;
-                                    const totalWithExtras = quoteTotal + extraCost;
-                                    const depositAmount = Math.round(totalWithExtras * 0.30 * 100) / 100;
-                                    const finalAmount = formData.payment_type === 'deposit' ? depositAmount : totalWithExtras;
+                                    // 💰 Use stored paymentAmount instead of recalculating
+                                    const depositAmount = Math.round(paymentAmount * 0.30 * 100) / 100;
+                                    const finalAmount = formData.payment_type === 'deposit' ? depositAmount : paymentAmount;
                                     
                                     console.log('🅿️ PayPal Amount Calculation:', {
-                                        quoteTotal,
-                                        extraCost,
-                                        totalWithExtras,
+                                        storedPaymentAmount: paymentAmount,
                                         depositAmount,
                                         payment_type: formData.payment_type,
                                         finalAmount
@@ -950,6 +967,32 @@ const BookingSystem: React.FC = () => {
                                         />
                                     );
                                 })()}
+                            </div>
+                        )}
+
+                        {/* Error message if paymentAmount is invalid */}
+                        {showPayment && bookingResult && (formData.payment_method === 'stripe' || formData.payment_method === 'paypal') && (!paymentAmount || paymentAmount <= 0) && (
+                            <div className="payment-form-section">
+                                <div style={{ padding: '20px', background: '#fee', border: '2px solid #c00', borderRadius: '8px' }}>
+                                    <h3 style={{ color: '#c00' }}>❌ Errore: Importo non valido</h3>
+                                    <p>L'importo della prenotazione non è stato calcolato correttamente.</p>
+                                    <p><strong>Dettagli tecnici:</strong></p>
+                                    <ul>
+                                        <li>paymentAmount: {paymentAmount}</li>
+                                        <li>quote exists: {quote ? 'Sì' : 'No'}</li>
+                                        <li>quote.totalAmount: {quote?.totalAmount}</li>
+                                        <li>extraServicesCost: {extraServicesCost}</li>
+                                    </ul>
+                                    <button 
+                                        onClick={() => {
+                                            setShowPayment(false);
+                                            setCurrentStep('details');
+                                        }}
+                                        style={{ marginTop: '10px', padding: '10px 20px', background: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                    >
+                                        Torna ai Dettagli
+                                    </button>
+                                </div>
                             </div>
                         )}
 
