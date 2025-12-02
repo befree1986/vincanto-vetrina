@@ -44,13 +44,29 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
     // Gestione selezione date
     const handleDateChange = (dates: [Date | null, Date | null]) => {
         const [start, end] = dates;
+        
+        // ⚡ FIX: Se solo check-in selezionato, imposta check-out minimo al giorno dopo
+        if (start && !end) {
+            setStartDate(start);
+            setEndDate(null);
+            return;
+        }
+        
         setStartDate(start);
         setEndDate(end);
         
         // 🔥 FIX: Chiama il callback SOLO quando abbiamo entrambe le date complete
         if (start && end) {
-            // ✅ VALIDAZIONE MINIMO NOTTI
+            // ⚡ VALIDAZIONE: Check-out deve essere DOPO check-in (minimo 1 giorno)
             const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24));
+            
+            if (nights < 1) {
+                setMinStayError('Il check-out deve essere almeno il giorno dopo il check-in.');
+                setStartDate(null);
+                setEndDate(null);
+                onDateChange(null, null);
+                return;
+            }
             
             if (nights < minNights) {
                 setMinStayError(`Il soggiorno minimo è di ${minNights} notti. Hai selezionato solo ${nights} ${nights === 1 ? 'notte' : 'notti'}.`);
@@ -72,8 +88,15 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
 
     // Verifica se una data è disabilitata (memoized per evitare re-render)
     const isDateDisabled = useCallback((date: Date): boolean => {
-        // Non permettere date nel passato
-        if (isBefore(date, new Date())) {
+        // ⚡ FIX: Check-in minimo DOMANI (non oggi)
+        const tomorrow = new Date();
+        tomorrow.setHours(0, 0, 0, 0);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        const checkDate = new Date(date);
+        checkDate.setHours(0, 0, 0, 0);
+        
+        if (isBefore(checkDate, tomorrow)) {
             return true;
         }
 
@@ -198,7 +221,7 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
                     selectsRange
                     inline
                     locale={it}
-                    minDate={new Date()}
+                    minDate={addDays(new Date(), 1)}
                     excludeDates={occupiedDates.map(date => new Date(date.start))}
                     filterDate={(date) => !isDateDisabled(date)}
                     monthsShown={2}
