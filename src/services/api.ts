@@ -323,10 +323,16 @@ export interface StripePaymentIntentResponse {
  * Crea Payment Intent per Stripe
  */
 export async function createStripePaymentIntent(data: StripePaymentIntentRequest): Promise<StripePaymentIntentResponse> {
+    // ⚡ Validazione amount
+    if (!data.amount || isNaN(data.amount) || data.amount <= 0) {
+        throw new Error(`Amount non valido: ${data.amount}`);
+    }
+    
     const response = await api.post('/unified', {
         action: 'stripe-payment-intent',
         booking_id: data.booking_id,
         amount: data.amount,
+        currency: 'eur', // ⚡ Fix: currency obbligatorio
         customer_email: data.customer_email || '',
         customer_name: data.customer_name || ''
     });

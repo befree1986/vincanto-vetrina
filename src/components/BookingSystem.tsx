@@ -880,40 +880,76 @@ const BookingSystem: React.FC = () => {
                         {showPayment && bookingResult && formData.payment_method === 'stripe' && quote && (
                             <div className="payment-form-section">
                                 <h3>💳 {getSafeTranslation(t, 'booking.cardPayment', 'Pagamento con Carta')}</h3>
-                                <StripePayment
-                                    bookingId={bookingResult.booking_id || bookingResult.id?.toString() || ''}
-                                    amount={formData.payment_type === 'deposit' 
-                                        ? Math.round((((quote?.totalAmount || 0) + (extraServicesCost || 0)) * 0.30) * 100) / 100
-                                        : ((quote?.totalAmount || 0) + (extraServicesCost || 0))}
-                                    customerEmail={formData.guest_email}
-                                    customerName={`${formData.guest_name} ${formData.guest_surname}`}
-                                    onPaymentSuccess={handlePaymentSuccess}
-                                    onPaymentError={(error) => setError(error)}
-                                    onCancel={() => {
-                                        setShowPayment(false);
-                                        setCurrentStep('details');
-                                    }}
-                                />
+                                {(() => {
+                                    // ⚡ DEBUG: Calcolo amount con log dettagliato
+                                    const quoteTotal = quote?.totalAmount || 0;
+                                    const extraCost = extraServicesCost || 0;
+                                    const totalWithExtras = quoteTotal + extraCost;
+                                    const depositAmount = Math.round(totalWithExtras * 0.30 * 100) / 100;
+                                    const finalAmount = formData.payment_type === 'deposit' ? depositAmount : totalWithExtras;
+                                    
+                                    console.log('💳 Stripe Amount Calculation:', {
+                                        quoteTotal,
+                                        extraCost,
+                                        totalWithExtras,
+                                        depositAmount,
+                                        payment_type: formData.payment_type,
+                                        finalAmount
+                                    });
+                                    
+                                    return (
+                                        <StripePayment
+                                            bookingId={bookingResult.booking_id || bookingResult.id?.toString() || ''}
+                                            amount={finalAmount}
+                                            customerEmail={formData.guest_email}
+                                            customerName={`${formData.guest_name} ${formData.guest_surname}`}
+                                            onPaymentSuccess={handlePaymentSuccess}
+                                            onPaymentError={(error) => setError(error)}
+                                            onCancel={() => {
+                                                setShowPayment(false);
+                                                setCurrentStep('details');
+                                            }}
+                                        />
+                                    );
+                                })()}
                             </div>
                         )}
 
                         {showPayment && bookingResult && formData.payment_method === 'paypal' && quote && (
                             <div className="payment-form-section">
                                 <h3>🅿️ {getSafeTranslation(t, 'booking.paypalPayment', 'Pagamento con PayPal')}</h3>
-                                <PayPalPayment
-                                    bookingId={bookingResult.booking_id || bookingResult.id?.toString() || ''}
-                                    amount={formData.payment_type === 'deposit' 
-                                        ? Math.round((((quote?.totalAmount || 0) + (extraServicesCost || 0)) * 0.30) * 100) / 100
-                                        : ((quote?.totalAmount || 0) + (extraServicesCost || 0))}
-                                    customerEmail={formData.guest_email}
-                                    customerName={`${formData.guest_name} ${formData.guest_surname}`}
-                                    onPaymentSuccess={handlePaymentSuccess}
-                                    onPaymentError={(error) => setError(error)}
-                                    onCancel={() => {
-                                        setShowPayment(false);
-                                        setCurrentStep('details');
-                                    }}
-                                />
+                                {(() => {
+                                    // ⚡ DEBUG: Calcolo amount con log dettagliato
+                                    const quoteTotal = quote?.totalAmount || 0;
+                                    const extraCost = extraServicesCost || 0;
+                                    const totalWithExtras = quoteTotal + extraCost;
+                                    const depositAmount = Math.round(totalWithExtras * 0.30 * 100) / 100;
+                                    const finalAmount = formData.payment_type === 'deposit' ? depositAmount : totalWithExtras;
+                                    
+                                    console.log('🅿️ PayPal Amount Calculation:', {
+                                        quoteTotal,
+                                        extraCost,
+                                        totalWithExtras,
+                                        depositAmount,
+                                        payment_type: formData.payment_type,
+                                        finalAmount
+                                    });
+                                    
+                                    return (
+                                        <PayPalPayment
+                                            bookingId={bookingResult.booking_id || bookingResult.id?.toString() || ''}
+                                            amount={finalAmount}
+                                            customerEmail={formData.guest_email}
+                                            customerName={`${formData.guest_name} ${formData.guest_surname}`}
+                                            onPaymentSuccess={handlePaymentSuccess}
+                                            onPaymentError={(error) => setError(error)}
+                                            onCancel={() => {
+                                                setShowPayment(false);
+                                                setCurrentStep('details');
+                                            }}
+                                        />
+                                    );
+                                })()}
                             </div>
                         )}
 

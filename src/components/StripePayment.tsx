@@ -205,6 +205,11 @@ const StripePayment: React.FC<StripePaymentProps> = (props) => {
                 setIsLoading(true);
                 setError(null);
 
+                // ⚡ Validazione amount PRIMA della chiamata API
+                if (!props.amount || isNaN(props.amount) || props.amount <= 0) {
+                    throw new Error(`Amount non valido: ${props.amount}. Verifica i dati della prenotazione.`);
+                }
+
                 log('💳 Inizializzazione Payment Intent:', {
                     booking_id: props.bookingId,
                     amount: props.amount,
