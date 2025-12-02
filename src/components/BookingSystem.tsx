@@ -403,7 +403,7 @@ const BookingSystem: React.FC = () => {
             const totalAmount = quote ? (quote.totalAmount + extraServicesCost) : 0;
             
             // 🔍 DEBUG: Verifica valori PRIMA di salvare paymentAmount
-            console.log('🔍 PRE-PAYMENT DEBUG:', {
+            console.log('🔍 PRE-PAYMENT DEBUG [v2.0]:', {
                 quote_exists: !!quote,
                 quote_totalAmount: quote?.totalAmount,
                 extraServicesCost,
