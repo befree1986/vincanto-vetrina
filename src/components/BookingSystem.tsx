@@ -231,6 +231,17 @@ const BookingSystem: React.FC = () => {
         loadCalendar();
     }, [loadCalendar]);
 
+    // 🛡️ Guard: quando si entra nello step pagamento, assicurati che paymentAmount sia valorizzato
+    useEffect(() => {
+        if (currentStep === 'payment') {
+            const total = (quote ? quote.totalAmount : 0) + (extraServicesCost || 0);
+            if (!paymentAmount || Number(paymentAmount) <= 0) {
+                setPaymentAmount(total);
+                console.log('🛡️ Guard set paymentAmount:', total);
+            }
+        }
+    }, [currentStep, quote, extraServicesCost]);
+
     // 🎬 HANDLER FUNCTIONS
     
     // ⚡ FIX: Memoize onServicesChange to prevent infinite loop in ExtraServices
@@ -257,6 +268,7 @@ const BookingSystem: React.FC = () => {
         try {
             // ⚡ NUOVO FLUSSO: Aggiorna booking DRAFT → CONFIRMED dopo payment success
             // Non creare nuovo booking - esiste già come DRAFT da handleDetailsSubmit()
+            
             
             if (!bookingResult?.booking_id) {
                 throw new Error('Booking ID mancante - impossibile confermare pagamento');
