@@ -450,6 +450,16 @@ export default async function handler(req, res) {
             console.error('❌ Importo totale mancante o non valido:', totalAmount);
             return res.status(400).json({ success: false, error: 'Importo totale mancante o non valido' });
           }
+
+          // 🔒 Controllo sovrapposizione date: ignora DRAFT e CANCELLED
+          const overlappingBookings = await pool.query(
+            "SELECT * FROM bookings WHERE check_in < $2 AND check_out > $1 AND status NOT IN ('cancelled', 'draft')",
+            [checkin, checkout]
+          );
+          if (overlappingBookings.rows.length > 0) {
+            console.error('❌ Date non disponibili:', checkin, checkout);
+            return res.status(409).json({ success: false, error: 'Date non disponibili' });
+          }
           
           // Parsing nome/cognome da customerName o campi separati
           let firstName = 'Nome';
@@ -663,9 +673,13 @@ export default async function handler(req, res) {
       if (req.method === 'POST') {
         try {
           const { amount, currency, bookingId, guestEmail } = req.body;
+          // Validazione amount
+          if (!amount || isNaN(amount) || amount <= 0) {
+            return res.status(400).json({ success: false, message: `Importo non valido: ${amount}` });
+          }
           const stripe = new Stripe(process.env.STRIPE_SECRET_KEY); // ⚡ Use imported Stripe
           const paymentIntent = await stripe.paymentIntents.create({
-            amount: Math.round(amount * 100),
+            amount: Math.round(Number(amount) * 100),
             currency,
             metadata: { bookingId, guestEmail }
           });
