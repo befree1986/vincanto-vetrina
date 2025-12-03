@@ -189,6 +189,20 @@ const StripePayment: React.FC<StripePaymentProps> = (props) => {
     const [error, setError] = useState<string | null>(null);
     const [retryCount, setRetryCount] = useState(0); // ⚡ Track retry attempts
     const MAX_RETRIES = 3; // ⚡ Max retry limit
+    // 💡 Fallback: se amount non valido, prova a derivarlo da window.debugPaymentData
+    const safeAmount = React.useMemo(() => {
+        const amt = Number(props.amount || 0);
+        if (amt > 0) return amt;
+        try {
+            const dbg: any = (window as any).debugPaymentData || {};
+            const total = Number(dbg.quote?.totalAmount || 0) + Number(dbg.extraServicesCost || 0);
+            if (total > 0) {
+                console.log('🛟 Fallback amount da debugPaymentData:', total);
+                return total;
+            }
+        } catch (_) {}
+        return 0;
+    }, [props.amount]);
 
     useEffect(() => {
         // ⚡ Stop infinite retries
@@ -206,8 +220,8 @@ const StripePayment: React.FC<StripePaymentProps> = (props) => {
                 setError(null);
 
                 // ⚡ Validazione amount PRIMA della chiamata API
-                if (!props.amount || isNaN(props.amount) || props.amount <= 0) {
-                    throw new Error(`Amount non valido: ${props.amount}. Verifica i dati della prenotazione.`);
+                if (!safeAmount || isNaN(safeAmount) || safeAmount <= 0) {
+                    throw new Error(`Amount non valido: ${safeAmount}. Verifica i dati della prenotazione.`);
                 }
 
                 log('💳 Inizializzazione Payment Intent:', {
@@ -220,7 +234,7 @@ const StripePayment: React.FC<StripePaymentProps> = (props) => {
 
                 const response = await createStripePaymentIntent({
                     booking_id: props.bookingId,
-                    amount: props.amount,
+                    amount: safeAmount,
                     customer_email: props.customerEmail,
                     customer_name: props.customerName
                 });
@@ -247,7 +261,7 @@ const StripePayment: React.FC<StripePaymentProps> = (props) => {
         };
 
         initializePayment();
-    }, [props.bookingId, props.amount, retryCount]); // ⚡ Add retryCount dependency for auto-retry
+    }, [props.bookingId, safeAmount, retryCount]); // ⚡ Add retryCount dependency for auto-retry
 
 
     if (isLoading) {

@@ -451,9 +451,9 @@ export default async function handler(req, res) {
             return res.status(400).json({ success: false, error: 'Importo totale mancante o non valido' });
           }
 
-          // 🔒 Controllo sovrapposizione date: ignora DRAFT e CANCELLED
+          // 🔒 Controllo sovrapposizione date: blocca SOLO prenotazioni confermate
           const overlappingBookings = await pool.query(
-            "SELECT * FROM bookings WHERE check_in < $2 AND check_out > $1 AND status NOT IN ('cancelled', 'draft')",
+            "SELECT * FROM bookings WHERE check_in < $2 AND check_out > $1 AND status = 'confirmed'",
             [checkin, checkout]
           );
           if (overlappingBookings.rows.length > 0) {
@@ -673,18 +673,41 @@ export default async function handler(req, res) {
       if (req.method === 'POST') {
         try {
           const { amount, currency, bookingId, guestEmail } = req.body;
-          // Validazione amount
-          if (!amount || isNaN(amount) || amount <= 0) {
-            return res.status(400).json({ success: false, message: `Importo non valido: ${amount}` });
+          let safeAmount = Number(amount || 0);
+          // Fallback backend: se amount non valido, prova a derivarlo dalla prenotazione
+          if (!safeAmount || isNaN(safeAmount) || safeAmount <= 0) {
+            if (bookingId) {
+              try {
+                const amtRes = await pool.query(
+                  `SELECT COALESCE(total_amount, 0) AS total FROM bookings WHERE booking_id = $1 LIMIT 1`,
+                  [bookingId]
+                );
+                const dbAmount = Number(amtRes.rows?.[0]?.total || 0);
+                if (dbAmount > 0) {
+                  safeAmount = dbAmount;
+                  console.log('🛟 Backend fallback amount da DB:', safeAmount);
+                }
+              } catch (e) {
+                console.warn('⚠️ Impossibile derivare amount da DB:', e.message);
+              }
+            }
+          }
+          // Validazione finale
+          if (!safeAmount || isNaN(safeAmount) || safeAmount <= 0) {
+            return res.status(400).json({ success: false, message: `Importo non valido: ${safeAmount}` });
           }
           const stripe = new Stripe(process.env.STRIPE_SECRET_KEY); // ⚡ Use imported Stripe
           const paymentIntent = await stripe.paymentIntents.create({
-            amount: Math.round(Number(amount) * 100),
+            amount: Math.round(Number(safeAmount) * 100),
             currency,
             metadata: { bookingId, guestEmail }
           });
           return res.status(200).json({
             success: true,
+            // Compatibilità con frontend
+            client_secret: paymentIntent.client_secret,
+            payment_intent_id: paymentIntent.id,
+            // Manteniamo anche i campi precedenti per retrocompatibilità
             clientSecret: paymentIntent.client_secret,
             paymentIntentId: paymentIntent.id,
             amount: paymentIntent.amount,
@@ -1068,7 +1091,7 @@ export default async function handler(req, res) {
               status,
               'database' as source
             FROM bookings 
-            WHERE status IN ('confirmed', 'pending')
+            WHERE status = 'confirmed'
             ORDER BY check_in ASC
           `);
 

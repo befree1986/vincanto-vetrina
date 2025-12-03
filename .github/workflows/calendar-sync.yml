@@ -12,6 +12,7 @@ jobs:
       AIRBNB_ICAL_URL: ${{ secrets.AIRBNB_ICAL_URL }}
       BOOKING_ICAL_URL: ${{ secrets.BOOKING_ICAL_URL }}
       HOLIDU_ICAL_URL: ${{ secrets.HOLIDU_ICAL_URL }}
+      CALENDAR_SYNC_TOKEN: ${{ secrets.CALENDAR_SYNC_TOKEN }}
     
     steps:
       - name: 🔄 Sincronizzazione Calendari Esterni
@@ -30,6 +31,7 @@ jobs:
             --retry-delay 5 \
             -H "Content-Type: application/json" \
             -H "User-Agent: GitHub-Actions-Calendar-Sync/1.0" \
+            -H "X-Sync-Token: ${CALENDAR_SYNC_TOKEN}" \
             -w "%{http_code}" \
             -o response.json \
             -s)

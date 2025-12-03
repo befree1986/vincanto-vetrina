@@ -77,6 +77,21 @@ const PayPalPayment: React.FC<PayPalPaymentProps> = ({
       container.innerHTML = '';
     }
 
+    // Fallback amount se non valido
+    const deriveAmount = () => {
+      const a = Number(amount || 0);
+      if (a > 0) return a;
+      try {
+        const dbg: any = (window as any).debugPaymentData || {};
+        const total = Number(dbg.quote?.totalAmount || 0) + Number(dbg.extraServicesCost || 0);
+        if (total > 0) {
+          console.log('🛟 PayPal fallback amount da debugPaymentData:', total);
+          return total;
+        }
+      } catch (_) {}
+      return 0;
+    };
+
     window.paypal.Buttons({
       style: {
         layout: 'vertical',
@@ -87,8 +102,8 @@ const PayPalPayment: React.FC<PayPalPaymentProps> = ({
       },
       
       createOrder: (_data: any, actions: any) => {
-        // Controllo di sicurezza per amount
-        const safeAmount = typeof amount === 'number' && !isNaN(amount) && amount > 0 ? amount : 0;
+        // Controllo di sicurezza per amount + fallback
+        const safeAmount = deriveAmount();
         if (safeAmount === 0) {
           console.error('⚠️ PayPal: amount non valido:', amount);
         }

@@ -512,10 +512,24 @@ export default async function handler(req, res) {
     res.status(405).json({ error: 'Metodo non consentito' });
     return;
   }
+  // Protezione opzionale tramite token di sincronizzazione
+  try {
+    const requiredToken = process.env.CALENDAR_SYNC_TOKEN;
+    const providedToken = req.headers['x-sync-token'];
+    if (requiredToken) {
+      if (!providedToken || providedToken !== requiredToken) {
+        res.status(401).json({ error: 'Token di sincronizzazione non valido o assente' });
+        return;
+      }
+    }
+  } catch (_) {
+    // nessuna azione: protezione opzionale
+  }
   try {
     const sync = new RealCalendarSync();
     const result = await sync.syncAll();
-    res.status(200).json({ success: true, result });
+    const status = await sync.getStatus().catch(() => null);
+    res.status(200).json({ success: true, result, status });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
