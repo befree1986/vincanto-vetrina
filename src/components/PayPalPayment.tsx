@@ -211,7 +211,7 @@ const PayPalPayment: React.FC<PayPalPaymentProps> = ({
       <div className="payment-header">
         <h3>{t('booking.payment.paypal.title')}</h3>
         <p className="payment-amount">
-          {t('booking.payment.amount')}: <strong>€{amount.toFixed(2)}</strong>
+          {t('booking.payment.amount')}: <strong>€{Number(amount || 0).toFixed(2)}</strong>
         </p>
         <p className="payment-description">
           {t('booking.payment.paypal.description')}
