@@ -428,6 +428,15 @@ const BookingSystem: React.FC = () => {
             setPaymentAmount(totalAmount);
             console.log('💰 Saved paymentAmount:', totalAmount);
             
+            // 🛟 Popola window.debugPaymentData per fallback Stripe/PayPal
+            (window as any).debugPaymentData = {
+                quote,
+                extraServicesCost,
+                totalAmount,
+                timestamp: new Date().toISOString()
+            };
+            console.log('🛟 Populated debugPaymentData for fallback:', (window as any).debugPaymentData);
+            
             // Reset flag pagamento completato quando si richiede un nuovo pagamento
             setPaymentCompleted(false);
             
