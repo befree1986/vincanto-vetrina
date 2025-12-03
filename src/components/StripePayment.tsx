@@ -114,7 +114,10 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
             <div className="payment-header">
                 <h3>Pagamento con Carta di Credito</h3>
                 <div className="payment-amount">
-                    <strong>Importo: €{amount.toFixed(2)}</strong>
+                    <strong>Importo: €{Number(amount || 0).toFixed(2)}</strong>
+                </div>
+                <div style={{fontSize: '12px', color: '#666', marginTop: '8px'}}>
+                    Debug: amount prop = {amount}
                 </div>
             </div>
 
@@ -192,15 +195,29 @@ const StripePayment: React.FC<StripePaymentProps> = (props) => {
     // 💡 Fallback: se amount non valido, prova a derivarlo da window.debugPaymentData
     const safeAmount = React.useMemo(() => {
         const amt = Number(props.amount || 0);
-        if (amt > 0) return amt;
+        console.log('🔍 STRIPE INIT - props.amount ricevuto:', props.amount, 'parsed:', amt);
+        
+        if (amt > 0) {
+            console.log('✅ Uso props.amount:', amt);
+            return amt;
+        }
+        
+        // Fallback da window.debugPaymentData
         try {
             const dbg: any = (window as any).debugPaymentData || {};
+            console.log('🔍 window.debugPaymentData:', dbg);
             const total = Number(dbg.quote?.totalAmount || 0) + Number(dbg.extraServicesCost || 0);
             if (total > 0) {
                 console.log('🛟 Fallback amount da debugPaymentData:', total);
+                alert(`⚠️ DIAGNOSI: props.amount era ${amt}, uso fallback ${total} da debugPaymentData`);
                 return total;
             }
-        } catch (_) {}
+        } catch (err) {
+            console.error('❌ Errore lettura debugPaymentData:', err);
+        }
+        
+        console.error('❌ ERRORE: Nessun importo valido trovato!');
+        alert(`🚨 DIAGNOSI CRITICA: props.amount=${amt}, debugPaymentData non disponibile`);
         return 0;
     }, [props.amount]);
 
