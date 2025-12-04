@@ -255,14 +255,16 @@ export async function getCalendar(startDate?: string, endDate?: string): Promise
     if (startDate) params.start_date = startDate;
     if (endDate) params.end_date = endDate;
     
-    // Carica sia date bloccate che prenotazioni
-    const [blockedResponse, bookingsResponse] = await Promise.all([
+    // Carica date bloccate, prenotazioni E calendar_events sincronizzati
+    const [blockedResponse, bookingsResponse, calendarEventsResponse] = await Promise.all([
         api.get('/unified', { params: { ...params, action: 'blocked-dates' } }),
-        api.get('/unified', { params: { ...params, action: 'booking' } })
+        api.get('/unified', { params: { ...params, action: 'booking' } }),
+        api.get('/unified', { params: { ...params, action: 'calendar-events' } })
     ]);
     
     const blockedData = blockedResponse.data;
     const bookingsData = bookingsResponse.data;
+    const calendarEventsData = calendarEventsResponse.data;
     
     // Trasforma blockedDates in occupied_dates
     const blocked_dates = (blockedData.blockedDates || []).map((blocked: any) => ({
@@ -280,8 +282,23 @@ export async function getCalendar(startDate?: string, endDate?: string): Promise
         status: booking.status || 'booked'
     }));
     
-    // Combina tutte le date occupate
-    const occupied_dates = [...blocked_dates, ...booking_dates];
+    // 🆕 Trasforma calendar_events (Airbnb, Booking, Holidu) in occupied_dates
+    const calendar_event_dates = (calendarEventsData.events || []).map((event: any) => ({
+        start: event.start_date.split('T')[0],
+        end: event.end_date.split('T')[0],
+        type: 'booking' as const,
+        status: `${event.calendar_source}-synced` // es: 'airbnb-synced', 'booking-synced'
+    }));
+    
+    console.log('📅 Date occupate caricate:', {
+        blocked: blocked_dates.length,
+        bookings: booking_dates.length,
+        calendar_events: calendar_event_dates.length,
+        total: blocked_dates.length + booking_dates.length + calendar_event_dates.length
+    });
+    
+    // Combina TUTTE le date occupate inclusi i calendar_events
+    const occupied_dates = [...blocked_dates, ...booking_dates, ...calendar_event_dates];
     
     return {
         success: blockedData.success && bookingsData.success,
