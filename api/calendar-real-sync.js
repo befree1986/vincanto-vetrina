@@ -245,17 +245,21 @@ export class RealCalendarSync {
       if (line === 'BEGIN:VEVENT') {
         currentEvent = {};
       } else if (line === 'END:VEVENT' && currentEvent) {
-        if (currentEvent.dtstart && currentEvent.dtend) {
+        // 🔥 FILTRO: Esclude festività e blocchi Airbnb - sincronizza SOLO prenotazioni
+        if (currentEvent.dtstart && currentEvent.dtend && this.isValidBooking(currentEvent)) {
           events.push({
             uid: currentEvent.uid || '',
             summary: currentEvent.summary || 'Prenotazione',
             start: this.parseICalDate(currentEvent.dtstart),
             end: this.parseICalDate(currentEvent.dtend),
             description: currentEvent.description || '',
-            location: currentEvent.location || ''
+            location: currentEvent.location || '',
+            eventType: this.classifyEvent(currentEvent.summary || '')
           });
           eventCount++;
-        }
+        } else if (currentEvent.summary) {
+          // ⏭️ Log eventi filtrati (festività, blocchi, etc)
+          console.log(`  ⏭️ Escluso: "${currentEvent.summary}" (tipo: ${this.classifyEvent(currentEvent.summary)})`);\n        }
         currentEvent = null;
       } else if (currentEvent && line.includes(':')) {
         const [key, ...values] = line.split(':');
@@ -266,8 +270,47 @@ export class RealCalendarSync {
       }
     }
 
-    console.log(`📊 parseICalData: trovati ${eventCount} eventi validi su ${lines.length} linee totali`);
+    console.log(`📊 parseICalData: trovati ${eventCount} PRENOTAZIONI valide (escluse festività/blocchi)`);
     return events;
+  }
+
+  /**
+   * Classifica il tipo di evento dal summary per filtrare festività/blocchi
+   */
+  classifyEvent(summary) {
+    if (!summary) return 'unknown';
+    
+    const s = summary.toLowerCase();
+    
+    // Festività/Vacanze
+    if (s.includes('holiday') || s.includes('festività') || s.includes('vacation') || s.includes('break') || s.includes('festa')) {
+      return 'holiday';
+    }
+    
+    // Blocchi/Unavailable
+    if (s.includes('blocked') || s.includes('unavailable') || s.includes('not available') || s.includes('block') || s.includes('bloccato')) {
+      return 'blocked';
+    }
+    
+    // Maintenance/Cleaning
+    if (s.includes('maintenance') || s.includes('manutenzione') || s.includes('cleaning') || s.includes('pulizie') || s.includes('manutenzione')) {
+      return 'maintenance';
+    }
+    
+    // Prenotazioni (default)
+    return 'booking';
+  }
+
+  /**
+   * Valida se un evento è una prenotazione valida (esclude festività/blocchi)
+   */
+  isValidBooking(event) {
+    if (!event.summary) return true; // Se no summary, considera come prenotazione
+    
+    const eventType = this.classifyEvent(event.summary);
+    
+    // 🔥 Accetta SOLO 'booking' - Rifiuta: 'holiday', 'blocked', 'maintenance'
+    return eventType === 'booking';
   }
 
   /**
