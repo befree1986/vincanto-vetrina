@@ -10,6 +10,12 @@ import { Pool } from 'pg';
 export class RealCalendarSync {
   constructor() {
     
+    console.log('🔍 Environment Check - Calendar URLs:');
+    console.log('  AIRBNB_ICAL_URL:', process.env.AIRBNB_ICAL_URL ? '✅ Presente' : '❌ Mancante');
+    console.log('  BOOKING_ICAL_URL:', process.env.BOOKING_ICAL_URL ? '✅ Presente' : '❌ Mancante');
+    console.log('  HOLIDU_ICAL_URL:', process.env.HOLIDU_ICAL_URL ? '✅ Presente' : '❌ Mancante');
+    console.log('  GOOGLE_CALENDAR_CLIENT_ID:', process.env.GOOGLE_CALENDAR_CLIENT_ID ? '✅ Presente' : '❌ Mancante');
+    
     this.calendars = [];
     if (process.env.AIRBNB_ICAL_URL) {
       this.calendars.push({
@@ -30,6 +36,7 @@ export class RealCalendarSync {
       });
     }
     if (process.env.HOLIDU_ICAL_URL) {
+      console.log('🏖️ HOLIDU CONFIGURATO - URL:', process.env.HOLIDU_ICAL_URL.substring(0, 50) + '...');
       this.calendars.push({
         id: 'holidu',
         name: 'Holidu',
@@ -37,6 +44,8 @@ export class RealCalendarSync {
         url: process.env.HOLIDU_ICAL_URL,
         enabled: true
       });
+    } else {
+      console.log('🏖️ HOLIDU NON CONFIGURATO - HOLIDU_ICAL_URL mancante');
     }
     if (process.env.GOOGLE_CALENDAR_CLIENT_ID && process.env.GOOGLE_CALENDAR_REFRESH_TOKEN) {
       this.calendars.push({
@@ -228,6 +237,7 @@ export class RealCalendarSync {
     const events = [];
     const lines = icalText.split('\n');
     let currentEvent = null;
+    let eventCount = 0;
 
     for (let line of lines) {
       line = line.trim();
@@ -244,6 +254,7 @@ export class RealCalendarSync {
             description: currentEvent.description || '',
             location: currentEvent.location || ''
           });
+          eventCount++;
         }
         currentEvent = null;
       } else if (currentEvent && line.includes(':')) {
@@ -255,6 +266,7 @@ export class RealCalendarSync {
       }
     }
 
+    console.log(`📊 parseICalData: trovati ${eventCount} eventi validi su ${lines.length} linee totali`);
     return events;
   }
 
