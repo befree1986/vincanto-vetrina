@@ -1,6 +1,6 @@
 
 // Modulo per gestione iCal e sincronizzazione calendari reali
-// Supporta parsing iCal da Airbnb, Booking.com, VRBO
+// Supporta parsing iCal da Airbnb, Booking.com
 // e integrazione con Google Calendar API
 import { Pool } from 'pg';
 
@@ -585,8 +585,7 @@ export function validateCalendarConfig() {
   // Verifica configurazione iCal reale
   const icalConfigured = !!(
     process.env.AIRBNB_ICAL_URL || 
-    process.env.BOOKING_ICAL_URL || 
-    process.env.VRBO_ICAL_URL
+    process.env.BOOKING_ICAL_URL
   );
   // Verifica Google Calendar reale
   const googleConfigured = !!(

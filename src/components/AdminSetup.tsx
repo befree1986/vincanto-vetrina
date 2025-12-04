@@ -10,7 +10,6 @@ interface SetupState {
   calendars: {
     bookingCom: string;
     airbnb: string;
-    vrbo: string;
     googleCalendar: boolean;
   };
   payments: {
@@ -54,7 +53,6 @@ export const AdminSetup: React.FC = () => {
     calendars: {
       bookingCom: '',
       airbnb: '',
-      vrbo: '',
       googleCalendar: false
     },
     payments: {
@@ -177,19 +175,6 @@ export const AdminSetup: React.FC = () => {
                   calendars: { ...prev.calendars, airbnb: e.target.value }
                 }))}
                 placeholder="https://calendar.airbnb.com/your-property-ical"
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="vrbo">URL iCal VRBO:</label>
-              <input
-                id="vrbo"
-                type="url"
-                value={setupState.calendars.vrbo}
-                onChange={(e) => setSetupState(prev => ({
-                  ...prev,
-                  calendars: { ...prev.calendars, vrbo: e.target.value }
-                }))}
-                placeholder="https://calendar.vrbo.com/your-property-ical"
               />
             </div>
             <div className="form-group">

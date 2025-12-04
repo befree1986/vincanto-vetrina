@@ -212,10 +212,19 @@ export default async function handler(req, res) {
   // Restituisce tutti gli eventi da calendar_events (per unificazione prenotazioni)
   if (action === 'calendar-events') {
     try {
+      // 🔥 Filtra solo prenotazioni valide, esclude blocchi/festività
       const eventsResult = await pool.query(`
         SELECT id, uid, calendar_source, summary, description, start_date, end_date, location, created_at, updated_at
         FROM calendar_events
         WHERE start_date >= NOW() - INTERVAL '1 year'
+          AND LOWER(summary) NOT LIKE '%not available%'
+          AND LOWER(summary) NOT LIKE '%closed%'
+          AND LOWER(summary) NOT LIKE '%blocked%'
+          AND LOWER(summary) NOT LIKE '%holiday%'
+          AND LOWER(summary) NOT LIKE '%festività%'
+          AND LOWER(summary) NOT LIKE '%maintenance%'
+          AND LOWER(summary) NOT LIKE '%pulizie%'
+          AND LOWER(summary) NOT LIKE '%cleaning%'
         ORDER BY start_date ASC
       `);
       return res.status(200).json({
@@ -1305,7 +1314,7 @@ export default async function handler(req, res) {
           });
         }
 
-        // Costruisci query
+        // Costruisci query - 🔥 Filtra solo prenotazioni valide, esclude blocchi/festività
         let query = `
           SELECT 
             id,
@@ -1321,6 +1330,14 @@ export default async function handler(req, res) {
             EXTRACT(DAY FROM (end_date - start_date)) as nights
           FROM calendar_events
           WHERE 1=1
+            AND LOWER(summary) NOT LIKE '%not available%'
+            AND LOWER(summary) NOT LIKE '%closed%'
+            AND LOWER(summary) NOT LIKE '%blocked%'
+            AND LOWER(summary) NOT LIKE '%holiday%'
+            AND LOWER(summary) NOT LIKE '%festività%'
+            AND LOWER(summary) NOT LIKE '%maintenance%'
+            AND LOWER(summary) NOT LIKE '%pulizie%'
+            AND LOWER(summary) NOT LIKE '%cleaning%'
         `;
 
         const params = [];
@@ -1341,8 +1358,16 @@ export default async function handler(req, res) {
 
         const result = await pool.query(query, params);
 
-        // Conta totale
-        let countQuery = 'SELECT COUNT(*) as total FROM calendar_events WHERE 1=1';
+        // Conta totale - 🔥 Applica gli stessi filtri
+        let countQuery = `SELECT COUNT(*) as total FROM calendar_events WHERE 1=1
+          AND LOWER(summary) NOT LIKE '%not available%'
+          AND LOWER(summary) NOT LIKE '%closed%'
+          AND LOWER(summary) NOT LIKE '%blocked%'
+          AND LOWER(summary) NOT LIKE '%holiday%'
+          AND LOWER(summary) NOT LIKE '%festività%'
+          AND LOWER(summary) NOT LIKE '%maintenance%'
+          AND LOWER(summary) NOT LIKE '%pulizie%'
+          AND LOWER(summary) NOT LIKE '%cleaning%'`;
         if (futureOnly === 'true' || futureOnly === true) {
           countQuery += ' AND start_date >= CURRENT_DATE';
         }

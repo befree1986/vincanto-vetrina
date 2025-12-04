@@ -171,7 +171,7 @@ const AdminPanelPro = (): JSX.Element => {
   // Form nuovo calendario
   const [newCalendarData, setNewCalendarData] = useState({
     name: '',
-    calendar_type: 'google_calendar', // google_calendar, airbnb, booking_com, vrbo
+    calendar_type: 'google_calendar', // google_calendar, airbnb, booking_com
     url: '',
     credentials: '',
     sync_frequency: 30, // minuti
@@ -1531,54 +1531,6 @@ const AdminPanelPro = (): JSX.Element => {
     }
   };
 
-  const handleReactivateVRBO = async () => {
-    const confirm = window.confirm('▶️ Riattivare il calendario VRBO?');
-    
-    if (!confirm) return;
-
-    try {
-      if (!adminApiService) return;
-      
-      const result = await adminApiService.reactivateExternalCalendar('vrbo');
-      
-      if (result.success) {
-        alert('✅ Calendario VRBO riattivato con successo!');
-        await loadCalendarConfigs();
-      } else {
-        alert('❌ Riattivazione fallita: ' + (result.error || 'Errore sconosciuto'));
-      }
-    } catch (error) {
-      console.error('Errore riattivazione VRBO:', error);
-      alert('❌ Errore nella riattivazione VRBO');
-    }
-  };
-
-  const handleEditVRBO = () => {
-    const newUrl = prompt('✏️ Modifica URL VRBO Calendar:', 'https://www.vrbo.com/calendar/...');
-    
-    if (!newUrl) return;
-
-    // Simula salvataggio configurazione VRBO
-    alert(`✅ Configurazione VRBO aggiornata!\n\n🔗 Nuovo URL: ${newUrl}`);
-  };
-
-  const handleDeleteVRBO = async () => {
-    const confirm = window.confirm('⚠️ Eliminare definitivamente il calendario VRBO?\n\nQuesta azione non può essere annullata.');
-    
-    if (!confirm) return;
-
-    try {
-      if (!adminApiService) return;
-      
-      await adminApiService.removeExternalCalendar('vrbo');
-      alert('🗑️ Calendario VRBO eliminato con successo');
-      await loadCalendarConfigs();
-    } catch (error) {
-      console.error('Errore eliminazione VRBO:', error);
-      alert('❌ Errore nell\'eliminazione del calendario VRBO');
-    }
-  };
-
   const handleTestGeneralConnection = async () => {
     try {
       if (!adminApiService) return;
@@ -1589,7 +1541,6 @@ const AdminPanelPro = (): JSX.Element => {
         `🌐 Connessione Internet: ${connectionTest.internet ? '✅' : '❌'}\n` +
         `📅 Google Calendar: ${connectionTest.google ? '✅' : '❌'}\n` +
         `🏠 Airbnb API: ${connectionTest.airbnb ? '✅' : '❌'}\n` +
-        `🏖️ VRBO API: ${connectionTest.vrbo ? '✅' : '❌'}\n` +
         `🏛️ Database: ${connectionTest.database ? '✅' : '❌'}\n\n` +
         `📊 Stato Generale: ${connectionTest.overall ? '✅ Tutto OK' : '❌ Problemi rilevati'}`;
       
@@ -1959,7 +1910,7 @@ const AdminPanelPro = (): JSX.Element => {
       setIsLoadingData(true);
       
       // Simula sincronizzazione con tutte le piattaforme
-      const platforms = ['Airbnb', 'Booking.com', 'Expedia', 'Google Calendar', 'VRBO'];
+      const platforms = ['Airbnb', 'Booking.com', 'Expedia', 'Google Calendar'];
       const syncResults = {
         airbnb: { success: true, newBookings: 3, updated: 1 },
         booking: { success: true, newBookings: 2, updated: 0 },
