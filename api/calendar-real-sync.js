@@ -246,7 +246,8 @@ export class RealCalendarSync {
         currentEvent = {};
       } else if (line === 'END:VEVENT' && currentEvent) {
         // 🔥 FILTRO: Esclude festività e blocchi Airbnb - sincronizza SOLO prenotazioni
-        if (currentEvent.dtstart && currentEvent.dtend && this.isValidBooking(currentEvent)) {
+        // 🔴 AGGIUNGI calendar_source per il filtro
+        if (currentEvent.dtstart && currentEvent.dtend && this.isValidBooking({ ...currentEvent, calendar_source })) {
           events.push({
             uid: currentEvent.uid || '',
             summary: currentEvent.summary || 'Prenotazione',
