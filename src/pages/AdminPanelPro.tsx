@@ -1067,6 +1067,20 @@ const AdminPanelPro = (): JSX.Element => {
         log('✅ Prenotazioni calendari esterni caricate:', calendarBookingsResult);
         if (calendarBookingsResult && calendarBookingsResult.bookings) {
           setCalendarEvents(calendarBookingsResult.bookings);
+          
+          // 📊 Log distribuzione per piattaforma
+          const platformCount = calendarBookingsResult.bookings.reduce((acc, booking) => {
+            const platform = booking.platform || 'unknown';
+            acc[platform] = (acc[platform] || 0) + 1;
+            return acc;
+          }, {});
+          
+          console.log('📊 Distribuzione prenotazioni per piattaforma:', platformCount);
+          console.log(`  🏖️ Holidu: ${platformCount.holidu || 0} prenotazioni`);
+          console.log(`  📱 Airbnb: ${platformCount.airbnb || 0} prenotazioni`);
+          console.log(`  🏨 Booking: ${platformCount.booking || 0} prenotazioni`);
+          console.log(`  📅 Google: ${platformCount.google || 0} prenotazioni`);
+          console.log(`  ❓ Altre: ${platformCount.unknown || 0} prenotazioni`);
         } else {
           setCalendarEvents([]);
         }
