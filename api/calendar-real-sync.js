@@ -259,7 +259,8 @@ export class RealCalendarSync {
           eventCount++;
         } else if (currentEvent.summary) {
           // ⏭️ Log eventi filtrati (festività, blocchi, etc)
-          console.log(`  ⏭️ Escluso: "${currentEvent.summary}" (tipo: ${this.classifyEvent(currentEvent.summary)})`);\n        }
+          console.log(`  ⏭️ Escluso: "${currentEvent.summary}" (tipo: ${this.classifyEvent(currentEvent.summary)})`);
+        }
         currentEvent = null;
       } else if (currentEvent && line.includes(':')) {
         const [key, ...values] = line.split(':');

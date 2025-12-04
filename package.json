@@ -14,7 +14,8 @@
     "lint-cli": "tsx scripts/cli.ts",
     "cli": "tsx scripts/cli.ts",
     "setup-calendars": "node scripts/setup-calendars.js",
-    "test-calendar": "node scripts/test-calendar-system.js"
+    "test-calendar": "node scripts/test-calendar-system.js",
+    "test-holidu": "node --experimental-modules --input-type=module -e \"import('dotenv/config').then(() => import('./test-holidu-sync.mjs'))\""
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
