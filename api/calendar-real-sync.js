@@ -86,8 +86,19 @@ export class RealCalendarSync {
           ...syncResult
         });
         
+        // 🏖️ Log speciale per Holidu result
+        if (calendar.id === 'holidu') {
+          console.log('🏖️ HOLIDU SYNC RESULT:', JSON.stringify(results[results.length - 1], null, 2));
+        }
+        
       } catch (error) {
         console.error(`❌ Errore sincronizzazione ${calendar.name}:`, error.message);
+        
+        // 🏖️ Log speciale per errori Holidu
+        if (calendar.id === 'holidu') {
+          console.error('🏖️ HOLIDU SYNC ERROR DETAILS:', error);
+        }
+        
         results.push({
           id: calendar.id,
           name: calendar.name,
@@ -113,6 +124,12 @@ export class RealCalendarSync {
     try {
       console.log(`🔄 Fetching iCal da ${calendar.name}: ${calendar.url}`);
       
+      // 🏖️ Log speciale per Holidu
+      if (calendar.id === 'holidu') {
+        console.log('🏖️ === HOLIDU SYNC START ===');
+        console.log('🏖️ Holidu URL:', calendar.url);
+      }
+      
       const response = await fetch(calendar.url, {
         headers: {
           'User-Agent': 'Vincanto Calendar Sync/1.0'
@@ -121,10 +138,18 @@ export class RealCalendarSync {
       });
 
       if (!response.ok) {
+        if (calendar.id === 'holidu') {
+          console.error('🏖️ HOLIDU HTTP ERROR:', response.status, response.statusText);
+        }
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const icalData = await response.text();
+      
+      if (calendar.id === 'holidu') {
+        console.log('🏖️ Holidu iCal data length:', icalData.length);
+        console.log('🏖️ Holidu iCal preview:', icalData.substring(0, 200));
+      }
       
       if (!icalData || icalData.trim().length === 0) {
         throw new Error('Dati iCal vuoti ricevuti');
@@ -134,12 +159,28 @@ export class RealCalendarSync {
       
       console.log(`✅ ${calendar.name}: trovati ${events.length} eventi`);
       
+      if (calendar.id === 'holidu') {
+        console.log('🏖️ Holidu eventi parsed:', events.length);
+        if (events.length > 0) {
+          console.log('🏖️ Holidu primo evento:', JSON.stringify(events[0], null, 2));
+        }
+      }
+      
       // Filtra solo eventi futuri
       const futureEvents = events.filter(event => new Date(event.start) > new Date());
       console.log(`📅 ${calendar.name}: ${futureEvents.length} eventi futuri`);
       
+      if (calendar.id === 'holidu') {
+        console.log('🏖️ Holidu eventi futuri:', futureEvents.length);
+      }
+      
       // Salva eventi nel database
       const savedEvents = await this.saveEventsToDatabase(futureEvents, calendar.id);
+      
+      if (calendar.id === 'holidu') {
+        console.log('🏖️ Holidu eventi salvati nel DB:', savedEvents);
+        console.log('🏖️ === HOLIDU SYNC END ===');
+      }
       
       return {
         eventsFound: events.length,
@@ -298,6 +339,10 @@ export class RealCalendarSync {
    */
   async saveEventsToDatabase(events, calendarSource) {
     console.log(`💾 Salvando ${events.length} eventi da ${calendarSource}`);
+    
+    if (calendarSource === 'holidu') {
+      console.log('🏖️ HOLIDU DB SAVE: inizio salvataggio', events.length, 'eventi');
+    }
     
     if (!events.length) return 0;
 
