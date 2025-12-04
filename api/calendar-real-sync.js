@@ -303,14 +303,27 @@ export class RealCalendarSync {
   }
 
   /**
-   * Valida se un evento è una prenotazione valida (esclude festività/blocchi)
+   * Valida se un evento è una prenotazione valida
+   * ESCLUDE: festività/blocchi da AIRBNB (default-blocked)
+   * MANTIENE: chiusure da BOOKING (host-controlled)
    */
   isValidBooking(event) {
     if (!event.summary) return true; // Se no summary, considera come prenotazione
     
-    const eventType = this.classifyEvent(event.summary);
+    // Se è da Booking.com, MANTIENI anche i "CLOSED" (chiusure reali del host)
+    if (event.calendar_source === 'booking') {
+      return true; // Tutti gli eventi Booking sono validi (incluse le chiusure intenzionali)
+    }
     
-    // 🔥 Accetta SOLO 'booking' - Rifiuta: 'holiday', 'blocked', 'maintenance'
+    // Se è da Airbnb, FILTRA i blocchi/festività
+    if (event.calendar_source === 'airbnb') {
+      const eventType = this.classifyEvent(event.summary);
+      // Rifiuta: 'holiday', 'blocked', 'maintenance' da Airbnb
+      return eventType === 'booking';
+    }
+    
+    // Per altre sorgenti, accetta se è una prenotazione
+    const eventType = this.classifyEvent(event.summary);
     return eventType === 'booking';
   }
 

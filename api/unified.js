@@ -212,19 +212,30 @@ export default async function handler(req, res) {
   // Restituisce tutti gli eventi da calendar_events (per unificazione prenotazioni)
   if (action === 'calendar-events') {
     try {
-      // 🔥 Filtra solo prenotazioni valide, esclude blocchi/festività
+      // 🔥 Filtra: ESCLUDE blocchi Airbnb (festività), MANTIENE chiusure Booking.com (vere)
       const eventsResult = await pool.query(`
         SELECT id, uid, calendar_source, summary, description, start_date, end_date, location, created_at, updated_at
         FROM calendar_events
         WHERE start_date >= NOW() - INTERVAL '1 year'
-          AND LOWER(summary) NOT LIKE '%not available%'
-          AND LOWER(summary) NOT LIKE '%closed%'
-          AND LOWER(summary) NOT LIKE '%blocked%'
-          AND LOWER(summary) NOT LIKE '%holiday%'
-          AND LOWER(summary) NOT LIKE '%festività%'
-          AND LOWER(summary) NOT LIKE '%maintenance%'
-          AND LOWER(summary) NOT LIKE '%pulizie%'
-          AND LOWER(summary) NOT LIKE '%cleaning%'
+          AND NOT (
+            calendar_source = 'airbnb' AND (
+              LOWER(summary) LIKE '%not available%'
+              OR LOWER(summary) LIKE '%blocked%'
+              OR LOWER(summary) LIKE '%holiday%'
+              OR LOWER(summary) LIKE '%festività%'
+              OR LOWER(summary) LIKE '%vacation%'
+              OR LOWER(summary) LIKE '%break%'
+              OR LOWER(summary) LIKE '%festa%'
+            )
+          )
+          AND NOT (
+            calendar_source = 'airbnb' AND (
+              LOWER(summary) LIKE '%maintenance%'
+              OR LOWER(summary) LIKE '%pulizie%'
+              OR LOWER(summary) LIKE '%cleaning%'
+              OR LOWER(summary) LIKE '%manutenzione%'
+            )
+          )
         ORDER BY start_date ASC
       `);
       return res.status(200).json({
@@ -1330,14 +1341,25 @@ export default async function handler(req, res) {
             EXTRACT(DAY FROM (end_date - start_date)) as nights
           FROM calendar_events
           WHERE 1=1
-            AND LOWER(summary) NOT LIKE '%not available%'
-            AND LOWER(summary) NOT LIKE '%closed%'
-            AND LOWER(summary) NOT LIKE '%blocked%'
-            AND LOWER(summary) NOT LIKE '%holiday%'
-            AND LOWER(summary) NOT LIKE '%festività%'
-            AND LOWER(summary) NOT LIKE '%maintenance%'
-            AND LOWER(summary) NOT LIKE '%pulizie%'
-            AND LOWER(summary) NOT LIKE '%cleaning%'
+            AND NOT (
+              calendar_source = 'airbnb' AND (
+                LOWER(summary) LIKE '%not available%'
+                OR LOWER(summary) LIKE '%blocked%'
+                OR LOWER(summary) LIKE '%holiday%'
+                OR LOWER(summary) LIKE '%festività%'
+                OR LOWER(summary) LIKE '%vacation%'
+                OR LOWER(summary) LIKE '%break%'
+                OR LOWER(summary) LIKE '%festa%'
+              )
+            )
+            AND NOT (
+              calendar_source = 'airbnb' AND (
+                LOWER(summary) LIKE '%maintenance%'
+                OR LOWER(summary) LIKE '%pulizie%'
+                OR LOWER(summary) LIKE '%cleaning%'
+                OR LOWER(summary) LIKE '%manutenzione%'
+              )
+            )
         `;
 
         const params = [];
@@ -1358,16 +1380,27 @@ export default async function handler(req, res) {
 
         const result = await pool.query(query, params);
 
-        // Conta totale - 🔥 Applica gli stessi filtri
+        // Conta totale - 🔥 Applica gli stessi filtri (esclude Airbnb blocchi, mantiene Booking chiusure)
         let countQuery = `SELECT COUNT(*) as total FROM calendar_events WHERE 1=1
-          AND LOWER(summary) NOT LIKE '%not available%'
-          AND LOWER(summary) NOT LIKE '%closed%'
-          AND LOWER(summary) NOT LIKE '%blocked%'
-          AND LOWER(summary) NOT LIKE '%holiday%'
-          AND LOWER(summary) NOT LIKE '%festività%'
-          AND LOWER(summary) NOT LIKE '%maintenance%'
-          AND LOWER(summary) NOT LIKE '%pulizie%'
-          AND LOWER(summary) NOT LIKE '%cleaning%'`;
+          AND NOT (
+            calendar_source = 'airbnb' AND (
+              LOWER(summary) LIKE '%not available%'
+              OR LOWER(summary) LIKE '%blocked%'
+              OR LOWER(summary) LIKE '%holiday%'
+              OR LOWER(summary) LIKE '%festività%'
+              OR LOWER(summary) LIKE '%vacation%'
+              OR LOWER(summary) LIKE '%break%'
+              OR LOWER(summary) LIKE '%festa%'
+            )
+          )
+          AND NOT (
+            calendar_source = 'airbnb' AND (
+              LOWER(summary) LIKE '%maintenance%'
+              OR LOWER(summary) LIKE '%pulizie%'
+              OR LOWER(summary) LIKE '%cleaning%'
+              OR LOWER(summary) LIKE '%manutenzione%'
+            )
+          )`;
         if (futureOnly === 'true' || futureOnly === true) {
           countQuery += ' AND start_date >= CURRENT_DATE';
         }
