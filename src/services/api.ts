@@ -181,6 +181,17 @@ export async function createBooking(data: CreateBookingRequest): Promise<CreateB
 }
 
 /**
+ * Cancella un booking (usato quando pagamento fallisce)
+ */
+export async function cancelBooking(bookingId: string, reason?: string): Promise<{ success: boolean; message: string }> {
+    const response = await api.post('/unified?action=cancel-booking', {
+        bookingId,
+        reason: reason || 'Pagamento annullato o fallito'
+    });
+    return response.data;
+}
+
+/**
  * Aggiorna lo status di una prenotazione dopo pagamento
  */
 export async function updateBookingStatus(bookingId: string, status: 'confirmed' | 'cancelled', paymentData?: {

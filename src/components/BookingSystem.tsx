@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useBooking } from '../hooks/useBooking';
 import { useDynamicPricing } from '../hooks/useDynamicPricing';
-import { updateBookingStatus } from '../services/api'; // ⚡ Import update function
+import { updateBookingStatus, cancelBooking } from '../services/api'; // ⚡ Import update function
 import BookingCalendar from './BookingCalendar';
 import ExtraServices from './ExtraServices';
 import './BookingSystem.css';
@@ -311,6 +311,21 @@ const BookingSystem: React.FC = () => {
             console.error('Errore conferma prenotazione:', error);
             setError(`Pagamento riuscito ma errore nel salvataggio: ${error.message}. Contattaci con il codice prenotazione ${bookingResult?.booking_id || 'N/A'}.`);
         }
+    };
+
+    const handlePaymentError = async (errorMessage: string, reason?: string) => {
+        try {
+            // Quando pagamento fallisce, cancella il booking draft
+            if (bookingResult?.booking_id) {
+                console.log(`🚫 Cancellazione booking ${bookingResult.booking_id} per errore pagamento: ${errorMessage}`);
+                await cancelBooking(bookingResult.booking_id, reason || `Pagamento fallito: ${errorMessage}`);
+                console.log(`✅ Booking ${bookingResult.booking_id} cancellato con successo`);
+            }
+        } catch (error: any) {
+            console.error('Errore nella cancellazione del booking:', error);
+        }
+        // Comunque mostra l'errore all'utente
+        setError(errorMessage);
     };
 
     const startNewBooking = () => {
@@ -947,7 +962,7 @@ const BookingSystem: React.FC = () => {
                                             customerEmail={formData.guest_email}
                                             customerName={`${formData.guest_name} ${formData.guest_surname}`}
                                             onPaymentSuccess={handlePaymentSuccess}
-                                            onPaymentError={(error) => setError(error)}
+                                            onPaymentError={(error) => handlePaymentError(error, 'Errore durante il pagamento Stripe')}
                                             onCancel={() => {
                                                 setShowPayment(false);
                                                 setCurrentStep('details');
@@ -980,7 +995,7 @@ const BookingSystem: React.FC = () => {
                                             customerEmail={formData.guest_email}
                                             customerName={`${formData.guest_name} ${formData.guest_surname}`}
                                             onPaymentSuccess={handlePaymentSuccess}
-                                            onPaymentError={(error) => setError(error)}
+                                            onPaymentError={(error) => handlePaymentError(error, 'Errore durante il pagamento PayPal')}
                                             onCancel={() => {
                                                 setShowPayment(false);
                                                 setCurrentStep('details');
@@ -1110,8 +1125,8 @@ const BookingSystem: React.FC = () => {
                             customerEmail={formData.guest_email}
                             customerName={`${formData.guest_name} ${formData.guest_surname}`}
                             onPaymentSuccess={handlePaymentSuccess}
-                            onPaymentError={(error: string) => setError(`Errore pagamento: ${error}`)}
-                            onCancel={() => setError('Pagamento annullato')}
+                            onPaymentError={(error: string) => handlePaymentError(`Errore pagamento: ${error}`, 'Stripe payment failed')}
+                            onCancel={() => handlePaymentError('Pagamento annullato', 'User cancelled Stripe payment')}
                         />
                     </div>
                 )}
@@ -1124,8 +1139,8 @@ const BookingSystem: React.FC = () => {
                             customerEmail={formData.guest_email}
                             customerName={`${formData.guest_name} ${formData.guest_surname}`}
                             onPaymentSuccess={handlePaymentSuccess}
-                            onPaymentError={(error: string) => setError(`Errore pagamento PayPal: ${error}`)}
-                            onCancel={() => setError('Pagamento PayPal annullato')}
+                            onPaymentError={(error: string) => handlePaymentError(`Errore pagamento PayPal: ${error}`, 'PayPal payment failed')}
+                            onCancel={() => handlePaymentError('Pagamento PayPal annullato', 'User cancelled PayPal payment')}
                         />
                     </div>
                 )}

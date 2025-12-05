@@ -406,7 +406,8 @@ export default async function handler(req, res) {
     if (action === 'booking') {
       if (req.method === 'GET') {
         try {
-          // Ottieni tutte le prenotazioni dal database
+          // Ottieni solo le prenotazioni CONFERMATE o IN ATTESA (non draft o cancellate)
+          // draft = non ancora pagato, cancelled = rifiutato
           const result = await pool.query(`
             SELECT 
               id,
@@ -421,6 +422,7 @@ export default async function handler(req, res) {
               payment_status as payment_method,
               created_at
             FROM bookings 
+            WHERE status IN ('confirmed', 'pending')
             ORDER BY created_at DESC
           `);
           
@@ -590,6 +592,58 @@ export default async function handler(req, res) {
             success: false,
             message: 'Errore creazione prenotazione',
             error: error.message
+          });
+        }
+      }
+    }
+
+    // ========================================
+    // CANCEL BOOKING ENDPOINT
+    // ========================================
+    // Cancella o marca come cancelled un booking (usato quando pagamento fallisce)
+    if (action === 'cancel-booking') {
+      if (req.method === 'POST') {
+        try {
+          const { bookingId, reason } = req.body;
+          
+          if (!bookingId) {
+            return res.status(400).json({
+              success: false,
+              error: 'bookingId è richiesto'
+            });
+          }
+          
+          console.log(`🚫 Cancellazione booking: ${bookingId}, motivo: ${reason || 'non specificato'}`);
+          
+          // Aggiorna il booking a status 'cancelled'
+          const result = await pool.query(`
+            UPDATE bookings 
+            SET status = 'cancelled', 
+                payment_status = 'cancelled',
+                updated_at = NOW()
+            WHERE booking_id = $1 OR id = $1
+            RETURNING *
+          `, [bookingId]);
+          
+          if (result.rows.length === 0) {
+            return res.status(404).json({
+              success: false,
+              error: 'Booking non trovato'
+            });
+          }
+          
+          console.log(`✅ Booking ${bookingId} cancellato con successo`);
+          return res.status(200).json({
+            success: true,
+            message: 'Booking cancellato con successo',
+            bookingId: bookingId,
+            reason: reason
+          });
+        } catch (error) {
+          console.error('❌ Errore cancellazione booking:', error);
+          return res.status(500).json({
+            success: false,
+            error: 'Errore nella cancellazione del booking'
           });
         }
       }
