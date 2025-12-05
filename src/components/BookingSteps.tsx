@@ -399,16 +399,22 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
             </div>
           </div>
         )}
-        {booking.formData.payment_type !== 'full' && (
-          <div className="summary-row">
-            <span>Acconto (30%):</span>
-            <span>€{deposit.toFixed(2)}</span>
-          </div>
+        {booking.formData.payment_type === 'deposit' && (
+          <>
+            <div className="summary-row">
+              <span>Acconto richiesto (30%):</span>
+              <span>€{deposit.toFixed(2)}</span>
+            </div>
+            <div className="summary-row">
+              <span>Saldo da pagare al check-in:</span>
+              <span>€{saldo.toFixed(2)}</span>
+            </div>
+          </>
         )}
-        {booking.formData.payment_type !== 'full' && (
+        {booking.formData.payment_type === 'full' && (
           <div className="summary-row">
-            <span>Saldo al check-in:</span>
-            <span>€{saldo.toFixed(2)}</span>
+            <span>Importo da pagare ora:</span>
+            <span><strong>€{total.toFixed(2)}</strong></span>
           </div>
         )}
       </div>
@@ -434,32 +440,34 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
             Paga l'intero importo ora
           </button>
         </div>
-        <div className="payment-choice-btn-group">
-          <button
-            type="button"
-            className={`choice-btn${booking.formData.payment_method === 'stripe' ? ' active' : ''}`}
-            onClick={() => booking.setFormData({ payment_method: 'stripe' })}
-          >
-            <img src="/icons/stripe_icon.webp" alt="Stripe" className="payment-logo" />
-            Carta di credito (Stripe)
-          </button>
-          <button
-            type="button"
-            className={`choice-btn${booking.formData.payment_method === 'paypal' ? ' active' : ''}`}
-            onClick={() => booking.setFormData({ payment_method: 'paypal' })}
-          >
-            <img src="/icons/PayPal_icon.webp" alt="PayPal" className="payment-logo" />
-            PayPal
-          </button>
-          <button
-            type="button"
-            className={`choice-btn${booking.formData.payment_method === 'bank_transfer' ? ' active' : ''}`}
-            onClick={() => booking.setFormData({ payment_method: 'bank_transfer' })}
-          >
-            <img src="/icons/bonifico_icon.webp" alt="Bonifico" className="payment-logo" />
-            Bonifico bancario
-          </button>
-        </div>
+        {(booking.formData.payment_method === 'stripe' || booking.formData.payment_method === 'paypal') && (
+          <div className="payment-choice-btn-group">
+            <button
+              type="button"
+              className={`choice-btn${booking.formData.payment_method === 'stripe' ? ' active' : ''}`}
+              onClick={() => booking.setFormData({ payment_method: 'stripe' })}
+            >
+              <img src="/icons/stripe_icon.webp" alt="Stripe" className="payment-logo" />
+              Carta di credito (Stripe)
+            </button>
+            <button
+              type="button"
+              className={`choice-btn${booking.formData.payment_method === 'paypal' ? ' active' : ''}`}
+              onClick={() => booking.setFormData({ payment_method: 'paypal' })}
+            >
+              <img src="/icons/PayPal_icon.webp" alt="PayPal" className="payment-logo" />
+              PayPal
+            </button>
+            <button
+              type="button"
+              className={`choice-btn${booking.formData.payment_method === 'bank_transfer' ? ' active' : ''}`}
+              onClick={() => booking.setFormData({ payment_method: 'bank_transfer' })}
+            >
+              <img src="/icons/bonifico_icon.webp" alt="Bonifico" className="payment-logo" />
+              Bonifico bancario
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="payment-methods">
