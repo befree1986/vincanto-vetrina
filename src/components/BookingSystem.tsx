@@ -1116,34 +1116,6 @@ const BookingSystem: React.FC = () => {
                         )}
                     </div>
                 )}
-
-                {showPayment && formData.payment_method === 'stripe' && bookingResult && (
-                    <div className="booking-step-content">
-                        <StripePayment
-                            bookingId={bookingResult.booking_id}
-                            amount={bookingResult.payment_amount}
-                            customerEmail={formData.guest_email}
-                            customerName={`${formData.guest_name} ${formData.guest_surname}`}
-                            onPaymentSuccess={handlePaymentSuccess}
-                            onPaymentError={(error: string) => handlePaymentError(`Errore pagamento: ${error}`, 'Stripe payment failed')}
-                            onCancel={() => handlePaymentError('Pagamento annullato', 'User cancelled Stripe payment')}
-                        />
-                    </div>
-                )}
-
-                {showPayment && formData.payment_method === 'paypal' && bookingResult && (
-                    <div className="booking-step-content">
-                        <PayPalPayment
-                            bookingId={bookingResult.booking_id}
-                            amount={bookingResult.payment_amount}
-                            customerEmail={formData.guest_email}
-                            customerName={`${formData.guest_name} ${formData.guest_surname}`}
-                            onPaymentSuccess={handlePaymentSuccess}
-                            onPaymentError={(error: string) => handlePaymentError(`Errore pagamento PayPal: ${error}`, 'PayPal payment failed')}
-                            onCancel={() => handlePaymentError('Pagamento PayPal annullato', 'User cancelled PayPal payment')}
-                        />
-                    </div>
-                )}
             </div>
         </div>
     );
