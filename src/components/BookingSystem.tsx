@@ -761,38 +761,38 @@ const BookingSystem: React.FC = () => {
                             <div className="price-summary">
                                 <div className="price-item">
                                     <span className="price-label">{getSafeTranslation(t, 'booking.accommodation', 'Soggiorno')} ({quote.nights} {quote.nights === 1 ? getSafeTranslation(t, 'booking.night', 'notte') : getSafeTranslation(t, 'booking.nights', 'notti')})</span>
-                                    <span className="price-value">€{quote.basePrice.toFixed(2)}</span>
+                                    <span className="price-value">€{Number(quote.basePrice || 0).toFixed(2)}</span>
                                 </div>
                                 {formData.parking_option === 'private' && quote.parkingCost > 0 && (
                                     <div className="price-item">
                                         <span className="price-label">🚗 {getSafeTranslation(t, 'booking.parking', 'Parcheggio')}</span>
-                                        <span className="price-value">€{quote.parkingCost.toFixed(2)}</span>
+                                        <span className="price-value">€{Number(quote.parkingCost || 0).toFixed(2)}</span>
                                     </div>
                                 )}
                                 {extraServicesCost > 0 && (
                                     <div className="price-item">
                                         <span className="price-label">🛎️ {getSafeTranslation(t, 'booking.extraServices', 'Servizi Extra')}</span>
-                                        <span className="price-value">€{extraServicesCost.toFixed(2)}</span>
+                                        <span className="price-value">€{Number(extraServicesCost || 0).toFixed(2)}</span>
                                     </div>
                                 )}
                                 <div className="price-item">
                                     <span className="price-label">🧹 {getSafeTranslation(t, 'booking.cleaning', 'Pulizia')}</span>
-                                    <span className="price-value">€{quote.cleaningFee.toFixed(2)}</span>
+                                    <span className="price-value">€{Number(quote.cleaningFee || 0).toFixed(2)}</span>
                                 </div>
                                 <div className="price-item">
                                     <span className="price-label">🏛️ {getSafeTranslation(t, 'booking.touristTax', 'Tassa soggiorno')}</span>
-                                    <span className="price-value">€{quote.touristTax.toFixed(2)}</span>
+                                    <span className="price-value">€{Number(quote.touristTax || 0).toFixed(2)}</span>
                                 </div>
                             </div>
                             <div className="price-total-section">
                                 <div className="price-total">
                                     <span className="total-label">{getSafeTranslation(t, 'booking.total', 'Totale')}</span>
-                                    <span className="total-value">€{(quote.totalAmount + extraServicesCost).toFixed(2)}</span>
+                                    <span className="total-value">€{Number((quote.totalAmount || 0) + (extraServicesCost || 0)).toFixed(2)}</span>
                                 </div>
                                 {formData.payment_type === 'deposit' && (
                                     <div className="price-deposit">
                                         <span className="deposit-label">{getSafeTranslation(t, 'booking.depositRequired', 'Acconto 30%')}</span>
-                                        <span className="deposit-value">€{((quote.totalAmount + extraServicesCost) * 0.30).toFixed(2)}</span>
+                                        <span className="deposit-value">€{Number(((quote.totalAmount || 0) + (extraServicesCost || 0)) * 0.30).toFixed(2)}</span>
                                     </div>
                                 )}
                             </div>
