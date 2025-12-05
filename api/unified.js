@@ -578,7 +578,11 @@ export default async function handler(req, res) {
           return res.status(201).json({
             success: true,
             message: 'Prenotazione creata con successo',
-            booking: result.rows[0]
+            booking: result.rows[0],
+            // 💰 Frontend mapping: includi payment_amount per compatibilità StripePayment/PayPalPayment
+            payment_amount: totalAmount,
+            booking_id: result.rows[0].booking_id,
+            id: result.rows[0].id
           });
         } catch (error) {
           console.error('❌ Errore booking POST:', error);
