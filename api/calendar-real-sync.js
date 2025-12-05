@@ -164,7 +164,7 @@ export class RealCalendarSync {
         throw new Error('Dati iCal vuoti ricevuti');
       }
 
-      const events = this.parseICalData(icalData);
+      const events = this.parseICalData(icalData, calendar.id);
       
       console.log(`✅ ${calendar.name}: trovati ${events.length} eventi`);
       
@@ -233,7 +233,7 @@ export class RealCalendarSync {
   /**
    * Parse dati iCal in formato standard
    */
-  parseICalData(icalText) {
+  parseICalData(icalText, calendar_source) {
     const events = [];
     const lines = icalText.split('\n');
     let currentEvent = null;
