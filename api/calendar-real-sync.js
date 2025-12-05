@@ -307,6 +307,7 @@ export class RealCalendarSync {
    * Valida se un evento è una prenotazione valida
    * ESCLUDE: festività/blocchi da AIRBNB (default-blocked)
    * MANTIENE: chiusure da BOOKING (host-controlled)
+   * ESCLUDE: blocchi/unavailable da HOLIDU
    */
   isValidBooking(event) {
     if (!event.summary) return true; // Se no summary, considera come prenotazione
@@ -321,6 +322,21 @@ export class RealCalendarSync {
       const eventType = this.classifyEvent(event.summary);
       // Rifiuta: 'holiday', 'blocked', 'maintenance' da Airbnb
       return eventType === 'booking';
+    }
+    
+    // 🏖️ Se è da Holidu, FILTRA i blocchi/unavailable in modo aggressivo
+    // Holidu potrebbe usare vari nomi per i blocchi: "Blocked", "Not Available", "Unavailable", etc.
+    if (event.calendar_source === 'holidu') {
+      const summary = event.summary?.toLowerCase() || '';
+      // Esclude esplicitamente i blocchi Holidu
+      if (summary.includes('block') || summary.includes('not available') || 
+          summary.includes('unavailable') || summary.includes('non disponibile') ||
+          summary.includes('non-available') || summary.includes('bloccato')) {
+        console.log(`🏖️ HOLIDU: Escludendo blocco "${event.summary}"`);
+        return false; // Scarta questo evento
+      }
+      // Se è una prenotazione generica, mantienila
+      return true;
     }
     
     // Per altre sorgenti, accetta se è una prenotazione

@@ -213,6 +213,7 @@ export default async function handler(req, res) {
   if (action === 'calendar-events') {
     try {
       // 🔥 Filtra: ESCLUDE blocchi Airbnb (festività), MANTIENE chiusure Booking.com (vere)
+      // ESCLUDE anche blocchi Holidu (non-booking events)
       const eventsResult = await pool.query(`
         SELECT id, uid, calendar_source, summary, description, start_date, end_date, location, created_at, updated_at
         FROM calendar_events
@@ -234,6 +235,16 @@ export default async function handler(req, res) {
               OR LOWER(summary) LIKE '%pulizie%'
               OR LOWER(summary) LIKE '%cleaning%'
               OR LOWER(summary) LIKE '%manutenzione%'
+            )
+          )
+          AND NOT (
+            calendar_source = 'holidu' AND (
+              LOWER(summary) LIKE '%not available%'
+              OR LOWER(summary) LIKE '%blocked%'
+              OR LOWER(summary) LIKE '%holiday%'
+              OR LOWER(summary) LIKE '%unavailable%'
+              OR LOWER(summary) LIKE '%non disponibile%'
+              OR LOWER(summary) LIKE '%non-available%'
             )
           )
         ORDER BY start_date ASC
