@@ -440,7 +440,8 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
             Paga l'intero importo ora
           </button>
         </div>
-        {(booking.formData.payment_method === 'stripe' || booking.formData.payment_method === 'paypal') && (
+        {/* Mostra metodi di pagamento SEMPRE se è stato selezionato payment_type */}
+        {booking.formData.payment_type && (
           <div className="payment-choice-btn-group">
             <button
               type="button"
@@ -533,11 +534,16 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
                 <PayPalScriptProvider options={{ "client-id": import.meta.env.VITE_PAYPAL_CLIENT_ID, clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID, currency: 'EUR' }}>
                   <PayPalButtons
                     createOrder={(_data, actions) => {
+                      // Calcola l'importo da pagare: acconto (30%) o totale completo
+                      const paypalAmount = isDeposit 
+                        ? Math.round(total * 0.3 * 100) / 100  // 30% con extra services
+                        : Math.round(total * 100) / 100;        // 100% con extra services
+                      
                       return actions.order.create({
                         intent: 'CAPTURE',
                         purchase_units: [{
                           amount: {
-                            value: (isDeposit && booking.quote ? (booking.quote.totalAmount * 0.3) : (booking.quote?.totalAmount || 0)).toFixed(2),
+                            value: paypalAmount.toFixed(2),
                             currency_code: 'EUR'
                           }
                         }]
@@ -556,17 +562,6 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
               )}
             </div>
             {paypalError && <div className="error-message"><span className="icon">⚠️</span> {paypalError}</div>}
-            <button
-              type="button"
-              className="btn btn-primary btn-pay btn-pay-margin"
-              onClick={() => {
-                const btn = document.querySelector('.paypal-buttons button') as HTMLButtonElement | null;
-                btn?.click();
-              }}
-              disabled={isProcessing}
-            >
-              {isProcessing ? 'Elaborazione...' : 'Effettua pagamento'}
-            </button>
           </div>
         )}
         {paypalSuccess && (
