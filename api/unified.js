@@ -240,8 +240,6 @@ export default async function handler(req, res) {
           AND NOT (
             calendar_source = 'holidu' AND (
               LOWER(summary) LIKE '%not available%'
-              OR LOWER(summary) LIKE '%blocked%'
-              OR LOWER(summary) LIKE '%holiday%'
               OR LOWER(summary) LIKE '%unavailable%'
               OR LOWER(summary) LIKE '%non disponibile%'
               OR LOWER(summary) LIKE '%non-available%'

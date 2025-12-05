@@ -324,18 +324,19 @@ export class RealCalendarSync {
       return eventType === 'booking';
     }
     
-    // 🏖️ Se è da Holidu, FILTRA i blocchi/unavailable in modo aggressivo
-    // Holidu potrebbe usare vari nomi per i blocchi: "Blocked", "Not Available", "Unavailable", etc.
+    // 🏖️ Se è da Holidu, FILTRA SOLO i blocchi di sistema (unavailable), non i blocchi manuali dell'host
+    // Conservatore: esclude SOLO i pattern chiari di "non disponibilità di sistema"
+    // Mantiene: "Blocked", "Maintenance", "Cleaning" (probabilmente host-controlled)
     if (event.calendar_source === 'holidu') {
       const summary = event.summary?.toLowerCase() || '';
-      // Esclude esplicitamente i blocchi Holidu
-      if (summary.includes('block') || summary.includes('not available') || 
-          summary.includes('unavailable') || summary.includes('non disponibile') ||
-          summary.includes('non-available') || summary.includes('bloccato')) {
-        console.log(`🏖️ HOLIDU: Escludendo blocco "${event.summary}"`);
-        return false; // Scarta questo evento
+      // Esclude SOLO unavailable di sistema - non manuali dell'host
+      if (summary.includes('unavailable') || summary.includes('not available') || 
+          summary.includes('non disponibile') || summary.includes('non-available')) {
+        console.log(`🏖️ HOLIDU: Escludendo unavailable di sistema "${event.summary}"`);
+        return false; // Scarta questo evento (blocco di sistema)
       }
-      // Se è una prenotazione generica, mantienila
+      // Mantiene: "Blocked", "Blocked by owner", "Maintenance", "Cleaning", testo generico
+      // Questi sono probabilmente blocchi manuali dell'host
       return true;
     }
     
