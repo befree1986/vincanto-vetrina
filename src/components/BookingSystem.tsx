@@ -942,7 +942,6 @@ const BookingSystem: React.FC = () => {
                         {/* Form di pagamento Stripe/PayPal */}
                         {showPayment && bookingResult && formData.payment_method === 'stripe' && paymentAmount > 0 && (
                             <div className="payment-form-section">
-                                <h3>💳 {getSafeTranslation(t, 'booking.cardPayment', 'Pagamento con Carta')}</h3>
                                 {(() => {
                                     // 💰 Use stored paymentAmount instead of recalculating
                                     const depositAmount = Math.round(paymentAmount * 0.30 * 100) / 100;
@@ -975,7 +974,6 @@ const BookingSystem: React.FC = () => {
 
                         {showPayment && bookingResult && formData.payment_method === 'paypal' && paymentAmount > 0 && (
                             <div className="payment-form-section">
-                                <h3>🅿️ {getSafeTranslation(t, 'booking.paypalPayment', 'Pagamento con PayPal')}</h3>
                                 {(() => {
                                     // 💰 Use stored paymentAmount instead of recalculating
                                     const depositAmount = Math.round(paymentAmount * 0.30 * 100) / 100;
