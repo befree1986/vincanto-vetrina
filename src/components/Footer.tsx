@@ -12,14 +12,14 @@ const Footer: React.FC = () => {
   useTranslationDebug([
   'footer.privacyPolicy',
   'footer.cookiePolicy',
-  'footer.termsConditions',
+  'footer.terms',
   'footer.accessibility',
-  'footer.manageCookies',
-  'footer.legalInfo',
-  'footer.certified',
+  'footer.cookieSettings',
+  'footer.legalInformation',
+  'footer.certifiedBy',
   'footer.license',
-  'footer.cin',
-  'footer.rights',
+  'footer.regionLicense',
+  'footer.allRightsReserved',
   'footer.webmaster'
 ], 'Footer');
 
@@ -133,8 +133,8 @@ const Footer: React.FC = () => {
         </div>
 
         <div className="footer-bottom">
-          <p>&copy; <time dateTime={String(currentYear)}>{currentYear}</time> Vincanto. {t('All Rights Reserved.')}</p>
-          <p>{t('Webmaster')} Giuseppe Marino</p>
+          <p>&copy; <time dateTime={String(currentYear)}>{currentYear}</time> Vincanto. {t('footer.allRightsReserved')}</p>
+          <p>{t('footer.webmaster')} Giuseppe Marino</p>
         </div>
       </div>
     </footer>
