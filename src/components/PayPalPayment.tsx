@@ -37,7 +37,6 @@ const PayPalPayment: React.FC<PayPalPaymentProps> = ({
     if (window.paypal) {
       setPaypalLoaded(true);
       setIsLoading(false);
-      renderPayPalButtons();
       return;
     }
 
@@ -49,7 +48,6 @@ const PayPalPayment: React.FC<PayPalPaymentProps> = ({
     script.onload = () => {
       setPaypalLoaded(true);
       setIsLoading(false);
-      renderPayPalButtons();
     };
     
     script.onerror = () => {
@@ -68,14 +66,32 @@ const PayPalPayment: React.FC<PayPalPaymentProps> = ({
     };
   }, []);
 
+  // Render PayPal buttons DOPO che paypalLoaded è true E il container è nel DOM
+  useEffect(() => {
+    if (paypalLoaded && window.paypal) {
+      // Aspetta un tick per assicurarsi che il DOM sia pronto
+      const timer = setTimeout(() => {
+        renderPayPalButtons();
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [paypalLoaded, amount, customerName, bookingId]);
+
   const renderPayPalButtons = () => {
-    if (!window.paypal || !paypalLoaded) return;
+    if (!window.paypal || !paypalLoaded) {
+      console.warn('🏖️ PayPal non pronto:', { hasPaypal: !!window.paypal, paypalLoaded });
+      return;
+    }
 
     // Clear existing buttons
     const container = document.getElementById('paypal-button-container');
-    if (container) {
-      container.innerHTML = '';
+    if (!container) {
+      console.error('🚨 Container PayPal non trovato nel DOM');
+      return;
     }
+    
+    console.log('✅ Container PayPal trovato, rendering buttons...');
+    container.innerHTML = '';
 
     // Fallback amount se non valido
     const deriveAmount = () => {
