@@ -249,5 +249,11 @@
   "booking.bank.reason.booking": "Réservation",
   "booking.bank.amountToTransfer": "Montant à transférer",
   "booking.bank.note": "Important : Nous vous avons envoyé un email avec tous les détails. La réservation sera définitivement confirmée après la réception et la vérification du virement bancaire. Nous vous contacterons dans les 24 à 48 heures suivant la réception du paiement.",
-  "booking.newBooking": "Nouvelle Réservation"
+  "booking.newBooking": "Nouvelle Réservation",
+  "booking.payment.paypal.title": "Paiement avec PayPal",
+  "booking.payment.paypal.description": "Paiement sécurisé via PayPal. Accepte toutes les principales cartes de crédit et de débit.",
+  "booking.payment.amount": "Montant",
+  "booking.payment.loading": "Chargement de PayPal...",
+  "booking.payment.retry": "Réessayer",
+  "booking.payment.security": "SSL ✓ PayPal 💳 Sécurisé"
 }

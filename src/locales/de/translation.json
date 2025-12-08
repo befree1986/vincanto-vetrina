@@ -409,6 +409,12 @@
   "booking.bank.reason": "Verwendungszweck",
   "booking.bank.reason.booking": "Buchung",
   "booking.bank.amountToTransfer": "Zu überweisender Betrag",
-  "booking.bank.note": "Wichtig: Wir haben Ihnen eine E-Mail mit allen Details gesendet. Die Buchung wird endgültig bestätigt, nachdem die Banküberweisung eingegangen und überprüft wurde. Wir kontaktieren Sie innerhalb von 24–48 Stunden nach Zahlungseingang.",
-  "booking.newBooking": "Neue Buchung"
+  "booking.bank.note": "Wichtig: Wir haben dir eine E-Mail mit allen Details gesendet. Die Buchung wird endgültig bestätigt, nachdem die Banküberweisung eingegangen und überprüft wurde. Wir kontaktieren dich innerhalb von 24–48 Stunden nach Erhalt der Zahlung.",
+  "booking.newBooking": "Neue Buchung",
+  "booking.payment.paypal.title": "Zahlung mit PayPal",
+  "booking.payment.paypal.description": "Sichere Zahlung über PayPal. Akzeptiert alle gängigen Kreditkarten und Debitkarten.",
+  "booking.payment.amount": "Betrag",
+  "booking.payment.loading": "PayPal wird geladen...",
+  "booking.payment.retry": "Erneut versuchen",
+  "booking.payment.security": "SSL ✓ PayPal 💳 Sicher"
 }

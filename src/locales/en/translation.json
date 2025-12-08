@@ -244,5 +244,11 @@
   "booking.bank.reason.booking": "Booking",
   "booking.bank.amountToTransfer": "Amount to transfer",
   "booking.bank.note": "Important: We have sent you an email with all details. The booking will be finally confirmed after receiving and verifying the bank transfer. We will contact you within 24–48 hours after receiving the payment.",
-  "booking.newBooking": "New Booking"
+  "booking.newBooking": "New Booking",
+  "booking.payment.paypal.title": "Payment with PayPal",
+  "booking.payment.paypal.description": "Secure payment via PayPal. Accepts all major credit and debit cards.",
+  "booking.payment.amount": "Amount",
+  "booking.payment.loading": "Loading PayPal...",
+  "booking.payment.retry": "Retry",
+  "booking.payment.security": "SSL ✓ PayPal 💳 Secure"
 }

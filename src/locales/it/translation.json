@@ -327,6 +327,12 @@
   "booking.bank.reason.booking": "Prenotazione",
   "booking.bank.amountToTransfer": "Importo da versare",
   "booking.bank.note": "Importante: Ti abbiamo inviato una email con tutti i dettagli. La prenotazione sarà confermata definitivamente dopo la ricezione e verifica del bonifico bancario. Ti contatteremo entro 24-48 ore dalla ricezione del pagamento.",
-  "booking.newBooking": "Nuova Prenotazione"
+  "booking.newBooking": "Nuova Prenotazione",
+  "booking.payment.paypal.title": "Pagamento con PayPal",
+  "booking.payment.paypal.description": "Pagamento sicuro tramite PayPal. Accetta tutte le principali carte di credito e debito.",
+  "booking.payment.amount": "Importo",
+  "booking.payment.loading": "Caricamento PayPal...",
+  "booking.payment.retry": "Riprova",
+  "booking.payment.security": "SSL ✓ PayPal 💳 Sicuro"
 
 }
