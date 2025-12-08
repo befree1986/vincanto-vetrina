@@ -97,6 +97,22 @@
   box-shadow: 0 25px 80px rgba(15, 23, 42, 0.08);
 }
 
+@media (max-width: 768px) {
+  .booking-content {
+    padding: 24px 16px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+  }
+}
+
+@media (max-width: 480px) {
+  .booking-content {
+    padding: 16px 12px;
+    border-radius: 8px;
+    margin: 0 8px;
+  }
+}
+
 .booking-step-content h2 {
   color: #d2691e;
   margin-bottom: 30px;
@@ -1782,12 +1798,16 @@
   margin: 24px 0;
   border: 1px solid #e2e8f0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .paypal-payment .payment-header {
   margin-bottom: 24px;
   padding-bottom: 16px;
   border-bottom: 1px solid #e2e8f0;
+  text-align: center;
 }
 
 .paypal-payment h3 {
@@ -1795,6 +1815,7 @@
   color: #2d3748;
   font-weight: 600;
   margin-bottom: 12px;
+  margin-top: 0;
 }
 
 .payment-amount {
@@ -1818,12 +1839,17 @@
 .paypal-buttons {
   display: flex;
   justify-content: center;
-  margin: 24px 0;
-  min-height: 50px;
+  align-items: center;
+  margin: 32px auto;
+  width: 100%;
+  max-width: 500px;
+  min-height: 60px;
 }
 
 .paypal-buttons iframe {
   max-width: 100%;
+  width: 100%;
+  margin: 0 auto;
 }
 
 .payment-security {
@@ -1850,6 +1876,7 @@
   font-size: 0.9rem;
   font-weight: 500;
   border: 1px solid #bfdbfe;
+  white-space: nowrap;
 }
 
 .security-text {
@@ -1863,10 +1890,14 @@
 .paypal-payment-loading {
   background: white;
   border-radius: 12px;
-  padding: 48px;
+  padding: 48px 24px;
   margin: 24px 0;
   text-align: center;
   border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .spinner {
@@ -1889,6 +1920,7 @@
   color: #4a5568;
   font-size: 1rem;
   margin-top: 16px;
+  margin-bottom: 0;
 }
 
 /* PayPal Error State */
@@ -1899,6 +1931,9 @@
   padding: 24px;
   margin: 24px 0;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .error-message {
@@ -1929,7 +1964,7 @@
 /* Mobile responsive for PayPal */
 @media (max-width: 768px) {
   .paypal-payment {
-    padding: 16px;
+    padding: 16px 12px;
     margin: 16px 0;
   }
 
@@ -1938,12 +1973,27 @@
     padding-bottom: 12px;
   }
 
+  .paypal-payment h3 {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+  }
+
   .payment-amount {
     font-size: 1rem;
   }
 
+  .payment-description {
+    font-size: 0.9rem;
+  }
+
+  .paypal-buttons {
+    margin: 24px auto;
+    min-height: 50px;
+  }
+
   .security-badges {
     gap: 8px;
+    justify-content: center;
   }
 
   .security-badge {
@@ -1951,15 +2001,72 @@
     font-size: 0.8rem;
   }
 
-  .paypal-buttons {
-    min-height: 45px;
-  }
-
   .paypal-payment-loading {
     padding: 32px 16px;
   }
 
+  .paypal-payment-loading p {
+    font-size: 0.95rem;
+  }
+
   .paypal-payment-error {
-    padding: 16px;
+    padding: 16px 12px;
+  }
+
+  .error-message {
+    font-size: 0.9rem;
+  }
+
+  .btn-secondary {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  .paypal-payment {
+    padding: 12px 8px;
+    border-radius: 8px;
+  }
+
+  .paypal-payment h3 {
+    font-size: 1rem;
+  }
+
+  .payment-amount {
+    font-size: 0.95rem;
+  }
+
+  .payment-description {
+    font-size: 0.85rem;
+  }
+
+  .paypal-buttons {
+    margin: 20px auto;
+    min-height: 45px;
+  }
+
+  .security-badges {
+    gap: 6px;
+  }
+
+  .security-badge {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+  }
+
+  .paypal-payment-loading {
+    padding: 24px 12px;
+  }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border-width: 3px;
+  }
+
+  .paypal-payment-error {
+    padding: 12px 8px;
   }
 }
