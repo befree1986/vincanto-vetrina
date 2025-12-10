@@ -850,11 +850,11 @@ const BookingSystem: React.FC = () => {
                         <h2>{getSafeTranslation(t, 'booking.payment', 'Pagamento')}</h2>
 
                         {/* Messaggio visivo: conferma solo dopo pagamento */}
-                        <div style={{ background: '#fffbe6', border: '1px solid #ffe58f', padding: '16px', borderRadius: '8px', marginBottom: '18px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <span style={{ fontSize: '2rem' }}>⏳</span>
+                        <div className="booking-payment-warning">
+                            <span className="booking-payment-icon">⏳</span>
                             <div>
-                                <strong style={{ color: '#ad8b00' }}>La tua prenotazione sarà confermata solo dopo il pagamento.</strong>
-                                <div style={{ fontSize: '0.95rem', color: '#ad8b00', marginTop: '4px' }}>
+                                <strong className="booking-payment-title">La tua prenotazione sarà confermata solo dopo il pagamento.</strong>
+                                <div className="booking-payment-subtitle">
                                     Le date selezionate restano disponibili fino al completamento del pagamento.
                                 </div>
                             </div>
@@ -1007,8 +1007,8 @@ const BookingSystem: React.FC = () => {
                         {/* Error message if paymentAmount is invalid */}
                         {showPayment && bookingResult && (formData.payment_method === 'stripe' || formData.payment_method === 'paypal') && (!paymentAmount || paymentAmount <= 0) && (
                             <div className="payment-form-section">
-                                <div style={{ padding: '20px', background: '#fee', border: '2px solid #c00', borderRadius: '8px' }}>
-                                    <h3 style={{ color: '#c00' }}>❌ Errore: Importo non valido</h3>
+                                <div className="booking-payment-error">
+                                    <h3 className="booking-error-title">❌ Errore: Importo non valido</h3>
                                     <p>L'importo della prenotazione non è stato calcolato correttamente.</p>
                                     <p><strong>Dettagli tecnici:</strong></p>
                                     <ul>
@@ -1022,7 +1022,7 @@ const BookingSystem: React.FC = () => {
                                             setShowPayment(false);
                                             setCurrentStep('details');
                                         }}
-                                        style={{ marginTop: '10px', padding: '10px 20px', background: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                        className="booking-error-back-btn"
                                     >
                                         Torna ai Dettagli
                                     </button>

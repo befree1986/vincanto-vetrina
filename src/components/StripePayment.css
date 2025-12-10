@@ -262,3 +262,10 @@
     font-size: 0.95rem;
   }
 }
+
+/* Debug Style */
+.stripe-debug {
+  font-size: 12px;
+  color: #666;
+  margin-top: 8px;
+}

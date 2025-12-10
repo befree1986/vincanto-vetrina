@@ -1,0 +1,88 @@
+/* ErrorBoundary Component Styling */
+.error-boundary-container {
+  padding: 40px 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  background: #fff3cd;
+  border: 2px solid #ffc107;
+  border-radius: 8px;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.error-boundary-title {
+  color: #dc3545;
+  margin-bottom: 20px;
+}
+
+.error-boundary-message {
+  margin-bottom: 20px;
+  font-size: 16px;
+}
+
+.error-boundary-details {
+  margin-bottom: 20px;
+}
+
+.error-boundary-details-summary {
+  cursor: pointer;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.error-boundary-details-pre {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 4px;
+  overflow: auto;
+  font-size: 12px;
+  border: 1px solid #dee2e6;
+}
+
+.error-boundary-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.error-boundary-btn {
+  padding: 10px 20px;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.error-boundary-btn-retry {
+  background: #007bff;
+}
+
+.error-boundary-btn-retry:hover {
+  background: #0056b3;
+}
+
+.error-boundary-btn-reload {
+  background: #6c757d;
+}
+
+.error-boundary-btn-reload:hover {
+  background: #5a6268;
+}
+
+.error-boundary-link-contact {
+  padding: 10px 20px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.error-boundary-link-contact:hover {
+  background: #218838;
+  text-decoration: none;
+}

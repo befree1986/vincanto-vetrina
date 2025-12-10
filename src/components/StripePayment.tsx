@@ -116,7 +116,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
                 <div className="payment-amount">
                     <strong>Importo: €{Number(amount || 0).toFixed(2)}</strong>
                 </div>
-                <div style={{fontSize: '12px', color: '#666', marginTop: '8px'}}>
+                <div className="stripe-debug">
                     Debug: amount prop = {amount}
                 </div>
             </div>

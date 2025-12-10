@@ -12,7 +12,7 @@ jobs:
       AIRBNB_ICAL_URL: ${{ secrets.AIRBNB_ICAL_URL }}
       BOOKING_ICAL_URL: ${{ secrets.BOOKING_ICAL_URL }}
       HOLIDU_ICAL_URL: ${{ secrets.HOLIDU_ICAL_URL }}
-      CALENDAR_SYNC_TOKEN: ${{ secrets.CALENDAR_SYNC_TOKEN }}
+      CALENDAR_SYNC_TOKEN: calendar-sync-2024
     
     steps:
       - name: 🔄 Sincronizzazione Calendari Esterni

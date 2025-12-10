@@ -1,4 +1,5 @@
 import React, { Component, ReactNode } from 'react';
+import './ErrorBoundary.css';
 
 interface Props {
   children: ReactNode;
@@ -52,36 +53,21 @@ class ErrorBoundary extends Component<Props, State> {
 
       // Fallback di default
       return (
-        <div style={{
-          padding: '40px 20px',
-          maxWidth: '800px',
-          margin: '0 auto',
-          background: '#fff3cd',
-          border: '2px solid #ffc107',
-          borderRadius: '8px',
-          fontFamily: 'system-ui, -apple-system, sans-serif'
-        }}>
-          <h2 style={{ color: '#dc3545', marginBottom: '20px' }}>
+        <div className="error-boundary-container">
+          <h2 className="error-boundary-title">
             ⚠️ Si è verificato un errore
           </h2>
           
-          <p style={{ marginBottom: '20px', fontSize: '16px' }}>
+          <p className="error-boundary-message">
             Il sistema di prenotazione ha riscontrato un problema. 
             Puoi provare a ricaricare la pagina o contattarci direttamente.
           </p>
 
-          <details style={{ marginBottom: '20px' }}>
-            <summary style={{ cursor: 'pointer', fontWeight: 'bold', marginBottom: '10px' }}>
+          <details className="error-boundary-details">
+            <summary className="error-boundary-details-summary">
               Dettagli tecnici (per sviluppatori)
             </summary>
-            <pre style={{
-              background: '#f8f9fa',
-              padding: '15px',
-              borderRadius: '4px',
-              overflow: 'auto',
-              fontSize: '12px',
-              border: '1px solid #dee2e6'
-            }}>
+            <pre className="error-boundary-details-pre">
               <strong>Errore:</strong>{'\n'}
               {this.state.error?.toString()}{'\n\n'}
               <strong>Stack:</strong>{'\n'}
@@ -89,52 +75,24 @@ class ErrorBoundary extends Component<Props, State> {
             </pre>
           </details>
 
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <div className="error-boundary-actions">
             <button
               onClick={this.handleReset}
-              style={{
-                padding: '10px 20px',
-                background: '#007bff',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '600'
-              }}
+              className="error-boundary-btn error-boundary-btn-retry"
             >
               🔄 Riprova
             </button>
 
             <button
               onClick={() => window.location.reload()}
-              style={{
-                padding: '10px 20px',
-                background: '#6c757d',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '600'
-              }}
+              className="error-boundary-btn error-boundary-btn-reload"
             >
               ↻ Ricarica Pagina
             </button>
 
             <a
               href="mailto:info@vincantomaori.it"
-              style={{
-                padding: '10px 20px',
-                background: '#28a745',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                textDecoration: 'none',
-                fontSize: '14px',
-                fontWeight: '600',
-                display: 'inline-block'
-              }}
+              className="error-boundary-link-contact"
             >
               📧 Contattaci
             </a>

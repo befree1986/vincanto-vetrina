@@ -1,91 +1,53 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { privacyPolicyContent } from "../sections/data/privacyPolicy";
+import "./PolicyPage.css";
 
 const PrivacyPolicy = () => {
+  const { i18n } = useTranslation();
+  const lang = (i18n.language || "it").slice(0, 2);
+  const content = privacyPolicyContent[lang] || privacyPolicyContent.it;
+
   return (
-    <main className="privacy-container" style={{ padding: "2rem", maxWidth: "800px", margin: "auto" }}>
-      <h1>Informativa sulla Privacy</h1>
-      <p>Ultimo aggiornamento: 31 luglio 2025</p>
+    <main className="policy-container">
+      <h1>{lang === "it" ? "Informativa sulla Privacy" : lang === "de" ? "Datenschutzerkl\u00e4rung" : lang === "fr" ? "Politique de Confidentialit\u00e9" : "Privacy Policy"}</h1>
+      <p>Last updated / Ultimo aggiornamento: {content.lastUpdated}</p>
 
-      <h2>1. Titolare del trattamento</h2>
-      <p>
-        Vincanto Maiori – Via Torre di Milo, 7 – 84010 Maiori (SA) <br />
-        Email: info@vincantomaiori.it – PEC: pec@vincantomaiori.it
-      </p>
+      <p className="policy-intro">{content.intro}</p>
 
-      <h2>2. Tipologie di dati raccolti</h2>
-      <ul>
-        <li>Dati identificativi (nome, email, ecc.)</li>
-        <li>Dati di navigazione (IP, browser, sistema operativo)</li>
-        <li>Dati raccolti tramite cookie e tecnologie simili</li>
-      </ul>
+      {content.sections.map((section) => (
+        <section key={section.id} className="policy-section">
+          <h2>{section.title}</h2>
+          {section.body && <p>{section.body}</p>}
+          {section.list && (
+            <ul>
+              {section.list.map((item, idx) => (
+                <li key={idx}>{item}</li>
+              ))}
+            </ul>
+          )}
+          {section.note && <p className="policy-note">{section.note}</p>}
+        </section>
+      ))}
 
-      <h2>3. Finalità del trattamento</h2>
-      <ul>
-        <li>Gestione delle richieste e dei contatti</li>
-        <li>Miglioramento dell’esperienza utente</li>
-        <li>Analisi statistiche in forma aggregata</li>
-        <li>Attività di marketing, previo consenso</li>
-      </ul>
-
-      <h2>4. Base giuridica del trattamento</h2>
-      <p>
-        I trattamenti si basano su:
-        <ul>
-          <li>Consenso dell’utente per attività specifiche (es. marketing)</li>
-          <li>Obblighi contrattuali o precontrattuali</li>
-          <li>Legittimo interesse del titolare per finalità organizzative e di analisi</li>
-        </ul>
-      </p>
-
-      <h2>5. Modalità del trattamento</h2>
-      <p>
-        Il trattamento è svolto in modo lecito, trasparente e con misure di sicurezza adeguate,
-        sia tecniche che organizzative.
-      </p>
-
-      <h2>6. Conservazione dei dati</h2>
-      <ul>
-        <li>10 anni per adempimenti di legge</li>
-        <li>2 anni per finalità promozionali</li>
-        <li>Fino a revoca del consenso ove applicabile</li>
-      </ul>
-
-      <h2>7. Diritti dell’interessato</h2>
-      <ul>
-        <li>Accesso ai propri dati</li>
-        <li>Rettifica, cancellazione e limitazione del trattamento</li>
-        <li>Portabilità dei dati</li>
-        <li>Revoca del consenso e opposizione al trattamento</li>
-      </ul>
-
-      <h2>8. Cookie</h2>
-      <p>
-        Questo sito utilizza cookie tecnici, analitici e di profilazione. Per maggiori informazioni consulta la{" "}
+      <p className="policy-cookie-link">
+        {lang === "it" ? "Per i cookie consulta la " : lang === "de" ? "Für Cookies siehe " : lang === "fr" ? "Pour les cookies voir la " : "For cookies please see the "}
         <Link to="/cookie-policy">Cookie Policy</Link>.
       </p>
 
-      <h2>9. Destinatari e trasferimenti</h2>
-      <p>
-        I dati possono essere condivisi con fornitori di servizi IT, piattaforme di analisi e marketing (es. Google, Meta),
-        e altri soggetti autorizzati. Nessun trasferimento al di fuori dell’UE senza garanzie adeguate.
-      </p>
-
-      <h2>10. Modifiche all'informativa</h2>
-      <p>
-        La presente informativa può essere aggiornata. Ti invitiamo a consultarla periodicamente. Ultimo aggiornamento: 31 luglio 2025
-      </p>
-
-      <p style={{ marginTop: "2rem" }}>
-        Grazie per aver consultato la nostra Informativa sulla Privacy.
-      </p>
-
-      <div style={{ textAlign: "center", marginTop: "2rem" }}>
+      <div className="policy-actions">
         <button
           onClick={() => window.history.back()}
           className="close-page-btn"
-          aria-label="Chiudi pagina"
+          aria-label="Close page"
         >
-          ❌ Chiudi la pagina
+          {lang === "it"
+            ? "Chiudi la pagina"
+            : lang === "de"
+            ? "Seite schliessen"
+            : lang === "fr"
+            ? "Fermer la page"
+            : "Close page"}
         </button>
       </div>
     </main>
