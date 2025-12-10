@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { Helmet } from "react-helmet";
 import { privacyPolicyContent } from "../sections/data/privacyPolicy";
 import "./PolicyPage.css";
 
@@ -8,16 +9,30 @@ const PrivacyPolicy = () => {
   const lang = (i18n.language || "it").slice(0, 2);
   const content = privacyPolicyContent[lang] || privacyPolicyContent.it;
 
+  const pageTitle = lang === "it" ? "Informativa sulla Privacy | Vincanto" : lang === "de" ? "Datenschutzerklärung | Vincanto" : lang === "fr" ? "Politique de Confidentialité | Vincanto" : "Privacy Policy | Vincanto";
+  const pageDescription = lang === "it" ? "Informativa completa sulla privacy di Vincanto. Scopri come trattiamo i tuoi dati personali e i tuoi diritti secondo il GDPR." : lang === "de" ? "Vollständige Datenschutzerklärung von Vincanto. Erfahren Sie, wie wir Ihre persönlichen Daten behandeln und Ihre Rechte gemäß DSGVO." : lang === "fr" ? "Politique de confidentialité complète de Vincanto. Découvrez comment nous traitons vos données personnelles et vos droits selon le RGPD." : "Complete privacy policy of Vincanto. Learn how we handle your personal data and your rights under GDPR.";
+
   return (
-    <main className="policy-container">
-      <h1>{lang === "it" ? "Informativa sulla Privacy" : lang === "de" ? "Datenschutzerkl\u00e4rung" : lang === "fr" ? "Politique de Confidentialit\u00e9" : "Privacy Policy"}</h1>
-      <p>Last updated / Ultimo aggiornamento: {content.lastUpdated}</p>
+    <>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://www.vincantomaiori.it/privacy-policy" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://www.vincantomaiori.it/privacy-policy" />
+      </Helmet>
+      <main className="policy-container">
+        <h1>{lang === "it" ? "Informativa sulla Privacy" : lang === "de" ? "Datenschutzerklärung" : lang === "fr" ? "Politique de Confidentialité" : "Privacy Policy"}</h1>
+        <p>Last updated / Ultimo aggiornamento: {content.lastUpdated}</p>
 
-      <p className="policy-intro">{content.intro}</p>
+        <p className="policy-intro">{content.intro}</p>
 
-      {content.sections.map((section) => (
-        <section key={section.id} className="policy-section">
-          <h2>{section.title}</h2>
+        {content.sections.map((section) => (
+          <section key={section.id} className="policy-section">
+            <h2>{section.title}</h2>
           {section.body && <p>{section.body}</p>}
           {section.list && (
             <ul>
@@ -51,6 +66,7 @@ const PrivacyPolicy = () => {
         </button>
       </div>
     </main>
+    </>
   );
 };
 

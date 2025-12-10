@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Helmet } from "react-helmet";
 import { cookiePolicyContent } from "../sections/data/cookiePolicy";
 import "./PolicyPage.css";
 
@@ -6,6 +7,9 @@ const CookiePolicy = () => {
   const { i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
   const content = cookiePolicyContent[lang] || cookiePolicyContent.it;
+
+  const pageTitle = lang === "it" ? "Informativa sui Cookie | Vincanto" : lang === "de" ? "Cookie-Richtlinie | Vincanto" : lang === "fr" ? "Politique sur les Cookies | Vincanto" : "Cookie Policy | Vincanto";
+  const pageDescription = lang === "it" ? "Informativa completa sui cookie utilizzati da Vincanto. Scopri come gestisci i cookie e come disabilitarli se lo desideri." : lang === "de" ? "Vollständige Cookie-Richtlinie von Vincanto. Erfahren Sie, wie Cookies verwaltet werden und wie Sie sie deaktivieren können." : lang === "fr" ? "Politique complète sur les cookies de Vincanto. Découvrez comment les cookies sont gérés et comment les désactiver si vous le souhaitez." : "Complete cookie policy of Vincanto. Learn how cookies are managed and how to disable them if you wish.";
 
   const browserLinks = (
     <ul>
@@ -17,7 +21,18 @@ const CookiePolicy = () => {
   );
 
   return (
-    <main className="policy-container">
+    <>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://www.vincantomaiori.it/cookie-policy" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://www.vincantomaiori.it/cookie-policy" />
+      </Helmet>
+      <main className="policy-container">
       <h1>{lang === "it" ? "Cookie Policy" : lang === "de" ? "Cookie-Richtlinie" : lang === "fr" ? "Politique de Cookies" : "Cookie Policy"}</h1>
       <p>Last updated / Ultimo aggiornamento: {content.lastUpdated}</p>
 
@@ -54,6 +69,7 @@ const CookiePolicy = () => {
         </button>
       </div>
     </main>
+    </>
   );
 };
 
