@@ -15,7 +15,10 @@ export default async function handler(req, res) {
     totalAmount,
     amountPaid,
     guestEmail,
-    language: userLanguage
+    language: userLanguage,
+    extraServices,
+    extra_services,
+    paymentMethod
   } = req.body || {};
 
   if (!guestEmail || !bookingId) {
@@ -37,7 +40,9 @@ export default async function handler(req, res) {
       totalAmount,
       amountPaid,
       fromEmail: process.env.SMTP_FROM,
-      language: guestLanguage
+      language: guestLanguage,
+      paymentMethod,
+      extraServices: Array.isArray(extraServices) ? extraServices : (Array.isArray(extra_services) ? extra_services : [])
     });
 
     const results = await sendEmailWithAdminCopy({
@@ -45,7 +50,7 @@ export default async function handler(req, res) {
       subject: `Pagamento ricevuto - Prenotazione ${bookingId}`,
       html,
       templateName: 'booking_final_confirmation',
-      metadata: { bookingId, totalAmount, amountPaid, language: guestLanguage }
+      metadata: { bookingId, totalAmount, amountPaid, language: guestLanguage, paymentMethod, extraServices: Array.isArray(extraServices) ? extraServices : (Array.isArray(extra_services) ? extra_services : []) }
     });
 
     const primarySuccess = results.find(r => r.recipient === guestEmail)?.success;

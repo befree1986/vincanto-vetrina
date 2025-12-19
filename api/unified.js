@@ -568,14 +568,23 @@ export default async function handler(req, res) {
                 totalAmount,
                 depositAmount: totalAmount * 0.3,
                 fromEmail: process.env.SMTP_FROM,
-                language: guestLanguage
+                language: guestLanguage,
+                paymentMethod: bookingData.paymentMethod || bookingData.payment_method,
+                // 🛎️ Includi eventuali servizi extra passati dal frontend
+                extraServices: Array.isArray(bookingData.extraServices) ? bookingData.extraServices : (Array.isArray(bookingData.extra_services) ? bookingData.extra_services : [])
               });
               const emailResults = await sendEmailWithAdminCopy({
                 to: email,
                 subject: `Conferma Prenotazione ${result.rows[0].booking_id}`,
                 html: emailHtml,
                 templateName: 'booking_confirmation',
-                metadata: { bookingId: result.rows[0].booking_id, totalAmount, language: guestLanguage }
+                metadata: { 
+                  bookingId: result.rows[0].booking_id, 
+                  totalAmount, 
+                  language: guestLanguage,
+                  paymentMethod: bookingData.paymentMethod || bookingData.payment_method,
+                  extraServices: Array.isArray(bookingData.extraServices) ? bookingData.extraServices : (Array.isArray(bookingData.extra_services) ? bookingData.extra_services : [])
+                }
               });
               const primarySuccess = emailResults.find(r => r.recipient === email)?.success;
               console.log(primarySuccess ? '✅ Email conferma inviata a:' : '⚠️ Email conferma fallita per:', email);
@@ -987,7 +996,10 @@ export default async function handler(req, res) {
                   totalAmount: parseFloat(booking.total_amount) || 0,
                   depositAmount: parseFloat(booking.deposit_amount) || parseFloat(booking.total_amount) * 0.3,
                   fromEmail: process.env.SMTP_FROM,
-                  language: guestLanguage
+                  language: guestLanguage,
+                  paymentMethod: req.body.payment_method || req.body.paymentMethod,
+                  // 🛎️ Se il client invia i servizi extra nel corpo della richiesta, includili nell'email
+                  extraServices: Array.isArray(req.body.extra_services) ? req.body.extra_services : (Array.isArray(req.body.extraServices) ? req.body.extraServices : [])
                 });
 
                 const emailResults = await sendEmailWithAdminCopy({

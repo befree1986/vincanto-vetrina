@@ -84,6 +84,7 @@ export interface CreateBookingRequest {
     guest_message?: string;
     total_amount?: number;
     status?: 'draft' | 'pending' | 'confirmed'; // ⚡ Allow setting initial status
+    extra_services?: { id?: number; name: string; price?: number; included?: boolean }[];
 }
 
 export interface CreateBookingResponse {
@@ -173,7 +174,14 @@ export async function createBooking(data: CreateBookingRequest): Promise<CreateB
         paymentType: data.payment_type,
         specialRequests: data.guest_message || '',
         totalPrice: data.total_amount || 0,
-        status: data.status || 'pending' // ⚡ Pass status if provided
+        status: data.status || 'pending', // ⚡ Pass status if provided
+        // 🛎️ Passa eventuali servizi extra selezionati al backend unificato
+        extraServices: Array.isArray(data.extra_services) ? data.extra_services.map(s => ({
+            id: s.id,
+            name: s.name,
+            price: typeof s.price === 'number' ? s.price : Number(s.price || 0),
+            included: !!s.included
+        })) : []
     };
     
     const response = await api.post('/unified?action=booking', adaptedData);
@@ -198,6 +206,7 @@ export async function updateBookingStatus(bookingId: string, status: 'confirmed'
     payment_id?: string;
     payment_status?: string;
     amount_paid?: number;
+    extra_services?: { id?: number; name: string; price?: number; included?: boolean }[];
 }): Promise<{ success: boolean; message: string }> {
     const response = await api.post('/unified', {
         action: 'update-booking-status',

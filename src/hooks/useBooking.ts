@@ -58,7 +58,7 @@ export interface BookingState {
     isCreatingBooking: boolean;
     bookingError: string | null;
     bookingResult: any | null;
-    submitBooking: (totalAmount?: number, options?: { status?: 'draft' | 'pending' | 'confirmed' }) => Promise<void>;
+    submitBooking: (totalAmount?: number, options?: { status?: 'draft' | 'pending' | 'confirmed' }, extraServices?: { id?: number; name: string; price?: number; included?: boolean }[]) => Promise<void>;
     
     // Validation
     formErrors: Record<string, string>;
@@ -254,7 +254,7 @@ export function useBooking(): BookingState {
     }, []);
     
     // Booking submission
-    const submitBooking = useCallback(async (totalAmount?: number, options?: { status?: 'draft' | 'pending' | 'confirmed' }) => {
+    const submitBooking = useCallback(async (totalAmount?: number, options?: { status?: 'draft' | 'pending' | 'confirmed' }, extraServices?: { id?: number; name: string; price?: number; included?: boolean }[]) => {
         if (!validateForm()) {
             throw new Error('Form non valido');
         }
@@ -284,7 +284,8 @@ export function useBooking(): BookingState {
                 payment_type: formData.payment_type,
                 guest_message: formData.guest_message,
                 total_amount: totalAmount,
-                status: options?.status || 'pending' // ⚡ Use provided status or default to pending
+                status: options?.status || 'pending', // ⚡ Use provided status or default to pending
+                extra_services: Array.isArray(extraServices) ? extraServices : []
             };
             
             const response = await createBooking(bookingRequest);

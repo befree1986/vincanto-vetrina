@@ -162,7 +162,10 @@ export default async function handler(req, res) {
           totalAmount,
           depositAmount: Math.round(totalAmount * 0.3 * 100) / 100,
           fromEmail: process.env.SMTP_FROM,
-          language: guestLanguage
+          language: guestLanguage,
+          paymentMethod: payment_method,
+          // 🛎️ Servizi extra opzionali dal payload del frontend
+          extraServices: Array.isArray(booking_data.extra_services) ? booking_data.extra_services : []
         });
 
         await sendEmailWithAdminCopy({
@@ -170,7 +173,13 @@ export default async function handler(req, res) {
           subject: `Conferma Prenotazione ${bookingId}`,
           html: emailHtml,
           templateName: 'booking_confirmation',
-          metadata: { bookingId, totalAmount, paymentMethod: payment_method, language: guestLanguage }
+          metadata: { 
+            bookingId, 
+            totalAmount, 
+            paymentMethod: payment_method, 
+            language: guestLanguage,
+            extraServices: Array.isArray(booking_data.extra_services) ? booking_data.extra_services : []
+          }
         });
 
         console.log('✅ Email conferma inviata');

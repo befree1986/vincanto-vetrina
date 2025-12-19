@@ -287,7 +287,9 @@ const BookingSystem: React.FC = () => {
                 {
                     payment_id: data?.payment_intent_id || data?.paymentId || null,
                     payment_status: 'success',
-                    amount_paid: amountPaid
+                    amount_paid: amountPaid,
+                    // 🛎️ Passa i servizi extra per includerli nell'email di conferma
+                    extra_services: selectedExtraServices.map(s => ({ id: s.id, name: s.name, price: s.price, included: !!s.included }))
                 }
             );
 
@@ -459,13 +461,21 @@ const BookingSystem: React.FC = () => {
             if (formData.payment_method === 'stripe' || formData.payment_method === 'paypal') {
                 // ⚡ PAGAMENTI ONLINE: Crea booking DRAFT (serve bookingId per payment intent)
                 // Verrà aggiornato a CONFIRMED in handlePaymentSuccess() dopo verifica pagamento
-                const result: any = await submitBooking(totalAmount, { status: 'draft' });
+                const result: any = await submitBooking(
+                    totalAmount,
+                    { status: 'draft' },
+                    selectedExtraServices.map(s => ({ id: s.id, name: s.name, price: s.price, included: !!s.included }))
+                );
                 setBookingResult(result || null);
                 setShowPayment(true);
                 setCurrentStep('payment');
             } else if (formData.payment_method === 'bank_transfer') {
                 // Bonifico bancario: crea booking subito come PENDING (pagamento offline)
-                const result: any = await submitBooking(totalAmount, { status: 'pending' });
+                const result: any = await submitBooking(
+                    totalAmount,
+                    { status: 'pending' },
+                    selectedExtraServices.map(s => ({ id: s.id, name: s.name, price: s.price, included: !!s.included }))
+                );
                 setBookingResult(result || null);
                 await handleBankTransferBooking();
             } else {
@@ -501,7 +511,9 @@ const BookingSystem: React.FC = () => {
                 special_requests: formData.guest_message,
                 email: formData.guest_email,
                 phone: formData.guest_phone,
-                guests: formData.num_adults + formData.num_children
+                guests: formData.num_adults + formData.num_children,
+                // 🛎️ Inoltra i servizi extra selezionati per l'email del backend
+                extra_services: selectedExtraServices.map(s => ({ id: s.id, name: s.name, price: s.price, included: !!s.included }))
             };
 
             // Salva la prenotazione come "pending" in attesa del bonifico

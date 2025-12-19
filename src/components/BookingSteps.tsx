@@ -573,8 +573,9 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
           <div className="payment-block">
             <h4>Dati per Bonifico Bancario</h4>
             <div className="bank-details">
-              <p><strong>Intestatario:</strong> Vincanto Srl</p>
-              <p><strong>IBAN:</strong> IT00X0000000000000000000000</p>
+              <p><strong>Intestatario:</strong> Antonio Guida</p>
+              <p><strong>IBAN:</strong> IT04D3608105038288844288937</p>
+              <p><strong>BIC/SWIFT:</strong> PPAYITR1XXX</p>
               <p><strong>Causale:</strong> Prenotazione {booking.formData.guest_name} {booking.formData.guest_surname} - {booking.formData.check_in_date ? new Date(booking.formData.check_in_date).toLocaleDateString('it-IT') : ''}</p>
               <p><strong>Importo da versare:</strong> €{isDeposit ? deposit.toFixed(2) : total.toFixed(2)}</p>
             </div>

@@ -1,0 +1,69 @@
+
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Anteprime Email Vincanto</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 1200px; margin: 40px auto; padding: 0 20px; background: #f5f5f5; }
+    h1 { color: #2c5282; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 20px 0; }
+    .card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .card h3 { margin-top: 0; color: #2c5282; }
+    .card a { display: inline-block; margin: 5px 0; padding: 8px 16px; background: #2c5282; color: white; text-decoration: none; border-radius: 4px; }
+    .card a:hover { background: #1e3a5f; }
+    .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+    .badge.stripe { background: #635bff; color: white; }
+    .badge.paypal { background: #0070ba; color: white; }
+    .badge.bank { background: #2ecc71; color: white; }
+  </style>
+</head>
+<body>
+  <h1>📧 Anteprime Email Vincanto Maori</h1>
+  <p>Visualizza le email di conferma prenotazione con i 3 metodi di pagamento.</p>
+  
+  <div class="grid">
+    
+      <div class="card">
+        <h3><span class="badge stripe">Stripe Card</span></h3>
+        <p><strong>Conferma Prenotazione</strong></p>
+        <a href="booking_confirmation_stripe.html" target="_blank">Apri Cliente</a>
+        <p><strong>Conferma Finale Pagamento</strong></p>
+        <a href="booking_final_stripe.html" target="_blank">Apri Cliente</a>
+      </div>
+    
+      <div class="card">
+        <h3><span class="badge paypal">PayPal</span></h3>
+        <p><strong>Conferma Prenotazione</strong></p>
+        <a href="booking_confirmation_paypal.html" target="_blank">Apri Cliente</a>
+        <p><strong>Conferma Finale Pagamento</strong></p>
+        <a href="booking_final_paypal.html" target="_blank">Apri Cliente</a>
+      </div>
+    
+      <div class="card">
+        <h3><span class="badge bank_transfer">Bank Transfer</span></h3>
+        <p><strong>Conferma Prenotazione</strong></p>
+        <a href="booking_confirmation_bank_transfer.html" target="_blank">Apri Cliente</a>
+        <p><strong>Conferma Finale Pagamento</strong></p>
+        <a href="booking_final_bank_transfer.html" target="_blank">Apri Cliente</a>
+      </div>
+    
+  </div>
+  
+  <hr style="margin: 40px 0;">
+  
+  <h2>📋 Dettagli Test</h2>
+  <ul>
+    <li><strong>Cliente:</strong> Mario Rossi</li>
+    <li><strong>Periodo:</strong> 3 notti</li>
+    <li><strong>Totale:</strong> €315.00</li>
+    <li><strong>Acconto 30%:</strong> €94.50</li>
+    <li><strong>Servizi Inclusi:</strong> Colazione Italiana, Kit Welcome</li>
+    <li><strong>Servizi Extra:</strong> Late Check-out (€30), Transfer Aeroporto (€45)</li>
+  </ul>
+  
+  <p style="color: #666; font-size: 14px; margin-top: 40px;">
+    ℹ️ Queste sono anteprime HTML generate in locale. La versione admin (con blocco dettagli tecnici) viene inviata solo via email a ADMIN_EMAIL.
+  </p>
+</body>
+</html>
