@@ -127,7 +127,7 @@ export const galleryData: GallerySection[] = [
   },
   {titleKey: 'propriety.gallery.section4.title',
     mainImage: {
-  src: '/openSpace/open_new.webp',
+  src: '/openSpace/title.webp',
       altKey: 'propriety.gallery.section4.mainImage.alt',
      },
     images: [
@@ -234,5 +234,5 @@ export const galleryData: GallerySection[] = [
     }
     ]
   }
-  
+
 ]
