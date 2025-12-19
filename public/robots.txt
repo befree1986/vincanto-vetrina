@@ -1,28 +1,6 @@
-# Vincanto SEO Robots Configuration
 # Consenti a tutti i crawler di accedere al sito
 User-agent: *
-Allow: /
-Disallow: /admin/
-Disallow: /oauth/
-Disallow: /debug.html
-Disallow: /test-booking.html
-Disallow: /test-prezzi.html
-
-# Crawl delay in secondi
-Crawl-delay: 1
-
-# Request rate
-Request-rate: 1/1s
+Disallow:
 
 # Indica la posizione della sitemap
 Sitemap: https://www.vincantomaiori.it/sitemap.xml
-
-# Google specifics
-User-agent: Googlebot
-Allow: /
-Crawl-delay: 0
-
-# Bing specifics
-User-agent: Bingbot
-Allow: /
-Crawl-delay: 1

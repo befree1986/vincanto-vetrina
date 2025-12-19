@@ -132,24 +132,24 @@ export const galleryData: GallerySection[] = [
      },
     images: [
       {
-  src: '/openSpace/open1.webp',
+  src: '/openSpace/oc1.avif',
         altKey: 'propriety.gallery.section4.img1.alt',
         
       },
       {
-  src: '/openSpace/open2.webp',
+  src: '/openSpace/oc1.avif',
         altKey: 'propriety.gallery.section4.img2.alt',
       },
       {
-  src: '/openSpace/open3.webp',
+  src: '/openSpace/oc3.avif',
         altKey: 'propriety.gallery.section4.img3.alt',
       },
       {
-  src: '/openSpace/open4a.webp',
+  src: '/openSpace/oc4.avif',
         altKey: 'propriety.gallery.section4.img4.alt',
       },
       {
-  src: '/openSpace/open4.webp',
+  src: '/openSpace/oc5.avif',
         altKey: 'propriety.gallery.section4.img5.alt',
       }
     
@@ -158,53 +158,29 @@ export const galleryData: GallerySection[] = [
 
   {titleKey: 'propriety.gallery.section5.title',
     mainImage: {
-  src: '/bagno1/bagno1.webp',
+  src: '/bagno/b1.avif',
     altKey: 'propriety.gallery.section5.mainImage.alt',
   },
     images: [
       {
-  src: '/bagno1/bagno1.webp',
+  src: '/bagno/b2.avif',
         altKey: 'propriety.gallery.section5.img1.alt',  
       },
       {
-  src: '/bagno1/bagno2.webp',
+  src: '/bagno/b3.avif',
         altKey: 'propriety.gallery.section5.img2.alt',
       },
       {
-  src: '/bagno1/bagno3.webp',
+  src: '/bagno/b4.avif',
         altKey: 'propriety.gallery.section5.img3.alt',
       },
       {
-  src: '/bagno2/bagno4a.webp',
+  src: '/bagno/b5.avif',
         altKey: 'propriety.gallery.section5.img4.alt',
       },
       {
-  src:'/bagno2/bagno4.webp',
+  src:'/bagno/b6.avif',
         altKey: 'propriety.gallery.section5.img5.alt',
-      },
-      {
-  src: '/bagno2/bagno5.webp',
-        altKey: 'propriety.gallery.section5.img6.alt',
-      },
-      {
-  src: '/bagno2/bagno6.webp',
-        altKey: 'propriety.gallery.section5.img7.alt',
-      },
-      {
-  src: '/bagno2/bagno7.webp',
-        altKey: 'propriety.gallery.section5.img8.alt',
-      },
-      {
-  src: '/bagno2/bagno7.webp',
-        altKey: 'propriety.gallery.section5.img9.alt',
-      },
-      {
-  src: '/bagno2/bagno8.webp',
-        altKey: 'propriety.gallery.section5.img10.alt',
-      },
-      {
-  src: '/bagno2/bagno9.webp',
-        altKey: 'propriety.gallery.section5.img11.alt',
       }
     ]
   },
@@ -258,5 +234,5 @@ export const galleryData: GallerySection[] = [
     }
     ]
   }
-
+  
 ]

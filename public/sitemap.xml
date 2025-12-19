@@ -5,45 +5,25 @@
   <!-- Homepage -->
   <url>
     <loc>https://www.vincantomaiori.it/</loc>
-    <lastmod>2025-12-10</lastmod>
-    <changefreq>weekly</changefreq>
+    <lastmod>2024-07-31</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="it" href="https://www.vincantomaiori.it/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://www.vincantomaiori.it/en"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://www.vincantomaiori.it/fr"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://www.vincantomaiori.it/de"/>
   </url>
 
-  <!-- Privacy Policy -->
+  <!-- Pagine Legali -->
   <url>
     <loc>https://www.vincantomaiori.it/privacy-policy</loc>
-    <lastmod>2025-12-10</lastmod>
+    <lastmod>2024-07-31</lastmod>
     <changefreq>yearly</changefreq>
-    <priority>0.5</priority>
+    <priority>0.3</priority>
   </url>
-
-  <!-- Cookie Policy -->
   <url>
     <loc>https://www.vincantomaiori.it/cookie-policy</loc>
-    <lastmod>2025-12-10</lastmod>
+    <lastmod>2024-07-31</lastmod>
     <changefreq>yearly</changefreq>
-    <priority>0.5</priority>
+    <priority>0.3</priority>
   </url>
-
-  <!-- Terms and Conditions -->
-  <url>
-    <loc>https://www.vincantomaiori.it/terms-conditions</loc>
-    <lastmod>2025-12-10</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.5</priority>
-  </url>
-
-  <!-- Accessibility Statement -->
-  <url>
-    <loc>https://www.vincantomaiori.it/accessibility</loc>
-    <lastmod>2025-12-10</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.4</priority>
-  </url>
-
 </urlset>

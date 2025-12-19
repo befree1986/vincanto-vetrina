@@ -67,7 +67,7 @@ const About: React.FC = () => {
             </div>
             <div className="location-image-container">
               <img 
-                src="/contact3.webp" 
+                src="/ingressoNotte/ingresso2.webp" 
                 alt="Vista panoramica su Maiori e la Costiera Amalfitana" 
                 className="img-fluid"
                 loading="lazy"

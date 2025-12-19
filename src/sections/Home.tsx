@@ -14,7 +14,7 @@ const Home: React.FC = () => {
       </Helmet>
       
         <section id="home" className="home-section">
-        <ParallaxBackground imageUrl="/welcome.webp">
+        <ParallaxBackground imageUrl="/1.avif">
           <div className="hero-content">
             <div className="hero-bar"></div>
             <img src="/logo.svg" alt="Vincanto Logo" className="hero-logo" />
