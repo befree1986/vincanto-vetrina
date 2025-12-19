@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Helmet } from 'react-helmet';
 const Home: React.FC = () => {
   const { t } = useTranslation();
+  const assetVersion = '?v=20251219';
 
   return (
     <React.Fragment>
@@ -14,7 +15,7 @@ const Home: React.FC = () => {
       </Helmet>
       
         <section id="home" className="home-section">
-        <ParallaxBackground imageUrl="/1.avif">
+        <ParallaxBackground imageUrl={`/1.avif${assetVersion}`}>
           <div className="hero-content">
             <div className="hero-bar"></div>
             <img src="/logo.svg" alt="Vincanto Logo" className="hero-logo" />
@@ -41,7 +42,7 @@ const Home: React.FC = () => {
               </a>
             </div>
             <div className="welcome-image">
-              <img src="/esterni/ingressoindex.webp" alt="Ingresso di Vincanto circondato da un limoneto" className="img-fluid" loading="lazy" />
+              <img src={`/esterni/ingressoindex.webp${assetVersion}`} alt="Ingresso di Vincanto circondato da un limoneto" className="img-fluid" loading="lazy" />
             </div>
           </div>
 

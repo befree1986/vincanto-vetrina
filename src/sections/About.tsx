@@ -8,6 +8,7 @@ import { Helmet } from 'react-helmet';
 
 const About: React.FC = () => {
   const { t } = useTranslation();
+  const assetVersion = '?v=20251219';
   return (
   <React.Fragment>
       <Helmet>
@@ -15,7 +16,7 @@ const About: React.FC = () => {
         <meta name="description" content={t('seo.about.description')} />
       </Helmet>
       <section id="about" className="about-section">
-      <ParallaxBackground imageUrl="/lemon.webp">
+      <ParallaxBackground imageUrl={`/lemon.webp${assetVersion}`}>
         <div className="about-hero">
           <h2>{t('Chi Siamo')}</h2>
         </div>
@@ -67,7 +68,7 @@ const About: React.FC = () => {
             </div>
             <div className="location-image-container">
               <img 
-                src="/ingressoNotte/ingresso2.webp" 
+                src={`/ingressoNotte/ingresso2.webp${assetVersion}`} 
                 alt="Vista panoramica su Maiori e la Costiera Amalfitana" 
                 className="img-fluid"
                 loading="lazy"
