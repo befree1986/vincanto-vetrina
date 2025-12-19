@@ -33,14 +33,11 @@ npm run dev
 # Server su http://localhost:5173
 ```
 
-### 4. Test Booking
-Apri: `http://localhost:5173/test-booking.html`
-
-### 5. Pannello Admin
+### 4. Pannello Admin
 Apri: `http://localhost:5173/#admin`  
 Password: `vincanto2025`
 
-### 6. Deploy
+### 5. Deploy
 ```bash
 git add .
 git commit -m "update: sistema configurato"
@@ -63,7 +60,6 @@ vincanto-backup/
 │   ├── pages/
 │   │   └── AdminPanelPro.tsx
 │   └── services/api.ts
-├── public/test-booking.html
 ├── .env                        # DATABASE_URL configurato
 ├── vercel.json
 ├── verify-system.mjs           # Script verifica
@@ -123,9 +119,6 @@ BOOKING_ICAL_URL=https://...
 ```bash
 # Verifica completa
 node verify-system.mjs
-
-# Test booking manuale
-http://localhost:5173/test-booking.html
 ```
 
 ## 🚨 Troubleshooting

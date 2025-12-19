@@ -12,13 +12,5 @@ echo Controlla lo stato del deployment:
 echo   - "Building" (in corso)
 echo   - "Ready" (completato)
 echo.
-echo Dopo che e' "Ready", premi un tasto per testare...
-pause
-echo.
-echo Apro pagina di test booking...
-start https://vincanto-vetrina.vercel.app/test-booking.html
-echo.
-echo Compila il form e invia una prenotazione.
-echo Se funziona, vedrai "Prenotazione creata con successo!"
-echo.
+echo Dopo che e' "Ready", il sistema e' pronto per essere utilizzato.
 pause
