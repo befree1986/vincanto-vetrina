@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import './ParallaxBackground.css';
 
 interface ParallaxBackgroundProps {
@@ -7,34 +7,34 @@ interface ParallaxBackgroundProps {
 }
 
 const ParallaxBackground: React.FC<ParallaxBackgroundProps> = ({ imageUrl, children }) => {
+  const bgRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    const el = bgRef.current;
+    if (!el) return;
+
+    el.style.setProperty('--bg-image', `url(${imageUrl})`);
+    el.style.backgroundImage = `url(${imageUrl})`;
+
     const isMobile = window.innerWidth < 769;
+    if (!isMobile) return;
 
-    // Set CSS custom property for background image
-    const backgroundElement = document.querySelector('.parallax-background') as HTMLElement;
-    if (backgroundElement) {
-      backgroundElement.style.setProperty('--bg-image', `url(${imageUrl})`);
-    }
+    const handleScroll = () => {
+      const offset = window.scrollY;
+      el.style.transform = `translateY(${offset * 0.5}px)`;
+    };
 
-    if (isMobile) {
-      const handleScroll = () => {
-        const offset = window.scrollY;
-        const background = document.querySelector('.parallax-background') as HTMLElement;
-        if (background) {
-          background.style.transform = `translateY(${offset * 0.5}px)`;
-        }
-      };
-
-      window.addEventListener('scroll', handleScroll, { passive: true });
-      return () => window.removeEventListener('scroll', handleScroll);
-    }
-  }, []);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [imageUrl]);
 
   return (
     <div className="parallax-wrapper">
       <div
         className="parallax-background"
+        ref={bgRef}
+        data-image-url={imageUrl}
       ></div>
       <div className="parallax-content">
         {children}
