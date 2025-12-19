@@ -28,11 +28,10 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
   React.useEffect(() => {
     if (onServicesChange) {
       const selected = getSelectedServices();
-      // ❌ ESCLUDI servizi inclusi (gratuiti) dal calcolo
-      const paidServices = selected.filter(s => !s.included && s.price > 0);
+      // Calcolo indipendente: escludi gli INCLUSI dal costo ma passa tutti i selezionati al parent
       const totalCost = getTotalCost();
-      console.log('🛍️ ExtraServices onChange:', { selected: selected.length, paid: paidServices.length, totalCost });
-      onServicesChange(paidServices, totalCost);
+      console.log('🛍️ ExtraServices onChange:', { selected: selected.length, totalCost });
+      onServicesChange(selected, totalCost);
     }
   }, [selectedServices, services, onServicesChange, calcOptions]);
 

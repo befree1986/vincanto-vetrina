@@ -232,6 +232,20 @@ export const useExtraServices = (): ExtraServicesData => {
     fetchServices();
   }, []);
 
+  // ✅ Seleziona automaticamente i servizi inclusi (INCLUSI) quando i servizi sono disponibili
+  useEffect(() => {
+    if (!services || services.length === 0) return;
+    const includedIds = services
+      .filter(s => (s.included === true) && s.available && s.active !== false)
+      .map(s => s.id);
+    if (includedIds.length === 0) return;
+
+    setSelectedServices(prev => {
+      const merged = new Set<number>([...prev, ...includedIds]);
+      return Array.from(merged);
+    });
+  }, [services]);
+
   // 🔥 RIMOSSO LOOP REFRESH AUTOMATICO - causava troppi re-render
   // Usa refreshServices() manualmente se serve aggiornare
 
