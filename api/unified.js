@@ -185,7 +185,9 @@ export default async function handler(req, res) {
   const allowedOrigins = [
     'https://www.vincantomaiori.it',
     'https://vincantomaiori.it',
-    'https://account.vincantomaiori.it', // Subdominio admin (futuro)
+    'https://account.vincantomaiori.it', // Subdominio admin (legacy)
+    'https://account.vincanto.it', // Subdominio admin attivo
+    'https://vincanto-vetrina.vercel.app', // Staging Vercel
     'http://localhost:3000', // Dev backend
     'http://localhost:5173', // Dev frontend Vite
     'http://127.0.0.1:3000',
