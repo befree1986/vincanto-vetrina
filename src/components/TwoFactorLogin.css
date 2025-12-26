@@ -1,0 +1,200 @@
+/* Stili per TwoFactorLogin Component */
+
+.two-factor-login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.two-factor-login-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  padding: 48px;
+  max-width: 420px;
+  width: 100%;
+}
+
+.two-factor-login-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.two-factor-login-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.two-factor-login-title {
+  color: #333;
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.two-factor-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.two-factor-login-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.two-factor-login-label {
+  color: #555;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.two-factor-login-input {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.two-factor-login-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.two-factor-login-button {
+  width: 100%;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.3s;
+}
+
+.two-factor-login-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.two-factor-login-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.two-factor-login-error {
+  background: #ffebee;
+  color: #c62828;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  text-align: center;
+  border-left: 4px solid #c62828;
+}
+
+/* TOTP Step */
+.two-factor-login-totp-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.two-factor-login-totp-header {
+  text-align: center;
+}
+
+.two-factor-login-totp-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.two-factor-login-totp-message {
+  color: #666;
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.two-factor-login-totp-input {
+  width: 100%;
+  padding: 20px;
+  font-size: 32px;
+  text-align: center;
+  letter-spacing: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.two-factor-login-totp-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.two-factor-login-back-button {
+  width: 100%;
+  padding: 12px 24px;
+  background: white;
+  color: #667eea;
+  border: 2px solid #667eea;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.two-factor-login-back-button:hover:not(:disabled) {
+  background: #f5f5f5;
+}
+
+.two-factor-login-back-button:disabled {
+  border-color: #ccc;
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.two-factor-login-help {
+  text-align: center;
+  margin-top: 8px;
+}
+
+.two-factor-login-help-text {
+  color: #999;
+  font-size: 13px;
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .two-factor-login-card {
+    padding: 32px 24px;
+  }
+
+  .two-factor-login-icon {
+    font-size: 48px;
+  }
+
+  .two-factor-login-title {
+    font-size: 24px;
+  }
+
+  .two-factor-login-totp-input {
+    font-size: 24px;
+    letter-spacing: 8px;
+  }
+}

@@ -15,10 +15,13 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsConditions from './pages/TermsConditions';
 import Accessibility from './pages/Accessibility';
 import AdminSetup from './components/AdminSetup';
+import ProtectedRoute from './components/ProtectedRoute';
 import { setupIntelligentPreload, preloadOnIdle } from './utils/preloadComponents';
 
 // Lazy loading per componenti pesanti
 const AdminPanelPro = lazy(() => import('./pages/AdminPanelPro'));
+const AdminPanelBasic = lazy(() => import('./components/AdminPanelBasic'));
+const TwoFactorLogin = lazy(() => import('./components/TwoFactorLogin'));
 const OAuthCallback = lazy(() => import('./pages/OAuthCallback'));
 
 // Componente di loading per lazy imports
@@ -30,7 +33,7 @@ const LazyLoadingSpinner = () => (
 );
 
 import './App.css';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 // Rimosso Analytics per alleggerire bundle e perché chunk dedicato eliminato
 // import { Analytics } from "@vercel/analytics/react";
 import GoogleAnalytics from "./utils/GoogleAnalytics";
@@ -42,6 +45,7 @@ suppressPerformanceWarnings();
 
 function App() {
   const location = useLocation();
+  const navigate = useNavigate();
   const isAdminRoute = location.pathname.startsWith('/admin');
   
   const {
@@ -74,8 +78,34 @@ function App() {
         {userPreferences?.analytics && <GoogleAnalytics />}
         <Suspense fallback={<LazyLoadingSpinner />}>
           <Routes>
-            <Route path="/admin" element={<AdminPanelPro />} />
+            <Route path="/admin/login" element={
+              <TwoFactorLogin
+                onLoginSuccess={(token, role) => {
+                  // Salva già nel componente; qui gestiamo solo redirect
+                  if (role === 'superadmin') {
+                    navigate('/admin');
+                  } else {
+                    navigate('/admin/basic');
+                  }
+                }}
+              />
+            } />
+            <Route path="/admin" element={
+              <ProtectedRoute requiredRole="superadmin">
+                <AdminPanelPro />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/basic" element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminPanelBasic />
+              </ProtectedRoute>
+            } />
             <Route path="/admin/setup" element={<AdminSetup />} />
+            <Route path="/admin/security" element={
+              <ProtectedRoute requiredRole="superadmin">
+                <TwoFactorSetup />
+              </ProtectedRoute>
+            } />
             <Route path="/oauth/callback" element={<OAuthCallback />} />
           </Routes>
         </Suspense>

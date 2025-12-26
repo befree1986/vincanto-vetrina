@@ -7,6 +7,8 @@ import { renderEmailTemplate } from '../email/templates/index.js';
 import { sendEmailWithAdminCopy } from '../email/emailSender.js';
 import { initializeEmailLogsTable } from '../email/emailLogger.js';
 import { detectLanguage } from '../email/i18n.js';
+import * as TwoFactorAuth from './2fa.js';
+import bcrypt from 'bcrypt';
 
 // Database connection
 const pool = new Pool({
@@ -178,10 +180,26 @@ export default async function handler(req, res) {
             return res.status(500).json({ success: false, error: err.message });
           }
         }
-  // CORS Headers - Setup universale
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  
+  // CORS Headers - Allowlist domini autorizzati
+  const allowedOrigins = [
+    'https://www.vincantomaiori.it',
+    'https://vincantomaiori.it',
+    'https://account.vincantomaiori.it', // Subdominio admin (futuro)
+    'http://localhost:3000', // Dev backend
+    'http://localhost:5173', // Dev frontend Vite
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:5173'
+  ];
+  
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -208,6 +226,262 @@ export default async function handler(req, res) {
   }
 
   console.log('🎯 API UNIFICATA CONSOLIDATA - Action:', action, 'Method:', req.method);
+
+  // ========================================
+  // 2FA SETUP - Genera secret e QR code
+  // ========================================
+  if (action === 'admin/2fa/setup') {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ success: false, error: 'Email richiesta' });
+      }
+
+      // Verifica che l'utente esista (in produzione controllare anche autenticazione)
+      const userResult = await pool.query(
+        'SELECT id, email, two_factor_enabled FROM admin_users WHERE email = $1',
+        [email]
+      );
+
+      if (userResult.rows.length === 0) {
+        return res.status(404).json({ success: false, error: 'Utente non trovato' });
+      }
+
+      const user = userResult.rows[0];
+
+      // Genera nuovo secret e QR code
+      const { secret, qrCodeUrl, otpauthUrl } = await TwoFactorAuth.generateTOTPSecret(email);
+      
+      // Cifra il secret prima di salvarlo temporaneamente
+      const encryptedSecret = TwoFactorAuth.encryptSecret(secret);
+
+      // Salva il secret temporaneo (non ancora attivo)
+      await pool.query(
+        'UPDATE admin_users SET two_factor_secret = $1 WHERE id = $2',
+        [encryptedSecret, user.id]
+      );
+
+      // Log audit
+      await pool.query(
+        'INSERT INTO admin_2fa_audit (user_id, action, ip_address, user_agent) VALUES ($1, $2, $3, $4)',
+        [user.id, 'setup', req.headers['x-forwarded-for'] || req.connection.remoteAddress, req.headers['user-agent']]
+      );
+
+      return res.status(200).json({
+        success: true,
+        qrCodeUrl, // Data URL del QR code da mostrare
+        otpauthUrl, // URL otpauth per debugging
+        message: 'Scansiona il QR code con Google Authenticator o app TOTP'
+      });
+
+    } catch (error) {
+      console.error('❌ Errore setup 2FA:', error);
+      return res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  // ========================================
+  // 2FA VERIFY - Verifica codice TOTP e attiva 2FA
+  // ========================================
+  if (action === 'admin/2fa/verify') {
+    try {
+      const { email, token } = req.body;
+      
+      if (!email || !token) {
+        return res.status(400).json({ success: false, error: 'Email e token richiesti' });
+      }
+
+      // Recupera utente e secret
+      const userResult = await pool.query(
+        'SELECT id, email, two_factor_secret, two_factor_enabled FROM admin_users WHERE email = $1',
+        [email]
+      );
+
+      if (userResult.rows.length === 0) {
+        return res.status(404).json({ success: false, error: 'Utente non trovato' });
+      }
+
+      const user = userResult.rows[0];
+
+      if (!user.two_factor_secret) {
+        return res.status(400).json({ success: false, error: 'Setup 2FA non inizializzato' });
+      }
+
+      // Verifica il token TOTP
+      const isValid = TwoFactorAuth.verifyTOTP(token, user.two_factor_secret, true);
+
+      if (!isValid) {
+        // Log fallimento
+        await pool.query(
+          'INSERT INTO admin_2fa_audit (user_id, action, ip_address, user_agent) VALUES ($1, $2, $3, $4)',
+          [user.id, 'verify_failed', req.headers['x-forwarded-for'] || req.connection.remoteAddress, req.headers['user-agent']]
+        );
+        return res.status(400).json({ success: false, error: 'Codice non valido' });
+      }
+
+      // Genera codici di recovery
+      const { codes, hashes } = await TwoFactorAuth.generateRecoveryCodes(10);
+
+      // Attiva 2FA
+      await pool.query(
+        'UPDATE admin_users SET two_factor_enabled = TRUE, recovery_codes = $1, two_factor_activated_at = NOW() WHERE id = $2',
+        [hashes, user.id]
+      );
+
+      // Log successo
+      await pool.query(
+        'INSERT INTO admin_2fa_audit (user_id, action, ip_address, user_agent) VALUES ($1, $2, $3, $4)',
+        [user.id, 'enabled', req.headers['x-forwarded-for'] || req.connection.remoteAddress, req.headers['user-agent']]
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: '2FA attivato con successo',
+        recoveryCodes: codes, // IMPORTANTE: Mostra i codici UNA SOLA VOLTA
+        warning: 'Salva questi codici in un posto sicuro! Non verranno mostrati di nuovo.'
+      });
+
+    } catch (error) {
+      console.error('❌ Errore verifica 2FA:', error);
+      return res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  // ========================================
+  // LOGIN CON 2FA - Step 1: Password
+  // ========================================
+  if (action === 'admin/login-password') {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ success: false, error: 'Email e password richiesti' });
+      }
+
+      // Recupera utente
+      const userResult = await pool.query(
+        'SELECT id, email, password_hash, role, two_factor_enabled FROM admin_users WHERE email = $1',
+        [email]
+      );
+
+      if (userResult.rows.length === 0) {
+        return res.status(401).json({ success: false, error: 'Credenziali non valide' });
+      }
+
+      const user = userResult.rows[0];
+
+      // Verifica password
+      const passwordMatch = await bcrypt.compare(password, user.password_hash);
+      
+      if (!passwordMatch) {
+        return res.status(401).json({ success: false, error: 'Credenziali non valide' });
+      }
+
+      // Se 2FA non è abilitato, login completato
+      if (!user.two_factor_enabled) {
+        // Genera token di sessione (in produzione usare JWT)
+        const sessionToken = require('crypto').randomBytes(32).toString('hex');
+        
+        return res.status(200).json({
+          success: true,
+          requires2FA: false,
+          role: user.role,
+          token: sessionToken,
+          message: 'Login completato'
+        });
+      }
+
+      // Se 2FA è abilitato, richiedi il codice TOTP
+      return res.status(200).json({
+        success: true,
+        requires2FA: true,
+        message: 'Inserisci il codice TOTP dalla tua app di autenticazione'
+      });
+
+    } catch (error) {
+      console.error('❌ Errore login password:', error);
+      return res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  // ========================================
+  // LOGIN CON 2FA - Step 2: TOTP
+  // ========================================
+  if (action === 'admin/login-totp') {
+    try {
+      const { email, token } = req.body;
+      
+      if (!email || !token) {
+        return res.status(400).json({ success: false, error: 'Email e token richiesti' });
+      }
+
+      // Rate limiting
+      if (!TwoFactorAuth.checkRateLimit(email, 5, 5 * 60 * 1000)) {
+        return res.status(429).json({ 
+          success: false, 
+          error: 'Troppi tentativi. Riprova tra 5 minuti.' 
+        });
+      }
+
+      // Recupera utente
+      const userResult = await pool.query(
+        'SELECT id, email, role, two_factor_secret, two_factor_enabled, recovery_codes FROM admin_users WHERE email = $1',
+        [email]
+      );
+
+      if (userResult.rows.length === 0) {
+        return res.status(401).json({ success: false, error: 'Credenziali non valide' });
+      }
+
+      const user = userResult.rows[0];
+
+      if (!user.two_factor_enabled) {
+        return res.status(400).json({ success: false, error: '2FA non abilitato per questo utente' });
+      }
+
+      // Verifica TOTP
+      const isValid = TwoFactorAuth.verifyTOTP(token, user.two_factor_secret, true);
+
+      if (!isValid) {
+        // Log fallimento
+        await pool.query(
+          'INSERT INTO admin_2fa_audit (user_id, action, ip_address, user_agent) VALUES ($1, $2, $3, $4)',
+          [user.id, 'login_failed', req.headers['x-forwarded-for'] || req.connection.remoteAddress, req.headers['user-agent']]
+        );
+        return res.status(401).json({ success: false, error: 'Codice TOTP non valido' });
+      }
+
+      // Reset rate limit su successo
+      TwoFactorAuth.resetRateLimit(email);
+
+      // Aggiorna last_login
+      await pool.query(
+        'UPDATE admin_users SET last_login = NOW() WHERE id = $1',
+        [user.id]
+      );
+
+      // Log successo
+      await pool.query(
+        'INSERT INTO admin_2fa_audit (user_id, action, ip_address, user_agent) VALUES ($1, $2, $3, $4)',
+        [user.id, 'login_success', req.headers['x-forwarded-for'] || req.connection.remoteAddress, req.headers['user-agent']]
+      );
+
+      // Genera token di sessione (in produzione usare JWT con scadenza)
+      const sessionToken = require('crypto').randomBytes(32).toString('hex');
+
+      return res.status(200).json({
+        success: true,
+        role: user.role,
+        token: sessionToken,
+        message: 'Login completato con successo'
+      });
+
+    } catch (error) {
+      console.error('❌ Errore login TOTP:', error);
+      return res.status(500).json({ success: false, error: error.message });
+    }
+  }
 
   // Restituisce tutti gli eventi da calendar_events (per unificazione prenotazioni)
   if (action === 'calendar-events') {
@@ -275,7 +549,8 @@ export default async function handler(req, res) {
         return res.status(200).json({
           success: true,
           message: 'Login effettuato con successo',
-          token: 'admin-token-vincanto'
+          token: 'admin-token-vincanto',
+          role: 'superadmin' // Ruolo di default al login
         });
       } else {
         return res.status(401).json({
@@ -283,6 +558,33 @@ export default async function handler(req, res) {
           error: 'Password non corretta'
         });
       }
+    }
+
+    // ========================================
+    // ADMIN ROLE ENDPOINT
+    // ========================================
+    if (action === 'admin/role') {
+      if (req.method !== 'GET') {
+        return res.status(405).json({ success: false, error: 'Metodo non consentito' });
+      }
+
+      // Verifica se l'utente è autenticato (controlla header Authorization o cookies)
+      const token = req.headers.authorization?.replace('Bearer ', '') || req.cookies?.adminToken;
+      
+      if (!token) {
+        return res.status(401).json({
+          success: false,
+          role: 'guest',
+          authenticated: false
+        });
+      }
+
+      // Se token valido, ritorna il ruolo (il frontend deciderà se superadmin o admin)
+      return res.status(200).json({
+        success: true,
+        role: 'superadmin', // Da backend sempre superadmin, il frontend gestisce la logica
+        authenticated: true
+      });
     }
 
     // ========================================
@@ -378,34 +680,12 @@ export default async function handler(req, res) {
     // NOTIFICATIONS SECTION
     // ========================================
     if (action === 'notifications') {
+      // Ritorna notifiche dal database (quando implementato)
+      // Per ora ritorna array vuoto
       return res.status(200).json({
         success: true,
-        notifications: [
-          {
-            id: 1,
-            type: 'booking',
-            title: 'Nuova Prenotazione',
-            message: 'Prenotazione ricevuta per il 15-18 Nov',
-            date: new Date().toISOString(),
-            read: false
-          },
-          {
-            id: 2,
-            type: 'payment',
-            title: 'Pagamento PayPal Ricevuto',
-            message: 'Pagamento di €450 completato via PayPal',
-            date: new Date(Date.now() - 86400000).toISOString(),
-            read: false
-          },
-          {
-            id: 3,
-            type: 'calendar',
-            title: 'Sincronizzazione Calendar',
-            message: 'Airbnb calendar sincronizzato con successo',
-            date: new Date(Date.now() - 172800000).toISOString(),
-            read: true
-          }
-        ]
+        notifications: [],
+        message: 'Notifiche caricate dal backend (database)'
       });
     }
 
@@ -2702,7 +2982,8 @@ END:VEVENT
       success: false,
       error: 'Endpoint non trovato',
       availableActions: [
-        'login', 'dashboard-stats', 'analytics', 'notifications', 
+        'login', 'admin/role', 'admin/2fa/setup', 'admin/2fa/verify', 'admin/login-password', 'admin/login-totp',
+        'dashboard-stats', 'analytics', 'notifications',
         'booking', 'payments', 'stripe-payment-intent', 'stripe-confirm-payment', 
         'payment-methods', 'calendar-configs', 'calendar-sync', 'calendar-auto-sync',
         'calendar-bookings', 'ical-export',

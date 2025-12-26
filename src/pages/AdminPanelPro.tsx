@@ -8,11 +8,15 @@ import AdminApiService from '../services/adminApiService';
 import AdminPricing from '../components/admin/AdminPricing';
 import ExtraServicesAdmin from '../components/admin/ExtraServicesAdmin';
 import { ExtraService } from '../hooks/useExtraServices';
+import { useAdminRole } from '../hooks/useAdminRole';
 import { devLog, devError, debugLog } from '../utils/debug';
 import { log } from '../utils/logger';
 
 const AdminPanelPro = (): JSX.Element => {
   devLog('🚀 AdminPanelPro component rendering...');
+  
+  // Verifica ruolo SuperAdmin
+  const { role, isLoading: roleLoading, isSuperAdmin } = useAdminRole();
   
   // Stati principali
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -1671,128 +1675,6 @@ const AdminPanelPro = (): JSX.Element => {
 
   // === NUOVE FUNZIONI PRENOTAZIONI AGGIUNTE ===
 
-  const handleEditBookingDemo = (booking: any) => {
-    if (typeof booking === 'string') {
-      // Se è un ID stringa (come 'VIN_DEMO'), trova la prenotazione corrispondente
-      const foundBooking = recentBookings.find(b => `#${String(b.id).toUpperCase()}` === `#${booking}` || b.id === booking);
-      if (foundBooking) {
-        alert(`✏️ Modifica Prenotazione\n\nModifica la prenotazione di:\n👤 ${foundBooking.guestName}\n📅 ${new Date(foundBooking.checkIn).toLocaleDateString('it-IT')} - ${new Date(foundBooking.checkOut).toLocaleDateString('it-IT')}\n💰 €${foundBooking.totalPrice}\n\n(Funzione demo - implementare integrazione completa)`);
-      } else {
-        alert(`✏️ Modifica Prenotazione ${booking}\n\n(Funzione demo - implementare integrazione completa)`);
-      }
-    } else {
-      // È un oggetto prenotazione completo
-      setNewBookingData({
-        customer_name: booking.guestName || '',
-        customer_email: booking.guestName ? booking.guestName.toLowerCase().replace(' ', '.') + '@email.com' : '',
-        check_in: booking.checkIn || '',
-        check_out: booking.checkOut || '',
-        guests: booking.guests || 1,
-        total_amount: booking.totalPrice || 0,
-        status: booking.status || 'pending',
-        platform: booking.platform || 'direct'
-      });
-      setEditingBooking(booking);
-      setShowBookingForm(true);
-    }
-  };
-
-  const handleSendBookingEmail = (booking: any) => {
-    if (typeof booking === 'string') {
-      const bookingId = booking;
-      const emailTypes = [
-        'Conferma prenotazione',
-        'Promemoria check-in', 
-        'Istruzioni accesso',
-        'Richiesta recensione',
-        'Email personalizzata'
-      ];
-      
-      const selectedType = prompt(`✉️ Invia Email per ${bookingId}\n\nSeleziona il tipo di email:\n${emailTypes.map((type, index) => `${index + 1}. ${type}`).join('\n')}\n\nInserisci il numero (1-5):`);
-      
-      if (selectedType && parseInt(selectedType) >= 1 && parseInt(selectedType) <= 5) {
-        const emailType = emailTypes[parseInt(selectedType) - 1];
-        alert(`✅ Email "${emailType}" inviata con successo per la prenotazione ${bookingId}!`);
-      }
-    } else {
-      alert(`✉️ Inviando email a ${booking.guestName || 'Ospite'} per la prenotazione #${booking.id}\n\n📧 Email: ${booking.guestName ? booking.guestName.toLowerCase().replace(' ', '.') : 'ospite'}@email.com\n📅 Periodo: ${new Date(booking.checkIn).toLocaleDateString('it-IT')} - ${new Date(booking.checkOut).toLocaleDateString('it-IT')}\n\n✅ Email inviata con successo!`);
-    }
-  };
-
-  const handleGenerateInvoice = (booking: any) => {
-    if (typeof booking === 'string') {
-      const bookingId = booking;
-      alert(`📄 Generando fattura per prenotazione ${bookingId}...\n\n✅ Fattura generata con successo!\n📁 Salvata in: /fatture/${bookingId}_fattura.pdf\n📧 Inviata automaticamente al cliente`);
-    } else {
-      const invoiceData = `📄 FATTURA VINCANTO MAORI\n\n` +
-        `📋 Prenotazione: #${String(booking.id).toUpperCase()}\n` +
-        `👤 Cliente: ${booking.guestName}\n` +
-        `📅 Periodo: ${new Date(booking.checkIn).toLocaleDateString('it-IT')} - ${new Date(booking.checkOut).toLocaleDateString('it-IT')}\n` +
-        `👥 Ospiti: ${booking.guests}\n` +
-        `💰 Totale: €${booking.totalPrice}\n` +
-        `📊 Piattaforma: ${booking.platform}\n\n` +
-        `✅ Fattura generata il ${new Date().toLocaleDateString('it-IT')}`;
-      
-      alert(invoiceData + '\n\n📁 Fattura salvata e inviata al cliente');
-    }
-  };
-
-  const handleRequestPayment = (bookingId: string) => {
-    const paymentMethods = [
-      'Bonifico bancario',
-      'Carta di credito',
-      'PayPal',
-      'Pagamento in loco'
-    ];
-    
-    const selectedMethod = prompt(`💳 Richiesta Pagamento - ${bookingId}\n\nSeleziona il metodo di pagamento:\n${paymentMethods.map((method, index) => `${index + 1}. ${method}`).join('\n')}\n\nInserisci il numero (1-4):`);
-    
-    if (selectedMethod && parseInt(selectedMethod) >= 1 && parseInt(selectedMethod) <= 4) {
-      const method = paymentMethods[parseInt(selectedMethod) - 1];
-      alert(`💳 Richiesta di pagamento inviata!\n\n📋 Prenotazione: ${bookingId}\n💰 Importo: €1,250.00\n💳 Metodo: ${method}\n📧 Email inviata al cliente con istruzioni\n\n⏱️ Scadenza: 48 ore`);
-    }
-  };
-
-  const handleRequestReview = (bookingId: string) => {
-    const reviewPlatforms = [
-      'Google Reviews',
-      'TripAdvisor',
-      'Airbnb (se applicabile)',
-      'Booking.com (se applicabile)',
-      'Email diretta'
-    ];
-    
-    const selectedPlatform = prompt(`⭐ Richiesta Recensione - ${bookingId}\n\nSeleziona la piattaforma:\n${reviewPlatforms.map((platform, index) => `${index + 1}. ${platform}`).join('\n')}\n\nInserisci il numero (1-5):`);
-    
-    if (selectedPlatform && parseInt(selectedPlatform) >= 1 && parseInt(selectedPlatform) <= 5) {
-      const platform = reviewPlatforms[parseInt(selectedPlatform) - 1];
-      alert(`⭐ Richiesta recensione inviata!\n\n📋 Prenotazione: ${bookingId}\n🌟 Piattaforma: ${platform}\n📧 Email personalizzata inviata al cliente\n🎁 Incluso sconto 10% per prossima prenotazione`);
-    }
-  };
-
-  const handleBookAgain = (bookingId: string) => {
-    const currentDate = new Date();
-    const suggestedDates = [
-      new Date(currentDate.getTime() + (30 * 24 * 60 * 60 * 1000)), // +30 giorni
-      new Date(currentDate.getTime() + (90 * 24 * 60 * 60 * 1000)), // +90 giorni
-      new Date(currentDate.getTime() + (180 * 24 * 60 * 60 * 1000)) // +6 mesi
-    ];
-    
-    const message = `🔁 Prenota Ancora - ${bookingId}\n\n` +
-      `📧 Email promozionale inviata al cliente!\n\n` +
-      `🎯 Offerte incluse:\n` +
-      `• 15% sconto per prenotazioni entro 30 giorni\n` +
-      `• 10% sconto per prenotazioni entro 90 giorni\n` +
-      `• Upgrade gratuito camera (se disponibile)\n\n` +
-      `📅 Date suggerite:\n` +
-      `• ${suggestedDates[0].toLocaleDateString('it-IT')}\n` +
-      `• ${suggestedDates[1].toLocaleDateString('it-IT')}\n` +
-      `• ${suggestedDates[2].toLocaleDateString('it-IT')}\n\n` +
-      `✅ Campaign attivata con successo!`;
-    
-    alert(message);
-  };
-
   const handleBookingsDetailedReport = async () => {
     try {
       const reportData = {
@@ -2295,6 +2177,28 @@ const AdminPanelPro = (): JSX.Element => {
   // }, [isAuthenticated]);
   
   // === RENDER LOGIN ===
+  // === RENDER SUPERADMIN GUARD ===
+  if (!roleLoading && !isSuperAdmin()) {
+    return (
+      <div className="admin-access-denied-container">
+        <div className="admin-access-denied-card">
+          <h1 className="admin-access-denied-icon">🔐</h1>
+          <h2 className="admin-access-denied-title">Accesso Negato</h2>
+          <p className="admin-access-denied-text">
+            Questo pannello è riservato ai <strong>SuperAdmin</strong>.
+          </p>
+          <p className="admin-access-denied-role">
+            Ruolo attuale: <strong>{role || 'Non disponibile'}</strong>
+          </p>
+          <p className="admin-access-denied-hint">
+            Contatta l'amministratore del sistema per ottenere i diritti necessari.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // === RENDER LOGIN SCREEN ===
   if (!isAuthenticated) {
     devLog('🔐 Rendering login form...');
     return (
@@ -3077,160 +2981,7 @@ const AdminPanelPro = (): JSX.Element => {
               </div>
             </div>
             
-            {/* Calendari Piattaforme Esterne */}
-            <div className="admin-pricing-section">
-              <h3>🌐 Calendari Piattaforme Esterne</h3>
-              <div className="admin-calendar-grid">
-                <div className="admin-calendar-card">
-                  <h3>📱 Airbnb Calendar</h3>
-                  <div className="calendar-status active">🟢 Sincronizzato</div>
-                  <div className="calendar-info">
-                    <p>📧 Account: mario@vincanto.com</p>
-                    <p>🔄 Ultima sincronizzazione: Oggi 14:30</p>
-                    <p>📊 Prenotazioni attive: 5</p>
-                    <div className="sync-indicator success">
-                      ✅ Sincronizzazione automatica ogni 2 ore
-                    </div>
-                  </div>
-                  <div className="calendar-controls">
-                    <button 
-                      className="admin-btn-secondary admin-btn-small"
-                      onClick={() => handleSyncCalendar('airbnb-1', 'Airbnb Calendar')}
-                      disabled={isLoadingCalendars}
-                    >
-                      🔄 Sincronizza
-                    </button>
-                    <button 
-                      className="admin-btn-secondary admin-btn-small"
-                      onClick={() => handleEditCalendar({id: 'airbnb-1', name: 'Airbnb Calendar', type: 'airbnb'})}
-                    >
-                      ✏️ Modifica
-                    </button>
-                    <button 
-                      className="admin-btn-warning admin-btn-small"
-                      onClick={() => handleSuspendCalendar('airbnb-1', 'Airbnb Calendar')}
-                      disabled={isLoadingCalendars}
-                    >
-                      ⏸️ Sospendi
-                    </button>
-                    <button 
-                      className="admin-btn-danger admin-btn-small"
-                      onClick={() => handleDeleteCalendar('airbnb-1', 'Airbnb Calendar')}
-                      disabled={isLoadingCalendars}
-                    >
-                      🗑️ Elimina
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="admin-calendar-card">
-                  <h3>🏨 Booking.com Calendar</h3>
-                  <div className="calendar-status active">🟢 Sincronizzato</div>
-                  <div className="calendar-info">
-                    <p>📧 Account: booking@vincanto.com</p>
-                    <p>🔄 Ultima sincronizzazione: Oggi 14:25</p>
-                    <p>📊 Prenotazioni attive: 3</p>
-                    <div className="sync-indicator success">
-                      ✅ Sincronizzazione automatica ogni 3 ore
-                    </div>
-                  </div>
-                  <div className="calendar-controls">
-                    <button 
-                      className="admin-btn-secondary admin-btn-small"
-                      onClick={() => handleSyncCalendar('booking-1', 'Booking.com Calendar')}
-                      disabled={isLoadingCalendars}
-                    >
-                      🔄 Sincronizza
-                    </button>
-                    <button 
-                      className="admin-btn-secondary admin-btn-small"
-                      onClick={() => handleEditCalendar({id: 'booking-1', name: 'Booking.com Calendar', type: 'booking'})}
-                    >
-                      ✏️ Modifica
-                    </button>
-                    <button 
-                      className="admin-btn-warning admin-btn-small"
-                      onClick={() => handleSuspendCalendar('booking-1', 'Booking.com Calendar')}
-                      disabled={isLoadingCalendars}
-                    >
-                      ⏸️ Sospendi
-                    </button>
-                    <button 
-                      className="admin-btn-danger admin-btn-small"
-                      onClick={() => handleDeleteCalendar('booking-1', 'Booking.com Calendar')}
-                      disabled={isLoadingCalendars}
-                    >
-                      🗑️ Elimina
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="admin-calendar-card">
-                  <h3>🌐 Expedia Calendar</h3>
-                  <div className="calendar-status syncing">🟡 Configurazione in corso</div>
-                  <div className="calendar-info">
-                    <p>� Account: expedia@vincanto.com</p>
-                    <p>⚙️ Configurazione: 75% completata</p>
-                    <p>📊 Test API: In corso...</p>
-                    <div className="sync-indicator pending">
-                      ⏳ Configurazione API in fase di test
-                    </div>
-                  </div>
-                  <div className="calendar-controls">
-                    <button className="admin-btn-primary admin-btn-small" onClick={() => handleCompleteAirbnbSetup()}>⚙️ Completa Setup</button>
-                    <button className="admin-btn-secondary admin-btn-small" onClick={() => handleTestAirbnbAPI()}>🔧 Test API</button>
-                    <button className="admin-btn-danger admin-btn-small" onClick={() => handleCancelAirbnbSetup()}>❌ Annulla</button>
-                  </div>
-                </div>
-                
-                <div className="admin-calendar-card">
-                  <h3>🏠 VRBO Calendar</h3>
-                  <div className="calendar-status inactive">🔴 Sospeso</div>
-                  <div className="calendar-info">
-                    <p>📧 Account: vrbo@vincanto.com</p>
-                    <p>⏸️ Sospeso da: 15/10/2025</p>
-                    <p>📊 Ultimo sync: 14/10/2025</p>
-                    <div className="sync-indicator error">
-                      ⚠️ Calendario temporaneamente sospeso per manutenzione
-                    </div>
-                  </div>
-                  <div className="calendar-controls">
-                    <button className="admin-btn-success admin-btn-small" onClick={() => handleReactivateVRBO()}>▶️ Riattiva</button>
-                    <button className="admin-btn-secondary admin-btn-small" onClick={() => handleEditVRBO()}>✏️ Modifica</button>
-                    <button className="admin-btn-danger admin-btn-small" onClick={() => handleDeleteVRBO()}>🗑️ Elimina</button>
-                  </div>
-                </div>
-                
-                <div className="admin-calendar-card">
-                  <h3>🏖️ Holidu Calendar</h3>
-                  <div className="calendar-status ready">🟡 Pronto per Configurazione</div>
-                  <div className="calendar-info">
-                    <p>🔗 URL: https://api.host.holidu.com/pmc/rest/apartments/65376863/ical.ics?key=72d27a56f3e8836f690500877301d000</p>
-                    <p>🆔 Apartment ID: 65376863</p>
-                    <p>🔑 API Key: 72d27a56f3e8836f690500877301d000</p>
-                    <div className="sync-indicator ready">
-                      ✅ URL iCal fornito - Pronto per attivazione
-                    </div>
-                  </div>
-                  <div className="calendar-controls">
-                    <button className="admin-btn-primary admin-btn-small" onClick={() => {
-                      setNewCalendarData({
-                        name: 'Holidu - Vincanto Maori',
-                        calendar_type: 'holidu',
-                        url: 'https://api.host.holidu.com/pmc/rest/apartments/65376863/ical.ics?key=72d27a56f3e8836f690500877301d000',
-                        credentials: 'apartment_id:65376863,api_key:72d27a56f3e8836f690500877301d000',
-                        sync_frequency: 60,
-                        is_active: true
-                      });
-                      setShowNewCalendarForm(true);
-                    }}>⚡ Configura Subito</button>
-                    <button className="admin-btn-secondary admin-btn-small" onClick={() => handleTestHoliduURL()}>🔍 Test URL</button>
-                    <button className="admin-btn-secondary admin-btn-small" onClick={() => handleSyncHoliduCalendar()}>🔄 Sincronizza Holidu</button>
-                    <button className="admin-btn-secondary admin-btn-small" onClick={() => handleLoadHoliduEvents()}>📅 Carica Eventi Holidu</button>
-                  </div>
-                </div>
-              </div>
-            </div>
+
             
             {/* Configurazioni Generali */}
             <div className="admin-pricing-section">
@@ -3668,121 +3419,6 @@ const AdminPanelPro = (): JSX.Element => {
               </div>
             </div>
 
-            {/* Tabella Prenotazioni Mock */}
-            <div className="admin-pricing-section">
-              <h3>📋 Lista Prenotazioni (Demo/Mock)</h3>
-              <div className="bookings-table-container">
-                <table className="bookings-table">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Cliente</th>
-                      <th>Ospiti</th>
-                      <th>Check-in</th>
-                      <th>Check-out</th>
-                      <th>Piattaforma</th>
-                      <th>Stato</th>
-                      <th>Totale</th>
-                      <th>Azioni</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentBookings.map((booking) => (
-                      <tr key={booking.id} className="booking-row">
-                        <td>#{String(booking.id).toUpperCase()}</td>
-                        <td>
-                          <div className="customer-info">
-                            <strong>{booking.guestName || 'Ospite Sconosciuto'}</strong>
-                            <small>{booking.guestName ? booking.guestName.toLowerCase().replace(' ', '.') : 'ospite'}@email.com</small>
-                          </div>
-                        </td>
-                        <td>{booking.guests} {booking.guests === 1 ? 'ospite' : 'ospiti'}</td>
-                        <td>{new Date(booking.checkIn).toLocaleDateString('it-IT')}</td>
-                        <td>{new Date(booking.checkOut).toLocaleDateString('it-IT')}</td>
-                        <td>
-                          <span className={`platform-badge ${booking.platform}`}>
-                            {booking.platform === 'airbnb' && '📱 Airbnb'}
-                            {booking.platform === 'booking' && '🏨 Booking.com'}
-                            {booking.platform === 'expedia' && '✈️ Expedia'}
-                            {booking.platform === 'direct' && '📞 Diretto'}
-                          </span>
-                        </td>
-                        <td>
-                          <span className={`status ${booking.status}`}>
-                            {booking.status === 'confirmed' && '✅ Confermata'}
-                            {booking.status === 'pending' && '🟡 In attesa'}
-                            {booking.status === 'cancelled' && '❌ Cancellata'}
-                          </span>
-                        </td>
-                        <td>€{(booking.totalPrice || booking.total_amount || 0).toFixed(2)}</td>
-                        <td>
-                          <div className="action-buttons">
-                            <button className="admin-btn-small" onClick={() => handleEditBookingDemo(booking)}>✏️ Modifica</button>
-                            <button className="admin-btn-small" onClick={() => handleSendBookingEmail(booking)}>✉️ Email</button>
-                            <button className="admin-btn-small" onClick={() => handleGenerateInvoice(booking)}>📄 Fattura</button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                    
-                    {recentBookings.length === 0 && (
-                      <tr className="booking-row">
-                        <td colSpan={9}>
-                          <div>Nessuna prenotazione trovata</div>
-                        </td>
-                      </tr>
-                    )}
-                    
-                    <tr className="booking-row">
-                      <td>#VIN_DEMO</td>
-                      <td>
-                        <div className="customer-info">
-                          <strong>Anna Bianchi</strong>
-                          <small>anna.bianchi@gmail.com</small>
-                        </div>
-                      </td>
-                      <td>2 adulti, 1 bambino</td>
-                      <td>05/11/2025</td>
-                      <td>12/11/2025</td>
-                      <td><span className="platform-badge booking">🏨 Booking.com</span></td>
-                      <td><span className="status pending">⏳ In Attesa Pagamento</span></td>
-                      <td>€1,250.00</td>
-                      <td>
-                        <div className="action-buttons">
-                          <button className="admin-btn-small admin-btn-warning" onClick={() => handleRequestPayment('VIN_DEMO')}>💳 Richiedi Pag.</button>
-                          <button className="admin-btn-small" onClick={() => handleEditBookingDemo('VIN_DEMO')}>✏️ Modifica</button>
-                          <button className="admin-btn-small" onClick={() => handleSendBookingEmail('VIN_DEMO')}>✉️ Email</button>
-                        </div>
-                      </td>
-                    </tr>
-                    
-                    <tr className="booking-row">
-                      <td>#VIN003</td>
-                      <td>
-                        <div className="customer-info">
-                          <strong>Luigi Verde</strong>
-                          <small>luigi.verde@hotmail.com</small>
-                        </div>
-                      </td>
-                      <td>6 adulti</td>
-                      <td>15/11/2025</td>
-                      <td>20/11/2025</td>
-                      <td><span className="platform-badge direct">🌐 Sito Diretto</span></td>
-                      <td><span className="status completed">✅ Completata</span></td>
-                      <td>€1,625.00</td>
-                      <td>
-                        <div className="action-buttons">
-                          <button className="admin-btn-small" onClick={() => handleGenerateInvoice('VIN003')}>📄 Fattura</button>
-                          <button className="admin-btn-small" onClick={() => handleRequestReview('VIN003')}>⭐ Recensione</button>
-                          <button className="admin-btn-small" onClick={() => handleBookAgain('VIN003')}>🔁 Prenota Ancora</button>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            
             {/* Azioni Avanzate */}
             <div className="admin-pricing-actions">
               <button className="admin-btn-primary" onClick={() => setShowBookingForm(true)}>➕ Nuova Prenotazione</button>

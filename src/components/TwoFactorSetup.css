@@ -1,0 +1,270 @@
+/* Stili per TwoFactorSetup Component */
+
+.two-factor-setup-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  background-color: #f5f5f5;
+}
+
+.two-factor-setup-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+}
+
+.two-factor-setup-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+}
+
+.two-factor-setup-title {
+  color: #333;
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.two-factor-setup-description {
+  color: #666;
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.two-factor-setup-info {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.two-factor-setup-info h3 {
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.two-factor-setup-info ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.two-factor-setup-info li {
+  color: #555;
+  font-size: 14px;
+  padding: 8px 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.two-factor-setup-info li:last-child {
+  border-bottom: none;
+}
+
+.two-factor-setup-button {
+  width: 100%;
+  padding: 14px 24px;
+  background: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.1s;
+}
+
+.two-factor-setup-button:hover:not(:disabled) {
+  background: #1976d2;
+  transform: translateY(-1px);
+}
+
+.two-factor-setup-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.two-factor-setup-error {
+  background: #ffebee;
+  color: #c62828;
+  padding: 12px;
+  border-radius: 6px;
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+/* QR Code Step */
+.two-factor-setup-qr-container {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  display: inline-block;
+}
+
+.two-factor-setup-qr-image {
+  width: 250px;
+  height: 250px;
+  display: block;
+}
+
+.two-factor-setup-instructions {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.two-factor-setup-instructions h3 {
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.two-factor-setup-instructions ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.two-factor-setup-instructions li {
+  color: #555;
+  font-size: 14px;
+  padding: 6px 0;
+  line-height: 1.5;
+}
+
+.two-factor-setup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.two-factor-setup-form-initial {
+  margin-bottom: 16px;
+}
+
+.two-factor-setup-input {
+  width: 100%;
+  padding: 16px;
+  font-size: 24px;
+  text-align: center;
+  letter-spacing: 8px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  transition: border-color 0.3s;
+}
+
+.two-factor-setup-input:focus {
+  outline: none;
+  border-color: #2196f3;
+}
+
+/* Recovery Codes Step */
+.two-factor-setup-success-message {
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.two-factor-setup-recovery-container {
+  background: #fff3e0;
+  border: 2px solid #ff9800;
+  border-radius: 8px;
+  padding: 24px;
+  margin-top: 24px;
+}
+
+.two-factor-setup-recovery-title {
+  color: #e65100;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.two-factor-setup-recovery-warning {
+  color: #bf360c;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.two-factor-setup-recovery-codes {
+  background: white;
+  border-radius: 6px;
+  padding: 20px;
+  margin-bottom: 20px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.two-factor-setup-recovery-code {
+  background: #f5f5f5;
+  padding: 12px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: #333;
+}
+
+.two-factor-setup-recovery-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.two-factor-setup-button-secondary {
+  flex: 1;
+  padding: 12px 20px;
+  background: white;
+  color: #ff9800;
+  border: 2px solid #ff9800;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.two-factor-setup-button-secondary:hover {
+  background: #ff9800;
+  color: white;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .two-factor-setup-card {
+    padding: 24px;
+  }
+
+  .two-factor-setup-qr-image {
+    width: 200px;
+    height: 200px;
+  }
+
+  .two-factor-setup-recovery-codes {
+    grid-template-columns: 1fr;
+  }
+
+  .two-factor-setup-recovery-actions {
+    flex-direction: column;
+  }
+}
