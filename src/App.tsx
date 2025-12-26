@@ -22,6 +22,7 @@ import { setupIntelligentPreload, preloadOnIdle } from './utils/preloadComponent
 const AdminPanelPro = lazy(() => import('./pages/AdminPanelPro'));
 const AdminPanelBasic = lazy(() => import('./components/AdminPanelBasic'));
 const TwoFactorLogin = lazy(() => import('./components/TwoFactorLogin'));
+const TwoFactorSetup = lazy(() => import('./components/TwoFactorSetup'));
 const OAuthCallback = lazy(() => import('./pages/OAuthCallback'));
 
 // Componente di loading per lazy imports
