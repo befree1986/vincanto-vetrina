@@ -9,6 +9,7 @@ import { initializeEmailLogsTable } from '../email/emailLogger.js';
 import { detectLanguage } from '../email/i18n.js';
 import * as TwoFactorAuth from './2fa.js';
 import bcrypt from 'bcrypt';
+import { randomBytes } from 'crypto';
 
 // Database connection
 const pool = new Pool({
@@ -383,7 +384,7 @@ export default async function handler(req, res) {
       // Se 2FA non è abilitato, login completato
       if (!user.two_factor_enabled) {
         // Genera token di sessione (in produzione usare JWT)
-        const sessionToken = require('crypto').randomBytes(32).toString('hex');
+        const sessionToken = randomBytes(32).toString('hex');
         
         return res.status(200).json({
           success: true,
@@ -470,7 +471,7 @@ export default async function handler(req, res) {
       );
 
       // Genera token di sessione (in produzione usare JWT con scadenza)
-      const sessionToken = require('crypto').randomBytes(32).toString('hex');
+      const sessionToken = randomBytes(32).toString('hex');
 
       return res.status(200).json({
         success: true,
