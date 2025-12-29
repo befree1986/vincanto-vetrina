@@ -20,6 +20,8 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
   const [totpToken, setTotpToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [requiresSetup, setRequiresSetup] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
 
   /**
    * Step 1: Verifica email e password
@@ -58,10 +60,27 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
         return;
       }
 
-      // Se requiresSetup = true, mostrare QR Code setup
-      // Se requiresSetup = false, richiedere codice TOTP esistente
-      // Passa allo step TOTP (che gestirà entrambi i casi)
+      // Gestione 2FA: se il backend richiede setup, prepara QR
+      setRequiresSetup(!!data.requiresSetup);
       setStep('totp');
+      
+      if (data.requiresSetup) {
+        try {
+          const qrResp = await fetch('/api/unified?action=admin/2fa/setup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+          });
+          const qrData = await qrResp.json();
+          if (qrResp.ok && qrData.success) {
+            setQrCodeUrl(qrData.qrCodeUrl || qrData.otpauthUrl || '');
+          } else {
+            console.warn('2FA setup non disponibile:', qrData.error);
+          }
+        } catch (e) {
+          console.warn('Errore fetch QR 2FA:', e);
+        }
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Errore di connessione';
       setError(errorMessage);
@@ -184,6 +203,25 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
                 Inserisci il codice a 6 cifre dalla tua app di autenticazione
               </p>
             </div>
+
+            {requiresSetup && (
+              <div className="two-factor-login-qr-setup" aria-describedby="totp-setup-desc">
+                <h3 className="two-factor-login-section-title" id="totp-setup-title">Configura 2FA</h3>
+                <p id="totp-setup-desc" className="two-factor-login-help-text">
+                  Scansiona il QR code con Google Authenticator o inserisci manualmente l'otpauth.
+                </p>
+                {qrCodeUrl && (
+                  <div className="two-factor-login-qr-box">
+                    {/* Se è un data URL di immagine, lo mostriamo; altrimenti mostriamo l'otpauth */}
+                    {qrCodeUrl.startsWith('data:image') ? (
+                      <img src={qrCodeUrl} alt="QR code TOTP" className="two-factor-login-qr" />
+                    ) : (
+                      <div className="two-factor-login-otpauth">{qrCodeUrl}</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             <form onSubmit={handleTotpSubmit} className="two-factor-login-form">
               <div className="two-factor-login-field">
