@@ -16,7 +16,7 @@ import AdminApiService from '../services/adminApiService';
  * Include: Dashboard, Prenotazioni, Calendari, Servizi Extra
  */
 const AdminPanelBasic = (): JSX.Element => {
-  devLog('ðŸš€ AdminPanelBasic component rendering...');
+  devLog('🚀 AdminPanelBasic component rendering...');
   
   const { role, isLoading: roleLoading, isAdmin } = useAdminRole();
   
@@ -37,10 +37,10 @@ const AdminPanelBasic = (): JSX.Element => {
   // Admin API Service
   const [adminApiService] = useState(() => {
     try {
-      devLog('ðŸ”§ Inizializzazione AdminApiService...');
+      devLog('🔧 Inizializzazione AdminApiService...');
       return new AdminApiService();
     } catch (error) {
-      devError('âŒ Errore AdminApiService:', error);
+      devError('❌ Errore AdminApiService:', error);
       return null;
     }
   });
@@ -54,7 +54,7 @@ const AdminPanelBasic = (): JSX.Element => {
 
     setIsLoadingData(true);
     try {
-      log('ðŸ”„ Caricamento dati API...');
+      log('📄 Caricamento dati API...');
       
       const [stats, bookings, calendarBookings, settings, analyticsData, notifs, transactions] = await Promise.allSettled([
         adminApiService.getDashboardStats(),
@@ -74,9 +74,9 @@ const AdminPanelBasic = (): JSX.Element => {
       if (notifs.status === 'fulfilled') setNotifications(notifs.value || []);
       if (transactions.status === 'fulfilled') setPaymentTransactions(transactions.value || []);
 
-      log('âœ… Dati caricati con successo');
+      log('✅ Dati caricati con successo');
     } catch (error) {
-      devError('âŒ Errore caricamento dati:', error);
+      devError('❌ Errore caricamento dati:', error);
     } finally {
       setIsLoadingData(false);
     }
@@ -103,7 +103,7 @@ const AdminPanelBasic = (): JSX.Element => {
     return (
       <div className="admin-access-denied-container">
         <div className="admin-access-denied-card">
-          <h1 className="admin-access-denied-icon">ðŸ”</h1>
+          <h1 className="admin-access-denied-icon">🔒</h1>
           <h2 className="admin-access-denied-title">Accesso Negato</h2>
           <p className="admin-access-denied-text">
             Questo pannello richiede i diritti di <strong>amministratore</strong>.
@@ -122,14 +122,14 @@ const AdminPanelBasic = (): JSX.Element => {
   // Nessun login client-side: accesso gestito da `/admin/login` e ProtectedRoute
 
   // === RENDER MAIN PANEL ===
-  devLog('ðŸŽ¯ Rendering basic admin panel...');
+  devLog('🎯 Rendering basic admin panel...');
   
   return (
     <div className="admin-panel-pro admin-container">
       {/* Header */}
       <header className="admin-header">
         <div className="admin-header-left">
-          <h1>ï¿½ Pannello Amministratore</h1>
+          <h1>⚙️ Pannello Amministratore</h1>
           <span className="admin-version admin-badge admin-badge-info">v2.0</span>
         </div>
         
@@ -137,14 +137,14 @@ const AdminPanelBasic = (): JSX.Element => {
           <div className="admin-flex admin-items-center admin-gap-md">
             {/* Indicatore Status */}
             <div className="admin-badge admin-badge-success">
-              âœ… Online
+              ✅ Online
             </div>
             
             {/* User Info */}
             <div className="admin-flex admin-items-center admin-gap-sm">
-              <span className="admin-text-muted admin-hidden-mobile">ðŸ‘¤ Amministratore</span>
-              <div className="admin-badge admin-badge-warning" title="ModalitÃ  Admin">
-                âš¡ Admin
+              <span className="admin-text-muted admin-hidden-mobile">👤 Amministratore</span>
+              <div className="admin-badge admin-badge-warning" title="Modalità Admin">
+                ⚡ Admin
               </div>
             </div>
           </div>
@@ -157,8 +157,8 @@ const AdminPanelBasic = (): JSX.Element => {
               window.location.href = '/admin/login';
             }}
           >
-            <span className="admin-hidden-mobile">ðŸ“¤ Logout</span>
-            <span className="admin-visible-mobile">ðŸ“¤</span>
+            <span className="admin-hidden-mobile">🚪 Logout</span>
+            <span className="admin-visible-mobile">🚪</span>
           </button>
         </div>
       </header>
@@ -213,19 +213,19 @@ const AdminPanelBasic = (): JSX.Element => {
         {/* Prenotazioni Tab */}
         {activeTab === 'prenotazioni' && (
           <div className="admin-prenotazioni">
-            <h2>ðŸ“… Gestione Prenotazioni {isLoadingData && '(Caricamento...)'}</h2>
+            <h2>📅 Gestione Prenotazioni {isLoadingData && '(Caricamento...)'}</h2>
             
             <div className="admin-pricing-actions margin-bottom">
               <button 
                 className="admin-btn-primary" 
                 onClick={loadRealApiData}
               >
-                ðŸ”„ Ricarica Dati
+                🔄 Ricarica Dati
               </button>
             </div>
 
             <div className="admin-pricing-section">
-              <h3>ðŸ”¥ Prenotazioni Attive</h3>
+              <h3>📥 Prenotazioni Attive</h3>
               <div className="bookings-table-container">
                 {realBookings.length > 0 ? (
                   <table className="bookings-table">
@@ -252,22 +252,22 @@ const AdminPanelBasic = (): JSX.Element => {
                           <td>{booking.guests}</td>
                           <td>
                             <span className={`status ${booking.status}`}>
-                              {booking.status === 'confirmed' && 'âœ… Confermata'}
-                              {booking.status === 'pending' && 'ðŸŸ¡ In attesa'}
-                              {booking.status === 'cancelled' && 'âŒ Cancellata'}
-                              {!booking.status && 'ðŸ“Š Backend'}
+                              {booking.status === 'confirmed' && '✅ Confermata'}
+                              {booking.status === 'pending' && '🟡 In attesa'}
+                              {booking.status === 'cancelled' && '❌ Cancellata'}
+                              {!booking.status && '📊 Backend'}
                             </span>
                           </td>
-                          <td>â‚¬{(booking.total_amount || booking.totalPrice || 0).toFixed(2)}</td>
+                          <td>€{(booking.total_amount || booking.totalPrice || 0).toFixed(2)}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 ) : (
                   <div className="admin-pricing-card">
-                    <p>ðŸ“Š Nessuna prenotazione trovata</p>
+                    <p>📊 Nessuna prenotazione trovata</p>
                     <button className="admin-btn-primary" onClick={loadRealApiData}>
-                      ðŸ”„ Ricarica Prenotazioni
+                      🔄 Ricarica Prenotazioni
                     </button>
                   </div>
                 )}
@@ -279,19 +279,19 @@ const AdminPanelBasic = (): JSX.Element => {
         {/* Calendari Tab */}
         {activeTab === 'calendari' && (
           <div className="admin-calendari">
-            <h2>ðŸ“† Gestione Calendari {isLoadingCalendar && '(Caricamento...)'}</h2>
+            <h2>📋 Gestione Calendari {isLoadingCalendar && '(Caricamento...)'}</h2>
             
             <div className="admin-pricing-actions margin-bottom">
               <button 
                 className="admin-btn-primary" 
                 onClick={loadCalendarData}
               >
-                ðŸ”„ Ricarica Calendari
+                🔄 Ricarica Calendari
               </button>
             </div>
 
             <div className="admin-pricing-section">
-              <h3>ðŸ“‹ Eventi Calendario</h3>
+              <h3>📔 Eventi Calendario</h3>
               <div className="bookings-table-container">
                 {calendarEvents.length > 0 ? (
                   <table className="bookings-table">
@@ -309,18 +309,18 @@ const AdminPanelBasic = (): JSX.Element => {
                         <tr key={idx}>
                           <td>
                             <span className={`platform-badge ${event.platform}`}>
-                              {event.platform === 'holidu' && 'ðŸ  Holidu'}
-                              {event.platform === 'airbnb' && 'ðŸ¡ Airbnb'}
-                              {event.platform === 'booking' && 'ðŸ¨ Booking'}
-                              {event.platform === 'google' && 'ðŸ“… Google'}
-                              {!event.platform && 'â“ Altro'}
+                              {event.platform === 'holidu' && '🏠 Holidu'}
+                              {event.platform === 'airbnb' && '🏡 Airbnb'}
+                              {event.platform === 'booking' && '🏨 Booking'}
+                              {event.platform === 'google' && '📅 Google'}
+                              {!event.platform && '❓ Altro'}
                             </span>
                           </td>
                           <td>{event.title || event.summary || 'Prenotazione'}</td>
                           <td>{event.check_in ? new Date(event.check_in).toLocaleDateString('it-IT') : 'N/A'}</td>
                           <td>{event.check_out ? new Date(event.check_out).toLocaleDateString('it-IT') : 'N/A'}</td>
                           <td>
-                            <span className="status confirmed">âœ… Confermato</span>
+                            <span className="status confirmed">✅ Confermato</span>
                           </td>
                         </tr>
                       ))}
@@ -328,9 +328,9 @@ const AdminPanelBasic = (): JSX.Element => {
                   </table>
                 ) : (
                   <div className="admin-pricing-card">
-                    <p>ðŸ“Š Nessun evento calendario trovato</p>
+                    <p>📊 Nessun evento calendario trovato</p>
                     <button className="admin-btn-primary" onClick={loadCalendarData}>
-                      ðŸ”„ Ricarica Calendari
+                      🔄 Ricarica Calendari
                     </button>
                   </div>
                 )}
@@ -342,7 +342,7 @@ const AdminPanelBasic = (): JSX.Element => {
         {/* Servizi Extra Tab */}
         {activeTab === 'servizi' && (
           <div className="admin-section admin-animate-fade-in">
-            <h2>ðŸ›Žï¸ Gestione Servizi Extra</h2>
+            <h2>🛎️ Gestione Servizi Extra</h2>
             <p className="admin-section-description">
               Modifica e configura i servizi aggiuntivi disponibili per gli ospiti.
             </p>
