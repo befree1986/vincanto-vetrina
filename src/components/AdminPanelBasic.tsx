@@ -72,7 +72,7 @@ const AdminPanelBasic = (): JSX.Element => {
             className="admin-btn admin-btn-secondary"
             onClick={() => {
               localStorage.removeItem('vincanto_admin_token');
-              // Reindirizza alla pagina di login admin
+              localStorage.removeItem('vincanto_admin_role');
               window.location.href = '/admin/login';
             }}
           >

@@ -2264,7 +2264,8 @@ const AdminPanelPro = (): JSX.Element => {
             onClick={() => {
               localStorage.removeItem('vincanto_admin_session');
               localStorage.removeItem('vincanto_admin_token');
-              setIsAuthenticated(false);
+              localStorage.removeItem('vincanto_admin_role');
+              window.location.href = '/admin/login';
             }}
           >
             <span className="admin-hidden-mobile">📤 Logout</span>
