@@ -63,7 +63,7 @@ const AdminPanelBasic = (): JSX.Element => {
         adminApiService.getSystemSettings(),
         adminApiService.getAnalytics(),
         adminApiService.getNotifications(),
-        adminApiService.getPaymentTransactions()
+        adminApiService.getPayments()
       ]);
 
       if (stats.status === 'fulfilled') setDashboardStats(stats.value || {});
