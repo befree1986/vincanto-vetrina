@@ -195,8 +195,11 @@ const AdminPanelPro = (): JSX.Element => {
   
   // Stati autenticazione admin con persistenza
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    // Controlla se c'├¿ una sessione salvata
-    return localStorage.getItem('vincanto_admin_session') === 'authenticated';
+    // Controlla se c'├¿ un token e ruolo salvato (nuovo sistema 2FA)
+    const hasToken = !!localStorage.getItem('vincanto_admin_token');
+    const hasRole = !!localStorage.getItem('vincanto_admin_role');
+    const hasOldSession = localStorage.getItem('vincanto_admin_session') === 'authenticated';
+    return hasToken || hasRole || hasOldSession;
   });
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -228,6 +231,14 @@ const AdminPanelPro = (): JSX.Element => {
       loadRealApiData();
     }
   }, [isAuthenticated]);
+
+  // Effect per caricare dati quando il ruolo è verificato (nuovo sistema 2FA)
+  useEffect(() => {
+    if (!roleLoading && (isSuperAdmin() || role)) {
+      devLog('🔄 Ruolo verificato, caricamento dati...');
+      loadRealApiData();
+    }
+  }, [roleLoading, role]);
 
   // Aggiorna dinamicamente l'altezza delle chart-bar
   useEffect(() => {
