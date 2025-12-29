@@ -1,4 +1,5 @@
 import React from 'react';
+import AdminApiService from '../../services/adminApiService';
 
 interface AdminDashboardProps {
   dashboardStats: any;
@@ -32,6 +33,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   loadCalendarData,
   setActiveTab,
 }) => {
+  const [viewStart, setViewStart] = React.useState(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), 1);
+  });
+  const [monthsToShow, setMonthsToShow] = React.useState<number>(2);
+  const [selectedStart, setSelectedStart] = React.useState<string | null>(null);
+  const [selectedEnd, setSelectedEnd] = React.useState<string | null>(null);
   // Calcolo date occupate dai calendarEvents
   const {
     busyDates,
@@ -145,12 +153,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const monthName = month.toLocaleString('it-IT', { month: 'long', year: 'numeric' });
     const firstWeekday = (month.getDay() + 6) % 7; // lun=0
     const daysInMonth = new Date(month.getFullYear(), month.getMonth()+1, 0).getDate();
-    const cells: Array<{ day?: number; busy?: boolean; closed?: boolean; title?: string; checkIn?: boolean; checkOut?: boolean; singleBooking?: boolean; closedStart?: boolean; closedEnd?: boolean; closedSingle?: boolean }> = [];
+    const cells: Array<{ day?: number; busy?: boolean; closed?: boolean; title?: string; checkIn?: boolean; checkOut?: boolean; singleBooking?: boolean; closedStart?: boolean; closedEnd?: boolean; closedSingle?: boolean; selected?: boolean }> = [];
     for (let i=0;i<firstWeekday;i++) cells.push({});
     for (let d=1; d<=daysInMonth; d++) {
       const iso = new Date(month.getFullYear(), month.getMonth(), d).toISOString().slice(0,10);
       const isClosed = closedDates.has(iso);
       const title = isClosed ? (closedReasonsByDate.get(iso) || []).join('\n') : undefined;
+      const inSelection = selectedStart && selectedEnd ? (iso >= selectedStart && iso <= selectedEnd) : (selectedStart === iso);
       cells.push({
         day: d,
         busy: busyDates.has(iso),
@@ -162,6 +171,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         closedStart: closedStartDates.has(iso),
         closedEnd: closedEndDates.has(iso),
         closedSingle: closedSingleDates.has(iso),
+        selected: !!inSelection,
       });
     }
     return (
@@ -174,8 +184,23 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
           {cells.map((c, idx) => (
             <div
               key={idx}
-              className={`admin-calendar-cell ${c.day===undefined ? 'empty' : ''} ${c.busy ? 'busy' : ''} ${c.closed ? 'closed' : ''} ${c.checkIn ? 'check-in' : ''} ${c.checkOut ? 'check-out' : ''} ${c.singleBooking ? 'single-booking' : ''} ${c.closedStart ? 'closed-start' : ''} ${c.closedEnd ? 'closed-end' : ''} ${c.closedSingle ? 'closed-single' : ''}`}
+              className={`admin-calendar-cell ${c.day===undefined ? 'empty' : ''} ${c.busy ? 'busy' : ''} ${c.closed ? 'closed' : ''} ${c.checkIn ? 'check-in' : ''} ${c.checkOut ? 'check-out' : ''} ${c.singleBooking ? 'single-booking' : ''} ${c.closedStart ? 'closed-start' : ''} ${c.closedEnd ? 'closed-end' : ''} ${c.closedSingle ? 'closed-single' : ''} ${c.selected ? 'selected' : ''}`}
               title={c.title || undefined}
+              onClick={() => {
+                if (c.day === undefined) return;
+                const iso = new Date(month.getFullYear(), month.getMonth(), c.day).toISOString().slice(0,10);
+                if (!selectedStart || (selectedStart && selectedEnd)) {
+                  setSelectedStart(iso);
+                  setSelectedEnd(null);
+                } else {
+                  if (iso < selectedStart) {
+                    setSelectedEnd(selectedStart);
+                    setSelectedStart(iso);
+                  } else {
+                    setSelectedEnd(iso);
+                  }
+                }
+              }}
             >
               <span className="day-number">{c.day ?? ''}</span>
               {(c.checkIn || c.singleBooking) && <span className="cell-indicator in">IN</span>}
@@ -259,14 +284,107 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
       </div>
 
-        {/* Calendario Occupazioni (2 mesi) */}
+        {/* Calendario Occupazioni con controlli */}
         <div className="admin-section">
-          <h3>📅 Calendario Occupazioni (2 mesi)</h3>
-          <div className="admin-calendar-two-months">
-            {renderMonthCalendar(new Date())}
-            {renderMonthCalendar(new Date(new Date().getFullYear(), new Date().getMonth()+1, 1))}
+          <div className="calendar-header">
+            <h3>📅 Calendario Occupazioni</h3>
+            <div className="calendar-controls">
+              <button className="admin-btn-small admin-btn-secondary" onClick={() => setViewStart(new Date(viewStart.getFullYear(), viewStart.getMonth()-1, 1))}>◀︎ Prec</button>
+              <button className="admin-btn-small admin-btn-secondary" onClick={() => setViewStart(new Date(viewStart.getFullYear(), viewStart.getMonth()+1, 1))}>Succ ▶︎</button>
+              <select className="admin-select" value={monthsToShow} onChange={(e) => setMonthsToShow(parseInt(e.target.value))}>
+                <option value={1}>1 mese</option>
+                <option value={2}>2 mesi</option>
+                <option value={3}>3 mesi</option>
+                <option value={6}>6 mesi</option>
+              </select>
+              <button className="admin-btn-small admin-btn-warning" onClick={() => { setSelectedStart(null); setSelectedEnd(null); }}>Pulisci selezione</button>
+            </div>
           </div>
+          <div className="admin-calendar-two-months">
+            {Array.from({ length: monthsToShow }).map((_, i) => (
+              renderMonthCalendar(new Date(viewStart.getFullYear(), viewStart.getMonth()+i, 1))
+            ))}
+          </div>
+
+          {(selectedStart) && (
+            <div className="calendar-actions">
+              <span>Intervallo selezionato: {selectedStart} {selectedEnd ? `→ ${selectedEnd}` : ''}</span>
+              <CalendarActions selectedStart={selectedStart} selectedEnd={selectedEnd} onDone={() => { setSelectedStart(null); setSelectedEnd(null); loadCalendarData(); }} />
+            </div>
+          )}
         </div>
+
+        // Piccolo componente azioni su selezione calendario (crea prenotazione o blocco)
+        const CalendarActions: React.FC<{
+          selectedStart: string;
+          selectedEnd: string | null;
+          onDone: () => void;
+        }> = ({ selectedStart, selectedEnd, onDone }) => {
+          const api = React.useMemo(() => new AdminApiService(), []);
+          const [mode, setMode] = React.useState<'booking'|'block'>('booking');
+          const [form, setForm] = React.useState<any>({
+            customerName: '',
+            customerEmail: '',
+            customerPhone: '',
+            guests: 2,
+            totalPrice: 0,
+            reason: 'manutenzione',
+            description: ''
+          });
+
+          const handleSubmit = async () => {
+            const start = selectedStart;
+            const end = selectedEnd || selectedStart;
+            if (mode === 'booking') {
+              await api.createBooking({
+                check_in: start,
+                check_out: end,
+                customer_name: form.customerName,
+                customer_email: form.customerEmail,
+                customer_phone: form.customerPhone,
+                guests: form.guests,
+                total_amount: form.totalPrice,
+                notes: form.description,
+              });
+            } else {
+              await api.addBlockedDate({ start_date: start, end_date: end, reason: form.reason, description: form.description });
+            }
+            onDone();
+          };
+
+          return (
+            <div className="calendar-action-panel">
+              <div className="action-mode">
+                <label>
+                  <input type="radio" name="mode" checked={mode==='booking'} onChange={() => setMode('booking')} /> Prenotazione
+                </label>
+                <label>
+                  <input type="radio" name="mode" checked={mode==='block'} onChange={() => setMode('block')} /> Chiusura
+                </label>
+              </div>
+              {mode==='booking' ? (
+                <div className="action-form">
+                  <input placeholder="Nome" value={form.customerName} onChange={e=>setForm({...form, customerName:e.target.value})} />
+                  <input placeholder="Email" value={form.customerEmail} onChange={e=>setForm({...form, customerEmail:e.target.value})} />
+                  <input placeholder="Telefono" value={form.customerPhone} onChange={e=>setForm({...form, customerPhone:e.target.value})} />
+                  <input type="number" placeholder="Ospiti" value={form.guests} onChange={e=>setForm({...form, guests:parseInt(e.target.value)})} />
+                  <input type="number" placeholder="Totale €" value={form.totalPrice} onChange={e=>setForm({...form, totalPrice:parseFloat(e.target.value)})} />
+                  <input placeholder="Note" value={form.description} onChange={e=>setForm({...form, description:e.target.value})} />
+                </div>
+              ) : (
+                <div className="action-form">
+                  <input placeholder="Motivo (es. manutenzione)" value={form.reason} onChange={e=>setForm({...form, reason:e.target.value})} />
+                  <input placeholder="Descrizione" value={form.description} onChange={e=>setForm({...form, description:e.target.value})} />
+                </div>
+              )}
+              <div className="action-buttons">
+                <button className="admin-btn-primary admin-btn-small" onClick={handleSubmit}>Salva</button>
+                <button className="admin-btn-secondary admin-btn-small" onClick={onDone}>Annulla</button>
+              </div>
+            </div>
+          );
+        };
+
 
       {/* Prossime Prenotazioni */}
       <div className="admin-pricing-section">
@@ -285,6 +403,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   {event.source === 'other' && '📅 Altro'}
                 </span>
                 <span>€{event.totalPrice}</span>
+                <div className="row-actions">
+                  <button className="admin-btn-small admin-btn-secondary" onClick={() => console.log('Modifica prenotazione', event.id || index)}>Modifica</button>
+                  <button className="admin-btn-small admin-btn-danger" onClick={() => console.log('Annulla prenotazione', event.id || index)}>Annulla</button>
+                </div>
               </div>
             ))}
 
@@ -296,6 +418,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 {bd.reason && <span className={`reason-badge ${getReasonBadgeClass(bd.reason)}`}>{bd.reason}</span>}
                 {bd.description && (<span className="closed-description">{bd.description}</span>)}
                 <span>€</span>
+                <div className="row-actions">
+                  <button className="admin-btn-small admin-btn-secondary" onClick={() => console.log('Modifica chiusura', idx)}>Modifica</button>
+                  <button className="admin-btn-small admin-btn-danger" onClick={() => console.log('Rimuovi chiusura', idx)}>Rimuovi</button>
+                </div>
               </div>
             ))}
 

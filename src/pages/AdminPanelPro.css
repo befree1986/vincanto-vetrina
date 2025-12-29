@@ -1494,6 +1494,11 @@
   background: #f8fafc;
 }
 
+.admin-calendar-cell.selected {
+  outline: 2px solid #0ea5e9;
+  outline-offset: -2px;
+}
+
 .admin-calendar-legend {
   display: flex;
   gap: 8px;
@@ -1589,6 +1594,24 @@
   flex-wrap: wrap;
 }
 
+.calendar-action-panel {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr;
+  background: var(--admin-card);
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  padding: 12px;
+}
+.action-form input { 
+  padding: 6px 8px; 
+  border: 1px solid var(--admin-border); 
+  border-radius: 6px; 
+  font-size: 12px; 
+}
+.action-buttons { display:flex; gap:8px; }
+.row-actions { display:flex; gap:8px; margin-top:6px; }
+
 .calendar-actions {
   display: flex;
   gap: 12px;
@@ -1672,6 +1695,9 @@
   .admin-calendar-grid {
     grid-template-columns: 1fr;
   }
+  .admin-calendar-grid .admin-calendar-cell { min-height: 28px; font-size: 12px; padding: 4px; }
+  .calendar-controls { justify-content: space-between; }
+  .calendar-action-panel { grid-template-columns: 1fr; }
   
   .custom-service-item {
     flex-direction: column;

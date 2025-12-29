@@ -172,25 +172,25 @@ const AdminPanelBasic = (): JSX.Element => {
           className={`admin-nav-link ${activeTab === 'dashboard' ? 'active' : ''}`}
           onClick={() => setActiveTab('dashboard')}
         >
-          ðŸ“Š Dashboard
+          📊 Dashboard
         </button>
         <button 
           className={`admin-nav-link ${activeTab === 'prenotazioni' ? 'active' : ''}`}
           onClick={() => setActiveTab('prenotazioni')}
         >
-          ðŸ“… Prenotazioni
+          📅 Prenotazioni
         </button>
         <button 
           className={`admin-nav-link ${activeTab === 'calendari' ? 'active' : ''}`}
           onClick={() => setActiveTab('calendari')}
         >
-          ðŸ“† Calendari
+          📆 Calendari
         </button>
         <button 
           className={`admin-nav-link ${activeTab === 'servizi' ? 'active' : ''}`}
           onClick={() => setActiveTab('servizi')}
         >
-          ðŸ›Žï¸ Servizi Extra
+          🛎️ Servizi Extra
         </button>
       </nav>
 
