@@ -46,8 +46,13 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
 
       // Se 2FA non è richiesto, login completato
       if (!data.requires2FA) {
+        console.log('✅ Login completato senza 2FA:', { token: data.token, role: data.role });
         localStorage.setItem('vincanto_admin_token', data.token);
         localStorage.setItem('vincanto_admin_role', data.role);
+        console.log('💾 Salvato in localStorage:', {
+          token: localStorage.getItem('vincanto_admin_token'),
+          role: localStorage.getItem('vincanto_admin_role')
+        });
         onLoginSuccess(data.token, data.role);
         return;
       }
@@ -136,6 +141,7 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
                 onChange={(e) => setEmail(e.target.value)}
                 className="two-factor-login-input"
                 placeholder="admin@vincanto.it"
+                autoComplete="email"
                 required
                 autoFocus
               />
@@ -149,6 +155,7 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
                 onChange={(e) => setPassword(e.target.value)}
                 className="two-factor-login-input"
                 placeholder="••••••••"
+                autoComplete="current-password"
                 required
               />
             </div>

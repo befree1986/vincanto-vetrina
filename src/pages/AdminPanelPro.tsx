@@ -2198,39 +2198,8 @@ const AdminPanelPro = (): JSX.Element => {
     );
   }
 
-  // === RENDER LOGIN SCREEN ===
-  if (!isAuthenticated) {
-    devLog('🔐 Rendering login form...');
-    return (
-      <div className="admin-login-container">
-        <div className="admin-login-card">
-          <div className="admin-logo">
-            <h1>🏡 Vincanto Admin</h1>
-            <p>Pannello di gestione professionale</p>
-          </div>
-          
-          <div className="admin-login-form">
-            <input
-              type="password"
-              placeholder="Password Admin"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-              className="admin-input"
-              aria-label="Password Admin"
-              title="Inserisci password per accedere al pannello admin"
-            />
-            
-            <button onClick={handleLogin} className="admin-btn-primary">
-              Accedi al Pannello
-            </button>
-            
-            {error && <div className="admin-error">{error}</div>}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // === LOGIN HANDLED BY ProtectedRoute ===
+  // Authentication is now managed via TwoFactorLogin component and ProtectedRoute wrapper
 
   // === RENDER DEBUG PRINCIPALE ===
   devLog('🎯 Rendering main admin panel...');
@@ -4134,20 +4103,11 @@ const AdminPanelPro = (): JSX.Element => {
                 <div className="admin-pricing-card">
                   <h4>Autenticazione</h4>
                   <div className="pricing-controls">
-                    <label>Password Amministratore:</label>
-                    <input type="password" defaultValue="••••••••••••" className="admin-input" aria-label="Password admin" />
-                    
                     <label>Autenticazione 2FA:</label>
-                    <select className="admin-select" aria-label="Two factor auth">
-                      <option>Disabilitata</option>
-                      <option>SMS</option>
-                      <option>App Authenticator</option>
-                    </select>
+                    <p className="admin-info-text">Configurabile in <a href="/admin/security" className="admin-link">Gestione Sicurezza</a></p>
                     
                     <label>Timeout Sessione (minuti):</label>
                     <input type="number" defaultValue="120" className="admin-input-small" aria-label="Timeout sessione" />
-                    
-                    <button className="admin-btn-secondary admin-btn-small" onClick={() => handleChangeAdminPassword()}>🔑 Cambia Password</button>
                   </div>
                 </div>
                 

@@ -19,6 +19,15 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 }) => {
   const { role, isLoading, hasAccess } = useAdminRole();
 
+  console.log('🔐 ProtectedRoute check:', { 
+    role, 
+    isLoading, 
+    requiredRole, 
+    hasAccess: hasAccess(requiredRole),
+    token: localStorage.getItem('vincanto_admin_token'),
+    storedRole: localStorage.getItem('vincanto_admin_role')
+  });
+
   // Mentre carica il ruolo, mostra un loader
   if (isLoading) {
     return (
