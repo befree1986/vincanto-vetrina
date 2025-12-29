@@ -1443,6 +1443,7 @@
   min-height: 32px;
   background: #fff;
   font-size: 13px;
+  position: relative;
 }
 
 .admin-calendar-cell.empty {
@@ -1460,6 +1461,33 @@
   border-color: #fecdd3;
   color: #b91c1c;
 }
+
+.admin-calendar-cell.check-in { box-shadow: inset 0 2px 0 #16a34a; }
+.admin-calendar-cell.check-out { box-shadow: inset 0 -2px 0 #f59e0b; }
+.admin-calendar-cell.single-booking { box-shadow: inset 0 0 0 2px #0ea5e9; }
+.admin-calendar-cell.closed-start { box-shadow: inset 2px 0 0 #b91c1c; }
+.admin-calendar-cell.closed-end { box-shadow: inset -2px 0 0 #b91c1c; }
+.admin-calendar-cell.closed-single { box-shadow: inset 0 0 0 2px #b91c1c; }
+
+.day-number { font-weight: 600; }
+
+.cell-indicator {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 700;
+  color: #fff;
+}
+
+.cell-indicator.in { background: #16a34a; }
+.cell-indicator.out { background: #f59e0b; right: 2px; left: auto; }
+.cell-indicator.closed { background: #b91c1c; }
+.cell-indicator.closed.end { right: 2px; left: auto; }
+.cell-indicator.closed.single { left: 50%; transform: translateX(-50%); }
 
 .admin-calendar-head {
   font-weight: 700;
@@ -1484,6 +1512,8 @@
 
 .legend-item.busy { background: #e0f2fe; color: #1e3a8a; border-color: #bae6fd; }
 .legend-item.closed { background: #ffe4e6; color: #b91c1c; border-color: #fecdd3; }
+.legend-item.in { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+.legend-item.out { background: #fef3c7; color: #92400e; border-color: #fde68a; }
 
 .admin-calendar-card {
   background: var(--admin-card);

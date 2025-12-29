@@ -33,10 +33,26 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   setActiveTab,
 }) => {
   // Calcolo date occupate dai calendarEvents
-  const { busyDates, closedDates, closedReasonsByDate } = React.useMemo(() => {
+  const {
+    busyDates,
+    closedDates,
+    closedReasonsByDate,
+    checkInDates,
+    checkOutDates,
+    singleDayBookings,
+    closedStartDates,
+    closedEndDates,
+    closedSingleDates,
+  } = React.useMemo(() => {
     const busy = new Set<string>();
     const closed = new Set<string>();
     const reasons = new Map<string, string[]>();
+    const checkIn = new Set<string>();
+    const checkOut = new Set<string>();
+    const singleBookings = new Set<string>();
+    const closedStart = new Set<string>();
+    const closedEnd = new Set<string>();
+    const closedSingle = new Set<string>();
     // Eventi di prenotazione
     for (const ev of calendarEvents || []) {
       const startStr = ev.start || ev.check_in || ev.start_date;
@@ -49,9 +65,18 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       const last = isNaN(end.getTime()) ? new Date(start) : new Date(end);
       cur.setHours(0,0,0,0);
       last.setHours(0,0,0,0);
-      while (cur <= last) {
-        busy.add(cur.toISOString().slice(0,10));
-        cur.setDate(cur.getDate() + 1);
+      const startIso = cur.toISOString().slice(0,10);
+      const endIso = last.toISOString().slice(0,10);
+      if (startIso === endIso) {
+        singleBookings.add(startIso);
+        busy.add(startIso);
+      } else {
+        checkIn.add(startIso);
+        checkOut.add(endIso);
+        while (cur <= last) {
+          busy.add(cur.toISOString().slice(0,10));
+          cur.setDate(cur.getDate() + 1);
+        }
       }
     }
     // Date di chiusura
@@ -66,20 +91,41 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       const last = isNaN(end.getTime()) ? new Date(start) : new Date(end);
       cur.setHours(0,0,0,0);
       last.setHours(0,0,0,0);
-      while (cur <= last) {
-        const iso = cur.toISOString().slice(0,10);
-        closed.add(iso);
-        busy.add(iso);
-        const label = [bd.reason, bd.description].filter(Boolean).join(' - ');
-        if (label) {
-          const arr = reasons.get(iso) || [];
-          arr.push(label);
-          reasons.set(iso, arr);
+      const startIso = cur.toISOString().slice(0,10);
+      const endIso = last.toISOString().slice(0,10);
+      const label = [bd.reason, bd.description].filter(Boolean).join(' - ');
+      if (startIso === endIso) {
+        closedSingle.add(startIso);
+        closed.add(startIso);
+        busy.add(startIso);
+        if (label) reasons.set(startIso, [label]);
+      } else {
+        closedStart.add(startIso);
+        closedEnd.add(endIso);
+        while (cur <= last) {
+          const iso = cur.toISOString().slice(0,10);
+          closed.add(iso);
+          busy.add(iso);
+          if (label) {
+            const arr = reasons.get(iso) || [];
+            arr.push(label);
+            reasons.set(iso, arr);
+          }
+          cur.setDate(cur.getDate() + 1);
         }
-        cur.setDate(cur.getDate() + 1);
       }
     }
-    return { busyDates: busy, closedDates: closed, closedReasonsByDate: reasons };
+    return {
+      busyDates: busy,
+      closedDates: closed,
+      closedReasonsByDate: reasons,
+      checkInDates: checkIn,
+      checkOutDates: checkOut,
+      singleDayBookings: singleBookings,
+      closedStartDates: closedStart,
+      closedEndDates: closedEnd,
+      closedSingleDates: closedSingle,
+    };
   }, [calendarEvents, blockedDates]);
 
   // Restituisce una classe CSS in base al motivo della chiusura
@@ -99,13 +145,24 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const monthName = month.toLocaleString('it-IT', { month: 'long', year: 'numeric' });
     const firstWeekday = (month.getDay() + 6) % 7; // lun=0
     const daysInMonth = new Date(month.getFullYear(), month.getMonth()+1, 0).getDate();
-    const cells: Array<{ day?: number; busy?: boolean; closed?: boolean; title?: string }> = [];
+    const cells: Array<{ day?: number; busy?: boolean; closed?: boolean; title?: string; checkIn?: boolean; checkOut?: boolean; singleBooking?: boolean; closedStart?: boolean; closedEnd?: boolean; closedSingle?: boolean }> = [];
     for (let i=0;i<firstWeekday;i++) cells.push({});
     for (let d=1; d<=daysInMonth; d++) {
       const iso = new Date(month.getFullYear(), month.getMonth(), d).toISOString().slice(0,10);
       const isClosed = closedDates.has(iso);
       const title = isClosed ? (closedReasonsByDate.get(iso) || []).join('\n') : undefined;
-      cells.push({ day: d, busy: busyDates.has(iso), closed: isClosed, title });
+      cells.push({
+        day: d,
+        busy: busyDates.has(iso),
+        closed: isClosed,
+        title,
+        checkIn: checkInDates.has(iso),
+        checkOut: checkOutDates.has(iso),
+        singleBooking: singleDayBookings.has(iso),
+        closedStart: closedStartDates.has(iso),
+        closedEnd: closedEndDates.has(iso),
+        closedSingle: closedSingleDates.has(iso),
+      });
     }
     return (
       <div className="admin-calendar-month">
@@ -115,14 +172,25 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <div key={w} className="admin-calendar-cell admin-calendar-head">{w}</div>
           ))}
           {cells.map((c, idx) => (
-            <div key={idx} className={`admin-calendar-cell ${c.day===undefined ? 'empty' : ''} ${c.busy ? 'busy' : ''} ${c.closed ? 'closed' : ''}`} title={c.title || undefined}>
-              {c.day ?? ''}
+            <div
+              key={idx}
+              className={`admin-calendar-cell ${c.day===undefined ? 'empty' : ''} ${c.busy ? 'busy' : ''} ${c.closed ? 'closed' : ''} ${c.checkIn ? 'check-in' : ''} ${c.checkOut ? 'check-out' : ''} ${c.singleBooking ? 'single-booking' : ''} ${c.closedStart ? 'closed-start' : ''} ${c.closedEnd ? 'closed-end' : ''} ${c.closedSingle ? 'closed-single' : ''}`}
+              title={c.title || undefined}
+            >
+              <span className="day-number">{c.day ?? ''}</span>
+              {(c.checkIn || c.singleBooking) && <span className="cell-indicator in">IN</span>}
+              {(c.checkOut || c.singleBooking) && <span className="cell-indicator out">OUT</span>}
+              {c.closedStart && <span className="cell-indicator closed">START</span>}
+              {c.closedEnd && <span className="cell-indicator closed end">END</span>}
+              {c.closedSingle && <span className="cell-indicator closed single">CLOSED</span>}
             </div>
           ))}
         </div>
         <div className="admin-calendar-legend">
           <span className="legend-item busy">Occupato</span>
           <span className="legend-item closed">Chiuso</span>
+          <span className="legend-item in">Check-in</span>
+          <span className="legend-item out">Check-out</span>
         </div>
       </div>
     );
