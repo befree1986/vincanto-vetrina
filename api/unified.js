@@ -706,10 +706,12 @@ export default async function handler(req, res) {
               booking_id,
               first_name || ' ' || last_name as customer_name,
               email as customer_email,
+              phone,
               check_in,
               check_out,
               guests,
               total_amount,
+              deposit_amount,
               status,
               payment_status as payment_method,
               created_at
@@ -724,8 +726,12 @@ export default async function handler(req, res) {
               ...booking,
               id: String(booking.id), // 🔧 ASSICURA che ID sia sempre stringa
               guestName: booking.customer_name || 'Ospite Sconosciuto', // 🔧 MAPPING per frontend
+              phone: booking.phone || '',
               total_amount: parseFloat(booking.total_amount), // Converti stringa in numero
-              platform: 'direct', // Default platform
+              deposit_amount: booking.deposit_amount ? parseFloat(booking.deposit_amount) : 0,
+              platform: booking.platform || 'direct', // Default platform
+              payment_method: booking.payment_status || 'pending',
+              total_days: Math.max(1, Math.ceil((new Date(booking.check_out) - new Date(booking.check_in)) / (1000 * 60 * 60 * 24))),
               created_at: booking.created_at.toISOString()
             }))
           });

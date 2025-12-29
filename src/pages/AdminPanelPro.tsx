@@ -1,101 +1,85 @@
 /* eslint-disable */
 // @ts-nocheck  
-import React, { useState, useEffect } from 'react';
-import './AdminPanelPro.css';
-import '../styles/AdminSuperAdmin.css';
-import '../styles/AdminUXResponsive.css';
-import AdminApiService from '../services/adminApiService';
-import AdminPricing from '../components/admin/AdminPricing';
-import ExtraServicesAdmin from '../components/admin/ExtraServicesAdmin';
-import { ExtraService } from '../hooks/useExtraServices';
-import { useAdminRole } from '../hooks/useAdminRole';
-import { devLog, devError, debugLog } from '../utils/debug';
-import { log } from '../utils/logger';
-
-const AdminPanelPro = (): JSX.Element => {
-  devLog('🚀 AdminPanelPro component rendering...');
-  
-  // Verifica ruolo SuperAdmin
-  const { role, isLoading: roleLoading, isSuperAdmin } = useAdminRole();
-  
-  // Stati principali
-  const [activeTab, setActiveTab] = useState('dashboard');
-  
-  // Stati per prenotazioni e pagamenti (solo backend reale)
-  const [recentBookings, setRecentBookings] = useState<any[]>([]);
-  const [calendarEvents, setCalendarEvents] = useState<any[]>([]); // Eventi iCal esterni
-  const [paymentTransactions, setPaymentTransactions] = useState<any[]>([]);
-  const [isLoadingData, setIsLoadingData] = useState(false);
-
-  // Filtro piattaforma prenotazioni (direct, airbnb, booking, holidu)
-  const [platformFilter, setPlatformFilter] = useState<'all'|'direct'|'airbnb'|'booking'|'holidu'>('all');
-  
-
-
-  // Servizio Admin API
-  const [adminApiService] = useState(() => {
-    try {
-      devLog('🔌 Inizializzazione AdminApiService...');
-      return new AdminApiService();
-    } catch (error) {
-      devError('❌ Errore AdminApiService:', error);
-      return null;
-    }
-  });
-
-  // Stati per i dati API
-  const [dashboardStats, setDashboardStats] = useState<any>({});
-  const [realBookings, setRealBookings] = useState<any[]>([]);
-  const [systemSettings, setSystemSettings] = useState<any[]>([]);
-  const [analytics, setAnalytics] = useState<any[]>([]);
-  const [notifications, setNotifications] = useState<any[]>([]);
-
-  // Stati per gestione form e loading
-  const [loading, setLoading] = useState(false);
-  const [showBookingForm, setShowBookingForm] = useState(false);
-  const [editingBooking, setEditingBooking] = useState<any>(null);
-  const [newBookingData, setNewBookingData] = useState({
-    customer_name: '',
-    customer_email: '',
-    check_in: '',
-    check_out: '',
-    guests: 1,
-    total_amount: 0,
-    status: 'pending',
-    platform: 'direct'
-  });
-
-  // Stati per gestione calendario e pricing
-  const [blockedDates, setBlockedDates] = useState<any[]>([]);
-  const [showBlockDateForm, setShowBlockDateForm] = useState(false);
-  const [newBlockedDate, setNewBlockedDate] = useState({
-    start_date: '',
-    end_date: '',
-    reason: 'maintenance'
-  });
-
-  // Stati per gestione prezzi PER GRUPPI SPECIFICI
-  const [pricingConfig, setPricingConfig] = useState({
-    // 🔥 NUOVO: Prezzi per gruppi specifici
-    priceGroup1to2: 75,       // €75 per 1-2 persone
-    priceGroup3to4: 95,       // €95 per 3-4 persone
-    priceGroup5to6: 115,      // €115 per 5-6 persone
-    priceGroup7to8: 135,      // €135 per 7-8 persone
-    
-    // Costi aggiuntivi
-    cleaningFee: 50,
-    parkingFee: 20,          // €20 parcheggio per notte
-    touristTaxAdult: 2.00,   // €2.00 tassa soggiorno adulti
-    touristTaxChild: 0,      // Bambini <12 anni gratuiti
-    
-    // Sconti e maggiorazioni
-    weekendSurcharge: 0,     // Nessuna maggiorazione weekend
-    weeklyDiscount: 10,      // 10% sconto settimanale
-    monthlyDiscount: 15,     // 15% sconto mensile
-    
-    // Limiti soggiorno
-    minStay: 2,
-    maxStay: 14,
+                  <table className="bookings-table">
+                    <thead>
+                      <tr>
+                        <th>Piattaforma</th>
+                        <th>Nome e cognome</th>
+                        <th>Email</th>
+                        <th>Telefono</th>
+                        <th>Check-in</th>
+                        <th>Check-out</th>
+                        <th>Totale giorni</th>
+                        <th>Metodo pagamento</th>
+                        <th>Importo Totale</th>
+                        <th>Importo Pagato</th>
+                        <th>Azioni</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {realBookings.map((booking) => (
+                        <tr key={booking.id} className="booking-row">
+                          <td>{booking.platform || 'direct'}</td>
+                          <td>{booking.customer_name || booking.guestName || 'N/A'}</td>
+                          <td>{booking.customer_email || booking.email || 'N/A'}</td>
+                          <td>{booking.phone || 'N/A'}</td>
+                          <td>{booking.check_in ? new Date(booking.check_in).toLocaleDateString('it-IT') : (booking.checkIn ? new Date(booking.checkIn).toLocaleDateString('it-IT') : 'N/A')}</td>
+                          <td>{booking.check_out ? new Date(booking.check_out).toLocaleDateString('it-IT') : (booking.checkOut ? new Date(booking.checkOut).toLocaleDateString('it-IT') : 'N/A')}</td>
+                          <td>{booking.total_days || Math.max(1, Math.ceil((new Date(booking.check_out || booking.checkOut) - new Date(booking.check_in || booking.checkIn)) / (1000 * 60 * 60 * 24)))}</td>
+                          <td>{booking.payment_method || 'pending'}</td>
+                          <td>€{(booking.total_amount || booking.totalPrice || 0).toFixed(2)}</td>
+                          <td>€{(booking.deposit_amount || booking.total_amount || booking.totalPrice || 0).toFixed(2)}</td>
+                          <td>
+                            <div className="action-buttons">
+                              <button 
+                                className="admin-btn-small" 
+                                onClick={() => handleEditBooking(booking)}
+                              >
+                                ✏️ Modifica
+                              </button>
+                              <button 
+                                className="admin-btn-small" 
+                                onClick={() => updateBookingStatus(booking.id, { status: 'confirmed' })}
+                              >
+                                ✅ Conferma
+                              </button>
+                              <button 
+                                className="admin-btn-small" 
+                                onClick={() => updateBookingStatus(booking.id, { status: 'cancelled' })}
+                              >
+                                ❌ Annulla
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="bookings-calendar-grid">
+                    {realBookings.map((booking) => (
+                      <div key={`cal-${booking.id}`} className="booking-card">
+                        <div className="booking-card-header">
+                          <span className="booking-platform">{booking.platform || 'direct'}</span>
+                          <span className={`status ${booking.status || 'pending'}`}>
+                            {booking.status === 'confirmed' && '✅ Confermata'}
+                            {booking.status === 'pending' && '🟡 In attesa'}
+                            {booking.status === 'cancelled' && '❌ Cancellata'}
+                            {!booking.status && '📊 Backend'}
+                          </span>
+                        </div>
+                        <div className="booking-card-body">
+                          <div className="booking-card-row"><strong>{booking.customer_name || booking.guestName || 'Ospite'}</strong></div>
+                          <div className="booking-card-row">{booking.customer_email || booking.email || 'N/A'} • {booking.phone || 'N/A'}</div>
+                          <div className="booking-card-dates">
+                            <span>Check-in: {booking.check_in ? new Date(booking.check_in).toLocaleDateString('it-IT') : (booking.checkIn ? new Date(booking.checkIn).toLocaleDateString('it-IT') : 'N/A')}</span>
+                            <span>Check-out: {booking.check_out ? new Date(booking.check_out).toLocaleDateString('it-IT') : (booking.checkOut ? new Date(booking.checkOut).toLocaleDateString('it-IT') : 'N/A')}</span>
+                          </div>
+                          <div className="booking-card-row">Totale giorni: {booking.total_days || Math.max(1, Math.ceil((new Date(booking.check_out || booking.checkOut) - new Date(booking.check_in || booking.checkIn)) / (1000 * 60 * 60 * 24)))}</div>
+                          <div className="booking-card-row">Pagamento: {booking.payment_method || 'pending'} • Pagato: €{(booking.deposit_amount || booking.total_amount || booking.totalPrice || 0).toFixed(2)} / Totale: €{(booking.total_amount || booking.totalPrice || 0).toFixed(2)}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
     maxGuests: 8,            // Massimo 8 ospiti
     
     // Sconti avanzati (opzionali)
@@ -3300,7 +3284,7 @@ const AdminPanelPro = (): JSX.Element => {
 
             {/* Prenotazioni Backend Reali */}
             <div className="admin-pricing-section">
-              <h3>🔥 Prenotazioni Backend (Dati Reali)</h3>
+              <h3>🔥 Prenotazioni Attive</h3>
               <div className="admin-pricing-actions margin-bottom">
                 <button 
                   className="admin-btn-primary" 
@@ -3350,52 +3334,55 @@ const AdminPanelPro = (): JSX.Element => {
                           </td>
                           <td>€{(booking.total_amount || booking.totalPrice || 0).toFixed(2)}</td>
                           <td>
-                            <div className="action-buttons">
+                            <table className="bookings-table">
                               <button 
                                 className="admin-btn-small" 
-                                onClick={() => handleEditBooking(booking)}
-                              >
-                                ✏️ Modifica
-                              </button>
-                              <button 
-                                className="admin-btn-small" 
-                                onClick={() => updateBookingStatus(booking.id, { status: 'confirmed' })}
-                              >
-                                ✅ Conferma
+                                  <th>Piattaforma</th>
+                                  <th>Nome e cognome</th>
+                                  <th>Email</th>
+                                  <th>Telefono</th>
+                                  <th>Check-in</th>
+                                  <th>Check-out</th>
+                                  <th>Totale giorni</th>
+                                  <th>Metodo pagamento</th>
+                                  <th>Importo Totale</th>
+                                  <th>Importo Pagato</th>
+                                  <th>Azioni</th>
                               </button>
                               <button 
                                 className="admin-btn-small" 
                                 onClick={() => handleDeleteBooking(booking.id)}
                               >
-                                ❌ Elimina
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                ) : (
-                  <div className="admin-pricing-card">
-                    <p>📊 Nessuna prenotazione trovata nel database backend</p>
-                    <button 
-                      className="admin-btn-primary" 
-                      onClick={loadRealApiData}
-                    >
-                      🔄 Ricarica Dati API
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Azioni Avanzate */}
-            <div className="admin-pricing-actions">
-              <button className="admin-btn-primary" onClick={() => setShowBookingForm(true)}>➕ Nuova Prenotazione</button>
-              <button className="admin-btn-secondary" onClick={() => handleBookingsDetailedReport()}>📊 Report Dettagliato</button>
-              <button className="admin-btn-secondary" onClick={() => handleMassEmailSend()}>📧 Email di Massa</button>
-              <button className="admin-btn-secondary" onClick={() => handleShowOccupancyDashboard()}>📅 Calendario Occupazione</button>
-              <button className="admin-btn-secondary" onClick={() => handleExportBookingsExcel()}>💾 Esporta Excel</button>
+                                    <td>{booking.platform || 'direct'}</td>
+                                    <td>{booking.customer_name || booking.guestName || 'N/A'}</td>
+                                    <td>{booking.customer_email || booking.email || 'N/A'}</td>
+                                    <td>{booking.phone || 'N/A'}</td>
+                                    <td>{booking.check_in ? new Date(booking.check_in).toLocaleDateString('it-IT') : (booking.checkIn ? new Date(booking.checkIn).toLocaleDateString('it-IT') : 'N/A')}</td>
+                                    <td>{booking.check_out ? new Date(booking.check_out).toLocaleDateString('it-IT') : (booking.checkOut ? new Date(booking.checkOut).toLocaleDateString('it-IT') : 'N/A')}</td>
+                                    <td>{booking.total_days || Math.max(1, Math.ceil((new Date(booking.check_out || booking.checkOut) - new Date(booking.check_in || booking.checkIn)) / (1000 * 60 * 60 * 24)))}</td>
+                                    <td>{booking.payment_method || 'pending'}</td>
+                                    <td>€{(booking.total_amount || booking.totalPrice || 0).toFixed(2)}</td>
+                                    <td>€{(booking.deposit_amount || booking.total_amount || booking.totalPrice || 0).toFixed(2)}</td>
+                                    <td>
+                                      <div className="action-buttons">
+                                        <button 
+                                          className="admin-btn-small" 
+                                          onClick={() => handleEditBooking(booking)}
+                                        >
+                                          ✏️ Modifica
+                                        </button>
+                                        <button 
+                                          className="admin-btn-small" 
+                                          onClick={() => updateBookingStatus(booking.id, { status: 'confirmed' })}
+                                        >
+                                          ✅ Conferma
+                                        </button>
+                                        <button 
+                                          className="admin-btn-small" 
+                                          onClick={() => updateBookingStatus(booking.id, { status: 'cancelled' })}
+                                        >
+                                          ❌ Annulla
+                                        </button>
               <button className="admin-btn-secondary" onClick={() => handleSyncAllPlatforms()}>🔄 Sincronizza Piattaforme</button>
             </div>
           </div>
