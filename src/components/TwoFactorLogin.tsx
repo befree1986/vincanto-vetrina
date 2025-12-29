@@ -44,8 +44,9 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
         throw new Error(data.error || 'Credenziali non valide');
       }
 
-      // Se 2FA non è richiesto, login completato
+      // Se 2FA non è richiesto, login completato (LEGACY - NON DOVREBBE SUCCEDERE PIÙ)
       if (!data.requires2FA) {
+        console.warn('⚠️ Login senza 2FA - Modalità legacy deprecata');
         console.log('✅ Login completato senza 2FA:', { token: data.token, role: data.role });
         localStorage.setItem('vincanto_admin_token', data.token);
         localStorage.setItem('vincanto_admin_role', data.role);
@@ -57,7 +58,9 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
         return;
       }
 
-      // Altrimenti, passa allo step TOTP
+      // Se requiresSetup = true, mostrare QR Code setup
+      // Se requiresSetup = false, richiedere codice TOTP esistente
+      // Passa allo step TOTP (che gestirà entrambi i casi)
       setStep('totp');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Errore di connessione';

@@ -380,24 +380,24 @@ export default async function handler(req, res) {
         return res.status(401).json({ success: false, error: 'Credenziali non valide' });
       }
 
-      // Se 2FA non è abilitato, login completato
+      // Se 2FA non è abilitato, forza il setup (primo login)
       if (!user.two_factor_enabled) {
-        // Genera token di sessione (in produzione usare JWT)
-        const sessionToken = randomBytes(32).toString('hex');
-        
         return res.status(200).json({
           success: true,
-          requires2FA: false,
-          role: user.role,
-          token: sessionToken,
-          message: 'Login completato'
+          requires2FA: true,
+          requiresSetup: true, // Flag per indicare che serve setup iniziale
+          userId: user.id,
+          email: user.email,
+          message: '2FA obbligatorio - Configura Google Authenticator per continuare'
         });
       }
 
-      // Se 2FA è abilitato, richiedi il codice TOTP
+      // Se 2FA è già abilitato, richiedi il codice TOTP
       return res.status(200).json({
         success: true,
         requires2FA: true,
+        requiresSetup: false,
+        userId: user.id,
         message: 'Inserisci il codice TOTP dalla tua app di autenticazione'
       });
 
