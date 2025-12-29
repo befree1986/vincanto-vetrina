@@ -1,6 +1,77 @@
 import React from 'react';
 import AdminApiService from '../../services/adminApiService';
 
+// Component per azioni su selezione calendario (crea prenotazione o blocco)
+const CalendarActions: React.FC<{
+  selectedStart: string;
+  selectedEnd: string | null;
+  onDone: () => void;
+}> = ({ selectedStart, selectedEnd, onDone }) => {
+  const api = React.useMemo(() => new AdminApiService(), []);
+  const [mode, setMode] = React.useState<'booking'|'block'>('booking');
+  const [form, setForm] = React.useState<any>({
+    customerName: '',
+    customerEmail: '',
+    customerPhone: '',
+    guests: 2,
+    totalPrice: 0,
+    reason: 'manutenzione',
+    description: ''
+  });
+
+  const handleSubmit = async () => {
+    const start = selectedStart;
+    const end = selectedEnd || selectedStart;
+    if (mode === 'booking') {
+      await api.createBooking({
+        check_in: start,
+        check_out: end,
+        customer_name: form.customerName,
+        customer_email: form.customerEmail,
+        customer_phone: form.customerPhone,
+        guests: form.guests,
+        total_amount: form.totalPrice,
+        notes: form.description,
+      });
+    } else {
+      await api.addBlockedDate({ start_date: start, end_date: end, reason: form.reason, description: form.description });
+    }
+    onDone();
+  };
+
+  return (
+    <div className="calendar-action-panel">
+      <div className="action-mode">
+        <label>
+          <input type="radio" name="mode" checked={mode==='booking'} onChange={() => setMode('booking')} /> Prenotazione
+        </label>
+        <label>
+          <input type="radio" name="mode" checked={mode==='block'} onChange={() => setMode('block')} /> Chiusura
+        </label>
+      </div>
+      {mode==='booking' ? (
+        <div className="action-form">
+          <input placeholder="Nome" value={form.customerName} onChange={e=>setForm({...form, customerName:e.target.value})} />
+          <input placeholder="Email" value={form.customerEmail} onChange={e=>setForm({...form, customerEmail:e.target.value})} />
+          <input placeholder="Telefono" value={form.customerPhone} onChange={e=>setForm({...form, customerPhone:e.target.value})} />
+          <input type="number" placeholder="Ospiti" value={form.guests} onChange={e=>setForm({...form, guests:parseInt(e.target.value)})} />
+          <input type="number" placeholder="Totale €" value={form.totalPrice} onChange={e=>setForm({...form, totalPrice:parseFloat(e.target.value)})} />
+          <input placeholder="Note" value={form.description} onChange={e=>setForm({...form, description:e.target.value})} />
+        </div>
+      ) : (
+        <div className="action-form">
+          <input placeholder="Motivo (es. manutenzione)" value={form.reason} onChange={e=>setForm({...form, reason:e.target.value})} />
+          <input placeholder="Descrizione" value={form.description} onChange={e=>setForm({...form, description:e.target.value})} />
+        </div>
+      )}
+      <div className="action-buttons">
+        <button className="admin-btn-primary admin-btn-small" onClick={handleSubmit}>Salva</button>
+        <button className="admin-btn-secondary admin-btn-small" onClick={onDone}>Annulla</button>
+      </div>
+    </div>
+  );
+};
+
 interface AdminDashboardProps {
   dashboardStats: any;
   realBookings: any[];
@@ -313,77 +384,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
           )}
         </div>
-
-        // Piccolo componente azioni su selezione calendario (crea prenotazione o blocco)
-        const CalendarActions: React.FC<{
-          selectedStart: string;
-          selectedEnd: string | null;
-          onDone: () => void;
-        }> = ({ selectedStart, selectedEnd, onDone }) => {
-          const api = React.useMemo(() => new AdminApiService(), []);
-          const [mode, setMode] = React.useState<'booking'|'block'>('booking');
-          const [form, setForm] = React.useState<any>({
-            customerName: '',
-            customerEmail: '',
-            customerPhone: '',
-            guests: 2,
-            totalPrice: 0,
-            reason: 'manutenzione',
-            description: ''
-          });
-
-          const handleSubmit = async () => {
-            const start = selectedStart;
-            const end = selectedEnd || selectedStart;
-            if (mode === 'booking') {
-              await api.createBooking({
-                check_in: start,
-                check_out: end,
-                customer_name: form.customerName,
-                customer_email: form.customerEmail,
-                customer_phone: form.customerPhone,
-                guests: form.guests,
-                total_amount: form.totalPrice,
-                notes: form.description,
-              });
-            } else {
-              await api.addBlockedDate({ start_date: start, end_date: end, reason: form.reason, description: form.description });
-            }
-            onDone();
-          };
-
-          return (
-            <div className="calendar-action-panel">
-              <div className="action-mode">
-                <label>
-                  <input type="radio" name="mode" checked={mode==='booking'} onChange={() => setMode('booking')} /> Prenotazione
-                </label>
-                <label>
-                  <input type="radio" name="mode" checked={mode==='block'} onChange={() => setMode('block')} /> Chiusura
-                </label>
-              </div>
-              {mode==='booking' ? (
-                <div className="action-form">
-                  <input placeholder="Nome" value={form.customerName} onChange={e=>setForm({...form, customerName:e.target.value})} />
-                  <input placeholder="Email" value={form.customerEmail} onChange={e=>setForm({...form, customerEmail:e.target.value})} />
-                  <input placeholder="Telefono" value={form.customerPhone} onChange={e=>setForm({...form, customerPhone:e.target.value})} />
-                  <input type="number" placeholder="Ospiti" value={form.guests} onChange={e=>setForm({...form, guests:parseInt(e.target.value)})} />
-                  <input type="number" placeholder="Totale €" value={form.totalPrice} onChange={e=>setForm({...form, totalPrice:parseFloat(e.target.value)})} />
-                  <input placeholder="Note" value={form.description} onChange={e=>setForm({...form, description:e.target.value})} />
-                </div>
-              ) : (
-                <div className="action-form">
-                  <input placeholder="Motivo (es. manutenzione)" value={form.reason} onChange={e=>setForm({...form, reason:e.target.value})} />
-                  <input placeholder="Descrizione" value={form.description} onChange={e=>setForm({...form, description:e.target.value})} />
-                </div>
-              )}
-              <div className="action-buttons">
-                <button className="admin-btn-primary admin-btn-small" onClick={handleSubmit}>Salva</button>
-                <button className="admin-btn-secondary admin-btn-small" onClick={onDone}>Annulla</button>
-              </div>
-            </div>
-          );
-        };
 
 
       {/* Prossime Prenotazioni */}
