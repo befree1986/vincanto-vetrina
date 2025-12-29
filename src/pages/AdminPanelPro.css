@@ -1420,6 +1420,64 @@
   margin-bottom: 24px;
 }
 
+/* Celle calendario e legenda */
+.admin-calendar-month {
+  background: var(--admin-card);
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.admin-calendar-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.admin-calendar-grid .admin-calendar-cell {
+  display: grid;
+  place-items: center;
+  padding: 8px;
+  border: 1px solid var(--admin-border-light);
+  border-radius: 6px;
+  min-height: 36px;
+  background: #fff;
+}
+
+.admin-calendar-cell.empty {
+  background: #f9fafb;
+}
+
+.admin-calendar-cell.busy {
+  background: #e0f2fe;
+  border-color: #bae6fd;
+  color: #1e3a8a;
+}
+
+.admin-calendar-cell.closed {
+  background: #ffe4e6;
+  border-color: #fecdd3;
+  color: #b91c1c;
+}
+
+.admin-calendar-legend {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  border: 1px solid var(--admin-border-light);
+}
+
+.legend-item.busy { background: #e0f2fe; color: #1e3a8a; border-color: #bae6fd; }
+.legend-item.closed { background: #ffe4e6; color: #b91c1c; border-color: #fecdd3; }
+
 .admin-calendar-card {
   background: var(--admin-card);
   border: 1px solid var(--admin-border);
@@ -1933,6 +1991,30 @@
   font-size: 0.85rem;
   font-weight: 600;
 }
+
+.platform-badge.closed {
+  background: #b91c1c;
+  color: #fff;
+}
+
+.reason-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #9a3412;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.reason-badge.reason-maintenance { background: #fef2f2; border-color: #fecdd3; color: #b91c1c; }
+.reason-badge.reason-holiday { background: #ecfdf3; border-color: #bbf7d0; color: #166534; }
+.reason-badge.reason-private { background: #eef2ff; border-color: #c7d2fe; color: #312e81; }
+.reason-badge.reason-work { background: #fef3c7; border-color: #fde68a; color: #92400e; }
+.reason-badge.reason-generic { background: #f1f5f9; border-color: #e2e8f0; color: #334155; }
 
 .platform-badge.platform-airbnb {
   background: #ff5a5f;

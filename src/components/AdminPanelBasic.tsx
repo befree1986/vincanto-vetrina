@@ -27,6 +27,7 @@ const AdminPanelBasic = (): JSX.Element => {
   const [dashboardStats, setDashboardStats] = useState<any>({});
   const [realBookings, setRealBookings] = useState<any[]>([]);
   const [calendarEvents, setCalendarEvents] = useState<any[]>([]);
+  const [blockedDates, setBlockedDates] = useState<any[]>([]);
   const [systemSettings, setSystemSettings] = useState<any[]>([]);
   const [analytics, setAnalytics] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -56,14 +57,15 @@ const AdminPanelBasic = (): JSX.Element => {
     try {
       log('📄 Caricamento dati API...');
       
-      const [stats, bookings, calendarBookings, settings, analyticsData, notifs, transactions] = await Promise.allSettled([
+      const [stats, bookings, calendarBookings, settings, analyticsData, notifs, transactions, blocks] = await Promise.allSettled([
         adminApiService.getDashboardStats(),
         adminApiService.getBookings(),
         adminApiService.getCalendarBookings({ futureOnly: true, limit: 100 }),
         adminApiService.getSystemSettings(),
         adminApiService.getAnalytics(),
         adminApiService.getNotifications(),
-        adminApiService.getPayments()
+        adminApiService.getPayments(),
+        adminApiService.getBlockedDates()
       ]);
 
       if (stats.status === 'fulfilled') setDashboardStats(stats.value || {});
@@ -73,6 +75,7 @@ const AdminPanelBasic = (): JSX.Element => {
       if (analyticsData.status === 'fulfilled') setAnalytics(analyticsData.value || []);
       if (notifs.status === 'fulfilled') setNotifications(notifs.value || []);
       if (transactions.status === 'fulfilled') setPaymentTransactions(transactions.value || []);
+      if (blocks.status === 'fulfilled') setBlockedDates(blocks.value || []);
 
       log('✅ Dati caricati con successo');
     } catch (error) {
@@ -203,6 +206,7 @@ const AdminPanelBasic = (): JSX.Element => {
             systemSettings={systemSettings}
             analytics={analytics}
             calendarEvents={calendarEvents}
+            blockedDates={blockedDates}
             isLoadingData={isLoadingData}
             isLoadingCalendar={isLoadingCalendar}
             loadCalendarData={loadCalendarData}
