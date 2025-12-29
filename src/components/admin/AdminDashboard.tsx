@@ -32,11 +32,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 }) => {
   return (
     <div className="admin-dashboard">
-      <h2>📊 Dashboard Backend Reale {isLoadingData && '(Caricamento...)'}</h2>
+      <h2>ðŸ“Š Dashboard Backend Reale {isLoadingData && '(Caricamento...)'}</h2>
       
       {/* Statistiche Principali */}
       <div className="admin-section">
-        <h3>📈 Statistiche Live (Database)</h3>
+        <h3>ðŸ“ˆ Statistiche Live (Database)</h3>
         <div className="admin-stats-grid">
           <div className="admin-stat-card">
             <h3>Prenotazioni Totali</h3>
@@ -46,7 +46,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
           
           <div className="admin-stat-card">
             <h3>Ricavi Totali</h3>
-            <div className="stat-value">€{(dashboardStats.totalRevenue || 0).toFixed(2)}</div>
+            <div className="stat-value">â‚¬{(dashboardStats.totalRevenue || 0).toFixed(2)}</div>
             <small>Calcolo backend</small>
           </div>
           
@@ -66,7 +66,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
       {/* Statistiche Aggiuntive */}
       <div className="admin-section">
-        <h3>🔧 Metriche Sistema</h3>
+        <h3>ðŸ”§ Metriche Sistema</h3>
         <div className="admin-stats-grid">
           <div className="admin-stat-card">
             <h3>Notifiche Attive</h3>
@@ -96,7 +96,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
       {/* Prossime Prenotazioni */}
       <div className="admin-pricing-section">
-        <h3>📅 Prossime Prenotazioni</h3>
+        <h3>ðŸ“… Prossime Prenotazioni</h3>
         <div className="admin-pricing-card">
           <div className="existing-services">
             {calendarEvents.slice(0, 5).map((event, index) => (
@@ -104,13 +104,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <span>{event.title}</span>
                 <span>{new Date(event.start).toLocaleDateString('it-IT')}</span>
                 <span className={`platform-badge ${event.source}`}>
-                  {event.source === 'airbnb' && '🏠 Airbnb'}
-                  {event.source === 'booking' && '🏨 Booking.com'}
-                  {event.source === 'expedia' && '✈️ Expedia'}
-                  {event.source === 'direct' && '📞 Diretto'}
-                  {event.source === 'other' && '📅 Altro'}
+                  {event.source === 'airbnb' && 'ðŸ  Airbnb'}
+                  {event.source === 'booking' && 'ðŸ¨ Booking.com'}
+                  {event.source === 'expedia' && 'âœˆï¸ Expedia'}
+                  {event.source === 'direct' && 'ðŸ“ž Diretto'}
+                  {event.source === 'other' && 'ðŸ“… Altro'}
                 </span>
-                <span>€{event.totalPrice}</span>
+                <span>â‚¬{event.totalPrice}</span>
               </div>
             ))}
             
@@ -125,10 +125,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
           
           <div className="admin-pricing-actions dashboard-actions">
             <button className="admin-btn-secondary" onClick={() => loadCalendarData()}>
-              🔄 Ricarica Calendario
+              ðŸ”„ Ricarica Calendario
             </button>
             <button className="admin-btn-secondary" onClick={() => setActiveTab('calendari')}>
-              📅 Gestisci Calendari
+              ðŸ“… Gestisci Calendari
             </button>
           </div>
         </div>
