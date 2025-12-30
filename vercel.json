@@ -5,13 +5,13 @@
   "installCommand": "npm install",
   "build": {
     "env": {
-      "NODE_VERSION": "20.18.1"
+      "NODE_VERSION": "24.2.0"
     }
   },
   "functions": {
     "api/**/*.js": {
       "maxDuration": 10,
-      "runtime": "nodejs20.x"
+      "runtime": "nodejs24.x"
     }
   },
   "rewrites": [

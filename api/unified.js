@@ -8,7 +8,7 @@ import { sendEmailWithAdminCopy } from '../email/emailSender.js';
 import { initializeEmailLogsTable } from '../email/emailLogger.js';
 import { detectLanguage } from '../email/i18n.js';
 import * as TwoFactorAuth from './2fa.js';
-import bcrypt from 'bcrypt';
+import bcrypt from '@node-rs/bcrypt';
 import { randomBytes } from 'crypto';
 
 // Database connection

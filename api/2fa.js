@@ -5,7 +5,7 @@
 import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
 import crypto from 'crypto';
-import bcrypt from 'bcrypt';
+import bcrypt from '@node-rs/bcrypt';
 
 // Chiave per cifratura secret (in produzione usare variabile ambiente!)
 const ENCRYPTION_KEY = process.env.TOTP_ENCRYPTION_KEY || 'vincanto-2fa-key-change-in-production-32chars!!';
