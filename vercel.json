@@ -4,7 +4,7 @@
   "framework": "vite",
   "installCommand": "npm install --include=dev",
   "env": {
-    "NODE_VERSION": "20.18.1",
+    "NODE_VERSION": "20.x",
     "NPM_CONFIG_PRODUCTION": "false"
   },
   "rewrites": [
