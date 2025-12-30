@@ -175,9 +175,17 @@ class AdminApiService {
 
   async updateBooking(id: string, updates: any) {
     try {
-      console.log('🔄 Aggiornamento prenotazione simulato per ID:', id, 'Dati:', updates);
-      // TODO: Implementare quando avremo l'endpoint
-      return { success: true, message: 'Prenotazione aggiornata (simulato)' };
+      const response = await fetch(`${this.baseUrl}/unified?action=booking`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id,
+          ...updates
+        }),
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      return { success: data.success, message: 'Prenotazione aggiornata', data };
     } catch (error) {
       console.error('Error updating booking:', error);
       return { success: false, message: 'Errore aggiornamento prenotazione' };
@@ -186,9 +194,14 @@ class AdminApiService {
 
   async deleteBooking(id: string) {
     try {
-      console.log('🗑️ Eliminazione prenotazione simulata per ID:', id);
-      // TODO: Implementare quando avremo l'endpoint
-      return { success: true, message: 'Prenotazione eliminata (simulato)' };
+      const response = await fetch(`${this.baseUrl}/unified?action=booking`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      return { success: data.success, message: 'Prenotazione eliminata', data };
     } catch (error) {
       console.error('Error deleting booking:', error);
       return { success: false, message: 'Errore eliminazione prenotazione' };

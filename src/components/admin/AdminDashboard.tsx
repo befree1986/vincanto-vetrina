@@ -111,6 +111,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [monthsToShow, setMonthsToShow] = React.useState<number>(2);
   const [selectedStart, setSelectedStart] = React.useState<string | null>(null);
   const [selectedEnd, setSelectedEnd] = React.useState<string | null>(null);
+  const [editingBooking, setEditingBooking] = React.useState<{id: string | number, data: any} | null>(null);
+  const [editingClosure, setEditingClosure] = React.useState<{id: string, data: any} | null>(null);
   // Calcolo date occupate dai calendarEvents
   const {
     busyDates,
@@ -206,6 +208,73 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       closedSingleDates: closedSingle,
     };
   }, [calendarEvents, blockedDates]);
+
+  // Handler per modificare prenotazione
+  const handleEditBooking = (event: any, index: number) => {
+    setEditingBooking({
+      id: event.id || index,
+      data: {
+        ...event,
+        originalCheckIn: event.check_in || event.start,
+        originalCheckOut: event.check_out || event.end,
+      }
+    });
+  };
+
+  // Handler per annullare prenotazione
+  const handleDeleteBooking = async (event: any, index: number) => {
+    const id = event.id || String(index);
+    if (confirm(`Annullare la prenotazione di ${event.customer_name || 'Cliente'}?`)) {
+      try {
+        const api = new AdminApiService();
+        const result = await api.deleteBooking(id);
+        if (result.success) {
+          alert('Prenotazione annullata');
+          // Ricarica dati
+          if (loadCalendarData) await loadCalendarData();
+        } else {
+          alert('Errore: ' + (result.message || 'Impossibile annullare'));
+        }
+      } catch (error) {
+        console.error('Errore annullamento:', error);
+        alert('Errore annullamento prenotazione');
+      }
+    }
+  };
+
+  // Handler per modificare chiusura
+  const handleEditClosure = (bd: any, idx: number) => {
+    setEditingClosure({
+      id: bd.id || String(idx),
+      data: {
+        ...bd,
+        originalStart: bd.start_date || bd.start,
+        originalEnd: bd.end_date || bd.end || bd.start,
+      }
+    });
+  };
+
+  // Handler per rimuovere chiusura
+  const handleRemoveClosure = async (bd: any, idx: number) => {
+    const id = bd.id || String(idx);
+    const reason = bd.reason || 'Chiusura';
+    if (confirm(`Rimuovere ${reason} (${new Date(bd.start_date || bd.start).toLocaleDateString('it-IT')})?`)) {
+      try {
+        const api = new AdminApiService();
+        const result = await api.removeBlockedDate(id);
+        if (result.success) {
+          alert('Chiusura rimossa');
+          // Ricarica dati
+          if (loadCalendarData) await loadCalendarData();
+        } else {
+          alert('Errore: ' + (result.message || 'Impossibile rimuovere'));
+        }
+      } catch (error) {
+        console.error('Errore rimozione:', error);
+        alert('Errore rimozione chiusura');
+      }
+    }
+  };
 
   // Restituisce una classe CSS in base al motivo della chiusura
   const getReasonBadgeClass = (reason?: string) => {
@@ -404,8 +473,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </span>
                 <span>€{event.totalPrice}</span>
                 <div className="row-actions">
-                  <button className="admin-btn-small admin-btn-secondary" onClick={() => console.log('Modifica prenotazione', event.id || index)}>Modifica</button>
-                  <button className="admin-btn-small admin-btn-danger" onClick={() => console.log('Annulla prenotazione', event.id || index)}>Annulla</button>
+                  <button className="admin-btn-small admin-btn-secondary" onClick={() => handleEditBooking(event, index)}>Modifica</button>
+                  <button className="admin-btn-small admin-btn-danger" onClick={() => handleDeleteBooking(event, index)}>Annulla</button>
                 </div>
               </div>
             ))}
@@ -419,8 +488,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 {bd.description && (<span className="closed-description">{bd.description}</span>)}
                 <span>€</span>
                 <div className="row-actions">
-                  <button className="admin-btn-small admin-btn-secondary" onClick={() => console.log('Modifica chiusura', idx)}>Modifica</button>
-                  <button className="admin-btn-small admin-btn-danger" onClick={() => console.log('Rimuovi chiusura', idx)}>Rimuovi</button>
+                  <button className="admin-btn-small admin-btn-secondary" onClick={() => handleEditClosure(bd, idx)}>Modifica</button>
+                  <button className="admin-btn-small admin-btn-danger" onClick={() => handleRemoveClosure(bd, idx)}>Rimuovi</button>
                 </div>
               </div>
             ))}

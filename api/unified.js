@@ -901,6 +901,124 @@ export default async function handler(req, res) {
           });
         }
       }
+
+      if (req.method === 'PUT') {
+        try {
+          const { id, ...updates } = req.body;
+          if (!id) {
+            return res.status(400).json({
+              success: false,
+              error: 'ID prenotazione obbligatorio'
+            });
+          }
+
+          // Normalizza campi per aggiornamento
+          const updateFields = [];
+          const updateValues = [];
+          let paramIndex = 1;
+
+          if (updates.check_in) {
+            updateFields.push(`check_in = $${paramIndex++}`);
+            updateValues.push(updates.check_in);
+          }
+          if (updates.check_out) {
+            updateFields.push(`check_out = $${paramIndex++}`);
+            updateValues.push(updates.check_out);
+          }
+          if (updates.guests !== undefined) {
+            updateFields.push(`guests = $${paramIndex++}`);
+            updateValues.push(updates.guests);
+          }
+          if (updates.total_amount !== undefined) {
+            updateFields.push(`total_amount = $${paramIndex++}`);
+            updateValues.push(updates.total_amount);
+          }
+          if (updates.notes) {
+            updateFields.push(`notes = $${paramIndex++}`);
+            updateValues.push(updates.notes);
+          }
+          if (updates.status) {
+            updateFields.push(`status = $${paramIndex++}`);
+            updateValues.push(updates.status);
+          }
+
+          if (updateFields.length === 0) {
+            return res.status(400).json({
+              success: false,
+              error: 'Nessun campo da aggiornare'
+            });
+          }
+
+          updateFields.push(`updated_at = NOW()`);
+          updateValues.push(id);
+
+          const query = `
+            UPDATE bookings 
+            SET ${updateFields.join(', ')}
+            WHERE id = $${paramIndex}
+            RETURNING *
+          `;
+
+          const result = await pool.query(query, updateValues);
+
+          if (result.rows.length === 0) {
+            return res.status(404).json({
+              success: false,
+              error: 'Prenotazione non trovata'
+            });
+          }
+
+          return res.status(200).json({
+            success: true,
+            message: 'Prenotazione aggiornata',
+            booking: result.rows[0]
+          });
+        } catch (error) {
+          console.error('❌ Errore booking PUT:', error);
+          return res.status(500).json({
+            success: false,
+            message: 'Errore aggiornamento prenotazione',
+            error: error.message
+          });
+        }
+      }
+
+      if (req.method === 'DELETE') {
+        try {
+          const { id } = req.body;
+          if (!id) {
+            return res.status(400).json({
+              success: false,
+              error: 'ID prenotazione obbligatorio'
+            });
+          }
+
+          const result = await pool.query(
+            `DELETE FROM bookings WHERE id = $1 RETURNING *`,
+            [id]
+          );
+
+          if (result.rows.length === 0) {
+            return res.status(404).json({
+              success: false,
+              error: 'Prenotazione non trovata'
+            });
+          }
+
+          return res.status(200).json({
+            success: true,
+            message: 'Prenotazione eliminata',
+            booking: result.rows[0]
+          });
+        } catch (error) {
+          console.error('❌ Errore booking DELETE:', error);
+          return res.status(500).json({
+            success: false,
+            message: 'Errore eliminazione prenotazione',
+            error: error.message
+          });
+        }
+      }
     }
 
     // ========================================
