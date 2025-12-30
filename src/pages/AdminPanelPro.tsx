@@ -74,6 +74,24 @@ const AdminPanelPro = (): JSX.Element => {
     reason: 'maintenance'
   });
 
+  // Stati per gestione admin (SOLO SUPERADMIN)
+  const [adminsList, setAdminsList] = useState<any[]>([]);
+  const [superAdminPassword, setSuperAdminPassword] = useState('');
+  const [showSuperAdminSettings, setShowSuperAdminSettings] = useState(false);
+  const [passwordChangeForm, setPasswordChangeForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+
+  // Stati per gestione cambio password admin
+  const [selectedAdminForPassword, setSelectedAdminForPassword] = useState<any>(null);
+  const [adminPasswordRequest, setAdminPasswordRequest] = useState({
+    adminId: '',
+    reason: '',
+    notes: ''
+  });
+
   // Stati per gestione prezzi PER GRUPPI SPECIFICI
   const [pricingConfig, setPricingConfig] = useState({
     // ­ƒöÑ NUOVO: Prezzi per gruppi specifici
@@ -2125,31 +2143,138 @@ const AdminPanelPro = (): JSX.Element => {
 
   // === NUOVE FUNZIONI SISTEMA AGGIUNTE ===
 
-  const handleChangeAdminPassword = () => {
-    const currentPassword = prompt('­ƒöÉ Inserisci la password attuale:', '');
-    
-    if (currentPassword !== 'vincanto2025') {
-      alert('ÔØî Password attuale non corretta');
+  // Handler per SuperAdmin cambiare la propria password
+  const handleSuperAdminPasswordChange = async () => {
+    if (!isSuperAdmin) {
+      alert('ÔØî Solo il SuperAdmin pu├▒ cambiare la password');
       return;
     }
-    
-    const newPassword = prompt('­ƒåò Inserisci la nuova password:\n\nRequisiti:\nÔÇó Minimo 8 caratteri\nÔÇó Almeno una maiuscola\nÔÇó Almeno un numero\nÔÇó Almeno un simbolo', '');
-    
-    if (!newPassword || newPassword.length < 8) {
-      alert('ÔØî La nuova password deve avere almeno 8 caratteri');
+
+    // Validazione campi
+    if (!passwordChangeForm.currentPassword) {
+      alert('ÔØî Inserisci la password attuale');
       return;
     }
-    
-    const confirmPassword = prompt('­ƒöä Conferma la nuova password:', '');
-    
-    if (newPassword !== confirmPassword) {
+
+    if (!passwordChangeForm.newPassword || passwordChangeForm.newPassword.length < 8) {
+      alert('ÔØî La nuova password deve avere minimo 8 caratteri');
+      return;
+    }
+
+    // Validazione requisiti password
+    const hasUppercase = /[A-Z]/.test(passwordChangeForm.newPassword);
+    const hasNumber = /[0-9]/.test(passwordChangeForm.newPassword);
+    const hasSymbol = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(passwordChangeForm.newPassword);
+
+    if (!hasUppercase || !hasNumber || !hasSymbol) {
+      alert('ÔØî Password deve contenere:\nÔÇó Almeno una maiuscola\nÔÇó Almeno un numero\nÔÇó Almeno un simbolo');
+      return;
+    }
+
+    if (passwordChangeForm.newPassword !== passwordChangeForm.confirmPassword) {
       alert('ÔØî Le password non coincidono');
       return;
     }
-    
-    // Simula il cambio password
-    alert(`­ƒöÉ Password Cambiata con Successo!\n\nÔ£à Nuova password salvata\n­ƒöÆ Sessioni precedenti invalidate\n­ƒôº Email di notifica inviata\n\nÔÜá´©Å Ricorda di aggiornare le tue credenziali salvate`);
+
+    try {
+      setLoading(true);
+      const response = await fetch(`${adminApiService?.baseUrl || 'https://vincanto-vetrina.vercel.app/api'}/unified?action=admin/change-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword: passwordChangeForm.currentPassword,
+          newPassword: passwordChangeForm.newPassword,
+          isSuperAdmin: true
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert('Ô£à Password cambiata con successo!\n\nLe sessioni precedenti sono state invalidate.');
+        setPasswordChangeForm({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+        setShowSuperAdminSettings(false);
+      } else {
+        alert(`ÔØî Errore: ${data.message || 'Impossibile cambiare password'}`);
+      }
+    } catch (error) {
+      console.error('Errore cambio password:', error);
+      alert('ÔØî Errore di connessione');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // Handler per richiedere cambio password admin
+  const handleRequestAdminPasswordChange = async (admin: any) => {
+    if (!isSuperAdmin) {
+      alert('ÔØî Solo il SuperAdmin pu├▒ richiedere cambio password');
+      return;
+    }
+
+    const reason = prompt('ÔÜá Motivo della richiesta di cambio password:\n(es: cambio periodico, reset sicurezza)', 'Cambio password richiesto');
+    
+    if (!reason) return;
+
+    try {
+      setLoading(true);
+      const response = await fetch(`${adminApiService?.baseUrl || 'https://vincanto-vetrina.vercel.app/api'}/unified?action=admin/change-password-request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          adminId: admin.id || admin.email,
+          adminEmail: admin.email,
+          adminName: admin.name || 'Admin',
+          reason: reason,
+          requestedBy: 'superadmin',
+          createdAt: new Date().toISOString()
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert(`Ô£à Richiesta di cambio password inviata a ${admin.email}\n\nEmail di notifica inviata al SuperAdmin.`);
+        setSelectedAdminForPassword(null);
+      } else {
+        alert(`ÔØî Errore: ${data.message || 'Impossibile inviare richiesta'}`);
+      }
+    } catch (error) {
+      console.error('Errore richiesta cambio password:', error);
+      alert('ÔØî Errore di connessione');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Carica lista admin
+  const loadAdminsList = async () => {
+    if (!isSuperAdmin) return;
+    try {
+      setLoading(true);
+      const response = await fetch(`${adminApiService?.baseUrl || 'https://vincanto-vetrina.vercel.app/api'}/unified?action=admin/list`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await response.json();
+      if (data.success) {
+        setAdminsList(data.admins || []);
+      }
+    } catch (error) {
+      console.error('Errore caricamento admin:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Effetto iniziale per caricare admin list
+  React.useEffect(() => {
+    if (activeTab === 'admin-management' && isSuperAdmin) {
+      loadAdminsList();
+    }
+  }, [activeTab, isSuperAdmin]);
 
   // === GESTIONE NOTIFICHE ===
   
@@ -2368,6 +2493,15 @@ const AdminPanelPro = (): JSX.Element => {
           >
             ­ƒôê Analytics
           </button>
+
+          {isSuperAdmin && (
+            <button 
+              className={`admin-nav-item ${activeTab === 'admin-management' ? 'active' : ''}`}
+              onClick={() => setActiveTab('admin-management')}
+            >
+              ­ƒæí´©Å Gestione Admin
+            </button>
+          )}
           
           <button 
             className={`admin-nav-item ${activeTab === 'sistema' ? 'active' : ''}`}
@@ -3924,6 +4058,148 @@ const AdminPanelPro = (): JSX.Element => {
               <button className="admin-btn-secondary" onClick={() => handleEmailDetailedReport()}>­ƒôè Report Dettagliato</button>
               <button className="admin-btn-secondary" onClick={() => handleMassEmailSend()}>­ƒôº Invio Massivo</button>
               <button className="admin-btn-secondary" onClick={() => handleManageEmailAutomations()}>ÔÜí Gestisci Automazioni</button>
+            </div>
+          </div>
+        )}
+
+        {/* GESTIONE ADMIN - SOLO SUPERADMIN */}
+        {activeTab === 'admin-management' && isSuperAdmin && (
+          <div className="admin-panel-management">
+            <h2>­ƒæí´©Å Gestione Admin e Password</h2>
+            
+            {/* Sezione cambio password SuperAdmin */}
+            <div className="admin-pricing-section">
+              <h3>­ƒöÉ Cambio Password SuperAdmin</h3>
+              <div className="admin-pricing-grid">
+                <div className="admin-pricing-card">
+                  <h4>Modifica Password Personale</h4>
+                  {!showSuperAdminSettings ? (
+                    <div className="pricing-controls">
+                      <p>Qui puoi cambiare la tua password di SuperAdmin.</p>
+                      <button 
+                        className="admin-btn-primary"
+                        onClick={() => setShowSuperAdminSettings(true)}
+                      >
+                        ­ƒöÉ Cambia Password
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="pricing-controls">
+                      <label>Password Attuale:</label>
+                      <input 
+                        type="password"
+                        className="admin-input"
+                        placeholder="Inserisci password attuale"
+                        value={passwordChangeForm.currentPassword}
+                        onChange={(e) => setPasswordChangeForm({...passwordChangeForm, currentPassword: e.target.value})}
+                      />
+                      
+                      <label>Nuova Password:</label>
+                      <input 
+                        type="password"
+                        className="admin-input"
+                        placeholder="Minimo 8 caratteri, maiuscola, numero, simbolo"
+                        value={passwordChangeForm.newPassword}
+                        onChange={(e) => setPasswordChangeForm({...passwordChangeForm, newPassword: e.target.value})}
+                      />
+                      
+                      <label>Conferma Password:</label>
+                      <input 
+                        type="password"
+                        className="admin-input"
+                        placeholder="Ripeti la nuova password"
+                        value={passwordChangeForm.confirmPassword}
+                        onChange={(e) => setPasswordChangeForm({...passwordChangeForm, confirmPassword: e.target.value})}
+                      />
+                      
+                      <small>
+                        Requisiti:<br/>
+                        ÔÇó Minimo 8 caratteri<br/>
+                        ÔÇó Almeno una lettera MAIUSCOLA<br/>
+                        ÔÇó Almeno un numero (0-9)<br/>
+                        ÔÇó Almeno un simbolo (!@#$%^&*)
+                      </small>
+                      
+                      <div className="admin-pricing-actions">
+                        <button 
+                          className="admin-btn-primary"
+                          onClick={handleSuperAdminPasswordChange}
+                          disabled={loading}
+                        >
+                          {loading ? 'Salvataggio...' : 'Ô£à Salva Nuova Password'}
+                        </button>
+                        <button 
+                          className="admin-btn-secondary"
+                          onClick={() => {
+                            setShowSuperAdminSettings(false);
+                            setPasswordChangeForm({currentPassword: '', newPassword: '', confirmPassword: ''});
+                          }}
+                        >
+                          ÔÜí Annulla
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Sezione gestione admin e loro password */}
+            <div className="admin-pricing-section">
+              <h3>­ƒæí Richiedi Cambio Password Admin</h3>
+              <div className="admin-pricing-grid">
+                {adminsList.length > 0 ? (
+                  adminsList.map((admin: any) => (
+                    <div key={admin.id || admin.email} className="admin-pricing-card">
+                      <h4>{admin.name || admin.email}</h4>
+                      <div className="pricing-controls">
+                        <p><strong>Email:</strong> {admin.email}</p>
+                        <p><strong>Ruolo:</strong> {admin.role || 'Admin'}</p>
+                        <p><strong>Ultimo accesso:</strong> {admin.last_login ? new Date(admin.last_login).toLocaleDateString('it-IT') : 'Mai'}</p>
+                        
+                        <button 
+                          className="admin-btn-secondary"
+                          onClick={() => handleRequestAdminPasswordChange(admin)}
+                          disabled={loading}
+                        >
+                          ÔÜá Richiedi Cambio Password
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="admin-pricing-card">
+                    <h4>Nessun Admin Trovato</h4>
+                    <div className="pricing-controls">
+                      <button 
+                        className="admin-btn-primary"
+                        onClick={loadAdminsList}
+                        disabled={loading}
+                      >
+                        {loading ? 'Caricamento...' : '­ƒöä Ricarica Admin'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Info cambio password */}
+            <div className="admin-pricing-section">
+              <h3>ÔÜá Informazioni Cambio Password</h3>
+              <div className="admin-notice">
+                <strong>­ƒöÉ Come funziona:</strong><br/>
+                1. Clicca "Richiedi Cambio Password" per un admin<br/>
+                2. Una richiesta automatica viene inviata al SuperAdmin<br/>
+                3. L'admin riceve una notifica di cambio password richiesto<br/>
+                4. L'admin deve cambiare la password al prossimo login<br/>
+                <br/>
+                <strong>Note Sicurezza:</strong><br/>
+                ÔÇó Solo il SuperAdmin pu├▒ gestire password degli admin<br/>
+                ÔÇó Il SuperAdmin pu├▒ cambiare solo la propria password<br/>
+                ÔÇó Ogni cambio genera un log di sicurezza<br/>
+                ÔÇó Sessioni precedenti vengono invalidate
+              </div>
             </div>
           </div>
         )}

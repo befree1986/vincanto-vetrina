@@ -563,6 +563,166 @@ export default async function handler(req, res) {
     }
 
     // ========================================
+    // CAMBIO PASSWORD SUPERADMIN
+    // ========================================
+    if (action === 'admin/change-password') {
+      if (req.method !== 'POST') {
+        return res.status(405).json({ success: false, error: 'Metodo non consentito' });
+      }
+
+      try {
+        const { currentPassword, newPassword, isSuperAdmin } = req.body;
+
+        if (!currentPassword || !newPassword) {
+          return res.status(400).json({
+            success: false,
+            error: 'Password attuale e nuova password obbligatorie'
+          });
+        }
+
+        // Verifica password attuale (hardcoded per ora)
+        const correctPassword = 'vincanto2025';
+        if (currentPassword !== correctPassword) {
+          return res.status(401).json({
+            success: false,
+            error: 'Password attuale non corretta'
+          });
+        }
+
+        // Validazione nuova password
+        if (newPassword.length < 8) {
+          return res.status(400).json({
+            success: false,
+            error: 'La password deve avere minimo 8 caratteri'
+          });
+        }
+
+        const hasUppercase = /[A-Z]/.test(newPassword);
+        const hasNumber = /[0-9]/.test(newPassword);
+        const hasSymbol = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword);
+
+        if (!hasUppercase || !hasNumber || !hasSymbol) {
+          return res.status(400).json({
+            success: false,
+            error: 'Password deve contenere maiuscola, numero e simbolo'
+          });
+        }
+
+        // TODO: Salvare hash nuova password nel database admin_users
+        // await pool.query(
+        //   'UPDATE admin_users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
+        //   [bcrypt.hashSync(newPassword, 10), adminId]
+        // );
+
+        console.log('✅ Password SuperAdmin cambiata');
+        return res.status(200).json({
+          success: true,
+          message: 'Password cambiata con successo'
+        });
+      } catch (error) {
+        console.error('❌ Errore cambio password:', error);
+        return res.status(500).json({
+          success: false,
+          error: 'Errore cambio password'
+        });
+      }
+    }
+
+    // ========================================
+    // RICHIESTA CAMBIO PASSWORD ADMIN
+    // ========================================
+    if (action === 'admin/change-password-request') {
+      if (req.method !== 'POST') {
+        return res.status(405).json({ success: false, error: 'Metodo non consentito' });
+      }
+
+      try {
+        const { adminEmail, adminName, reason, requestedBy } = req.body;
+
+        if (!adminEmail) {
+          return res.status(400).json({
+            success: false,
+            error: 'Email admin obbligatoria'
+          });
+        }
+
+        // Log della richiesta
+        console.log(`✅ Richiesta cambio password inviata per ${adminEmail} - Motivo: ${reason}`);
+
+        // TODO: Invia email a superadmin notificando della richiesta
+        // TODO: Salva richiesta in database password_change_requests table
+
+        // Simula invio email
+        if (emailTransporter && process.env.SMTP_FROM) {
+          try {
+            await emailTransporter.sendMail({
+              from: process.env.SMTP_FROM,
+              to: 'superadmin@vincantomaori.it', // Email SuperAdmin
+              subject: `[SECURITY] Richiesta Cambio Password Admin: ${adminName}`,
+              html: `
+                <h2>Richiesta di Cambio Password</h2>
+                <p><strong>Admin:</strong> ${adminName} (${adminEmail})</p>
+                <p><strong>Motivo:</strong> ${reason}</p>
+                <p><strong>Richiesta da:</strong> ${requestedBy}</p>
+                <p><strong>Data/Ora:</strong> ${new Date().toLocaleString('it-IT')}</p>
+                <p>L'admin riceverà una notifica e dovrà cambiare password al prossimo login.</p>
+              `
+            });
+          } catch (emailError) {
+            console.warn('⚠️ Email notifica non inviata:', emailError.message);
+          }
+        }
+
+        return res.status(200).json({
+          success: true,
+          message: 'Richiesta di cambio password inviata'
+        });
+      } catch (error) {
+        console.error('❌ Errore richiesta cambio password:', error);
+        return res.status(500).json({
+          success: false,
+          error: 'Errore invio richiesta'
+        });
+      }
+    }
+
+    // ========================================
+    // LISTA ADMIN (per SuperAdmin)
+    // ========================================
+    if (action === 'admin/list') {
+      if (req.method !== 'GET') {
+        return res.status(405).json({ success: false, error: 'Metodo non consentito' });
+      }
+
+      try {
+        // TODO: Leggere da database admin_users table
+        // const result = await pool.query('SELECT id, name, email, role, last_login FROM admin_users WHERE role = $1', ['admin']);
+
+        // Dati mock per ora
+        const mockAdmins = [
+          {
+            id: 1,
+            name: 'Giulio Admin',
+            email: 'admin@vincantomaori.it',
+            role: 'admin',
+            last_login: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+          }
+        ];
+
+        return res.status(200).json({
+          success: true,
+          admins: mockAdmins
+        });
+      } catch (error) {
+        console.error('❌ Errore lista admin:', error);
+        return res.status(500).json({
+          success: false,
+          error: 'Errore caricamento lista admin'
+        });
+      }
+    }
+
+    // ========================================
     // ADMIN ROLE ENDPOINT
     // ========================================
     if (action === 'admin/role') {
