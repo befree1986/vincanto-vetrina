@@ -431,7 +431,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <div className="calendar-controls">
               <button className="admin-btn-small admin-btn-secondary" onClick={() => setViewStart(new Date(viewStart.getFullYear(), viewStart.getMonth()-1, 1))}>◀︎ Prec</button>
               <button className="admin-btn-small admin-btn-secondary" onClick={() => setViewStart(new Date(viewStart.getFullYear(), viewStart.getMonth()+1, 1))}>Succ ▶︎</button>
-              <select className="admin-select" value={monthsToShow} onChange={(e) => setMonthsToShow(parseInt(e.target.value))}>
+              <select className="admin-select" value={monthsToShow} onChange={(e) => setMonthsToShow(parseInt(e.target.value))} aria-label="Numero di mesi da visualizzare">
                 <option value={1}>1 mese</option>
                 <option value={2}>2 mesi</option>
                 <option value={3}>3 mesi</option>

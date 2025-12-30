@@ -4297,6 +4297,7 @@ const AdminPanelPro = (): JSX.Element => {
                         className="admin-select"
                         value={newAdminForm.role}
                         onChange={(e) => setNewAdminForm({...newAdminForm, role: e.target.value})}
+                        aria-label="Seleziona ruolo admin"
                       >
                         <option value="admin">Admin</option>
                         <option value="editor">Editor</option>
