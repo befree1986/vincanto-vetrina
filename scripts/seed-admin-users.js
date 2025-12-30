@@ -1,4 +1,4 @@
-import bcrypt from '@node-rs/bcrypt';
+import bcrypt from 'bcrypt';
 import pkg from 'pg';
 import dotenv from 'dotenv';
 import path from 'path';
