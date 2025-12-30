@@ -92,6 +92,15 @@ const AdminPanelPro = (): JSX.Element => {
     notes: ''
   });
 
+  // Stati per creazione/eliminazione admin
+  const [showCreateAdminForm, setShowCreateAdminForm] = useState(false);
+  const [newAdminForm, setNewAdminForm] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: 'admin'
+  });
+
   // Stati per gestione prezzi PER GRUPPI SPECIFICI
   const [pricingConfig, setPricingConfig] = useState({
     // ­ƒöÑ NUOVO: Prezzi per gruppi specifici
@@ -2276,6 +2285,100 @@ const AdminPanelPro = (): JSX.Element => {
     }
   }, [activeTab, isSuperAdmin]);
 
+  // Handler per creare nuovo admin
+  const handleCreateAdmin = async () => {
+    if (!isSuperAdmin) {
+      alert('ÔØî Solo il SuperAdmin pu├▓ creare admin');
+      return;
+    }
+
+    // Validazioni
+    if (!newAdminForm.name || !newAdminForm.email || !newAdminForm.password) {
+      alert('ÔØî Tutti i campi sono obbligatori');
+      return;
+    }
+
+    // Validazione email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newAdminForm.email)) {
+      alert('ÔØî Email non valida');
+      return;
+    }
+
+    // Validazione password
+    if (newAdminForm.password.length < 8) {
+      alert('ÔØî La password deve avere minimo 8 caratteri');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch(`${adminApiService?.baseUrl || 'https://vincanto-vetrina.vercel.app/api'}/unified?action=admin/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newAdminForm.name,
+          email: newAdminForm.email,
+          password: newAdminForm.password,
+          role: newAdminForm.role
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert(`Ô£à Admin ${newAdminForm.name} creato con successo!\n\nCredenziali inviate via email.`);
+        setNewAdminForm({ name: '', email: '', password: '', role: 'admin' });
+        setShowCreateAdminForm(false);
+        // Ricarica lista admin
+        await loadAdminsList();
+      } else {
+        alert(`ÔØî Errore: ${data.message || 'Impossibile creare admin'}`);
+      }
+    } catch (error) {
+      console.error('Errore creazione admin:', error);
+      alert('ÔØî Errore di connessione');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handler per eliminare admin
+  const handleDeleteAdmin = async (admin: any) => {
+    if (!isSuperAdmin) {
+      alert('ÔØî Solo il SuperAdmin pu├▓ eliminare admin');
+      return;
+    }
+
+    const confirmDelete = confirm(`­ƒöá Eliminare l'admin ${admin.name || admin.email}?\n\nQuesta azione ├¿ irreversibile.`);
+    if (!confirmDelete) return;
+
+    try {
+      setLoading(true);
+      const response = await fetch(`${adminApiService?.baseUrl || 'https://vincanto-vetrina.vercel.app/api'}/unified?action=admin/delete`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          adminId: admin.id,
+          adminEmail: admin.email
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert(`Ô£à Admin ${admin.name || admin.email} eliminato con successo`);
+        // Ricarica lista admin
+        await loadAdminsList();
+      } else {
+        alert(`ÔØî Errore: ${data.message || 'Impossibile eliminare admin'}`);
+      }
+    } catch (error) {
+      console.error('Errore eliminazione admin:', error);
+      alert('ÔØî Errore di connessione');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // === GESTIONE NOTIFICHE ===
   
   const markNotificationAsRead = async (id: string | number) => {
@@ -4144,9 +4247,93 @@ const AdminPanelPro = (): JSX.Element => {
               </div>
             </div>
 
-            {/* Sezione gestione admin e loro password */}
+            {/* Sezione creazione nuovo admin */}
             <div className="admin-pricing-section">
-              <h3>­ƒæí Richiedi Cambio Password Admin</h3>
+              <h3>­ƒæÄ Crea Nuovo Admin</h3>
+              <div className="admin-pricing-grid">
+                <div className="admin-pricing-card">
+                  <h4>Aggiungi Amministratore</h4>
+                  {!showCreateAdminForm ? (
+                    <div className="pricing-controls">
+                      <p>Crea un nuovo account amministratore per gestire il sistema.</p>
+                      <button 
+                        className="admin-btn-primary"
+                        onClick={() => setShowCreateAdminForm(true)}
+                      >
+                        ­ƒæÄ Nuovo Admin
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="pricing-controls">
+                      <label>Nome Completo:</label>
+                      <input 
+                        type="text"
+                        className="admin-input"
+                        placeholder="Es: Mario Rossi"
+                        value={newAdminForm.name}
+                        onChange={(e) => setNewAdminForm({...newAdminForm, name: e.target.value})}
+                      />
+                      
+                      <label>Email:</label>
+                      <input 
+                        type="email"
+                        className="admin-input"
+                        placeholder="admin@vincantomaori.it"
+                        value={newAdminForm.email}
+                        onChange={(e) => setNewAdminForm({...newAdminForm, email: e.target.value})}
+                      />
+                      
+                      <label>Password Iniziale:</label>
+                      <input 
+                        type="password"
+                        className="admin-input"
+                        placeholder="Minimo 8 caratteri"
+                        value={newAdminForm.password}
+                        onChange={(e) => setNewAdminForm({...newAdminForm, password: e.target.value})}
+                      />
+                      
+                      <label>Ruolo:</label>
+                      <select 
+                        className="admin-select"
+                        value={newAdminForm.role}
+                        onChange={(e) => setNewAdminForm({...newAdminForm, role: e.target.value})}
+                      >
+                        <option value="admin">Admin</option>
+                        <option value="editor">Editor</option>
+                        <option value="viewer">Viewer</option>
+                      </select>
+                      
+                      <small>
+                        Le credenziali verranno inviate via email all'admin.
+                      </small>
+                      
+                      <div className="admin-pricing-actions">
+                        <button 
+                          className="admin-btn-primary"
+                          onClick={handleCreateAdmin}
+                          disabled={loading}
+                        >
+                          {loading ? 'Creazione...' : 'Ô£à Crea Admin'}
+                        </button>
+                        <button 
+                          className="admin-btn-secondary"
+                          onClick={() => {
+                            setShowCreateAdminForm(false);
+                            setNewAdminForm({name: '', email: '', password: '', role: 'admin'});
+                          }}
+                        >
+                          ÔÜí Annulla
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Sezione gestione admin esistenti */}
+            <div className="admin-pricing-section">
+              <h3>­ƒæí Gestione Admin Esistenti</h3>
               <div className="admin-pricing-grid">
                 {adminsList.length > 0 ? (
                   adminsList.map((admin: any) => (
@@ -4157,13 +4344,22 @@ const AdminPanelPro = (): JSX.Element => {
                         <p><strong>Ruolo:</strong> {admin.role || 'Admin'}</p>
                         <p><strong>Ultimo accesso:</strong> {admin.last_login ? new Date(admin.last_login).toLocaleDateString('it-IT') : 'Mai'}</p>
                         
-                        <button 
-                          className="admin-btn-secondary"
-                          onClick={() => handleRequestAdminPasswordChange(admin)}
-                          disabled={loading}
-                        >
-                          ÔÜá Richiedi Cambio Password
-                        </button>
+                        <div className="admin-pricing-actions">
+                          <button 
+                            className="admin-btn-secondary"
+                            onClick={() => handleRequestAdminPasswordChange(admin)}
+                            disabled={loading}
+                          >
+                            ÔÜá Cambia Password
+                          </button>
+                          <button 
+                            className="admin-btn-danger"
+                            onClick={() => handleDeleteAdmin(admin)}
+                            disabled={loading}
+                          >
+                            ­ƒöá Elimina
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))
@@ -4184,21 +4380,20 @@ const AdminPanelPro = (): JSX.Element => {
               </div>
             </div>
 
-            {/* Info cambio password */}
+            {/* Info gestione admin */}
             <div className="admin-pricing-section">
-              <h3>ÔÜá Informazioni Cambio Password</h3>
+              <h3>ÔÜá Informazioni Gestione Admin</h3>
               <div className="admin-notice">
-                <strong>­ƒöÉ Come funziona:</strong><br/>
-                1. Clicca "Richiedi Cambio Password" per un admin<br/>
-                2. Una richiesta automatica viene inviata al SuperAdmin<br/>
-                3. L'admin riceve una notifica di cambio password richiesto<br/>
-                4. L'admin deve cambiare la password al prossimo login<br/>
+                <strong>­ƒöÉ Funzionalit├á disponibili:</strong><br/>
+                Ô£à <strong>Crea Admin:</strong> Aggiungi nuovi amministratori con credenziali sicure<br/>
+                ÔÜá <strong>Cambia Password:</strong> Richiedi il cambio password per un admin specifico<br/>
+                ­ƒöá <strong>Elimina Admin:</strong> Rimuovi account amministratore (azione irreversibile)<br/>
                 <br/>
                 <strong>Note Sicurezza:</strong><br/>
-                ÔÇó Solo il SuperAdmin pu├▒ gestire password degli admin<br/>
-                ÔÇó Il SuperAdmin pu├▒ cambiare solo la propria password<br/>
-                ÔÇó Ogni cambio genera un log di sicurezza<br/>
-                ÔÇó Sessioni precedenti vengono invalidate
+                ÔÇó Solo il SuperAdmin pu├▓ creare o eliminare admin<br/>
+                ÔÇó Le password iniziali vengono inviate via email<br/>
+                ÔÇó Ogni operazione genera un log di sicurezza<br/>
+                ÔÇó L'eliminazione di un admin ├¿ irreversibile
               </div>
             </div>
           </div>

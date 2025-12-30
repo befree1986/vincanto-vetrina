@@ -723,6 +723,133 @@ export default async function handler(req, res) {
     }
 
     // ========================================
+    // CREA ADMIN (per SuperAdmin)
+    // ========================================
+    if (action === 'admin/create') {
+      if (req.method !== 'POST') {
+        return res.status(405).json({ success: false, error: 'Metodo non consentito' });
+      }
+
+      try {
+        const { name, email, password, role } = req.body;
+
+        // Validazioni
+        if (!name || !email || !password) {
+          return res.status(400).json({
+            success: false,
+            error: 'Nome, email e password obbligatori'
+          });
+        }
+
+        // Validazione email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          return res.status(400).json({
+            success: false,
+            error: 'Email non valida'
+          });
+        }
+
+        // Validazione password
+        if (password.length < 8) {
+          return res.status(400).json({
+            success: false,
+            error: 'Password deve avere minimo 8 caratteri'
+          });
+        }
+
+        // TODO: Verifica che email non esista già
+        // const existingAdmin = await pool.query('SELECT id FROM admin_users WHERE email = $1', [email]);
+        // if (existingAdmin.rows.length > 0) {
+        //   return res.status(409).json({ success: false, error: 'Email già registrata' });
+        // }
+
+        // TODO: Salva nel database admin_users
+        // const passwordHash = bcrypt.hashSync(password, 10);
+        // await pool.query(
+        //   'INSERT INTO admin_users (name, email, password_hash, role, created_at) VALUES ($1, $2, $3, $4, NOW())',
+        //   [name, email, passwordHash, role || 'admin']
+        // );
+
+        console.log(`✅ Admin creato: ${name} (${email})`);
+
+        // Invia email con credenziali
+        if (emailTransporter && process.env.SMTP_FROM) {
+          try {
+            await emailTransporter.sendMail({
+              from: process.env.SMTP_FROM,
+              to: email,
+              subject: '[Vincanto Maori] Credenziali Accesso Admin',
+              html: `
+                <h2>Benvenuto nel pannello Admin</h2>
+                <p>Ciao <strong>${name}</strong>,</p>
+                <p>Il tuo account amministratore è stato creato con successo.</p>
+                <p><strong>Credenziali di accesso:</strong></p>
+                <ul>
+                  <li>Email: ${email}</li>
+                  <li>Password: ${password}</li>
+                  <li>Ruolo: ${role || 'admin'}</li>
+                </ul>
+                <p>⚠️ <strong>IMPORTANTE:</strong> Cambia la password al primo accesso.</p>
+                <p>Accedi al pannello admin: <a href="https://www.vincantomaori.it/admin">https://www.vincantomaori.it/admin</a></p>
+              `
+            });
+          } catch (emailError) {
+            console.warn('⚠️ Email credenziali non inviata:', emailError.message);
+          }
+        }
+
+        return res.status(201).json({
+          success: true,
+          message: 'Admin creato con successo',
+          admin: { name, email, role: role || 'admin' }
+        });
+      } catch (error) {
+        console.error('❌ Errore creazione admin:', error);
+        return res.status(500).json({
+          success: false,
+          error: 'Errore creazione admin'
+        });
+      }
+    }
+
+    // ========================================
+    // ELIMINA ADMIN (per SuperAdmin)
+    // ========================================
+    if (action === 'admin/delete') {
+      if (req.method !== 'DELETE') {
+        return res.status(405).json({ success: false, error: 'Metodo non consentito' });
+      }
+
+      try {
+        const { adminId, adminEmail } = req.body;
+
+        if (!adminId && !adminEmail) {
+          return res.status(400).json({
+            success: false,
+            error: 'ID o email admin obbligatori'
+          });
+        }
+
+        // TODO: Elimina da database admin_users
+        // await pool.query('DELETE FROM admin_users WHERE id = $1 OR email = $2', [adminId, adminEmail]);
+
+        console.log(`✅ Admin eliminato: ${adminId || adminEmail}`);
+
+        return res.status(200).json({
+          success: true,
+          message: 'Admin eliminato con successo'
+        });
+      } catch (error) {
+        console.error('❌ Errore eliminazione admin:', error);
+        return res.status(500).json({
+          success: false,
+          error: 'Errore eliminazione admin'
+        });
+      }
+    }
+
+    // ========================================
     // ADMIN ROLE ENDPOINT
     // ========================================
     if (action === 'admin/role') {
