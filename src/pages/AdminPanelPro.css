@@ -1023,26 +1023,68 @@
 @media (max-width: 768px) {
   .admin-header {
     padding: 12px 16px;
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
   }
   
   .admin-header-left h1 {
     font-size: 1.25rem;
   }
   
-  .admin-nav {
-    padding: 0 16px;
+  .admin-header-right {
+    width: 100%;
+    justify-content: space-between;
   }
   
-  .admin-nav-tabs {
+  .admin-user-info {
+    font-size: 0.85rem;
+    gap: 8px;
+  }
+  
+  .admin-nav {
+    padding: 0 12px;
+  }
+  
+  .admin-nav-tabs,
+  .admin-nav-container {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  
+  .admin-nav-item,
+  .admin-nav-link {
+    font-size: 0.85rem;
+    padding: 10px 16px;
+    white-space: nowrap;
   }
   
   .admin-main {
+    padding: 12px;
+  }
+  
+  .admin-section {
     padding: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .admin-section h2,
+  .admin-section h3 {
+    font-size: 1.25rem;
   }
   
   .admin-stats-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .admin-stat-card {
+    padding: 16px;
+  }
+  
+  .stat-value {
+    font-size: 1.75rem;
   }
   
   .admin-cards-grid {
@@ -1055,6 +1097,35 @@
   
   .admin-form-actions {
     flex-direction: column;
+  }
+  
+  /* Tabelle responsive */
+  .admin-bookings-table-wrapper,
+  .bookings-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .admin-bookings-table th,
+  .admin-bookings-table td,
+  .bookings-table th,
+  .bookings-table td {
+    padding: 8px;
+    font-size: 0.85rem;
+  }
+  
+  /* Pulsanti più grandi per touch */
+  .admin-btn,
+  .admin-btn-primary,
+  .admin-btn-secondary {
+    min-height: 44px;
+    padding: 12px 20px;
+  }
+  
+  .admin-btn-small {
+    min-height: 36px;
+    padding: 8px 12px;
+    font-size: 0.8rem;
   }
 }
 
@@ -1072,13 +1143,49 @@
   }
   
   .admin-section {
-    padding: 16px;
+    padding: 12px;
   }
   
   .admin-section-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
+  }
+  
+  .admin-header-left h1 {
+    font-size: 1.1rem;
+  }
+  
+  .admin-nav-item,
+  .admin-nav-link {
+    font-size: 0.8rem;
+    padding: 8px 12px;
+  }
+  
+  .admin-stats-grid {
+    gap: 10px;
+  }
+  
+  .admin-stat-card h3 {
+    font-size: 0.9rem;
+  }
+  
+  .stat-value {
+    font-size: 1.5rem;
+  }
+  
+  .service-row {
+    font-size: 0.85rem;
+    padding: 10px;
+  }
+  
+  .row-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .row-actions button {
+    width: 100%;
   }
 }
 
@@ -1692,12 +1799,86 @@
     grid-template-columns: 1fr;
   }
   
+  /* Calendario compatto mobile */
   .admin-calendar-grid {
     grid-template-columns: 1fr;
   }
-  .admin-calendar-grid .admin-calendar-cell { min-height: 28px; font-size: 12px; padding: 4px; }
-  .calendar-controls { justify-content: space-between; }
-  .calendar-action-panel { grid-template-columns: 1fr; }
+  
+  .admin-calendar-month {
+    padding: 10px;
+  }
+  
+  .admin-calendar-title {
+    font-size: 14px;
+  }
+  
+  .admin-calendar-grid .admin-calendar-cell { 
+    min-height: 32px; 
+    font-size: 11px; 
+    padding: 4px 2px;
+  }
+  
+  .admin-calendar-cell .day-number {
+    font-size: 12px;
+  }
+  
+  .cell-indicator {
+    font-size: 8px;
+    padding: 1px 3px;
+  }
+  
+  .admin-calendar-legend {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  
+  .legend-item {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+  
+  /* Controlli calendario */
+  .calendar-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .calendar-controls { 
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    width: 100%;
+  }
+  
+  .calendar-controls button,
+  .calendar-controls select {
+    flex: 1;
+    min-width: 80px;
+  }
+  
+  .calendar-action-panel { 
+    grid-template-columns: 1fr; 
+    padding: 12px;
+  }
+  
+  .action-form {
+    display: grid;
+    gap: 8px;
+  }
+  
+  .action-form input {
+    width: 100%;
+    font-size: 14px;
+    padding: 10px;
+  }
+  
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .action-buttons button {
+    flex: 1;
+  }
   
   .custom-service-item {
     flex-direction: column;
@@ -1708,6 +1889,7 @@
     flex-direction: column;
     align-items: start;
     gap: 8px;
+    padding: 12px;
   }
   
   .promo-dates {
@@ -1717,10 +1899,6 @@
   
   .admin-pricing-actions {
     flex-direction: column;
-  }
-  
-  .calendar-controls {
-    justify-content: center;
   }
   
   .export-options {
