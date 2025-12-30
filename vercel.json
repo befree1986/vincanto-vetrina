@@ -3,10 +3,8 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "installCommand": "npm install",
-  "build": {
-    "env": {
-      "NODE_VERSION": "24.2.0"
-    }
+  "env": {
+    "NODE_VERSION": "24.2.0"
   },
   "functions": {
     "api/**/*.js": {
