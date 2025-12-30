@@ -1049,8 +1049,6 @@
   .admin-nav-tabs,
   .admin-nav-container {
     overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
   }
   
   .admin-nav-item,
@@ -1103,7 +1101,6 @@
   .admin-bookings-table-wrapper,
   .bookings-table-container {
     overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
   }
   
   .admin-bookings-table th,

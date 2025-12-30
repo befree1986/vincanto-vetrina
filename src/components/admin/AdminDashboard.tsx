@@ -111,8 +111,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [monthsToShow, setMonthsToShow] = React.useState<number>(2);
   const [selectedStart, setSelectedStart] = React.useState<string | null>(null);
   const [selectedEnd, setSelectedEnd] = React.useState<string | null>(null);
-  const [editingBooking, setEditingBooking] = React.useState<{id: string | number, data: any} | null>(null);
-  const [editingClosure, setEditingClosure] = React.useState<{id: string, data: any} | null>(null);
   // Calcolo date occupate dai calendarEvents
   const {
     busyDates,
@@ -209,16 +207,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     };
   }, [calendarEvents, blockedDates]);
 
-  // Handler per modificare prenotazione
+  // Handler per modificare prenotazione (TODO: implementare UI modifica)
   const handleEditBooking = (event: any, index: number) => {
-    setEditingBooking({
-      id: event.id || index,
-      data: {
-        ...event,
-        originalCheckIn: event.check_in || event.start,
-        originalCheckOut: event.check_out || event.end,
-      }
-    });
+    // Future: aprire modal o form di modifica
+    console.log('Edit booking:', event.id || index, event);
   };
 
   // Handler per annullare prenotazione
@@ -242,16 +234,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
   };
 
-  // Handler per modificare chiusura
+  // Handler per modificare chiusura (TODO: implementare UI modifica)
   const handleEditClosure = (bd: any, idx: number) => {
-    setEditingClosure({
-      id: bd.id || String(idx),
-      data: {
-        ...bd,
-        originalStart: bd.start_date || bd.start,
-        originalEnd: bd.end_date || bd.end || bd.start,
-      }
-    });
+    // Future: aprire modal o form di modifica chiusura
+    console.log('Edit closure:', bd.id || idx, bd);
   };
 
   // Handler per rimuovere chiusura
