@@ -1,4 +1,4 @@
-/* eslint-disable */
+﻿/* eslint-disable */
 // @ts-nocheck  
 import React, { useState, useEffect } from 'react';
 import './AdminPanelPro.css';
@@ -142,7 +142,6 @@ const AdminPanelPro = (): JSX.Element => {
   const [calendarStats, setCalendarStats] = useState({
     total: 0,
     active: 0,
-    googleCalendar: 0,
     external: 0,
     lastSyncSuccess: null as string | null
   });
@@ -202,7 +201,7 @@ const AdminPanelPro = (): JSX.Element => {
   // Form nuovo calendario
   const [newCalendarData, setNewCalendarData] = useState({
     name: '',
-    calendar_type: 'google_calendar', // google_calendar, airbnb, booking_com
+    calendar_type: 'airbnb', // airbnb, booking_com, holidu
     url: '',
     credentials: '',
     sync_frequency: 30, // minuti
@@ -247,8 +246,7 @@ const AdminPanelPro = (): JSX.Element => {
   });
   const [isUpdatingPayments, setIsUpdatingPayments] = useState(false);
   
-  // Stato autenticazione Google Calendar
-  const [isGoogleAuthenticated, setIsGoogleAuthenticated] = useState(false);
+
   
 
 
@@ -670,7 +668,6 @@ const AdminPanelPro = (): JSX.Element => {
       setCalendarStats({
         total: result.stats?.total || 0,
         active: result.stats?.active || 0,
-        googleCalendar: result.stats?.googleCalendar || 0,
         external: result.stats?.external || 0,
         lastSyncSuccess: result.stats?.lastSyncSuccess || null
       });
@@ -699,7 +696,7 @@ const AdminPanelPro = (): JSX.Element => {
         setShowNewCalendarForm(false);
         setNewCalendarData({
           name: '',
-          calendar_type: 'google_calendar',
+          calendar_type: 'airbnb',
           url: '',
           credentials: '',
           sync_frequency: 30,
@@ -1396,121 +1393,7 @@ const AdminPanelPro = (): JSX.Element => {
     }
   };
 
-  // Funzioni rimosse: forceSyncCalendar e testCalendarConnection non utilizzate nell'interfaccia
-  // Le funzioni Google Calendar attive sono: handleGoogleCalendarSync, testGoogleConnection, etc.
-
-  const initiateGoogleAuth = async () => {
-    try {
-      if (!adminApiService) return;
-      
-      const authUrl = await adminApiService.initiateGoogleAuth();
-      if (authUrl) {
-        window.open(authUrl, '_blank', 'width=500,height=600');
-        alert('­ƒöÉ Finestra di autenticazione aperta. Completa il login e torna qui.');
-      }
-    } catch (error) {
-      console.error('Errore autenticazione Google:', error);
-      alert('ÔØî Errore nell\'avvio dell\'autenticazione Google');
-    }
-  };
-
-  const handleGoogleCalendarSync = async () => {
-    try {
-      if (!adminApiService) return;
-      
-      const result = await adminApiService.syncGoogleCalendar();
-      
-      if (result.success) {
-        await loadCalendarData();
-        alert(`Ô£à Sincronizzazione completata! ${result.syncedEvents || 0} eventi sincronizzati.`);
-      } else {
-        alert('ÔØî Sincronizzazione fallita: ' + (result.error || 'Errore sconosciuto'));
-      }
-    } catch (error) {
-      console.error('Errore sincronizzazione Google Calendar:', error);
-      alert('ÔØî Errore nella sincronizzazione Google Calendar');
-    }
-  };
-
-  const testGoogleConnection = async () => {
-    try {
-      if (!adminApiService) return;
-      
-      const status = await adminApiService.getGoogleCalendarStatus();
-      
-      if (status.isAuthenticated) {
-        setIsGoogleAuthenticated(true);
-        alert(`Ô£à Google Calendar connesso!\n­ƒôº Email: ${status.email}\n­ƒôà Calendari: ${status.calendarsCount || 0}`);
-      } else {
-        setIsGoogleAuthenticated(false);
-        alert('ÔØî Google Calendar non autenticato. Usa il pulsante "­ƒöÉ Autentica Google" per connetterti.');
-      }
-    } catch (error) {
-      console.error('Errore test connessione Google:', error);
-      alert('ÔØî Errore nel test della connessione Google Calendar');
-    }
-  };
-
-  const loadGoogleCalendarEvents = async () => {
-    try {
-      if (!adminApiService) return;
-      
-      const events = await adminApiService.getGoogleCalendarEvents();
-      
-      log('Eventi Google Calendar caricati:', events);
-      alert(`­ƒôà Caricati ${events.length || 0} eventi da Google Calendar`);
-      
-      return events;
-    } catch (error) {
-      console.error('Errore caricamento eventi Google:', error);
-      alert('ÔØî Errore nel caricamento eventi Google Calendar');
-      return [];
-    }
-  };
-
-  // === NUOVE FUNZIONI CALENDARIO AGGIUNTE ===
-
-  const handleShareGoogleCalendar = async () => {
-    try {
-      if (!adminApiService) return;
-      
-      const shareUrl = await adminApiService.getGoogleCalendarShareUrl();
-      
-      if (shareUrl) {
-        navigator.clipboard.writeText(shareUrl);
-        alert(`­ƒô▒ Link di condivisione copiato negli appunti!\n\n${shareUrl}\n\nCondividi questo link per permettere la visualizzazione del calendario.`);
-      } else {
-        alert('ÔØî Impossibile generare il link di condivisione. Verifica l\'autenticazione Google Calendar.');
-      }
-    } catch (error) {
-      console.error('Errore condivisione calendario:', error);
-      alert('ÔØî Errore nella condivisione del calendario Google');
-    }
-  };
-
-  const handleGoogleSyncReport = async () => {
-    try {
-      if (!adminApiService) return;
-      
-      const report = await adminApiService.getGoogleSyncReport();
-      
-      if (report) {
-        const reportText = `­ƒôè Report Sincronizzazione Google Calendar\n\n` +
-          `­ƒôà Ultima sincronizzazione: ${report.lastSync || 'Mai'}\n` +
-          `­ƒôï Eventi sincronizzati: ${report.eventsCount || 0}\n` +
-          `Ô£à Successi: ${report.successCount || 0}\n` +
-          `ÔØî Errori: ${report.errorCount || 0}\n\n` +
-          `${report.errors && report.errors.length > 0 ? 'Errori:\n' + report.errors.join('\n') : ''}`;
-        
-        alert(reportText);
-      } else {
-        alert('­ƒôè Nessun report di sincronizzazione disponibile');
-      }
-    } catch (error) {
-      console.error('Errore report sincronizzazione:', error);
-      alert('ÔØî Errore nel recupero del report di sincronizzazione');
-    }
-  };
+  // Funzioni Google Calendar rimosse (non più utilizzato)
 
   const handleCompleteAirbnbSetup = async () => {
     const apiKey = prompt('­ƒöæ Inserisci la tua API Key di Airbnb:');
