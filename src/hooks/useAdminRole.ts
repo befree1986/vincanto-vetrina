@@ -26,6 +26,17 @@ export const useAdminRole = (): AdminRoleState & {
   useEffect(() => {
     const fetchAdminRole = async () => {
       try {
+        // Verifica se esiste un token
+        const token = localStorage.getItem('vincanto_admin_token');
+        if (!token) {
+          setState({
+            role: 'guest',
+            isLoading: false,
+            error: null
+          });
+          return;
+        }
+
         // Prova prima da localStorage
         const storedRole = localStorage.getItem('vincanto_admin_role');
         if (storedRole && ['superadmin', 'admin'].includes(storedRole)) {

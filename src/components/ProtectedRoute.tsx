@@ -1,4 +1,5 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAdminRole } from '../hooks/useAdminRole';
 import './ProtectedRoute.css';
 
@@ -18,6 +19,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   fallback
 }) => {
   const { role, isLoading, hasAccess } = useAdminRole();
+  const navigate = useNavigate();
 
   console.log('🔐 ProtectedRoute check:', { 
     role, 
@@ -27,6 +29,13 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     token: localStorage.getItem('vincanto_admin_token'),
     storedRole: localStorage.getItem('vincanto_admin_role')
   });
+
+  // Reindirizza al login se non c'è token o il ruolo è guest
+  useEffect(() => {
+    if (!isLoading && (role === 'guest' || !localStorage.getItem('vincanto_admin_token'))) {
+      navigate('/admin/login', { replace: true });
+    }
+  }, [role, isLoading, navigate]);
 
   // Mentre carica il ruolo, mostra un loader
   if (isLoading) {
