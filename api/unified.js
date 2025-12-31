@@ -465,8 +465,14 @@ export default async function handler(req, res) {
 
       const user = userResult.rows[0];
 
-      if (!user.two_factor_enabled) {
+      // Se 2FA non è abilitato E non c'è un secret, l'utente non ha mai fatto il setup
+      if (!user.two_factor_enabled && !user.two_factor_secret) {
         return res.status(400).json({ success: false, error: '2FA non abilitato per questo utente' });
+      }
+
+      // Se c'è un secret (anche se two_factor_enabled è false), è il primo setup
+      if (!user.two_factor_secret) {
+        return res.status(400).json({ success: false, error: 'Nessun secret TOTP trovato' });
       }
 
       // Verifica TOTP
@@ -483,6 +489,14 @@ export default async function handler(req, res) {
 
       // Reset rate limit su successo
       TwoFactorAuth.resetRateLimit(email);
+
+      // Se è il primo setup (two_factor_enabled è false), abilita il 2FA
+      if (!user.two_factor_enabled) {
+        await pool.query(
+          'UPDATE admin_users SET two_factor_enabled = true, two_factor_activated_at = NOW() WHERE id = $1',
+          [user.id]
+        );
+      }
 
       // Aggiorna last_login
       await pool.query(
