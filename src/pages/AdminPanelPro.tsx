@@ -13,7 +13,7 @@ import { devLog, devError, debugLog } from '../utils/debug';
 import { log } from '../utils/logger';
 
 const AdminPanelPro = (): JSX.Element => {
-  devLog('­ƒÜÇ AdminPanelPro component rendering...');
+  devLog('🖥️ AdminPanelPro component rendering...');
   
   // Verifica ruolo SuperAdmin
   const { role, isLoading: roleLoading, isSuperAdmin } = useAdminRole();
@@ -36,10 +36,10 @@ const AdminPanelPro = (): JSX.Element => {
   // Servizio Admin API
   const [adminApiService] = useState(() => {
     try {
-      devLog('­ƒöî Inizializzazione AdminApiService...');
+      devLog('📋 Inizializzazione AdminApiService...');
       return new AdminApiService();
     } catch (error) {
-      devError('ÔØî Errore AdminApiService:', error);
+      devError('❌ Errore AdminApiService:', error);
       return null;
     }
   });
@@ -104,16 +104,16 @@ const AdminPanelPro = (): JSX.Element => {
 
   // Stati per gestione prezzi PER GRUPPI SPECIFICI
   const [pricingConfig, setPricingConfig] = useState({
-    // ­ƒöÑ NUOVO: Prezzi per gruppi specifici
-    priceGroup1to2: 75,       // Ôé¼75 per 1-2 persone
-    priceGroup3to4: 95,       // Ôé¼95 per 3-4 persone
-    priceGroup5to6: 115,      // Ôé¼115 per 5-6 persone
-    priceGroup7to8: 135,      // Ôé¼135 per 7-8 persone
+    // ✨ NUOVO: Prezzi per gruppi specifici
+    priceGroup1to2: 75,       // €75 per 1-2 persone
+    priceGroup3to4: 95,       // €95 per 3-4 persone
+    priceGroup5to6: 115,      // €115 per 5-6 persone
+    priceGroup7to8: 135,      // €135 per 7-8 persone
     
     // Costi aggiuntivi
     cleaningFee: 50,
-    parkingFee: 20,          // Ôé¼20 parcheggio per notte
-    touristTaxAdult: 2.00,   // Ôé¼2.00 tassa soggiorno adulti
+    parkingFee: 20,          // €20 parcheggio per notte
+    touristTaxAdult: 2.00,   // €2.00 tassa soggiorno adulti
     touristTaxChild: 0,      // Bambini <12 anni gratuiti
     
     // Sconti e maggiorazioni
@@ -134,7 +134,7 @@ const AdminPanelPro = (): JSX.Element => {
   
   // Stati per servizi personalizzati AGGIORNATI
   const [customServices, setCustomServices] = useState<ExtraService[]>([]);
-  const [allServices, setAllServices] = useState<ExtraService[]>([]); // ­ƒöÑ TUTTI i servizi (hardcoded + custom)
+  const [allServices, setAllServices] = useState<ExtraService[]>([]); // ✨ TUTTI i servizi (hardcoded + custom)
   const [newServiceName, setNewServiceName] = useState('');
   const [newServicePrice, setNewServicePrice] = useState(0);
   
@@ -152,32 +152,32 @@ const AdminPanelPro = (): JSX.Element => {
   // === Holidu: Handler azioni calendario ===
   const handleTestHoliduURL = async () => {
     try {
-      devLog('­ƒöì Test URL Holidu - iCal export');
+      devLog('🔧 Test URL Holidu - iCal export');
       const res = await fetch('/api/unified?action=ical-export');
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}`);
       }
       const text = await res.text();
-      log('Ô£à Holidu URL OK, bytes:', text.length);
-      alert('Ô£à URL iCal del sito valido e raggiungibile. Copialo su Holidu: https://vincanto-vetrina.vercel.app/api/unified?action=ical-export');
+      log('✅ Holidu URL OK, bytes:', text.length);
+      alert('✅ URL iCal del sito valido e raggiungibile. Copialo su Holidu: https://vincanto-vetrina.vercel.app/api/unified?action=ical-export');
     } catch (e) {
-      devError('ÔØî Test URL Holidu fallito', e);
-      alert('ÔØî Test URL Holidu fallito: controlla endpoint /api/unified?action=ical-export');
+      devError('❌ Test URL Holidu fallito', e);
+      alert('❌ Test URL Holidu fallito: controlla endpoint /api/unified?action=ical-export');
     }
   };
 
   const handleSyncHoliduCalendar = async () => {
     try {
-      devLog('­ƒöä Sincronizzazione eventi Holidu (import)');
+      devLog('🔄 Sincronizzazione eventi Holidu (import)');
       setIsLoadingData(true);
       const res = await fetch('/api/calendar-real-sync', { method: 'POST' });
       const json = await res.json();
-      log('Ô£à Holidu sync risposta:', json);
-      alert(`Ô£à Holidu sincronizzato. Eventi aggiornati: ${json?.synced || 'OK'}`);
+      log('✅ Holidu sync risposta:', json);
+      alert(`✅ Holidu sincronizzato. Eventi aggiornati: ${json?.synced || 'OK'}`);
       typeof loadRealApiData === 'function' && loadRealApiData();
     } catch (e) {
-      devError('ÔØî Holidu sync errore', e);
-      alert('ÔØî Errore sincronizzazione Holidu');
+      devError('❌ Holidu sync errore', e);
+      alert('❌ Errore sincronizzazione Holidu');
     } finally {
       setIsLoadingData(false);
     }
@@ -185,15 +185,15 @@ const AdminPanelPro = (): JSX.Element => {
 
   const handleLoadHoliduEvents = async () => {
     try {
-      devLog('­ƒôà Carico eventi calendario (tutte piattaforme, include Holidu)');
+      devLog('📅 Carico eventi calendario (tutte piattaforme, include Holidu)');
       setIsLoadingData(true);
       const res = await fetch('/api/unified?action=calendar-bookings');
       const json = await res.json();
       setCalendarEvents(json?.events || []);
-      alert(`­ƒôà Eventi caricati: ${json?.events?.length || 0}`);
+      alert(`📅 Eventi caricati: ${json?.events?.length || 0}`);
     } catch (e) {
-      devError('ÔØî Caricamento eventi Holidu fallito', e);
-      alert('ÔØî Errore caricamento eventi Holidu');
+      devError('❌ Caricamento eventi Holidu fallito', e);
+      alert('❌ Errore caricamento eventi Holidu');
     } finally {
       setIsLoadingData(false);
     }
@@ -212,10 +212,10 @@ const AdminPanelPro = (): JSX.Element => {
   // Servizio API - temporaneamente commentato
   // const [calendarApiService] = useState(() => {
   //   try {
-  //     log('­ƒôà Inizializzazione GoogleCalendarApiService...');
+  //     log('📅 Inizializzazione GoogleCalendarApiService...');
   //     return new GoogleCalendarApiService();
   //   } catch (error) {
-  //     console.error('ÔØî Errore GoogleCalendarApiService:', error);
+  //     console.error('❌ Errore GoogleCalendarApiService:', error);
   //     return null;
   //   }
   // });
@@ -283,9 +283,9 @@ const AdminPanelPro = (): JSX.Element => {
     try {
       await adminApiService.forceRealCalendarSync();
       await loadCalendarConfigs();
-      alert('Ô£à Sincronizzazione completata!');
+      alert('✅ Sincronizzazione completata!');
     } catch (error) {
-      alert('ÔØî Errore durante la sincronizzazione');
+      alert('❌ Errore durante la sincronizzazione');
       console.error(error);
     } finally {
       setIsLoadingCalendars(false);
@@ -294,7 +294,7 @@ const AdminPanelPro = (): JSX.Element => {
   
   // === AUTENTICAZIONE ===
   const handleLogin = async () => {
-    devLog('­ƒöÉ Tentativo di login...');
+    devLog('🔐 Tentativo di login...');
     
     if (!adminApiService) {
       setError('Servizio API non disponibile');
@@ -306,19 +306,19 @@ const AdminPanelPro = (): JSX.Element => {
       const result = await adminApiService.login(password);
       
       if (result.success) {
-        devLog('Ô£à Login API riuscito, imposto autenticazione...');
+        devLog('✅ Login API riuscito, imposto autenticazione...');
         localStorage.setItem('vincanto_admin_session', 'authenticated');
         setIsAuthenticated(true);
         setError('');
-        devLog('­ƒÄ» Stato autenticazione impostato e salvato');
+        devLog('🎨 Stato autenticazione impostato e salvato');
         // Carica tutti i dati reali dal backend
         loadRealApiData();
       } else {
-        devLog('ÔØî Login API fallito:', result.error);
+        devLog('❌ Login API fallito:', result.error);
         setError(result.error || 'Login fallito');
       }
     } catch (error) {
-      devLog('ÔØî Errore durante il login:', error);
+      devLog('❌ Errore durante il login:', error);
       setError('Errore di connessione al server');
     } finally {
       setLoading(false);
@@ -333,7 +333,7 @@ const AdminPanelPro = (): JSX.Element => {
   const loadPricingConfig = async () => {
     try {
       if (!adminApiService) return;
-      log('­ƒÆ░ Caricamento configurazione prezzi per gruppi...');
+      log('💰 Caricamento configurazione prezzi per gruppi...');
       const result = await adminApiService.getPricingConfig();
       
       if (result && (result.priceGroup1to2 !== undefined || result.success)) {
@@ -366,40 +366,40 @@ const AdminPanelPro = (): JSX.Element => {
           advanceBookingDiscount: config.advanceBookingDiscount || 0,
           lastMinuteDiscount: config.lastMinuteDiscount || 0
         });
-        log('Ô£à Configurazione prezzi per gruppi caricata:', config);
+        log('✅ Configurazione prezzi per gruppi caricata:', config);
       } else {
-        log('ÔÜá´©Å Nessuna configurazione trovata, uso valori predefiniti per gruppi');
+        log('⚠️ Nessuna configurazione trovata, uso valori predefiniti per gruppi');
       }
     } catch (error) {
-      console.error('ÔØî Errore caricamento prezzi:', error);
+      console.error('❌ Errore caricamento prezzi:', error);
     }
   };
 
   const savePricingConfig = async () => {
     try {
       if (!adminApiService) {
-        alert('ÔØî Servizio API non disponibile');
+        alert('❌ Servizio API non disponibile');
         return;
       }
 
       setIsUpdatingPricing(true);
-      log('­ƒöÑ ADMIN SAVE - Dati da salvare:', JSON.stringify(pricingConfig, null, 2));
-      log('­ƒöù URL API Unificata chiamata:', `${window.location.origin}/api/unified?action=pricing-config`);
+      log('✨ ADMIN SAVE - Dati da salvare:', JSON.stringify(pricingConfig, null, 2));
+      log('📤 URL API Unificata chiamata:', `${window.location.origin}/api/unified?action=pricing-config`);
       
       const result = await adminApiService.updatePricingConfig(pricingConfig);
       
-      log('­ƒÄ» RISPOSTA API UNIFICATA:', JSON.stringify(result, null, 2));
+      log('🎨 RISPOSTA API UNIFICATA:', JSON.stringify(result, null, 2));
       
       if (result.success) {
-        alert('Ô£à Configurazione prezzi salvata con successo!');
-        log('Ô£à Prezzi salvati nel database:', result.saved_data || result.data);
+        alert('✅ Configurazione prezzi salvata con successo!');
+        log('✅ Prezzi salvati nel database:', result.saved_data || result.data);
         
-        // ­ƒöÑ FORZA RICARICAMENTO IMMEDIATO DEI PREZZI
-        log('­ƒöä FORCE RELOAD: Ricarico configurazione prezzi...');
+        // ✨ FORZA RICARICAMENTO IMMEDIATO DEI PREZZI
+        log('🔄 FORCE RELOAD: Ricarico configurazione prezzi...');
         await loadPricingConfig();
         
-        // ­ƒº¬ TEST IMMEDIATO: Verifica che i prezzi siano salvati con API unificata
-        log('­ƒº¬ TEST: Verifica prezzi dal database...');
+        // 🧪 TEST IMMEDIATO: Verifica che i prezzi siano salvati con API unificata
+        log('🧪 TEST: Verifica prezzi dal database...');
         setTimeout(async () => {
           try {
             const testResponse = await fetch(`/api/unified?action=pricing-config?t=${Date.now()}`, {
@@ -407,32 +407,32 @@ const AdminPanelPro = (): JSX.Element => {
               headers: { 'Cache-Control': 'no-cache' }
             });
             const testData = await testResponse.json();
-            log('­ƒº¬ TEST PREZZI POST-SALVATAGGIO (NO CACHE):', testData);
+            log('🧪 TEST PREZZI POST-SALVATAGGIO (NO CACHE):', testData);
           } catch (testError) {
-            console.error('ÔØî Errore test post-salvataggio:', testError);
+            console.error('❌ Errore test post-salvataggio:', testError);
           }
         }, 1000);
         
       } else {
-        alert('ÔØî Errore nel salvataggio: ' + (result.message || 'Errore sconosciuto'));
-        console.error('ÔØî Dettagli errore:', result);
+        alert('❌ Errore nel salvataggio: ' + (result.message || 'Errore sconosciuto'));
+        console.error('❌ Dettagli errore:', result);
       }
     } catch (error) {
-      console.error('ÔØî Errore salvataggio prezzi:', error);
-      alert('ÔØî Errore nel salvataggio della configurazione prezzi');
+      console.error('❌ Errore salvataggio prezzi:', error);
+      alert('❌ Errore nel salvataggio della configurazione prezzi');
     } finally {
       setIsUpdatingPricing(false);
     }
   };
 
   const updatePricingField = (field: string, value: number) => {
-    devLog('­ƒÆ░ Aggiornamento campo prezzo:', { field, value, currentConfig: pricingConfig });
+    devLog('💰 Aggiornamento campo prezzo:', { field, value, currentConfig: pricingConfig });
     setPricingConfig(prev => {
       const updated = {
         ...prev,
         [field]: value
       };
-      devLog('­ƒÆ░ Nuova configurazione prezzi:', updated);
+      devLog('💰 Nuova configurazione prezzi:', updated);
       return updated;
     });
   };
@@ -446,7 +446,7 @@ const AdminPanelPro = (): JSX.Element => {
     if (!adminApiService) return;
     
     try {
-      log('­ƒøÄ´©Å Caricamento servizi dal database...');
+      log('📁 Caricamento servizi dal database...');
       
       const services = await adminApiService.getExtraServices();
       
@@ -454,23 +454,23 @@ const AdminPanelPro = (): JSX.Element => {
       const customOnly = services.filter(service => service.category === 'custom');
       setCustomServices(customOnly);
       
-      // ­ƒöÑ NUOVO: Carica TUTTI i servizi per permettere modifica di quelli hardcoded
+      // ✨ NUOVO: Carica TUTTI i servizi per permettere modifica di quelli hardcoded
       setAllServices(services);
       
-      log('Ô£à Servizi caricati - Custom:', customOnly.length, 'Totali:', services.length);
+      log('✅ Servizi caricati - Custom:', customOnly.length, 'Totali:', services.length);
     } catch (error) {
-      console.error('ÔØî Errore caricamento servizi:', error);
+      console.error('❌ Errore caricamento servizi:', error);
     }
   };
 
   const addCustomService = async () => {
     if (!newServiceName.trim() || newServicePrice <= 0) {
-      alert('ÔÜá´©Å Inserisci nome e prezzo validi');
+      alert('⚠️ Inserisci nome e prezzo validi');
       return;
     }
 
     if (!adminApiService) {
-      alert('ÔØî Servizio API non disponibile');
+      alert('❌ Servizio API non disponibile');
       return;
     }
 
@@ -491,13 +491,13 @@ const AdminPanelPro = (): JSX.Element => {
         
         setNewServiceName('');
         setNewServicePrice(0);
-        log('Ô£à Servizio aggiunto e salvato nel database');
+        log('✅ Servizio aggiunto e salvato nel database');
       } else {
-        alert('ÔØî Errore aggiunta servizio: ' + result.message);
+        alert('❌ Errore aggiunta servizio: ' + result.message);
       }
     } catch (error) {
-      console.error('ÔØî Errore aggiunta servizio:', error);
-      alert('ÔØî Errore aggiunta servizio');
+      console.error('❌ Errore aggiunta servizio:', error);
+      alert('❌ Errore aggiunta servizio');
     }
   };
 
@@ -528,24 +528,24 @@ const AdminPanelPro = (): JSX.Element => {
       const result = await adminApiService.updateCustomService(serviceData);
       
       if (!result.success) {
-        console.warn('ÔÜá´©Å Errore aggiornamento servizio:', result.message);
+        console.warn('⚠️ Errore aggiornamento servizio:', result.message);
         // Ricarica per sincronizzare
         await loadCustomServices();
       }
     } catch (error) {
-      console.error('ÔØî Errore aggiornamento servizio:', error);
+      console.error('❌ Errore aggiornamento servizio:', error);
       // Ricarica per sincronizzare
       await loadCustomServices();
     }
   };
 
   const deleteCustomService = async (id: number) => {
-    if (!confirm('ÔÜá´©Å Sei sicuro di voler eliminare questo servizio?')) {
+    if (!confirm('⚠️ Sei sicuro di voler eliminare questo servizio?')) {
       return;
     }
 
     if (!adminApiService) {
-      alert('ÔØî Servizio API non disponibile');
+      alert('❌ Servizio API non disponibile');
       return;
     }
 
@@ -555,25 +555,25 @@ const AdminPanelPro = (): JSX.Element => {
       if (result.success) {
         // Ricarica i servizi dal database
         await loadCustomServices();
-        log('Ô£à Servizio eliminato dal database');
+        log('✅ Servizio eliminato dal database');
       } else {
-        alert('ÔØî Errore eliminazione servizio: ' + result.message);
+        alert('❌ Errore eliminazione servizio: ' + result.message);
       }
     } catch (error) {
-      console.error('ÔØî Errore eliminazione servizio:', error);
-      alert('ÔØî Errore eliminazione servizio');
+      console.error('❌ Errore eliminazione servizio:', error);
+      alert('❌ Errore eliminazione servizio');
     }
   };
 
-  // ­ƒöÑ NUOVO: Funzione per aggiornare prezzi servizi hardcoded
+  // ✨ NUOVO: Funzione per aggiornare prezzi servizi hardcoded
   const updateHardcodedServicePrice = async (serviceId: number, newPrice: number) => {
     if (!adminApiService) {
-      alert('ÔØî Servizio API non disponibile');
+      alert('❌ Servizio API non disponibile');
       return;
     }
 
     try {
-      log(`­ƒÆ░ Aggiornamento prezzo servizio ${serviceId}: Ôé¼${newPrice}`);
+      log(`💰 Aggiornamento prezzo servizio ${serviceId}: €${newPrice}`);
 
       // Usa l'API di pricing-config per aggiornare il prezzo del servizio
       const result = await adminApiService.updatePricingConfig({
@@ -586,25 +586,25 @@ const AdminPanelPro = (): JSX.Element => {
           service.id === serviceId ? { ...service, price: newPrice } : service
         ));
         
-        log('Ô£à Prezzo servizio aggiornato nel database');
+        log('✅ Prezzo servizio aggiornato nel database');
       } else {
-        alert('ÔØî Errore aggiornamento prezzo: ' + result.message);
+        alert('❌ Errore aggiornamento prezzo: ' + result.message);
       }
     } catch (error) {
-      console.error('ÔØî Errore aggiornamento prezzo servizio:', error);
-      alert('ÔØî Errore aggiornamento prezzo servizio');
+      console.error('❌ Errore aggiornamento prezzo servizio:', error);
+      alert('❌ Errore aggiornamento prezzo servizio');
     }
   };
 
-  // ­ƒöÑ NUOVO: Funzione per attivare/disattivare servizi hardcoded
+  // ✨ NUOVO: Funzione per attivare/disattivare servizi hardcoded
   const updateHardcodedServiceActive = async (serviceId: number, active: boolean) => {
     if (!adminApiService) {
-      alert('ÔØî Servizio API non disponibile');
+      alert('❌ Servizio API non disponibile');
       return;
     }
 
     try {
-      log(`­ƒöä ${active ? 'Attivazione' : 'Disattivazione'} servizio ${serviceId}`);
+      log(`🔄 ${active ? 'Attivazione' : 'Disattivazione'} servizio ${serviceId}`);
 
       const result = await adminApiService.updatePricingConfig({
         [`service_${serviceId}_active`]: active.toString()
@@ -615,25 +615,25 @@ const AdminPanelPro = (): JSX.Element => {
           service.id === serviceId ? { ...service, active } : service
         ));
         
-        log(`Ô£à Servizio ${active ? 'attivato' : 'disattivato'} nel database`);
+        log(`✅ Servizio ${active ? 'attivato' : 'disattivato'} nel database`);
       } else {
-        alert(`ÔØî Errore ${active ? 'attivazione' : 'disattivazione'} servizio: ` + result.message);
+        alert(`❌ Errore ${active ? 'attivazione' : 'disattivazione'} servizio: ` + result.message);
       }
     } catch (error) {
-      console.error(`ÔØî Errore ${active ? 'attivazione' : 'disattivazione'} servizio:`, error);
-      alert(`ÔØî Errore ${active ? 'attivazione' : 'disattivazione'} servizio`);
+      console.error(`❌ Errore ${active ? 'attivazione' : 'disattivazione'} servizio:`, error);
+      alert(`❌ Errore ${active ? 'attivazione' : 'disattivazione'} servizio`);
     }
   };
 
-  // ­ƒöÑ NUOVO: Funzione per impostare servizi come inclusi
+  // ✨ NUOVO: Funzione per impostare servizi come inclusi
   const updateHardcodedServiceIncluded = async (serviceId: number, included: boolean) => {
     if (!adminApiService) {
-      alert('ÔØî Servizio API non disponibile');
+      alert('❌ Servizio API non disponibile');
       return;
     }
 
     try {
-      log(`­ƒÄü ${included ? 'Impostazione come incluso' : 'Rimozione da inclusi'} servizio ${serviceId}`);
+      log(`✏️ ${included ? 'Impostazione come incluso' : 'Rimozione da inclusi'} servizio ${serviceId}`);
 
       const result = await adminApiService.updatePricingConfig({
         [`service_${serviceId}_included`]: included.toString()
@@ -644,13 +644,13 @@ const AdminPanelPro = (): JSX.Element => {
           service.id === serviceId ? { ...service, included } : service
         ));
         
-        log(`Ô£à Servizio ${included ? 'impostato come incluso' : 'rimosso da inclusi'} nel database`);
+        log(`✅ Servizio ${included ? 'impostato come incluso' : 'rimosso da inclusi'} nel database`);
       } else {
-        alert(`ÔØî Errore modifica servizio incluso: ` + result.message);
+        alert(`❌ Errore modifica servizio incluso: ` + result.message);
       }
     } catch (error) {
-      console.error(`ÔØî Errore modifica servizio incluso:`, error);
-      alert(`ÔØî Errore modifica servizio incluso`);
+      console.error(`❌ Errore modifica servizio incluso:`, error);
+      alert(`❌ Errore modifica servizio incluso`);
     }
   };
 
@@ -661,7 +661,7 @@ const AdminPanelPro = (): JSX.Element => {
     
     try {
       setIsLoadingCalendars(true);
-      log('­ƒôà Caricamento configurazioni calendario...');
+      log('📅 Caricamento configurazioni calendario...');
       
       const result = await adminApiService.getCalendarConfigs();
       
@@ -672,9 +672,9 @@ const AdminPanelPro = (): JSX.Element => {
         external: result.stats?.external || 0,
         lastSyncSuccess: result.stats?.lastSyncSuccess || null
       });
-      log('Ô£à Calendari caricati:', result);
+      log('✅ Calendari caricati:', result);
     } catch (error) {
-      console.error('ÔØî Errore caricamento calendari:', error);
+      console.error('❌ Errore caricamento calendari:', error);
     } finally {
       setIsLoadingCalendars(false);
     }
@@ -688,12 +688,12 @@ const AdminPanelPro = (): JSX.Element => {
 
     try {
       setIsLoadingCalendars(true);
-      log('­ƒôà Creazione nuovo calendario:', newCalendarData);
+      log('📅 Creazione nuovo calendario:', newCalendarData);
 
       const result = await adminApiService.createCalendarConfig(newCalendarData);
       
       if (result.success) {
-        alert('Ô£à Calendario configurato con successo!');
+        alert('✅ Calendario configurato con successo!');
         setShowNewCalendarForm(false);
         setNewCalendarData({
           name: '',
@@ -705,11 +705,11 @@ const AdminPanelPro = (): JSX.Element => {
         });
         await loadCalendarConfigs(); // Ricarica la lista
       } else {
-        alert('ÔØî Errore nella configurazione: ' + (result.message || 'Errore sconosciuto'));
+        alert('❌ Errore nella configurazione: ' + (result.message || 'Errore sconosciuto'));
       }
     } catch (error) {
-      console.error('ÔØî Errore creazione calendario:', error);
-      alert('ÔØî Errore nella creazione del calendario');
+      console.error('❌ Errore creazione calendario:', error);
+      alert('❌ Errore nella creazione del calendario');
     } finally {
       setIsLoadingCalendars(false);
     }
@@ -723,14 +723,14 @@ const AdminPanelPro = (): JSX.Element => {
       const result = await adminApiService.updateCalendarConfig(id, updates);
       
       if (result.success) {
-        alert('Ô£à Calendario aggiornato con successo!');
+        alert('✅ Calendario aggiornato con successo!');
         await loadCalendarConfigs();
       } else {
-        alert('ÔØî Errore aggiornamento: ' + (result.message || 'Errore sconosciuto'));
+        alert('❌ Errore aggiornamento: ' + (result.message || 'Errore sconosciuto'));
       }
     } catch (error) {
-      console.error('ÔØî Errore aggiornamento calendario:', error);
-      alert('ÔØî Errore nell\'aggiornamento del calendario');
+      console.error('❌ Errore aggiornamento calendario:', error);
+      alert('❌ Errore nell\'aggiornamento del calendario');
     } finally {
       setIsLoadingCalendars(false);
     }
@@ -739,29 +739,29 @@ const AdminPanelPro = (): JSX.Element => {
   // === FUNZIONI PER GESTIONE CALENDARI ESTERNI ===
   
   const handleEditCalendar = (calendar: any) => {
-    alert(`Ô£Å´©Å Modifica calendario: ${calendar.name || 'Senza nome'}\n\nFunzionalit├á di modifica in fase di sviluppo.`);
-    log('­ƒôØ Editing calendario:', calendar);
+    alert(`⚠️ Modifica calendario: ${calendar.name || 'Senza nome'}\n\nFunzionalit├á di modifica in fase di sviluppo.`);
+    log('✏️ Editing calendario:', calendar);
   };
 
   const handleDeleteCalendar = async (id: string, name?: string) => {
     if (!adminApiService) return;
     
     const confirmMessage = name 
-      ? `ÔÜá´©Å Sei sicuro di voler eliminare il calendario "${name}"?\n\nQuesta azione ├¿ irreversibile!`
-      : 'ÔÜá´©Å Sei sicuro di voler eliminare questa configurazione calendario?';
+      ? `⚠️ Sei sicuro di voler eliminare il calendario "${name}"?\n\nQuesta azione ├¿ irreversibile!`
+      : '⚠️ Sei sicuro di voler eliminare questa configurazione calendario?';
     
     if (!window.confirm(confirmMessage)) return;
 
     try {
       setIsLoadingCalendars(true);
-      log('­ƒùæ´©Å Eliminazione calendario:', id);
+      log('🗑️ Eliminazione calendario:', id);
       
       // Simula eliminazione - TODO: implementare endpoint backend
-      alert('Ô£à Calendario eliminato con successo!');
+      alert('✅ Calendario eliminato con successo!');
       await loadCalendarConfigs();
     } catch (error) {
-      console.error('ÔØî Errore eliminazione calendario:', error);
-      alert('ÔØî Errore nell\'eliminazione del calendario');
+      console.error('❌ Errore eliminazione calendario:', error);
+      alert('❌ Errore nell\'eliminazione del calendario');
     } finally {
       setIsLoadingCalendars(false);
     }
@@ -770,19 +770,19 @@ const AdminPanelPro = (): JSX.Element => {
   const handleSuspendCalendar = async (calendarId: string, calendarName: string) => {
     if (!adminApiService) return;
     
-    const confirm = window.confirm(`ÔÅ©´©Å Sospendere temporaneamente il calendario "${calendarName}"?`);
+    const confirm = window.confirm(`⏸️ Sospendere temporaneamente il calendario "${calendarName}"?`);
     if (!confirm) return;
 
     try {
       setIsLoadingCalendars(true);
-      log('ÔÅ©´©Å Sospensione calendario:', calendarId);
+      log('⏸️ Sospensione calendario:', calendarId);
       
       // Simula sospensione - TODO: implementare endpoint backend
-      alert('Ô£à Calendario sospeso con successo!');
+      alert('✅ Calendario sospeso con successo!');
       await loadCalendarConfigs();
     } catch (error) {
-      console.error('ÔØî Errore sospensione calendario:', error);
-      alert('ÔØî Errore nella sospensione del calendario');
+      console.error('❌ Errore sospensione calendario:', error);
+      alert('❌ Errore nella sospensione del calendario');
     } finally {
       setIsLoadingCalendars(false);
     }
@@ -793,14 +793,14 @@ const AdminPanelPro = (): JSX.Element => {
 
     try {
       setIsLoadingCalendars(true);
-      log('­ƒöä Sincronizzazione calendario:', calendarId, calendarName);
+      log('🔄 Sincronizzazione calendario:', calendarId, calendarName);
       
       // Simula sincronizzazione - TODO: implementare endpoint backend
-      alert(`Ô£à Calendario "${calendarName}" sincronizzato con successo!`);
+      alert(`✅ Calendario "${calendarName}" sincronizzato con successo!`);
       await loadCalendarConfigs();
     } catch (error) {
-      console.error('ÔØî Errore sincronizzazione calendario:', error);
-      alert('ÔØî Errore nella sincronizzazione del calendario');
+      console.error('❌ Errore sincronizzazione calendario:', error);
+      alert('❌ Errore nella sincronizzazione del calendario');
     } finally {
       setIsLoadingCalendars(false);
     }
@@ -814,14 +814,14 @@ const AdminPanelPro = (): JSX.Element => {
       const result = await adminApiService.forceCalendarSync(calendarId);
       
       if (result.success) {
-        alert('Ô£à Sincronizzazione completata!');
+        alert('✅ Sincronizzazione completata!');
         await loadCalendarConfigs();
       } else {
-        alert('ÔØî Errore sincronizzazione: ' + (result.message || 'Errore sconosciuto'));
+        alert('❌ Errore sincronizzazione: ' + (result.message || 'Errore sconosciuto'));
       }
     } catch (error) {
-      console.error('ÔØî Errore sincronizzazione:', error);
-      alert('ÔØî Errore nella sincronizzazione');
+      console.error('❌ Errore sincronizzazione:', error);
+      alert('❌ Errore nella sincronizzazione');
     } finally {
       setIsLoadingCalendars(false);
     }
@@ -835,13 +835,13 @@ const AdminPanelPro = (): JSX.Element => {
       const result = await adminApiService.testCalendarConnection(config);
       
       if (result.success) {
-        alert('Ô£à Connessione testata con successo!');
+        alert('✅ Connessione testata con successo!');
       } else {
-        alert('ÔØî Test connessione fallito: ' + (result.message || 'Errore sconosciuto'));
+        alert('❌ Test connessione fallito: ' + (result.message || 'Errore sconosciuto'));
       }
     } catch (error) {
-      console.error('ÔØî Errore test connessione:', error);
-      alert('ÔØî Errore nel test di connessione');
+      console.error('❌ Errore test connessione:', error);
+      alert('❌ Errore nel test di connessione');
     } finally {
       setIsLoadingCalendars(false);
     }
@@ -852,49 +852,49 @@ const AdminPanelPro = (): JSX.Element => {
   const savePaymentSettings = async () => {
     try {
       setIsUpdatingPayments(true);
-      log('­ƒÆ│ Salvataggio configurazione pagamenti:', paymentSettings);
+      log('💳 Salvataggio configurazione pagamenti:', paymentSettings);
       
       // Simula salvataggio - TODO: implementare endpoint backend
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      alert('Ô£à Configurazione pagamenti salvata con successo!');
+      alert('✅ Configurazione pagamenti salvata con successo!');
     } catch (error) {
-      console.error('ÔØî Errore salvataggio pagamenti:', error);
-      alert('ÔØî Errore nel salvataggio della configurazione pagamenti');
+      console.error('❌ Errore salvataggio pagamenti:', error);
+      alert('❌ Errore nel salvataggio della configurazione pagamenti');
     } finally {
       setIsUpdatingPayments(false);
     }
   };
 
   const handleRefundPayment = async (transactionId: string, amount: number) => {
-    const confirm = window.confirm(`ÔÜá´©Å Sei sicuro di voler rimborsare Ôé¼${amount.toFixed(2)}?\n\nQuesta azione ├¿ irreversibile!`);
+    const confirm = window.confirm(`⚠️ Sei sicuro di voler rimborsare €${amount.toFixed(2)}?\n\nQuesta azione ├¿ irreversibile!`);
     if (!confirm) return;
 
     try {
-      log('­ƒÆ░ Elaborazione rimborso:', { transactionId, amount });
+      log('💰 Elaborazione rimborso:', { transactionId, amount });
       
       // Simula rimborso - TODO: implementare endpoint backend
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      alert('Ô£à Rimborso elaborato con successo!');
+      alert('✅ Rimborso elaborato con successo!');
       // Aggiorna la lista delle transazioni
     } catch (error) {
-      console.error('ÔØî Errore rimborso:', error);
-      alert('ÔØî Errore nell\'elaborazione del rimborso');
+      console.error('❌ Errore rimborso:', error);
+      alert('❌ Errore nell\'elaborazione del rimborso');
     }
   };
 
   const handleCapturePayment = async (transactionId: string) => {
     try {
-      log('­ƒÆ│ Cattura pagamento:', transactionId);
+      log('💳 Cattura pagamento:', transactionId);
       
       // Simula cattura pagamento - TODO: implementare endpoint backend
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      alert('Ô£à Pagamento catturato con successo!');
+      alert('✅ Pagamento catturato con successo!');
     } catch (error) {
-      console.error('ÔØî Errore cattura pagamento:', error);
-      alert('ÔØî Errore nella cattura del pagamento');
+      console.error('❌ Errore cattura pagamento:', error);
+      alert('❌ Errore nella cattura del pagamento');
     }
   };
 
@@ -916,12 +916,12 @@ const AdminPanelPro = (): JSX.Element => {
   const saveEmailSettings = async () => {
     setLoading(true);
     try {
-      log('­ƒôº Salvataggio configurazione email:', emailSettings);
+      log('📧 Salvataggio configurazione email:', emailSettings);
       await new Promise(resolve => setTimeout(resolve, 1000));
-      alert('Ô£à Configurazione email salvata con successo!');
+      alert('✅ Configurazione email salvata con successo!');
     } catch (error) {
-      console.error('ÔØî Errore salvataggio email:', error);
-      alert('ÔØî Errore nel salvataggio della configurazione email');
+      console.error('❌ Errore salvataggio email:', error);
+      alert('❌ Errore nel salvataggio della configurazione email');
     } finally {
       setLoading(false);
     }
@@ -930,56 +930,56 @@ const AdminPanelPro = (): JSX.Element => {
   const testEmailConnection = async () => {
     setLoading(true);
     try {
-      log('­ƒöº Test connessione SMTP...');
+      log('📧 Test connessione SMTP...');
       await new Promise(resolve => setTimeout(resolve, 2000));
-      alert('Ô£à Test email inviata con successo! Controlla la tua casella di posta.');
+      alert('✅ Test email inviata con successo! Controlla la tua casella di posta.');
     } catch (error) {
-      console.error('ÔØî Errore test email:', error);
-      alert('ÔØî Errore durante il test email');
+      console.error('❌ Errore test email:', error);
+      alert('❌ Errore durante il test email');
     } finally {
       setLoading(false);
     }
   };
 
   const handleEditTemplate = (templateName: string) => {
-    alert(`Ô£Å´©Å Apertura editor per template: ${templateName}\n\nFunzionalit├á editor template in fase di sviluppo.`);
-    log(`­ƒôØ Editing template: ${templateName}`);
+    alert(`⚠️ Apertura editor per template: ${templateName}\n\nFunzionalit├á editor template in fase di sviluppo.`);
+    log(`✏️ Editing template: ${templateName}`);
   };
 
   const handleCreateTemplate = () => {
-    const templateName = prompt('­ƒôØ Inserisci il nome del nuovo template:');
+    const templateName = prompt('✏️ Inserisci il nome del nuovo template:');
     if (templateName) {
-      alert(`Ô£à Template "${templateName}" creato con successo!`);
-      log(`­ƒôº Created new template: ${templateName}`);
+      alert(`✅ Template "${templateName}" creato con successo!`);
+      log(`📧 Created new template: ${templateName}`);
     }
   };
 
   // === FUNZIONI GESTIONE SISTEMA ===
   
   const resetSystemSetting = async (key: string) => {
-    if (window.confirm(`­ƒöä Confermi il reset del setting "${key}" al valore predefinito?`)) {
+    if (window.confirm(`🔄 Confermi il reset del setting "${key}" al valore predefinito?`)) {
       try {
-        log(`­ƒöä Reset setting: ${key}`);
+        log(`🔄 Reset setting: ${key}`);
         await new Promise(resolve => setTimeout(resolve, 500));
-        alert(`Ô£à Setting "${key}" resettato con successo!`);
+        alert(`✅ Setting "${key}" resettato con successo!`);
         await loadRealApiData(); // Ricarica i settings
       } catch (error) {
-        console.error('ÔØî Errore reset setting:', error);
-        alert('ÔØî Errore durante il reset del setting');
+        console.error('❌ Errore reset setting:', error);
+        alert('❌ Errore durante il reset del setting');
       }
     }
   };
 
   const handleSystemBackup = async () => {
-    if (window.confirm('­ƒÆ¥ Confermi la creazione di un backup completo del sistema?')) {
+    if (window.confirm('💾 Confermi la creazione di un backup completo del sistema?')) {
       setLoading(true);
       try {
-        log('­ƒÆ¥ Creazione backup sistema...');
+        log('💾 Creazione backup sistema...');
         await new Promise(resolve => setTimeout(resolve, 3000));
-        alert('Ô£à Backup sistema creato con successo!');
+        alert('✅ Backup sistema creato con successo!');
       } catch (error) {
-        console.error('ÔØî Errore backup:', error);
-        alert('ÔØî Errore durante la creazione del backup');
+        console.error('❌ Errore backup:', error);
+        alert('❌ Errore durante la creazione del backup');
       } finally {
         setLoading(false);
       }
@@ -987,17 +987,17 @@ const AdminPanelPro = (): JSX.Element => {
   };
 
   const handleSystemRestore = async () => {
-    if (window.confirm('ÔÜá´©Å ATTENZIONE: Confermi il ripristino del sistema? Questa operazione sovrascriver├á le configurazioni attuali.')) {
+    if (window.confirm('⚠️ ATTENZIONE: Confermi il ripristino del sistema? Questa operazione sovrascriver├á le configurazioni attuali.')) {
       setLoading(true);
       try {
-        log('­ƒöä Ripristino sistema...');
+        log('🔄 Ripristino sistema...');
         await new Promise(resolve => setTimeout(resolve, 3000));
-        alert('Ô£à Sistema ripristinato con successo!');
+        alert('✅ Sistema ripristinato con successo!');
         // Ricarica tutti i dati dopo il ripristino
         await loadRealApiData();
       } catch (error) {
-        console.error('ÔØî Errore ripristino:', error);
-        alert('ÔØî Errore durante il ripristino del sistema');
+        console.error('❌ Errore ripristino:', error);
+        alert('❌ Errore durante il ripristino del sistema');
       } finally {
         setLoading(false);
       }
@@ -1021,12 +1021,12 @@ const AdminPanelPro = (): JSX.Element => {
   const saveNotificationSettings = async () => {
     setLoading(true);
     try {
-      log('­ƒöö Salvataggio impostazioni notifiche:', notificationSettings);
+      log('🔔 Salvataggio impostazioni notifiche:', notificationSettings);
       await new Promise(resolve => setTimeout(resolve, 1000));
-      alert('Ô£à Impostazioni notifiche salvate con successo!');
+      alert('✅ Impostazioni notifiche salvate con successo!');
     } catch (error) {
-      console.error('ÔØî Errore salvataggio notifiche:', error);
-      alert('ÔØî Errore nel salvataggio delle impostazioni notifiche');
+      console.error('❌ Errore salvataggio notifiche:', error);
+      alert('❌ Errore nel salvataggio delle impostazioni notifiche');
     } finally {
       setLoading(false);
     }
@@ -1035,31 +1035,31 @@ const AdminPanelPro = (): JSX.Element => {
 
 
   const markAllNotificationsAsRead = () => {
-    if (window.confirm('­ƒôû Marcare tutte le notifiche come lette?')) {
-      log('­ƒôû Tutte le notifiche marcate come lette');
-      alert('Ô£à Tutte le notifiche sono state marcate come lette!');
+    if (window.confirm('🔔 Marcare tutte le notifiche come lette?')) {
+      log('🔔 Tutte le notifiche marcate come lette');
+      alert('✅ Tutte le notifiche sono state marcate come lette!');
     }
   };
 
   const deleteNotification = (notificationId: number) => {
-    if (window.confirm(`­ƒùæ´©Å Eliminare la notifica #${notificationId}?`)) {
-      log(`­ƒùæ´©Å Eliminazione notifica ${notificationId}`);
-      alert(`Ô£à Notifica #${notificationId} eliminata con successo!`);
+    if (window.confirm(`🗑️ Eliminare la notifica #${notificationId}?`)) {
+      log(`🗑️ Eliminazione notifica ${notificationId}`);
+      alert(`✅ Notifica #${notificationId} eliminata con successo!`);
     }
   };
 
   const testNotification = () => {
-    alert('­ƒöö Test Notifica!\n\nQuesta ├¿ una notifica di prova del sistema.\nSe vedi questo messaggio, il sistema notifiche funziona correttamente.');
-    log('­ƒöö Test notifica inviato');
+    alert('🔔 Test Notifica!\n\nQuesta ├¿ una notifica di prova del sistema.\nSe vedi questo messaggio, il sistema notifiche funziona correttamente.');
+    log('🔔 Test notifica inviato');
   };
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'booking': return '­ƒÅá';
-      case 'payment': return '­ƒÆ░';
-      case 'system': return 'ÔÜÖ´©Å';
-      case 'review': return 'Ô¡É';
-      default: return '­ƒöö';
+      case 'booking': return '📧';
+      case 'payment': return '💰';
+      case 'system': return '⚙️';
+      case 'review': return '⭐';
+      default: return '🔔';
     }
   };
 
@@ -1075,129 +1075,129 @@ const AdminPanelPro = (): JSX.Element => {
   // Carica dati reali dalle API backend
   const loadRealApiData = async () => {
     if (!adminApiService) {
-      console.warn('ÔÜá´©Å AdminApiService non disponibile');
+      console.warn('⚠️ AdminApiService non disponibile');
       return;
     }
 
     setIsLoadingData(true);
     try {
-      log('­ƒöä Caricamento dati API reali...');
+      log('🔄 Caricamento dati API reali...');
       
       // Carica dati uno alla volta per debug
       try {
         const stats = await adminApiService.getDashboardStats();
-        log('Ô£à Stats caricate:', stats);
+        log('✅ Stats caricate:', stats);
         setDashboardStats(stats || {});
       } catch (err) {
-        console.error('ÔØî Errore stats:', err);
+        console.error('❌ Errore stats:', err);
       }
 
       try {
         const bookings = await adminApiService.getBookings();
-        log('Ô£à Prenotazioni caricate:', bookings);
+        log('✅ Prenotazioni caricate:', bookings);
         setRealBookings(bookings || []);
         setRecentBookings(bookings || []);
       } catch (err) {
-        console.error('ÔØî Errore prenotazioni:', err);
+        console.error('❌ Errore prenotazioni:', err);
       }
 
       // Carica eventi iCal esterni sincronizzati (Airbnb, Booking, etc)
       try {
         const calendarBookingsResult = await adminApiService.getCalendarBookings({ futureOnly: true, limit: 100 });
-        log('Ô£à Prenotazioni calendari esterni caricate:', calendarBookingsResult);
+        log('✅ Prenotazioni calendari esterni caricate:', calendarBookingsResult);
         if (calendarBookingsResult && calendarBookingsResult.bookings) {
           setCalendarEvents(calendarBookingsResult.bookings);
           
-          // ­ƒôè Log distribuzione per piattaforma
+          // 📊 Log distribuzione per piattaforma
           const platformCount = calendarBookingsResult.bookings.reduce((acc, booking) => {
             const platform = booking.platform || 'unknown';
             acc[platform] = (acc[platform] || 0) + 1;
             return acc;
           }, {});
           
-          console.log('­ƒôè Distribuzione prenotazioni per piattaforma:', platformCount);
-          console.log(`  ­ƒÅû´©Å Holidu: ${platformCount.holidu || 0} prenotazioni`);
-          console.log(`  ­ƒô▒ Airbnb: ${platformCount.airbnb || 0} prenotazioni`);
-          console.log(`  ­ƒÅ¿ Booking: ${platformCount.booking || 0} prenotazioni`);
-          console.log(`  ­ƒôà Google: ${platformCount.google || 0} prenotazioni`);
-          console.log(`  ÔØô Altre: ${platformCount.unknown || 0} prenotazioni`);
+          console.log('📊 Distribuzione prenotazioni per piattaforma:', platformCount);
+          console.log(`  🏨 Holidu: ${platformCount.holidu || 0} prenotazioni`);
+          console.log(`  📱 Airbnb: ${platformCount.airbnb || 0} prenotazioni`);
+          console.log(`  📅 Booking: ${platformCount.booking || 0} prenotazioni`);
+          console.log(`  📅 Google: ${platformCount.google || 0} prenotazioni`);
+          console.log(`  ❌ Altre: ${platformCount.unknown || 0} prenotazioni`);
         } else {
           setCalendarEvents([]);
         }
       } catch (err) {
-        console.error('ÔØî Errore prenotazioni calendari esterni:', err);
+        console.error('❌ Errore prenotazioni calendari esterni:', err);
         setCalendarEvents([]);
       }
 
       try {
         const settings = await adminApiService.getSystemSettings();
-        log('Ô£à Impostazioni caricate:', settings);
+        log('✅ Impostazioni caricate:', settings);
         setSystemSettings(settings || []);
       } catch (err) {
-        console.error('ÔØî Errore impostazioni:', err);
+        console.error('❌ Errore impostazioni:', err);
       }
 
       try {
         const analyticsResult = await adminApiService.getAnalytics();
-        log('Ô£à Analytics caricate:', analyticsResult);
+        log('✅ Analytics caricate:', analyticsResult);
         setAnalytics(analyticsResult || []);
       } catch (err) {
-        console.error('ÔØî Errore analytics:', err);
+        console.error('❌ Errore analytics:', err);
       }
 
       try {
         const notificationsResult = await adminApiService.getNotifications();
-        log('Ô£à Notifiche caricate:', notificationsResult);
+        log('✅ Notifiche caricate:', notificationsResult);
         setNotifications(notificationsResult || []);
       } catch (err) {
-        console.error('ÔØî Errore notifiche:', err);
+        console.error('❌ Errore notifiche:', err);
       }
 
       try {
         const blockedDatesResult = await adminApiService.getBlockedDates();
-        log('Ô£à Date bloccate caricate:', blockedDatesResult);
+        log('✅ Date bloccate caricate:', blockedDatesResult);
         setBlockedDates(blockedDatesResult || []);
       } catch (err) {
-        console.error('ÔØî Errore date bloccate:', err);
+        console.error('❌ Errore date bloccate:', err);
       }
 
       try {
         const paymentsResult = await adminApiService.getPayments();
-        log('Ô£à Pagamenti caricati:', paymentsResult);
+        log('✅ Pagamenti caricati:', paymentsResult);
         setPaymentTransactions(paymentsResult || []);
       } catch (err) {
-        console.error('ÔØî Errore pagamenti:', err);
+        console.error('❌ Errore pagamenti:', err);
         setPaymentTransactions([]);
       }
       
       // Carica configurazioni prezzi e calendari
       try {
         await loadPricingConfig();
-        log('Ô£à Prezzi caricati');
+        log('✅ Prezzi caricati');
       } catch (err) {
-        console.error('ÔØî Errore prezzi:', err);
+        console.error('❌ Errore prezzi:', err);
       }
 
       try {
         await loadCalendarConfigs();
-        log('Ô£à Calendari caricati');
+        log('✅ Calendari caricati');
       } catch (err) {
-        console.error('ÔØî Errore calendari:', err);
+        console.error('❌ Errore calendari:', err);
       }
 
       try {
         await loadCustomServices();
-        log('Ô£à Servizi custom caricati');
+        log('✅ Servizi custom caricati');
       } catch (err) {
-        console.error('ÔØî Errore servizi custom:', err);
+        console.error('❌ Errore servizi custom:', err);
       }
 
       // Tassa soggiorno: caricamento remoto disabilitato (gestita via `pricingConfig`)
       log('Ôä╣´©Å Tassa soggiorno gestita tramite pricingConfig (caricamento remoto disabilitato)');
 
-      log('Ô£à Dati API reali caricati completamente');
+      log('✅ Dati API reali caricati completamente');
     } catch (error) {
-      console.error('ÔØî Errore nel caricamento dati API:', error);
+      console.error('❌ Errore nel caricamento dati API:', error);
     } finally {
       setIsLoadingData(false);
     }
@@ -1212,10 +1212,10 @@ const AdminPanelPro = (): JSX.Element => {
       setIsLoadingData(true);
       const result = await adminApiService.createBooking(bookingData);
       await loadRealApiData(); // Ricarica tutti i dati
-      log('Ô£à Prenotazione creata:', result);
+      log('✅ Prenotazione creata:', result);
       return result;
     } catch (error) {
-      console.error('ÔØî Errore creazione prenotazione:', error);
+      console.error('❌ Errore creazione prenotazione:', error);
       throw error;
     } finally {
       setIsLoadingData(false);
@@ -1227,10 +1227,10 @@ const AdminPanelPro = (): JSX.Element => {
     try {
       const result = await adminApiService.updateBooking(id, updates);
       await loadRealApiData(); // Ricarica tutti i dati
-      log('Ô£à Prenotazione aggiornata:', result);
+      log('✅ Prenotazione aggiornata:', result);
       return result;
     } catch (error) {
-      console.error('ÔØî Errore aggiornamento prenotazione:', error);
+      console.error('❌ Errore aggiornamento prenotazione:', error);
       throw error;
     }
   };
@@ -1240,10 +1240,10 @@ const AdminPanelPro = (): JSX.Element => {
     try {
       const result = await adminApiService.deleteBooking(id);
       await loadRealApiData(); // Ricarica tutti i dati
-      log('Ô£à Prenotazione eliminata:', result);
+      log('✅ Prenotazione eliminata:', result);
       return result;
     } catch (error) {
-      console.error('ÔØî Errore eliminazione prenotazione:', error);
+      console.error('❌ Errore eliminazione prenotazione:', error);
       throw error;
     }
   };
@@ -1253,10 +1253,10 @@ const AdminPanelPro = (): JSX.Element => {
     if (!adminApiService) return;
     try {
       const result = await adminApiService.updateSystemSetting(key, value);
-      log('Ô£à Impostazione aggiornata:', { key, value });
+      log('✅ Impostazione aggiornata:', { key, value });
       return result;
     } catch (error) {
-      console.error('ÔØî Errore aggiornamento impostazione:', error);
+      console.error('❌ Errore aggiornamento impostazione:', error);
       throw error;
     }
   };
@@ -1278,9 +1278,9 @@ const AdminPanelPro = (): JSX.Element => {
         status: 'pending',
         platform: 'direct'
       });
-      alert('Ô£à Prenotazione creata con successo!');
+      alert('✅ Prenotazione creata con successo!');
     } catch (error) {
-      alert('ÔØî Errore nella creazione della prenotazione');
+      alert('❌ Errore nella creazione della prenotazione');
     }
   };
 
@@ -1317,19 +1317,19 @@ const AdminPanelPro = (): JSX.Element => {
         status: 'pending',
         platform: 'direct'
       });
-      alert('Ô£à Prenotazione aggiornata con successo!');
+      alert('✅ Prenotazione aggiornata con successo!');
     } catch (error) {
-      alert('ÔØî Errore nell\'aggiornamento della prenotazione');
+      alert('❌ Errore nell\'aggiornamento della prenotazione');
     }
   };
 
   const handleDeleteBooking = async (id: string) => {
-    if (confirm('ÔÜá´©Å Sei sicuro di voler eliminare questa prenotazione?')) {
+    if (confirm('⚠️ Sei sicuro di voler eliminare questa prenotazione?')) {
       try {
         await deleteBookingById(id);
-        alert('Ô£à Prenotazione eliminata con successo!');
+        alert('✅ Prenotazione eliminata con successo!');
       } catch (error) {
-        alert('ÔØî Errore nell\'eliminazione della prenotazione');
+        alert('❌ Errore nell\'eliminazione della prenotazione');
       }
     }
   };
@@ -1349,22 +1349,22 @@ const AdminPanelPro = (): JSX.Element => {
         reason: 'maintenance'
       });
       await loadRealApiData();
-      alert('Ô£à Date bloccate aggiunte con successo!');
+      alert('✅ Date bloccate aggiunte con successo!');
     } catch (error) {
-      alert('ÔØî Errore nell\'aggiungere le date bloccate');
+      alert('❌ Errore nell\'aggiungere le date bloccate');
     }
   };
 
   const handleRemoveBlockedDate = async (id: string) => {
     if (!adminApiService) return;
     
-    if (confirm('ÔÜá´©Å Rimuovere il blocco per queste date?')) {
+    if (confirm('⚠️ Rimuovere il blocco per queste date?')) {
       try {
         await adminApiService.removeBlockedDate(id);
         await loadRealApiData();
-        alert('Ô£à Blocco rimosso con successo!');
+        alert('✅ Blocco rimosso con successo!');
       } catch (error) {
-        alert('ÔØî Errore nella rimozione del blocco');
+        alert('❌ Errore nella rimozione del blocco');
       }
     }
   };
@@ -1386,7 +1386,7 @@ const AdminPanelPro = (): JSX.Element => {
       const externalBookings = await adminApiService.getCalendarBookings({ futureOnly: true, limit: 100 });
       if (externalBookings && externalBookings.bookings) {
         setCalendarEvents(externalBookings.bookings);
-        log(`­ƒôà Caricate ${externalBookings.bookings.length} prenotazioni da calendari esterni`);
+        log(`📅 Caricate ${externalBookings.bookings.length} prenotazioni da calendari esterni`);
       }
       
     } catch (error) {
@@ -1397,7 +1397,7 @@ const AdminPanelPro = (): JSX.Element => {
   // Funzioni Google Calendar rimosse (non più utilizzato)
 
   const handleCompleteAirbnbSetup = async () => {
-    const apiKey = prompt('­ƒöæ Inserisci la tua API Key di Airbnb:');
+    const apiKey = prompt('🔑 Inserisci la tua API Key di Airbnb:');
     if (!apiKey) return;
 
     try {
@@ -1412,14 +1412,14 @@ const AdminPanelPro = (): JSX.Element => {
       const result = await adminApiService.setupExternalCalendar(setupData);
       
       if (result.success) {
-        alert('Ô£à Setup Airbnb completato con successo!');
+        alert('✅ Setup Airbnb completato con successo!');
         await loadCalendarConfigs();
       } else {
-        alert('ÔØî Setup fallito: ' + (result.error || 'Errore sconosciuto'));
+        alert('❌ Setup fallito: ' + (result.error || 'Errore sconosciuto'));
       }
     } catch (error) {
       console.error('Errore setup Airbnb:', error);
-      alert('ÔØî Errore nel setup Airbnb. Verifica la tua API Key.');
+      alert('❌ Errore nel setup Airbnb. Verifica la tua API Key.');
     }
   };
 
@@ -1430,18 +1430,18 @@ const AdminPanelPro = (): JSX.Element => {
       const testResult = await adminApiService.testExternalCalendarAPI('airbnb');
       
       if (testResult.success) {
-        alert(`Ô£à Test API Airbnb riuscito!\n\n­ƒôè Status: ${testResult.status}\n­ƒôà Calendari trovati: ${testResult.calendarsCount || 0}`);
+        alert(`✅ Test API Airbnb riuscito!\n\n📊 Status: ${testResult.status}\n📅 Calendari trovati: ${testResult.calendarsCount || 0}`);
       } else {
-        alert(`ÔØî Test API fallito: ${testResult.error || 'Errore sconosciuto'}`);
+        alert(`❌ Test API fallito: ${testResult.error || 'Errore sconosciuto'}`);
       }
     } catch (error) {
       console.error('Errore test API Airbnb:', error);
-      alert('ÔØî Errore nel test delle API Airbnb');
+      alert('❌ Errore nel test delle API Airbnb');
     }
   };
 
   const handleCancelAirbnbSetup = async () => {
-    const confirm = window.confirm('ÔÜá´©Å Sei sicuro di voler annullare il setup Airbnb? Tutte le configurazioni verranno rimosse.');
+    const confirm = window.confirm('⚠️ Sei sicuro di voler annullare il setup Airbnb? Tutte le configurazioni verranno rimosse.');
     
     if (!confirm) return;
 
@@ -1449,11 +1449,11 @@ const AdminPanelPro = (): JSX.Element => {
       if (!adminApiService) return;
       
       await adminApiService.removeExternalCalendar('airbnb');
-      alert('­ƒùæ´©Å Setup Airbnb annullato e configurazioni rimosse');
+      alert('🗑️ Setup Airbnb annullato e configurazioni rimosse');
       await loadCalendarConfigs();
     } catch (error) {
       console.error('Errore annullamento setup:', error);
-      alert('ÔØî Errore nell\'annullamento del setup');
+      alert('❌ Errore nell\'annullamento del setup');
     }
   };
 
@@ -1463,22 +1463,22 @@ const AdminPanelPro = (): JSX.Element => {
       
       const connectionTest = await adminApiService.testGeneralCalendarConnection();
       
-      const statusMessage = `­ƒöº Test Connessioni Generale\n\n` +
-        `­ƒîÉ Connessione Internet: ${connectionTest.internet ? 'Ô£à' : 'ÔØî'}\n` +
-        `­ƒôà Google Calendar: ${connectionTest.google ? 'Ô£à' : 'ÔØî'}\n` +
-        `­ƒÅá Airbnb API: ${connectionTest.airbnb ? 'Ô£à' : 'ÔØî'}\n` +
-        `­ƒÅø´©Å Database: ${connectionTest.database ? 'Ô£à' : 'ÔØî'}\n\n` +
-        `­ƒôè Stato Generale: ${connectionTest.overall ? 'Ô£à Tutto OK' : 'ÔØî Problemi rilevati'}`;
+      const statusMessage = `📧 Test Connessioni Generale\n\n` +
+        `📱 Connessione Internet: ${connectionTest.internet ? '✅' : '❌'}\n` +
+        `📅 Google Calendar: ${connectionTest.google ? '✅' : '❌'}\n` +
+        `📧 Airbnb API: ${connectionTest.airbnb ? '✅' : '❌'}\n` +
+        `💾 Database: ${connectionTest.database ? '✅' : '❌'}\n\n` +
+        `📊 Stato Generale: ${connectionTest.overall ? '✅ Tutto OK' : '❌ Problemi rilevati'}`;
       
       alert(statusMessage);
     } catch (error) {
       console.error('Errore test connessioni:', error);
-      alert('ÔØî Errore nel test delle connessioni');
+      alert('❌ Errore nel test delle connessioni');
     }
   };
 
   const handleSyncAllCalendars = async () => {
-    const confirm = window.confirm('­ƒöä Sincronizzare tutti i calendari?\n\nQuesta operazione potrebbe richiedere alcuni minuti.');
+    const confirm = window.confirm('🔄 Sincronizzare tutti i calendari?\n\nQuesta operazione potrebbe richiedere alcuni minuti.');
     
     if (!confirm) return;
 
@@ -1488,17 +1488,17 @@ const AdminPanelPro = (): JSX.Element => {
       
       const syncResults = await adminApiService.syncAllCalendars();
       
-      const resultMessage = `­ƒöä Sincronizzazione Completata\n\n` +
-        `Ô£à Successi: ${syncResults.successful || 0}\n` +
-        `ÔØî Errori: ${syncResults.failed || 0}\n` +
-        `­ƒôà Eventi totali: ${syncResults.totalEvents || 0}\n\n` +
+      const resultMessage = `🔄 Sincronizzazione Completata\n\n` +
+        `✅ Successi: ${syncResults.successful || 0}\n` +
+        `❌ Errori: ${syncResults.failed || 0}\n` +
+        `📅 Eventi totali: ${syncResults.totalEvents || 0}\n\n` +
         `${syncResults.errors && syncResults.errors.length > 0 ? 'Dettagli errori:\n' + syncResults.errors.join('\n') : ''}`;
       
       alert(resultMessage);
       await loadCalendarConfigs();
     } catch (error) {
       console.error('Errore sincronizzazione calendari:', error);
-      alert('ÔØî Errore nella sincronizzazione di tutti i calendari');
+      alert('❌ Errore nella sincronizzazione di tutti i calendari');
     } finally {
       setIsLoadingCalendars(false);
     }
@@ -1513,12 +1513,12 @@ const AdminPanelPro = (): JSX.Element => {
       nextMonth: '45%'
     };
     
-    const dashboardMessage = `­ƒôè Dashboard Occupazione\n\n` +
-      `­ƒôà Oggi: ${occupancyData.today}\n` +
-      `­ƒôå Questa settimana: ${occupancyData.thisWeek}\n` +
-      `­ƒôê Questo mese: ${occupancyData.thisMonth}\n` +
-      `­ƒô« Prossimo mese: ${occupancyData.nextMonth}\n\n` +
-      `­ƒÆí Suggerimento: Considera di aumentare i prezzi nei periodi di alta occupazione.`;
+    const dashboardMessage = `📊 Dashboard Occupazione\n\n` +
+      `📅 Oggi: ${occupancyData.today}\n` +
+      `📅 Questa settimana: ${occupancyData.thisWeek}\n` +
+      `📊 Questo mese: ${occupancyData.thisMonth}\n` +
+      `📅 Prossimo mese: ${occupancyData.nextMonth}\n\n` +
+      `💡 Suggerimento: Considera di aumentare i prezzi nei periodi di alta occupazione.`;
     
     alert(dashboardMessage);
   };
@@ -1529,18 +1529,18 @@ const AdminPanelPro = (): JSX.Element => {
       
       const report = await adminApiService.getFullSyncReport();
       
-      const reportMessage = `­ƒôê Report Sincronizzazioni Completo\n\n` +
-        `­ƒôè Sincronizzazioni oggi: ${report.todaySync || 0}\n` +
-        `­ƒôà Sincronizzazioni settimana: ${report.weekSync || 0}\n` +
-        `­ƒöä Ultima sincronizzazione: ${report.lastSync || 'Mai'}\n` +
-        `ÔÜí Media tempo sync: ${report.averageTime || '0'}s\n` +
-        `Ô£à Tasso successo: ${report.successRate || 0}%\n\n` +
-        `­ƒÅå Platform pi├╣ affidabile: ${report.bestPlatform || 'N/A'}`;
+      const reportMessage = `📊 Report Sincronizzazioni Completo\n\n` +
+        `📊 Sincronizzazioni oggi: ${report.todaySync || 0}\n` +
+        `📅 Sincronizzazioni settimana: ${report.weekSync || 0}\n` +
+        `🔄 Ultima sincronizzazione: ${report.lastSync || 'Mai'}\n` +
+        `⏱️ Media tempo sync: ${report.averageTime || '0'}s\n` +
+        `✅ Tasso successo: ${report.successRate || 0}%\n\n` +
+        `🏆 Platform pi├╣ affidabile: ${report.bestPlatform || 'N/A'}`;
       
       alert(reportMessage);
     } catch (error) {
       console.error('Errore report sincronizzazioni:', error);
-      alert('ÔØî Errore nel recupero del report sincronizzazioni');
+      alert('❌ Errore nel recupero del report sincronizzazioni');
     }
   };
 
@@ -1566,15 +1566,15 @@ const AdminPanelPro = (): JSX.Element => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
-      alert('­ƒôñ Configurazione calendari esportata con successo!');
+      alert('📥 Configurazione calendari esportata con successo!');
     } catch (error) {
       console.error('Errore esportazione:', error);
-      alert('ÔØî Errore nell\'esportazione della configurazione');
+      alert('❌ Errore nell\'esportazione della configurazione');
     }
   };
 
   const handleAdvancedCalendarSettings = () => {
-    const settings = prompt(`ÔÜÖ´©Å Impostazioni Avanzate Calendari\n\nInserisci nuove impostazioni (JSON format):\n\nEsempio:\n{\n  "syncInterval": 30,\n  "maxRetries": 3,\n  "timeoutSeconds": 60\n}`, 
+    const settings = prompt(`⚙️ Impostazioni Avanzate Calendari\n\nInserisci nuove impostazioni (JSON format):\n\nEsempio:\n{\n  "syncInterval": 30,\n  "maxRetries": 3,\n  "timeoutSeconds": 60\n}`, 
       JSON.stringify({
         syncInterval: 30,
         maxRetries: 3,
@@ -1589,9 +1589,9 @@ const AdminPanelPro = (): JSX.Element => {
       const parsedSettings = JSON.parse(settings);
       
       // Simula salvataggio impostazioni avanzate
-      alert(`ÔÜÖ´©Å Impostazioni avanzate salvate!\n\n${JSON.stringify(parsedSettings, null, 2)}`);
+      alert(`⚙️ Impostazioni avanzate salvate!\n\n${JSON.stringify(parsedSettings, null, 2)}`);
     } catch (error) {
-      alert('ÔØî Formato JSON non valido. Riprova.');
+      alert('❌ Formato JSON non valido. Riprova.');
     }
   };
 
@@ -1610,23 +1610,23 @@ const AdminPanelPro = (): JSX.Element => {
         averageGuests: 2.8
       };
       
-      const report = `­ƒôè REPORT DETTAGLIATO PRENOTAZIONI\n\n` +
-        `­ƒôê STATISTICHE GENERALI:\n` +
+      const report = `📊 REPORT DETTAGLIATO PRENOTAZIONI\n\n` +
+        `📊 STATISTICHE GENERALI:\n` +
         `ÔÇó Prenotazioni totali: ${reportData.totalBookings}\n` +
         `ÔÇó Confermate: ${reportData.confirmedBookings}\n` +
         `ÔÇó In attesa: ${reportData.pendingBookings}\n` +
-        `ÔÇó Ricavo totale: Ôé¼${reportData.totalRevenue.toFixed(2)}\n\n` +
-        `­ƒôè METRICHE:\n` +
+        `ÔÇó Ricavo totale: €${reportData.totalRevenue.toFixed(2)}\n\n` +
+        `📊 METRICHE:\n` +
         `ÔÇó Soggiorno medio: ${reportData.averageStay} notti\n` +
         `ÔÇó Tasso occupazione: ${reportData.occupancyRate}%\n` +
         `ÔÇó Piattaforma top: ${reportData.topPlatform}\n` +
         `ÔÇó Ospiti medi: ${reportData.averageGuests}\n\n` +
-        `­ƒôà Generato il: ${new Date().toLocaleDateString('it-IT')} alle ${new Date().toLocaleTimeString('it-IT')}`;
+        `📅 Generato il: ${new Date().toLocaleDateString('it-IT')} alle ${new Date().toLocaleTimeString('it-IT')}`;
       
       alert(report);
     } catch (error) {
       console.error('Errore generazione report:', error);
-      alert('ÔØî Errore nella generazione del report dettagliato');
+      alert('❌ Errore nella generazione del report dettagliato');
     }
   };
 
@@ -1639,13 +1639,13 @@ const AdminPanelPro = (): JSX.Element => {
       'Email promozionale personalizzata'
     ];
     
-    const selectedType = prompt(`­ƒôº Email di Massa\n\nSeleziona il tipo di email:\n${emailTypes.map((type, index) => `${index + 1}. ${type}`).join('\n')}\n\nInserisci il numero (1-5):`);
+    const selectedType = prompt(`📧 Email di Massa\n\nSeleziona il tipo di email:\n${emailTypes.map((type, index) => `${index + 1}. ${type}`).join('\n')}\n\nInserisci il numero (1-5):`);
     
     if (selectedType && parseInt(selectedType) >= 1 && parseInt(selectedType) <= 5) {
       const type = emailTypes[parseInt(selectedType) - 1];
       const recipientCount = realBookings.length + recentBookings.length + 150; // Aggiungi database email
       
-      alert(`­ƒôº Invio Email di Massa Avviato!\n\n­ƒô¿ Tipo: ${type}\n­ƒæÑ Destinatari: ${recipientCount} clienti\nÔÅ▒´©Å Tempo stimato: 15-20 minuti\n\nÔ£à Email aggiunte alla coda di invio\n­ƒôè Riceverai un report al completamento`);
+      alert(`📧 Invio Email di Massa Avviato!\n\n📧 Tipo: ${type}\n👥 Destinatari: ${recipientCount} clienti\n⚠️ Tempo stimato: 15-20 minuti\n\n✅ Email aggiunte alla coda di invio\n📊 Riceverai un report al completamento`);
     }
   };
 
@@ -1698,15 +1698,15 @@ const AdminPanelPro = (): JSX.Element => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
-      alert(`­ƒÆ¥ Export Excel Completato!\n\n­ƒôü File: vincanto-prenotazioni-${new Date().toISOString().split('T')[0]}.csv\n­ƒôè Righe esportate: ${bookingsData.length}\n­ƒÆ¥ Download avviato automaticamente`);
+      alert(`💾 Export Excel Completato!\n\n📥 File: vincanto-prenotazioni-${new Date().toISOString().split('T')[0]}.csv\n📊 Righe esportate: ${bookingsData.length}\n💾 Download avviato automaticamente`);
     } catch (error) {
       console.error('Errore export Excel:', error);
-      alert('ÔØî Errore nell\'esportazione Excel');
+      alert('❌ Errore nell\'esportazione Excel');
     }
   };
 
   const handleSyncAllPlatforms = async () => {
-    const confirm = window.confirm('­ƒöä Sincronizzare tutte le piattaforme?\n\nQuesta operazione potrebbe richiedere alcuni minuti e aggiornare tutte le prenotazioni.');
+    const confirm = window.confirm('🔄 Sincronizzare tutte le piattaforme?\n\nQuesta operazione potrebbe richiedere alcuni minuti e aggiornare tutte le prenotazioni.');
     
     if (!confirm) return;
 
@@ -1729,16 +1729,16 @@ const AdminPanelPro = (): JSX.Element => {
       const totalNewBookings = Object.values(syncResults).filter(r => r.success).reduce((sum, r) => sum + (r.newBookings || 0), 0);
       const totalUpdated = Object.values(syncResults).filter(r => r.success).reduce((sum, r) => sum + (r.updated || 0), 0);
       
-      const resultMessage = `­ƒöä Sincronizzazione Completata!\n\n` +
-        `Ô£à Piattaforme sincronizzate: ${successfulPlatforms}/${platforms.length}\n` +
+      const resultMessage = `🔄 Sincronizzazione Completata!\n\n` +
+        `✅ Piattaforme sincronizzate: ${successfulPlatforms}/${platforms.length}\n` +
         `Ô×ò Nuove prenotazioni: ${totalNewBookings}\n` +
-        `Ô£Å´©Å Prenotazioni aggiornate: ${totalUpdated}\n\n` +
-        `­ƒôè Dettagli:\n` +
-        `ÔÇó Airbnb: ${syncResults.airbnb.success ? `Ô£à ${syncResults.airbnb.newBookings} nuove, ${syncResults.airbnb.updated} aggiornate` : 'ÔØî'}\n` +
-        `ÔÇó Booking.com: ${syncResults.booking.success ? `Ô£à ${syncResults.booking.newBookings} nuove, ${syncResults.booking.updated} aggiornate` : 'ÔØî'}\n` +
-        `ÔÇó Expedia: ${syncResults.expedia.success ? 'Ô£à' : 'ÔØî ' + syncResults.expedia.error}\n` +
-        `ÔÇó Google Calendar: ${syncResults.google.success ? `Ô£à ${syncResults.google.newBookings} nuove, ${syncResults.google.updated} aggiornate` : 'ÔØî'}\n` +
-        `ÔÇó VRBO: ${syncResults.vrbo.success ? `Ô£à ${syncResults.vrbo.newBookings} nuove, ${syncResults.vrbo.updated} aggiornate` : 'ÔØî'}`;
+        `⚠️ Prenotazioni aggiornate: ${totalUpdated}\n\n` +
+        `📊 Dettagli:\n` +
+        `ÔÇó Airbnb: ${syncResults.airbnb.success ? `✅ ${syncResults.airbnb.newBookings} nuove, ${syncResults.airbnb.updated} aggiornate` : '❌'}\n` +
+        `ÔÇó Booking.com: ${syncResults.booking.success ? `✅ ${syncResults.booking.newBookings} nuove, ${syncResults.booking.updated} aggiornate` : '❌'}\n` +
+        `ÔÇó Expedia: ${syncResults.expedia.success ? '✅' : '❌ ' + syncResults.expedia.error}\n` +
+        `ÔÇó Google Calendar: ${syncResults.google.success ? `✅ ${syncResults.google.newBookings} nuove, ${syncResults.google.updated} aggiornate` : '❌'}\n` +
+        `ÔÇó VRBO: ${syncResults.vrbo.success ? `✅ ${syncResults.vrbo.newBookings} nuove, ${syncResults.vrbo.updated} aggiornate` : '❌'}`;
       
       alert(resultMessage);
       
@@ -1746,7 +1746,7 @@ const AdminPanelPro = (): JSX.Element => {
       await loadRealApiData();
     } catch (error) {
       console.error('Errore sincronizzazione piattaforme:', error);
-      alert('ÔØî Errore nella sincronizzazione delle piattaforme');
+      alert('❌ Errore nella sincronizzazione delle piattaforme');
     } finally {
       setIsLoadingData(false);
     }
@@ -1755,7 +1755,7 @@ const AdminPanelPro = (): JSX.Element => {
   // === NUOVE FUNZIONI PAGAMENTI AGGIUNTE ===
 
   const handleConfigureStripe = () => {
-    const stripeConfig = prompt(`ÔÜÖ´©Å Configurazione Stripe\n\nInserisci la tua configurazione Stripe (JSON):\n\nEsempio:\n{\n  "publicKey": "pk_live_...",\n  "secretKey": "sk_live_...",\n  "webhookSecret": "whsec_...",\n  "currency": "EUR"\n}`, 
+    const stripeConfig = prompt(`⚙️ Configurazione Stripe\n\nInserisci la tua configurazione Stripe (JSON):\n\nEsempio:\n{\n  "publicKey": "pk_live_...",\n  "secretKey": "sk_live_...",\n  "webhookSecret": "whsec_...",\n  "currency": "EUR"\n}`, 
       JSON.stringify({
         publicKey: 'pk_live_51...',
         secretKey: 'sk_live_51...',
@@ -1769,21 +1769,21 @@ const AdminPanelPro = (): JSX.Element => {
     
     try {
       const config = JSON.parse(stripeConfig);
-      alert(`ÔÜÖ´©Å Configurazione Stripe Salvata!\n\n­ƒÆ│ Valuta: ${config.currency}\n­ƒôè Commissione: ${config.commission}%\n­ƒöÉ Sicurezza: Attivata\n\nÔ£à Stripe configurato correttamente`);
+      alert(`⚙️ Configurazione Stripe Salvata!\n\n💳 Valuta: ${config.currency}\n📊 Commissione: ${config.commission}%\n🔐 Sicurezza: Attivata\n\n✅ Stripe configurato correttamente`);
     } catch (error) {
-      alert('ÔØî Formato JSON non valido. Riprova.');
+      alert('❌ Formato JSON non valido. Riprova.');
     }
   };
 
   const handleEditBankTransfer = () => {
-    const newIBAN = prompt('­ƒÅª Modifica Dati Bonifico Bancario\n\nInserisci il nuovo IBAN:', 'IT02 L012 3456 789012345678901');
+    const newIBAN = prompt('🏦 Modifica Dati Bonifico Bancario\n\nInserisci il nuovo IBAN:', 'IT02 L012 3456 789012345678901');
     
     if (!newIBAN) return;
     
-    const liquidationDays = prompt('ÔÅ▒´©Å Giorni per liquidazione:', '2');
+    const liquidationDays = prompt('⚠️ Giorni per liquidazione:', '2');
     
     if (liquidationDays) {
-      alert(`­ƒÅª Dati Bonifico Aggiornati!\n\n­ƒÆ│ IBAN: ${newIBAN}\n­ƒôà Liquidazione: ${liquidationDays} giorni\nÔ£à Configurazione salvata con successo`);
+      alert(`🏦 Dati Bonifico Aggiornati!\n\n💳 IBAN: ${newIBAN}\n📅 Liquidazione: ${liquidationDays} giorni\n✅ Configurazione salvata con successo`);
     }
   };
 
@@ -1796,13 +1796,13 @@ const AdminPanelPro = (): JSX.Element => {
       webhooks: true
     };
     
-    alert(`Ô£à Setup PayPal Completato!\n\n­ƒôº Email: ${paypalConfig.email}\n­ƒöù Link: ${paypalConfig.link}\n­ƒôè Commissione: ${paypalConfig.commission}%\n­ƒÆ░ Valute: ${paypalConfig.currency.join(', ')}\n­ƒöö Webhook: ${paypalConfig.webhooks ? 'Attivi' : 'Disattivi'}\n\n­ƒÄë PayPal Business ├¿ ora completamente configurato!`);
+    alert(`✅ Setup PayPal Completato!\n\n📧 Email: ${paypalConfig.email}\n📤 Link: ${paypalConfig.link}\n📊 Commissione: ${paypalConfig.commission}%\n💰 Valute: ${paypalConfig.currency.join(', ')}\n🔔 Webhook: ${paypalConfig.webhooks ? 'Attivi' : 'Disattivi'}\n\n✅ PayPal Business ├¿ ora completamente configurato!`);
   };
 
   // === ADVANCED PAYMENT HANDLERS ===
 
   const handleProcessRefund = async (paymentId: string, amount?: number) => {
-    if (!confirm(`ÔÜá´©Å Confermi il rimborso${amount ? ` di Ôé¼${amount.toFixed(2)}` : ' totale'}?`)) return;
+    if (!confirm(`⚠️ Confermi il rimborso${amount ? ` di €${amount.toFixed(2)}` : ' totale'}?`)) return;
     
     setLoading(true);
     try {
@@ -1819,14 +1819,14 @@ const AdminPanelPro = (): JSX.Element => {
       const data = await response.json();
       
       if (response.ok) {
-        alert(`Ô£à Rimborso Processato!\n\n­ƒÆ░ Importo: Ôé¼${data.amount}\n­ƒåö Refund ID: ${data.refund_id}\nÔÅ▒´©Å Il rimborso sar├á visibile sul conto del cliente entro 5-10 giorni lavorativi.`);
+        alert(`✅ Rimborso Processato!\n\n💰 Importo: €${data.amount}\n💳 Refund ID: ${data.refund_id}\n⚠️ Il rimborso sar├á visibile sul conto del cliente entro 5-10 giorni lavorativi.`);
         await loadRealApiData(); // Reload transactions
       } else {
         throw new Error(data.error);
       }
     } catch (error) {
-      console.error('ÔØî Errore rimborso:', error);
-      alert(`ÔØî Errore nel processare il rimborso: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
+      console.error('❌ Errore rimborso:', error);
+      alert(`❌ Errore nel processare il rimborso: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
     } finally {
       setLoading(false);
     }
@@ -1844,13 +1844,13 @@ const AdminPanelPro = (): JSX.Element => {
       const data = await response.json();
       
       if (response.ok && data.receipt_url) {
-        alert(`Ô£à Ricevuta Inviata!\n\n­ƒôº Email: ${customerEmail}\n­ƒöù URL Ricevuta: ${data.receipt_url}\n\nLa ricevuta ├¿ stata inviata con successo.`);
+        alert(`✅ Ricevuta Inviata!\n\n📧 Email: ${customerEmail}\n📤 URL Ricevuta: ${data.receipt_url}\n\nLa ricevuta ├¿ stata inviata con successo.`);
       } else {
         throw new Error(data.error || 'Ricevuta non disponibile');
       }
     } catch (error) {
-      console.error('ÔØî Errore invio ricevuta:', error);
-      alert(`ÔØî Errore: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
+      console.error('❌ Errore invio ricevuta:', error);
+      alert(`❌ Errore: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
     } finally {
       setLoading(false);
     }
@@ -1863,13 +1863,13 @@ const AdminPanelPro = (): JSX.Element => {
       const data = await response.json();
       
       if (response.ok) {
-        alert(`­ƒÆ│ Stato Pagamento\n\n­ƒåö ID: ${paymentId}\n­ƒôè Stato: ${data.status}\n­ƒÆ░ Importo: Ôé¼${data.amount}\n­ƒÆÁ Valuta: ${data.currency.toUpperCase()}\n­ƒôº Cliente: ${data.customer_email}`);
+        alert(`💳 Stato Pagamento\n\n💳 ID: ${paymentId}\n📊 Stato: ${data.status}\n💰 Importo: €${data.amount}\n💱 Valuta: ${data.currency.toUpperCase()}\n📧 Cliente: ${data.customer_email}`);
       } else {
         throw new Error(data.error);
       }
     } catch (error) {
-      console.error('ÔØî Errore verifica pagamento:', error);
-      alert(`ÔØî Errore: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
+      console.error('❌ Errore verifica pagamento:', error);
+      alert(`❌ Errore: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
     } finally {
       setLoading(false);
     }
@@ -1877,8 +1877,8 @@ const AdminPanelPro = (): JSX.Element => {
 
   const handleConfigurePaymentGateway = async (gateway: 'stripe' | 'paypal') => {
     const config = gateway === 'stripe' 
-      ? prompt(`ÔÜÖ´©Å Configurazione Stripe\n\nInserisci JSON con:\n- publishable_key\n- secret_key\n- webhook_secret`)
-      : prompt(`ÔÜÖ´©Å Configurazione PayPal\n\nInserisci JSON con:\n- client_id\n- client_secret\n- mode (sandbox/live)`);
+      ? prompt(`⚙️ Configurazione Stripe\n\nInserisci JSON con:\n- publishable_key\n- secret_key\n- webhook_secret`)
+      : prompt(`⚙️ Configurazione PayPal\n\nInserisci JSON con:\n- client_id\n- client_secret\n- mode (sandbox/live)`);
     
     if (!config) return;
     
@@ -1895,12 +1895,12 @@ const AdminPanelPro = (): JSX.Element => {
       const data = await response.json();
       
       if (response.ok) {
-        alert(`Ô£à ${gateway === 'stripe' ? 'Stripe' : 'PayPal'} configurato con successo!`);
+        alert(`✅ ${gateway === 'stripe' ? 'Stripe' : 'PayPal'} configurato con successo!`);
       } else {
         throw new Error(data.error);
       }
     } catch (error) {
-      alert(`ÔØî Errore configurazione: ${error instanceof Error ? error.message : 'Formato JSON non valido'}`);
+      alert(`❌ Errore configurazione: ${error instanceof Error ? error.message : 'Formato JSON non valido'}`);
     }
   };
 
@@ -1948,14 +1948,14 @@ const AdminPanelPro = (): JSX.Element => {
     
     const stats = statsData[templateName as keyof typeof statsData] || statsData['Conferma Prenotazione'];
     
-    const report = `­ƒôè Statistiche Email: ${templateName}\n\n` +
-      `­ƒôº Email inviate: ${stats.sent}\n` +
-      `­ƒæÇ Aperture: ${stats.opened} (${stats.openRate})\n` +
-      `­ƒû▒´©Å Click: ${stats.clicked} (${stats.clickRate})\n` +
-      `ÔÜá´©Å Bounce: ${stats.bounced}\n` +
-      `ÔØî Disiscrizioni: ${stats.unsubscribed}\n\n` +
-      `­ƒôê Performance: ${parseFloat(stats.openRate) > 80 ? 'Eccellente' : parseFloat(stats.openRate) > 60 ? 'Buona' : 'Da migliorare'}\n` +
-      `­ƒôà Ultimo invio: ${new Date().toLocaleDateString('it-IT')}`;
+    const report = `📊 Statistiche Email: ${templateName}\n\n` +
+      `📧 Email inviate: ${stats.sent}\n` +
+      `📧 Aperture: ${stats.opened} (${stats.openRate})\n` +
+      `🔗 Click: ${stats.clicked} (${stats.clickRate})\n` +
+      `⚠️ Bounce: ${stats.bounced}\n` +
+      `❌ Disiscrizioni: ${stats.unsubscribed}\n\n` +
+      `📊 Performance: ${parseFloat(stats.openRate) > 80 ? 'Eccellente' : parseFloat(stats.openRate) > 60 ? 'Buona' : 'Da migliorare'}\n` +
+      `📅 Ultimo invio: ${new Date().toLocaleDateString('it-IT')}`;
     
     alert(report);
   };
@@ -1974,28 +1974,28 @@ const AdminPanelPro = (): JSX.Element => {
         worstTemplate: 'Richiesta Recensione (65% open rate)'
       };
       
-      const report = `­ƒôº REPORT DETTAGLIATO EMAIL\n\n` +
-        `­ƒôè STATISTICHE GENERALI:\n` +
+      const report = `📧 REPORT DETTAGLIATO EMAIL\n\n` +
+        `📊 STATISTICHE GENERALI:\n` +
         `ÔÇó Email inviate totali: ${totalStats.totalSent}\n` +
         `ÔÇó Aperture totali: ${totalStats.totalOpened}\n` +
         `ÔÇó Click totali: ${totalStats.totalClicked}\n` +
         `ÔÇó Bounce totali: ${totalStats.totalBounced}\n` +
         `ÔÇó Disiscrizioni: ${totalStats.totalUnsubscribed}\n\n` +
-        `­ƒôê PERFORMANCE:\n` +
+        `📊 PERFORMANCE:\n` +
         `ÔÇó Tasso apertura medio: ${totalStats.averageOpenRate}\n` +
         `ÔÇó Tasso click medio: ${totalStats.averageClickRate}\n` +
         `ÔÇó Template migliore: ${totalStats.topTemplate}\n` +
         `ÔÇó Template da migliorare: ${totalStats.worstTemplate}\n\n` +
-        `­ƒÆí SUGGERIMENTI:\n` +
+        `💡 SUGGERIMENTI:\n` +
         `ÔÇó Ottimizza oggetto email per template recensioni\n` +
         `ÔÇó A/B test per migliorare CTR\n` +
         `ÔÇó Personalizzazione avanzata consigliata\n\n` +
-        `­ƒôà Report generato: ${new Date().toLocaleString('it-IT')}`;
+        `📅 Report generato: ${new Date().toLocaleString('it-IT')}`;
       
       alert(report);
     } catch (error) {
       console.error('Errore report email:', error);
-      alert('ÔØî Errore nella generazione del report email');
+      alert('❌ Errore nella generazione del report email');
     }
   };
 
@@ -2009,12 +2009,12 @@ const AdminPanelPro = (): JSX.Element => {
       'Abandoned booking recovery'
     ];
     
-    const selectedAutomation = prompt(`ÔÜí Gestisci Automazioni Email\n\nSeleziona automazione da configurare:\n${automations.map((auto, index) => `${index + 1}. ${auto}`).join('\n')}\n\nInserisci il numero (1-6):`);
+    const selectedAutomation = prompt(`⏱️ Gestisci Automazioni Email\n\nSeleziona automazione da configurare:\n${automations.map((auto, index) => `${index + 1}. ${auto}`).join('\n')}\n\nInserisci il numero (1-6):`);
     
     if (selectedAutomation && parseInt(selectedAutomation) >= 1 && parseInt(selectedAutomation) <= 6) {
       const automation = automations[parseInt(selectedAutomation) - 1];
       
-      const settings = prompt(`ÔÜÖ´©Å Configurazione: ${automation}\n\nInserisci impostazioni (JSON):\n\nEsempio:\n{\n  "active": true,\n  "delay": "24h",\n  "conditions": ["booking_confirmed"]\n}`,
+      const settings = prompt(`⚙️ Configurazione: ${automation}\n\nInserisci impostazioni (JSON):\n\nEsempio:\n{\n  "active": true,\n  "delay": "24h",\n  "conditions": ["booking_confirmed"]\n}`,
         JSON.stringify({
           active: true,
           delay: automation.includes('Welcome') ? '1h' : '24h',
@@ -2026,9 +2026,9 @@ const AdminPanelPro = (): JSX.Element => {
       if (settings) {
         try {
           const config = JSON.parse(settings);
-          alert(`ÔÜí Automazione Configurata!\n\n­ƒÄ» Automazione: ${automation}\nÔ£à Stato: ${config.active ? 'Attiva' : 'Sospesa'}\nÔÅ▒´©Å Delay: ${config.delay}\n­ƒôè Condizioni: ${config.conditions.join(', ')}\n\n­ƒÜÇ Automazione salvata e attivata!`);
+          alert(`⏱️ Automazione Configurata!\n\n🎨 Automazione: ${automation}\n✅ Stato: ${config.active ? 'Attiva' : 'Sospesa'}\n⚠️ Delay: ${config.delay}\n📊 Condizioni: ${config.conditions.join(', ')}\n\n🖥️ Automazione salvata e attivata!`);
         } catch (error) {
-          alert('ÔØî Formato JSON non valido. Riprova.');
+          alert('❌ Formato JSON non valido. Riprova.');
         }
       }
     }
@@ -2039,18 +2039,18 @@ const AdminPanelPro = (): JSX.Element => {
   // Handler per SuperAdmin cambiare la propria password
   const handleSuperAdminPasswordChange = async () => {
     if (!isSuperAdmin) {
-      alert('ÔØî Solo il SuperAdmin pu├▒ cambiare la password');
+      alert('❌ Solo il SuperAdmin pu├▒ cambiare la password');
       return;
     }
 
     // Validazione campi
     if (!passwordChangeForm.currentPassword) {
-      alert('ÔØî Inserisci la password attuale');
+      alert('❌ Inserisci la password attuale');
       return;
     }
 
     if (!passwordChangeForm.newPassword || passwordChangeForm.newPassword.length < 8) {
-      alert('ÔØî La nuova password deve avere minimo 8 caratteri');
+      alert('❌ La nuova password deve avere minimo 8 caratteri');
       return;
     }
 
@@ -2060,12 +2060,12 @@ const AdminPanelPro = (): JSX.Element => {
     const hasSymbol = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(passwordChangeForm.newPassword);
 
     if (!hasUppercase || !hasNumber || !hasSymbol) {
-      alert('ÔØî Password deve contenere:\nÔÇó Almeno una maiuscola\nÔÇó Almeno un numero\nÔÇó Almeno un simbolo');
+      alert('❌ Password deve contenere:\nÔÇó Almeno una maiuscola\nÔÇó Almeno un numero\nÔÇó Almeno un simbolo');
       return;
     }
 
     if (passwordChangeForm.newPassword !== passwordChangeForm.confirmPassword) {
-      alert('ÔØî Le password non coincidono');
+      alert('❌ Le password non coincidono');
       return;
     }
 
@@ -2083,7 +2083,7 @@ const AdminPanelPro = (): JSX.Element => {
 
       const data = await response.json();
       if (data.success) {
-        alert('Ô£à Password cambiata con successo!\n\nLe sessioni precedenti sono state invalidate.');
+        alert('✅ Password cambiata con successo!\n\nLe sessioni precedenti sono state invalidate.');
         setPasswordChangeForm({
           currentPassword: '',
           newPassword: '',
@@ -2091,11 +2091,11 @@ const AdminPanelPro = (): JSX.Element => {
         });
         setShowSuperAdminSettings(false);
       } else {
-        alert(`ÔØî Errore: ${data.message || 'Impossibile cambiare password'}`);
+        alert(`❌ Errore: ${data.message || 'Impossibile cambiare password'}`);
       }
     } catch (error) {
       console.error('Errore cambio password:', error);
-      alert('ÔØî Errore di connessione');
+      alert('❌ Errore di connessione');
     } finally {
       setLoading(false);
     }
@@ -2104,11 +2104,11 @@ const AdminPanelPro = (): JSX.Element => {
   // Handler per richiedere cambio password admin
   const handleRequestAdminPasswordChange = async (admin: any) => {
     if (!isSuperAdmin) {
-      alert('ÔØî Solo il SuperAdmin pu├▒ richiedere cambio password');
+      alert('❌ Solo il SuperAdmin pu├▒ richiedere cambio password');
       return;
     }
 
-    const reason = prompt('ÔÜá Motivo della richiesta di cambio password:\n(es: cambio periodico, reset sicurezza)', 'Cambio password richiesto');
+    const reason = prompt('⚠️ Motivo della richiesta di cambio password:\n(es: cambio periodico, reset sicurezza)', 'Cambio password richiesto');
     
     if (!reason) return;
 
@@ -2129,14 +2129,14 @@ const AdminPanelPro = (): JSX.Element => {
 
       const data = await response.json();
       if (data.success) {
-        alert(`Ô£à Richiesta di cambio password inviata a ${admin.email}\n\nEmail di notifica inviata al SuperAdmin.`);
+        alert(`✅ Richiesta di cambio password inviata a ${admin.email}\n\nEmail di notifica inviata al SuperAdmin.`);
         setSelectedAdminForPassword(null);
       } else {
-        alert(`ÔØî Errore: ${data.message || 'Impossibile inviare richiesta'}`);
+        alert(`❌ Errore: ${data.message || 'Impossibile inviare richiesta'}`);
       }
     } catch (error) {
       console.error('Errore richiesta cambio password:', error);
-      alert('ÔØî Errore di connessione');
+      alert('❌ Errore di connessione');
     } finally {
       setLoading(false);
     }
@@ -2172,26 +2172,26 @@ const AdminPanelPro = (): JSX.Element => {
   // Handler per creare nuovo admin
   const handleCreateAdmin = async () => {
     if (!isSuperAdmin) {
-      alert('ÔØî Solo il SuperAdmin pu├▓ creare admin');
+      alert('❌ Solo il SuperAdmin pu├▓ creare admin');
       return;
     }
 
     // Validazioni
     if (!newAdminForm.name || !newAdminForm.email || !newAdminForm.password) {
-      alert('ÔØî Tutti i campi sono obbligatori');
+      alert('❌ Tutti i campi sono obbligatori');
       return;
     }
 
     // Validazione email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(newAdminForm.email)) {
-      alert('ÔØî Email non valida');
+      alert('❌ Email non valida');
       return;
     }
 
     // Validazione password
     if (newAdminForm.password.length < 8) {
-      alert('ÔØî La password deve avere minimo 8 caratteri');
+      alert('❌ La password deve avere minimo 8 caratteri');
       return;
     }
 
@@ -2210,17 +2210,17 @@ const AdminPanelPro = (): JSX.Element => {
 
       const data = await response.json();
       if (data.success) {
-        alert(`Ô£à Admin ${newAdminForm.name} creato con successo!\n\nCredenziali inviate via email.`);
+        alert(`✅ Admin ${newAdminForm.name} creato con successo!\n\nCredenziali inviate via email.`);
         setNewAdminForm({ name: '', email: '', password: '', role: 'admin' });
         setShowCreateAdminForm(false);
         // Ricarica lista admin
         await loadAdminsList();
       } else {
-        alert(`ÔØî Errore: ${data.message || 'Impossibile creare admin'}`);
+        alert(`❌ Errore: ${data.message || 'Impossibile creare admin'}`);
       }
     } catch (error) {
       console.error('Errore creazione admin:', error);
-      alert('ÔØî Errore di connessione');
+      alert('❌ Errore di connessione');
     } finally {
       setLoading(false);
     }
@@ -2229,11 +2229,11 @@ const AdminPanelPro = (): JSX.Element => {
   // Handler per eliminare admin
   const handleDeleteAdmin = async (admin: any) => {
     if (!isSuperAdmin) {
-      alert('ÔØî Solo il SuperAdmin pu├▓ eliminare admin');
+      alert('❌ Solo il SuperAdmin pu├▓ eliminare admin');
       return;
     }
 
-    const confirmDelete = confirm(`­ƒöá Eliminare l'admin ${admin.name || admin.email}?\n\nQuesta azione ├¿ irreversibile.`);
+    const confirmDelete = confirm(`🗑️ Eliminare l'admin ${admin.name || admin.email}?\n\nQuesta azione ├¿ irreversibile.`);
     if (!confirmDelete) return;
 
     try {
@@ -2249,15 +2249,15 @@ const AdminPanelPro = (): JSX.Element => {
 
       const data = await response.json();
       if (data.success) {
-        alert(`Ô£à Admin ${admin.name || admin.email} eliminato con successo`);
+        alert(`✅ Admin ${admin.name || admin.email} eliminato con successo`);
         // Ricarica lista admin
         await loadAdminsList();
       } else {
-        alert(`ÔØî Errore: ${data.message || 'Impossibile eliminare admin'}`);
+        alert(`❌ Errore: ${data.message || 'Impossibile eliminare admin'}`);
       }
     } catch (error) {
       console.error('Errore eliminazione admin:', error);
-      alert('ÔØî Errore di connessione');
+      alert('❌ Errore di connessione');
     } finally {
       setLoading(false);
     }
@@ -2267,8 +2267,8 @@ const AdminPanelPro = (): JSX.Element => {
   
   const markNotificationAsRead = async (id: string | number) => {
     if (typeof id === 'number') {
-      log(`­ƒôû Notifica ${id} marcata come letta`);
-      alert(`Ô£à Notifica #${id} marcata come letta!`);
+      log(`🔔 Notifica ${id} marcata come letta`);
+      alert(`✅ Notifica #${id} marcata come letta!`);
       return;
     }
     
@@ -2305,7 +2305,7 @@ const AdminPanelPro = (): JSX.Element => {
     return (
       <div className="admin-access-denied-container">
         <div className="admin-access-denied-card">
-          <h1 className="admin-access-denied-icon">­ƒöÉ</h1>
+          <h1 className="admin-access-denied-icon">🔐</h1>
           <h2 className="admin-access-denied-title">Accesso Negato</h2>
           <p className="admin-access-denied-text">
             Questo pannello ├¿ riservato ai <strong>SuperAdmin</strong>.
@@ -2325,7 +2325,7 @@ const AdminPanelPro = (): JSX.Element => {
   // Authentication is now managed via TwoFactorLogin component and ProtectedRoute wrapper
 
   // === RENDER DEBUG PRINCIPALE ===
-  devLog('­ƒÄ» Rendering main admin panel...');
+  devLog('🎨 Rendering main admin panel...');
   
   // === RENDER ADMIN PANEL RESPONSIVE ===
   // Unifica bookings e calendarEvents per la tabella
@@ -2362,7 +2362,7 @@ const AdminPanelPro = (): JSX.Element => {
       {/* Header Responsive */}
       <header className="admin-header">
         <div className="admin-header-left">
-          <h1>­ƒÅí Vincanto Admin</h1>
+          <h1>🏢 Vincanto Admin</h1>
           <span className="admin-version admin-badge admin-badge-info">v2.0 Pro</span>
         </div>
         
@@ -2370,14 +2370,14 @@ const AdminPanelPro = (): JSX.Element => {
           <div className="admin-flex admin-items-center admin-gap-md">
             {/* Indicatore Status */}
             <div className={`admin-badge ${isLoadingData ? 'admin-badge-warning' : 'admin-badge-success'}`}>
-              {isLoadingData ? 'ÔÅ│ Loading' : 'Ô£à Online'}
+              {isLoadingData ? '⏳ Loading' : '✅ Online'}
             </div>
             
             {/* User Info */}
             <div className="admin-flex admin-items-center admin-gap-sm">
-              <span className="admin-text-muted admin-hidden-mobile">­ƒæñ Administrator</span>
+              <span className="admin-text-muted admin-hidden-mobile">👨 Administrator</span>
               <div className="admin-badge admin-badge-info" title="Modalit├á SuperAdmin Attiva">
-                ÔÜí SuperAdmin
+                ⏱️ SuperAdmin
               </div>
             </div>
           </div>
@@ -2391,8 +2391,8 @@ const AdminPanelPro = (): JSX.Element => {
               window.location.href = '/admin/login';
             }}
           >
-            <span className="admin-hidden-mobile">­ƒôñ Logout</span>
-            <span className="admin-visible-mobile">­ƒôñ</span>
+            <span className="admin-hidden-mobile">📥 Logout</span>
+            <span className="admin-visible-mobile">📥</span>
           </button>
         </div>
       </header>
@@ -2403,82 +2403,82 @@ const AdminPanelPro = (): JSX.Element => {
           <button 
             className={`admin-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
             onClick={() => {
-              log('­ƒÄ» Click su tab dashboard');
+              log('🎨 Click su tab dashboard');
               setActiveTab('dashboard');
             }}
           >
-            ­ƒôè Dashboard
+            📊 Dashboard
           </button>
           
           <button 
             className={`admin-nav-item ${activeTab === 'prezzi' ? 'active' : ''}`}
             onClick={() => {
-              log('­ƒÄ» Click su tab prezzi');
+              log('🎨 Click su tab prezzi');
               setActiveTab('prezzi');
             }}
           >
-            ­ƒÆ░ Prezzi
+            💰 Prezzi
           </button>
           
           <button 
             className={`admin-nav-item ${activeTab === 'servizi-extra' ? 'active' : ''}`}
             onClick={() => {
-              log('­ƒÄ» Click su tab servizi-extra');
+              log('🎨 Click su tab servizi-extra');
               setActiveTab('servizi-extra');
             }}
           >
-            ­ƒøÄ´©Å Servizi Extra
+            📁 Servizi Extra
           </button>
           
           <button 
             className={`admin-nav-item ${activeTab === 'calendari' ? 'active' : ''}`}
             onClick={() => {
-              log('­ƒÄ» Click su tab calendari');
+              log('🎨 Click su tab calendari');
               setActiveTab('calendari');
             }}
           >
-            ­ƒùô´©Å Calendari
+            📅 Calendari
           </button>
           
           <button 
             className={`admin-nav-item ${activeTab === 'prenotazioni' ? 'active' : ''}`}
             onClick={() => {
-              log('­ƒÄ» Click su tab prenotazioni');
+              log('🎨 Click su tab prenotazioni');
               setActiveTab('prenotazioni');
             }}
           >
-            ­ƒôà Prenotazioni
+            📅 Prenotazioni
           </button>
           
           <button 
             className={`admin-nav-item ${activeTab === 'pagamenti' ? 'active' : ''}`}
             onClick={() => {
-              log('­ƒÄ» Click su tab pagamenti');
+              log('🎨 Click su tab pagamenti');
               setActiveTab('pagamenti');
             }}
           >
-            ­ƒÆ│ Pagamenti
+            💳 Pagamenti
           </button>
           
           <button 
             className={`admin-nav-item ${activeTab === 'email' ? 'active' : ''}`}
             onClick={() => setActiveTab('email')}
           >
-            Ô£ë´©Å Email
+            📧 Email
           </button>
           
           <button 
             className={`admin-nav-item ${activeTab === 'notifiche' ? 'active' : ''}`}
             onClick={() => setActiveTab('notifiche')}
           >
-            ­ƒöö Notifiche
+            🔔 Notifiche
           </button>
           
           <button 
             className={`admin-nav-item ${activeTab === 'analytics' ? 'active' : ''}`}
             onClick={() => setActiveTab('analytics')}
           >
-            ­ƒôê Analytics
+            📊 Analytics
           </button>
 
           {isSuperAdmin && (
@@ -2486,7 +2486,7 @@ const AdminPanelPro = (): JSX.Element => {
               className={`admin-nav-item ${activeTab === 'admin-management' ? 'active' : ''}`}
               onClick={() => setActiveTab('admin-management')}
             >
-              ­ƒæí´©Å Gestione Admin
+              👥´©Å Gestione Admin
             </button>
           )}
           
@@ -2494,7 +2494,7 @@ const AdminPanelPro = (): JSX.Element => {
             className={`admin-nav-item ${activeTab === 'sistema' ? 'active' : ''}`}
             onClick={() => setActiveTab('sistema')}
           >
-            ÔÜÖ´©Å Sistema
+            ⚙️ Sistema
           </button>
         </div>
       </nav>
@@ -2504,7 +2504,7 @@ const AdminPanelPro = (): JSX.Element => {
         {error && (
           <div className="admin-section admin-text-danger">
             <div className="admin-card">
-              <h4>ÔÜá´©Å Errore di Sistema</h4>
+              <h4>⚠️ Errore di Sistema</h4>
               <p>{error}</p>
             </div>
           </div>
@@ -2513,11 +2513,11 @@ const AdminPanelPro = (): JSX.Element => {
         {/* Dashboard con Dati Backend Reali */}
         {activeTab === 'dashboard' && (
           <div className="admin-section admin-animate-fade-in">
-            <h2>­ƒôè Dashboard Live {isLoadingData && <span className="admin-loading"><div className="admin-spinner"></div> Caricamento...</span>}</h2>
+            <h2>📊 Dashboard Live {isLoadingData && <span className="admin-loading"><div className="admin-spinner"></div> Caricamento...</span>}</h2>
             
             {/* Statistiche Principali */}
             <div className="admin-mb-xl">
-              <h3>­ƒôè Statistiche Live (Database)</h3>
+              <h3>📊 Statistiche Live (Database)</h3>
               <div className="admin-stats-grid">
                 <div className="admin-stat-card">
                   <h3>Prenotazioni Totali</h3>
@@ -2527,7 +2527,7 @@ const AdminPanelPro = (): JSX.Element => {
                 
                 <div className="admin-stat-card">
                   <h3>Ricavi Totali</h3>
-                  <div className="stat-value">Ôé¼{(dashboardStats.totalRevenue || 0).toFixed(2)}</div>
+                  <div className="stat-value">€{(dashboardStats.totalRevenue || 0).toFixed(2)}</div>
                   <small>Calcolo backend</small>
                 </div>
                 
@@ -2547,7 +2547,7 @@ const AdminPanelPro = (): JSX.Element => {
 
             {/* Statistiche Aggiuntive */}
             <div className="admin-mb-xl">
-              <h3>­ƒôê Metriche Avanzate</h3>
+              <h3>📊 Metriche Avanzate</h3>
               <div className="admin-stats-grid">
                 <div className="admin-stat-card">
                   <h3>Notifiche Attive</h3>
@@ -2577,7 +2577,7 @@ const AdminPanelPro = (): JSX.Element => {
 
             {/* Prossime Prenotazioni */}
             <div className="admin-mb-xl">
-              <h3>­ƒôà Prossime Prenotazioni & Eventi iCal</h3>
+              <h3>📅 Prossime Prenotazioni & Eventi iCal</h3>
               <div className="admin-card">
                 <div className="admin-table-container">
                   {unifiedBookings.length > 0 ? (
@@ -2597,30 +2597,30 @@ const AdminPanelPro = (): JSX.Element => {
                             <td>{item.checkIn ? new Date(item.checkIn).toLocaleDateString('it-IT') : '-'}</td>
                             <td>
                               <span className={`admin-badge admin-badge-${item.source === 'airbnb' ? 'info' : item.source === 'booking' ? 'success' : item.source === 'ical' ? 'warning' : 'default'}`}>
-                                {item.source === 'airbnb' && '­ƒÅá Airbnb'}
-                                {item.source === 'booking' && '­ƒÅ¿ Booking.com'}
-                                {item.source === 'ical' && '­ƒôà iCal'}
-                                {item.source === 'manual' && 'Ô£ì´©Å Manuale'}
+                                {item.source === 'airbnb' && '📧 Airbnb'}
+                                {item.source === 'booking' && '📅 Booking.com'}
+                                {item.source === 'ical' && '📅 iCal'}
+                                {item.source === 'manual' && '✍️ Manuale'}
                                 {item.source !== 'airbnb' && item.source !== 'booking' && item.source !== 'ical' && item.source !== 'manual' && item.source}
                               </span>
                             </td>
-                            <td><strong>{item.totalPrice ? `Ôé¼${item.totalPrice}` : '-'}</strong></td>
+                            <td><strong>{item.totalPrice ? `€${item.totalPrice}` : '-'}</strong></td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   ) : (
                     <div className="admin-text-center admin-text-muted">
-                      <p>­ƒôè Nessuna prenotazione o evento iCal trovato</p>
+                      <p>📊 Nessuna prenotazione o evento iCal trovato</p>
                     </div>
                   )}
                 </div>
                 <div className="admin-flex admin-gap-md admin-mb-0 admin-mt-lg">
                   <button className="admin-btn admin-btn-secondary" onClick={() => loadRealApiData()}>
-                    ­ƒöä Ricarica Dati
+                    🔄 Ricarica Dati
                   </button>
                   <button className="admin-btn-secondary" onClick={() => setActiveTab('calendari')}>
-                    ­ƒôà Gestisci Calendari
+                    📅 Gestisci Calendari
                   </button>
                 </div>
               </div>
@@ -2671,11 +2671,11 @@ const AdminPanelPro = (): JSX.Element => {
         )}
         {activeTab === 'calendari' && (
           <div className="admin-calendari">
-            <h2>­ƒùô´©Å Gestione Calendari {isLoadingCalendars && '(Caricamento...)'}</h2>
+            <h2>📅 Gestione Calendari {isLoadingCalendars && '(Caricamento...)'}</h2>
             
             {/* Statistiche Calendari */}
             <div className="admin-pricing-section">
-              <h3>­ƒôè Statistiche Calendario</h3>
+              <h3>📊 Statistiche Calendario</h3>
               <div className="pricing-controls">
                 <div className="pricing-preview">
                   <div className="preview-item">
@@ -2723,12 +2723,12 @@ const AdminPanelPro = (): JSX.Element => {
                         onChange={(e) => setNewCalendarData({...newCalendarData, calendar_type: e.target.value})}
                         className="admin-select"
                       >
-                        <option value="google_calendar">­ƒÄ» Google Calendar</option>
-                        <option value="airbnb">­ƒÅá Airbnb</option>
-                        <option value="booking_com">­ƒîì Booking.com</option>
-                        <option value="vrbo">­ƒÅû´©Å VRBO</option>
-                        <option value="holidu">­ƒÅû´©Å Holidu</option>
-                        <option value="ical_external">­ƒôà iCal Esterno</option>
+                        <option value="google_calendar">🎨 Google Calendar</option>
+                        <option value="airbnb">📧 Airbnb</option>
+                        <option value="booking_com">📅 Booking.com</option>
+                        <option value="vrbo">🏨 VRBO</option>
+                        <option value="holidu">🏨 Holidu</option>
+                        <option value="ical_external">📅 iCal Esterno</option>
                       </select>
                       
                       <label htmlFor="cal-url">URL/iCal Feed:</label>
@@ -2769,14 +2769,14 @@ const AdminPanelPro = (): JSX.Element => {
                     
                     <div className="admin-pricing-actions">
                       <button type="submit" className="admin-btn-primary" disabled={isLoadingCalendars}>
-                        {isLoadingCalendars ? 'ÔÅ│ Creazione...' : 'Ô£à Crea Calendario'}
+                        {isLoadingCalendars ? '⏳ Creazione...' : '✅ Crea Calendario'}
                       </button>
                       <button 
                         type="button" 
                         className="admin-btn-secondary" 
                         onClick={() => setShowNewCalendarForm(false)}
                       >
-                        ÔØî Annulla
+                        ❌ Annulla
                       </button>
                     </div>
                   </form>
@@ -2786,7 +2786,7 @@ const AdminPanelPro = (): JSX.Element => {
 
             {/* Lista Calendari Configurati */}
             <div className="admin-pricing-section">
-              <h3>­ƒùô´©Å Calendari Configurati</h3>
+              <h3>📅 Calendari Configurati</h3>
               <div className="admin-pricing-actions margin-bottom">
                 <button 
                   className="admin-btn-primary" 
@@ -2800,14 +2800,14 @@ const AdminPanelPro = (): JSX.Element => {
                   onClick={() => handleForceSync()}
                   disabled={isLoadingCalendars}
                 >
-                  {isLoadingCalendars ? 'ÔÅ│ Sincronizzazione...' : '­ƒöä Sincronizza Tutti'}
+                  {isLoadingCalendars ? '⏳ Sincronizzazione...' : '🔄 Sincronizza Tutti'}
                 </button>
                 <button 
                   className="admin-btn-secondary" 
                   onClick={loadCalendarConfigs}
                   disabled={isLoadingCalendars}
                 >
-                  ­ƒöä Ricarica
+                  🔄 Ricarica
                 </button>
                 {/* Bottone per sync manuale reale */}
                 <button
@@ -2815,7 +2815,7 @@ const AdminPanelPro = (): JSX.Element => {
                   onClick={handleForceRealCalendarSync}
                   disabled={isLoadingCalendars}
                 >
-                  {isLoadingCalendars ? 'ÔÅ│ Sync Reale...' : 'ÔÜí Sincronizza Calendari Ora'}
+                  {isLoadingCalendars ? '⏳ Sync Reale...' : '⏱️ Sincronizza Calendari Ora'}
                 </button>
               </div>
               
@@ -2839,16 +2839,16 @@ const AdminPanelPro = (): JSX.Element => {
                           <td><strong>{calendar.name}</strong></td>
                           <td>
                             <span className={`status ${calendar.calendar_type}`}>
-                              {calendar.calendar_type === 'google_calendar' && '­ƒÄ» Google'}
-                              {calendar.calendar_type === 'airbnb' && '­ƒÅá Airbnb'}
-                              {calendar.calendar_type === 'booking_com' && '­ƒîì Booking.com'}
-                              {calendar.calendar_type === 'vrbo' && '­ƒÅû´©Å VRBO'}
-                              {calendar.calendar_type === 'ical_external' && '­ƒôà iCal'}
+                              {calendar.calendar_type === 'google_calendar' && '🎨 Google'}
+                              {calendar.calendar_type === 'airbnb' && '📧 Airbnb'}
+                              {calendar.calendar_type === 'booking_com' && '📅 Booking.com'}
+                              {calendar.calendar_type === 'vrbo' && '🏨 VRBO'}
+                              {calendar.calendar_type === 'ical_external' && '📅 iCal'}
                             </span>
                           </td>
                           <td>
                             <span className={`status ${calendar.is_active ? 'confirmed' : 'cancelled'}`}>
-                              {calendar.is_active ? '­ƒƒó Attivo' : '­ƒö┤ Disattivo'}
+                              {calendar.is_active ? '✅ Attivo' : '❌ Disattivo'}
                             </span>
                           </td>
                           <td>{calendar.last_sync_at ? new Date(calendar.last_sync_at).toLocaleString('it-IT') : 'Mai'}</td>
@@ -2862,7 +2862,7 @@ const AdminPanelPro = (): JSX.Element => {
                                 disabled={isLoadingCalendars}
                                 title="Sincronizza ora"
                               >
-                                ­ƒöä
+                                🔄
                               </button>
                               <button 
                                 className="admin-btn-small" 
@@ -2870,7 +2870,7 @@ const AdminPanelPro = (): JSX.Element => {
                                 disabled={isLoadingCalendars}
                                 title="Test connessione"
                               >
-                                ­ƒº¬
+                                🧪
                               </button>
                               <button 
                                 className="admin-btn-small" 
@@ -2878,7 +2878,7 @@ const AdminPanelPro = (): JSX.Element => {
                                 disabled={isLoadingCalendars}
                                 title={calendar.is_active ? "Disattiva" : "Attiva"}
                               >
-                                {calendar.is_active ? 'ÔÅ©´©Å' : 'ÔûÂ´©Å'}
+                                {calendar.is_active ? '⏸️' : '❌'}
                               </button>
                               <button 
                                 className="admin-btn-small" 
@@ -2886,7 +2886,7 @@ const AdminPanelPro = (): JSX.Element => {
                                 disabled={isLoadingCalendars}
                                 title="Modifica"
                               >
-                                Ô£Å´©Å
+                                ⚠️
                               </button>
                               <button 
                                 className="admin-btn-small admin-btn-danger" 
@@ -2894,7 +2894,7 @@ const AdminPanelPro = (): JSX.Element => {
                                 disabled={isLoadingCalendars}
                                 title="Elimina"
                               >
-                                ­ƒùæ´©Å
+                                🗑️
                               </button>
                             </div>
                           </td>
@@ -2905,7 +2905,7 @@ const AdminPanelPro = (): JSX.Element => {
                 </div>
               ) : (
                 <div className="admin-pricing-card">
-                  <p>­ƒôè Nessun calendario configurato. Aggiungi il primo calendario per iniziare la sincronizzazione automatica.</p>
+                  <p>📊 Nessun calendario configurato. Aggiungi il primo calendario per iniziare la sincronizzazione automatica.</p>
                   <div className="admin-pricing-actions">
                     <button 
                       className="admin-btn-primary" 
@@ -2921,7 +2921,7 @@ const AdminPanelPro = (): JSX.Element => {
             {/* Form per Bloccare Date */}
             {showBlockDateForm && (
               <div className="admin-pricing-section">
-                <h3>­ƒÜ½ Blocca Nuove Date</h3>
+                <h3>📅 Blocca Nuove Date</h3>
                 <div className="admin-pricing-card">
                   <form onSubmit={handleAddBlockedDate}>
                     <div className="pricing-controls">
@@ -2957,22 +2957,22 @@ const AdminPanelPro = (): JSX.Element => {
                         className="admin-select"
                         title="Seleziona il motivo del blocco"
                       >
-                        <option value="maintenance">­ƒöº Manutenzione</option>
-                        <option value="owner_use">­ƒÅá Uso Proprietario</option>
-                        <option value="cleaning">­ƒº¢ Pulizie Approfondite</option>
-                        <option value="renovation">­ƒÅù´©Å Ristrutturazione</option>
-                        <option value="other">ÔØô Altro</option>
+                        <option value="maintenance">📧 Manutenzione</option>
+                        <option value="owner_use">📧 Uso Proprietario</option>
+                        <option value="cleaning">🧹 Pulizie Approfondite</option>
+                        <option value="renovation">🔨 Ristrutturazione</option>
+                        <option value="other">❌ Altro</option>
                       </select>
                     </div>
                     
                     <div className="admin-pricing-actions">
-                      <button type="submit" className="admin-btn-primary">­ƒÜ½ Blocca Date</button>
+                      <button type="submit" className="admin-btn-primary">📅 Blocca Date</button>
                       <button 
                         type="button" 
                         className="admin-btn-secondary" 
                         onClick={() => setShowBlockDateForm(false)}
                       >
-                        ÔØî Annulla
+                        ❌ Annulla
                       </button>
                     </div>
                   </form>
@@ -2994,7 +2994,7 @@ const AdminPanelPro = (): JSX.Element => {
                   className="admin-btn-secondary" 
                   onClick={loadRealApiData}
                 >
-                  ­ƒöä Ricarica Dati
+                  🔄 Ricarica Dati
                 </button>
               </div>
               
@@ -3024,11 +3024,11 @@ const AdminPanelPro = (): JSX.Element => {
                             <td>{endDate.toLocaleDateString('it-IT')}</td>
                             <td>
                               <span className={`status ${block.reason}`}>
-                                {block.reason === 'maintenance' && '­ƒöº Manutenzione'}
-                                {block.reason === 'owner_use' && '­ƒÅá Uso Proprietario'}
-                                {block.reason === 'cleaning' && '­ƒº¢ Pulizie'}
-                                {block.reason === 'renovation' && '­ƒÅù´©Å Ristrutturazione'}
-                                {block.reason === 'other' && 'ÔØô Altro'}
+                                {block.reason === 'maintenance' && '📧 Manutenzione'}
+                                {block.reason === 'owner_use' && '📧 Uso Proprietario'}
+                                {block.reason === 'cleaning' && '🧹 Pulizie'}
+                                {block.reason === 'renovation' && '🔨 Ristrutturazione'}
+                                {block.reason === 'other' && '❌ Altro'}
                               </span>
                             </td>
                             <td>{daysDiff + 1} giorni</td>
@@ -3037,7 +3037,7 @@ const AdminPanelPro = (): JSX.Element => {
                                 className="admin-btn-small" 
                                 onClick={() => handleRemoveBlockedDate(block.id)}
                               >
-                                ­ƒùæ´©Å Rimuovi
+                                🗑️ Rimuovi
                               </button>
                             </td>
                           </tr>
@@ -3048,37 +3048,37 @@ const AdminPanelPro = (): JSX.Element => {
                 </div>
               ) : (
                 <div className="admin-pricing-card">
-                  <p>­ƒôè Nessuna data bloccata nel sistema</p>
+                  <p>📊 Nessuna data bloccata nel sistema</p>
                 </div>
               )}
             </div>
 
             {/* Calendario Google Master */}
             <div className="admin-pricing-section">
-              <h3>­ƒÄ» Calendario Master Google</h3>
+              <h3>🎨 Calendario Master Google</h3>
               <div className="admin-calendar-card">
-                <h3>­ƒôà Google Calendar - Vincanto Master</h3>
-                <div className="calendar-status active">­ƒƒó Connesso e Sincronizzato</div>
+                <h3>📅 Google Calendar - Vincanto Master</h3>
+                <div className="calendar-status active">✅ Connesso e Sincronizzato</div>
                 <div className="calendar-info">
-                  <p>­ƒôº Email: vincantomaiori@gmail.com</p>
-                  <p>­ƒöä Ultima sincronizzazione: {new Date().toLocaleString('it-IT')}</p>
-                  <p>­ƒôè Eventi sincronizzati: {calendarStats.total || 0}</p>
+                  <p>📧 Email: vincantomaiori@gmail.com</p>
+                  <p>🔄 Ultima sincronizzazione: {new Date().toLocaleString('it-IT')}</p>
+                  <p>📊 Eventi sincronizzati: {calendarStats.total || 0}</p>
                   <div className={`sync-indicator ${isGoogleAuthenticated ? 'success' : 'warning'}`} id="calendar-connection-status">
                     {isGoogleAuthenticated 
-                      ? 'Ô£à Autenticato - Sincronizzazione attiva' 
+                      ? '✅ Autenticato - Sincronizzazione attiva' 
                       : '´┐¢ Richiesta autenticazione Google Calendar'}
                   </div>
                 </div>
                 <div className="calendar-controls">
                   {!isGoogleAuthenticated ? (
-                    <button className="admin-btn-success admin-btn-small" onClick={() => initiateGoogleAuth()}>­ƒöÉ Autentica Google</button>
+                    <button className="admin-btn-success admin-btn-small" onClick={() => initiateGoogleAuth()}>🔐 Autentica Google</button>
                   ) : (
-                    <button className="admin-btn-primary admin-btn-small" onClick={() => handleGoogleCalendarSync()}>­ƒöä Sincronizza Google</button>
+                    <button className="admin-btn-primary admin-btn-small" onClick={() => handleGoogleCalendarSync()}>🔄 Sincronizza Google</button>
                   )}
-                  <button className="admin-btn-secondary admin-btn-small" onClick={() => testGoogleConnection()}>ÔÜÖ´©Å Test Google</button>
-                  <button className="admin-btn-secondary admin-btn-small" onClick={() => loadGoogleCalendarEvents()}>­ƒôà Carica Eventi</button>
-                  <button className="admin-btn-secondary admin-btn-small" onClick={() => handleShareGoogleCalendar()}>­ƒô▒ Condividi Calendario</button>
-                  <button className="admin-btn-secondary admin-btn-small" onClick={() => handleGoogleSyncReport()}>­ƒôè Report Sincronizzazione</button>
+                  <button className="admin-btn-secondary admin-btn-small" onClick={() => testGoogleConnection()}>⚙️ Test Google</button>
+                  <button className="admin-btn-secondary admin-btn-small" onClick={() => loadGoogleCalendarEvents()}>📅 Carica Eventi</button>
+                  <button className="admin-btn-secondary admin-btn-small" onClick={() => handleShareGoogleCalendar()}>📱 Condividi Calendario</button>
+                  <button className="admin-btn-secondary admin-btn-small" onClick={() => handleGoogleSyncReport()}>📊 Report Sincronizzazione</button>
                 </div>
               </div>
             </div>
@@ -3087,7 +3087,7 @@ const AdminPanelPro = (): JSX.Element => {
             
             {/* Configurazioni Generali */}
             <div className="admin-pricing-section">
-              <h3>ÔÜÖ´©Å Configurazioni Sincronizzazione</h3>
+              <h3>⚙️ Configurazioni Sincronizzazione</h3>
               <div className="admin-pricing-grid">
                 <div className="admin-pricing-card">
                   <h4>Impostazioni Globali</h4>
@@ -3120,15 +3120,15 @@ const AdminPanelPro = (): JSX.Element => {
                   <h4>Google Calendar API</h4>
                   <div className="pricing-controls">
                     <label>API Key Status:</label>
-                    <div className="sync-indicator success">Ô£à API Key valida e attiva</div>
+                    <div className="sync-indicator success">✅ API Key valida e attiva</div>
                     
                     <label>Calendario ID:</label>
                     <input type="text" defaultValue="vincanto.master@gmail.com" className="admin-input" aria-label="Google Calendar ID" readOnly />
                     
                     <label>Ultima Verifica API:</label>
-                    <span className="pricing-note">27/10/2025 - 15:45 Ô£à</span>
+                    <span className="pricing-note">27/10/2025 - 15:45 ✅</span>
                     
-                    <button className="admin-btn-secondary admin-btn-small" onClick={() => handleTestGeneralConnection()}>­ƒöº Test Connessione</button>
+                    <button className="admin-btn-secondary admin-btn-small" onClick={() => handleTestGeneralConnection()}>📧 Test Connessione</button>
                   </div>
                 </div>
               </div>
@@ -3137,11 +3137,11 @@ const AdminPanelPro = (): JSX.Element => {
             {/* Azioni Avanzate */}
             <div className="admin-pricing-actions">
               <button className="admin-btn-primary" onClick={() => setShowNewCalendarForm(true)}>Ô×ò Aggiungi Nuovo Calendario</button>
-              <button className="admin-btn-secondary" onClick={() => handleSyncAllCalendars()}>­ƒöä Sincronizza Tutti</button>
-              <button className="admin-btn-secondary" onClick={() => handleShowOccupancyDashboard()}>­ƒôè Dashboard Occupazione</button>
-              <button className="admin-btn-secondary" onClick={() => handleShowSyncReport()}>­ƒôê Report Sincronizzazioni</button>
-              <button className="admin-btn-secondary" onClick={() => handleExportCalendarConfig()}>­ƒôñ Esporta Configurazione</button>
-              <button className="admin-btn-secondary" onClick={() => handleAdvancedCalendarSettings()}>ÔÜÖ´©Å Impostazioni Avanzate</button>
+              <button className="admin-btn-secondary" onClick={() => handleSyncAllCalendars()}>🔄 Sincronizza Tutti</button>
+              <button className="admin-btn-secondary" onClick={() => handleShowOccupancyDashboard()}>📊 Dashboard Occupazione</button>
+              <button className="admin-btn-secondary" onClick={() => handleShowSyncReport()}>📊 Report Sincronizzazioni</button>
+              <button className="admin-btn-secondary" onClick={() => handleExportCalendarConfig()}>📥 Esporta Configurazione</button>
+              <button className="admin-btn-secondary" onClick={() => handleAdvancedCalendarSettings()}>⚙️ Impostazioni Avanzate</button>
             </div>
           </div>
         )}
@@ -3150,12 +3150,12 @@ const AdminPanelPro = (): JSX.Element => {
         {activeTab === 'prenotazioni' && (
           <div className="admin-prenotazioni">
             <div className="admin-header">
-              <h2>­ƒôà Gestione Prenotazioni Avanzata</h2>
+              <h2>📅 Gestione Prenotazioni Avanzata</h2>
               <button 
                 onClick={() => setShowBookingForm(!showBookingForm)}
                 className="admin-button primary"
               >
-                {showBookingForm ? 'ÔØî Chiudi Form' : 'Ô×ò Nuova Prenotazione'}
+                {showBookingForm ? '❌ Chiudi Form' : 'Ô×ò Nuova Prenotazione'}
               </button>
             </div>
 
@@ -3168,26 +3168,26 @@ const AdminPanelPro = (): JSX.Element => {
             
             {/* Statistiche Rapide */}
             <div className="admin-pricing-section">
-              <h3>­ƒôè Panoramica Prenotazioni</h3>
+              <h3>📊 Panoramica Prenotazioni</h3>
               <div className="admin-pricing-grid">
                 <div className="admin-pricing-card">
                   <h4>Stato Attuale</h4>
                   <div className="pricing-controls">
                     <div className="stat-row">
-                      <span>­ƒÅá Occupazione Oggi:</span>
+                      <span>📧 Occupazione Oggi:</span>
                       <span className="stat-value">100%</span>
                     </div>
                     <div className="stat-row">
-                      <span>­ƒôà Prossimi Check-in:</span>
+                      <span>📅 Prossimi Check-in:</span>
                       <span className="stat-value">2</span>
                     </div>
                     <div className="stat-row">
-                      <span>­ƒÜ¬ Prossimi Check-out:</span>
+                      <span>🚪 Prossimi Check-out:</span>
                       <span className="stat-value">1</span>
                     </div>
                     <div className="stat-row">
-                      <span>­ƒÆ░ Ricavo Settimana:</span>
-                      <span className="stat-value">Ôé¼2,450</span>
+                      <span>💰 Ricavo Settimana:</span>
+                      <span className="stat-value">€2,450</span>
                     </div>
                   </div>
                 </div>
@@ -3198,13 +3198,13 @@ const AdminPanelPro = (): JSX.Element => {
                     <label>Stato Prenotazione:</label>
                     <select className="admin-select" aria-label="Filtro stato prenotazioni">
                       <option>Tutte le prenotazioni</option>
-                      <option>Ô£à Confermate</option>
-                      <option>ÔÅ│ In Attesa</option>
-                      <option>­ƒÅá Check-in Oggi</option>
-                      <option>­ƒÜ¬ Check-out Oggi</option>
-                      <option>­ƒöä In Soggiorno</option>
-                      <option>Ô£à Completate</option>
-                      <option>ÔØî Cancellate</option>
+                      <option>✅ Confermate</option>
+                      <option>⏳ In Attesa</option>
+                      <option>📧 Check-in Oggi</option>
+                      <option>🚪 Check-out Oggi</option>
+                      <option>🔄 In Soggiorno</option>
+                      <option>✅ Completate</option>
+                      <option>❌ Cancellate</option>
                     </select>
                     
                     <label>Periodo:</label>
@@ -3219,10 +3219,10 @@ const AdminPanelPro = (): JSX.Element => {
                       onChange={(e) => setPlatformFilter(e.target.value as 'all'|'direct'|'airbnb'|'booking'|'holidu')}
                     >
                       <option value="all">Tutte le piattaforme</option>
-                      <option value="direct">­ƒîÉ Sito Diretto</option>
-                      <option value="airbnb">­ƒô▒ Airbnb</option>
-                      <option value="booking">­ƒÅ¿ Booking.com</option>
-                      <option value="holidu">­ƒÅû´©Å Holidu</option>
+                      <option value="direct">📱 Sito Diretto</option>
+                      <option value="airbnb">📱 Airbnb</option>
+                      <option value="booking">📅 Booking.com</option>
+                      <option value="holidu">🏨 Holidu</option>
                     </select>
                   </div>
                 </div>
@@ -3232,9 +3232,9 @@ const AdminPanelPro = (): JSX.Element => {
             {/* Prenotazioni da Calendari Esterni Sincronizzati */}
             {calendarEvents && calendarEvents.length > 0 && (
               <div className="admin-pricing-section">
-                <h3>­ƒîÉ Prenotazioni Sincronizzate da Piattaforme Esterne</h3>
+                <h3>📱 Prenotazioni Sincronizzate da Piattaforme Esterne</h3>
                 <p className="calendar-bookings-info">
-                  ­ƒôà {calendarEvents.length} prenotazioni sincronizzate automaticamente da Airbnb, Booking.com e altre piattaforme
+                  📅 {calendarEvents.length} prenotazioni sincronizzate automaticamente da Airbnb, Booking.com e altre piattaforme
                 </p>
                 <div className="admin-bookings-table-wrapper">
                   <table className="admin-bookings-table">
@@ -3262,10 +3262,10 @@ const AdminPanelPro = (): JSX.Element => {
                           <tr key={idx} className={isCurrent ? 'booking-current' : ''}>
                             <td>
                               <span className={`platform-badge platform-${event.platform}`}>
-                                {event.platform === 'airbnb' && '­ƒô▒ Airbnb'}
-                                {event.platform === 'booking' && '­ƒÅ¿ Booking.com'}
-                                {event.platform === 'holidu' && '­ƒÅû´©Å Holidu'}
-                                {event.platform === 'google' && '­ƒôà Google'}
+                                {event.platform === 'airbnb' && '📱 Airbnb'}
+                                {event.platform === 'booking' && '📅 Booking.com'}
+                                {event.platform === 'holidu' && '🏨 Holidu'}
+                                {event.platform === 'google' && '📅 Google'}
                               </span>
                             </td>
                             <td>
@@ -3281,9 +3281,9 @@ const AdminPanelPro = (): JSX.Element => {
                             <td>{checkOut.toLocaleDateString('it-IT')}</td>
                             <td>{event.nights} {event.nights === 1 ? 'notte' : 'notti'}</td>
                             <td>
-                              {isCurrent && <span className="status-badge status-current">­ƒöä In corso</span>}
-                              {isUpcoming && <span className="status-badge status-upcoming">­ƒôà Prossima</span>}
-                              {!isCurrent && !isUpcoming && <span className="status-badge status-past">Ô£à Passata</span>}
+                              {isCurrent && <span className="status-badge status-current">🔄 In corso</span>}
+                              {isUpcoming && <span className="status-badge status-upcoming">📅 Prossima</span>}
+                              {!isCurrent && !isUpcoming && <span className="status-badge status-past">✅ Passata</span>}
                             </td>
                           </tr>
                         );
@@ -3302,7 +3302,7 @@ const AdminPanelPro = (): JSX.Element => {
             {/* Form Creazione/Modifica Prenotazione */}
             {showBookingForm && (
               <div className="admin-pricing-section">
-                <h3>{editingBooking ? 'Ô£Å´©Å Modifica Prenotazione' : 'Ô×ò Nuova Prenotazione'}</h3>
+                <h3>{editingBooking ? '⚠️ Modifica Prenotazione' : 'Ô×ò Nuova Prenotazione'}</h3>
                 <div className="admin-pricing-card">
                   <form onSubmit={editingBooking ? handleUpdateBooking : handleCreateBooking}>
                     <div className="pricing-controls">
@@ -3389,10 +3389,10 @@ const AdminPanelPro = (): JSX.Element => {
                         className="admin-select"
                         title="Seleziona lo stato della prenotazione"
                       >
-                        <option value="pending">­ƒƒí In Attesa</option>
-                        <option value="confirmed">Ô£à Confermata</option>
-                        <option value="cancelled">ÔØî Cancellata</option>
-                        <option value="completed">Ô£à Completata</option>
+                        <option value="pending">⏳ In Attesa</option>
+                        <option value="confirmed">✅ Confermata</option>
+                        <option value="cancelled">❌ Cancellata</option>
+                        <option value="completed">✅ Completata</option>
                       </select>
                       
                       <label htmlFor="booking-platform">Piattaforma:</label>
@@ -3403,16 +3403,16 @@ const AdminPanelPro = (): JSX.Element => {
                         className="admin-select"
                         title="Seleziona la piattaforma di prenotazione"
                       >
-                        <option value="direct">­ƒô× Diretto</option>
-                        <option value="airbnb">­ƒô▒ Airbnb</option>
-                        <option value="booking">­ƒÅ¿ Booking.com</option>
-                        <option value="expedia">Ô£ê´©Å Expedia</option>
+                        <option value="direct">📞 Diretto</option>
+                        <option value="airbnb">📱 Airbnb</option>
+                        <option value="booking">📅 Booking.com</option>
+                        <option value="expedia">✈️ Expedia</option>
                       </select>
                     </div>
                     
                     <div className="admin-pricing-actions">
                       <button type="submit" className="admin-btn-primary">
-                        {editingBooking ? 'Ô£à Aggiorna Prenotazione' : 'Ô×ò Crea Prenotazione'}
+                        {editingBooking ? '✅ Aggiorna Prenotazione' : 'Ô×ò Crea Prenotazione'}
                       </button>
                       <button 
                         type="button" 
@@ -3422,7 +3422,7 @@ const AdminPanelPro = (): JSX.Element => {
                           setEditingBooking(null);
                         }}
                       >
-                        ÔØî Annulla
+                        ❌ Annulla
                       </button>
                     </div>
                   </form>
@@ -3444,7 +3444,7 @@ const AdminPanelPro = (): JSX.Element => {
                   className="admin-btn-secondary" 
                   onClick={loadRealApiData}
                 >
-                  ­ƒöä Ricarica Dati
+                  🔄 Ricarica Dati
                 </button>
               </div>
               <div className="bookings-table-container">
@@ -3475,13 +3475,13 @@ const AdminPanelPro = (): JSX.Element => {
                             <td>{booking.guests}</td>
                             <td>
                               <span className={`status ${booking.status}`}>
-                                {booking.status === 'confirmed' && 'Ô£à Confermata'}
-                                {booking.status === 'pending' && '­ƒƒí In attesa'}
-                                {booking.status === 'cancelled' && 'ÔØî Cancellata'}
-                                {!booking.status && '­ƒôè Backend'}
+                                {booking.status === 'confirmed' && '✅ Confermata'}
+                                {booking.status === 'pending' && '⏳ In attesa'}
+                                {booking.status === 'cancelled' && '❌ Cancellata'}
+                                {!booking.status && '📊 Backend'}
                               </span>
                             </td>
-                            <td>Ôé¼{(booking.total_amount || booking.totalPrice || 0).toFixed(2)}</td>
+                            <td>€{(booking.total_amount || booking.totalPrice || 0).toFixed(2)}</td>
                             <td>
                               <div className="action-buttons">
                                 <button
@@ -3537,23 +3537,23 @@ const AdminPanelPro = (): JSX.Element => {
                   </>
                 ) : (
                   <div className="admin-pricing-card">
-                    <p>­ƒôè Nessuna prenotazione trovata</p>
+                    <p>📊 Nessuna prenotazione trovata</p>
                     <button
                       className="admin-btn-primary"
                       onClick={loadRealApiData}
                     >
-                      ­ƒöä Ricarica Prenotazioni
+                      🔄 Ricarica Prenotazioni
                     </button>
                   </div>
                 )}
               </div>
 
             <div className="admin-pricing-card">
-              <h4>­ƒÆ░ Ricavi Periodo (Dati Reali)</h4>
+              <h4>💰 Ricavi Periodo (Dati Reali)</h4>
               <div className="pricing-controls">
                 <div className="stat-row">
                   <span>Totale Backend:</span>
-                  <span className="stat-value">Ôé¼{(dashboardStats.totalRevenue || 0).toFixed(2)}</span>
+                  <span className="stat-value">€{(dashboardStats.totalRevenue || 0).toFixed(2)}</span>
                 </div>
                 <div className="stat-row">
                   <span>Transazioni Totali:</span>
@@ -3562,7 +3562,7 @@ const AdminPanelPro = (): JSX.Element => {
                 <div className="stat-row">
                   <span>Media per Transazione:</span>
                   <span className="stat-value">
-                    Ôé¼{paymentTransactions.length > 0 
+                    €{paymentTransactions.length > 0 
                       ? (paymentTransactions.reduce((sum, t) => sum + t.amount, 0) / paymentTransactions.length).toFixed(2)
                       : '0.00'}
                   </span>
@@ -3575,28 +3575,28 @@ const AdminPanelPro = (): JSX.Element => {
             </div>
             
             <div className="admin-pricing-card">
-              <h4>­ƒôê Statistiche Live</h4>
+              <h4>📊 Statistiche Live</h4>
               <div className="pricing-controls">
                 <div className="stat-row">
-                  <span>ÔÅ│ In Sospeso:</span>
+                  <span>⏳ In Sospeso:</span>
                   <span className="stat-value warning">
-                    Ôé¼{paymentTransactions
+                    €{paymentTransactions
                       .filter(t => t.status === 'pending')
                       .reduce((sum, t) => sum + t.amount, 0)
                       .toFixed(2)}
                   </span>
                 </div>
                 <div className="stat-row">
-                  <span>Ô£à Completati:</span>
+                  <span>✅ Completati:</span>
                   <span className="stat-value success">
-                    Ôé¼{paymentTransactions
+                    €{paymentTransactions
                       .filter(t => t.status === 'completed')
                       .reduce((sum, t) => sum + t.amount, 0)
                       .toFixed(2)}
                   </span>
                 </div>
                 <div className="stat-row">
-                  <span>­ƒôè Tasso Successo:</span>
+                  <span>📊 Tasso Successo:</span>
                   <span className="stat-value">
                     {paymentTransactions.length > 0 
                       ? Math.round((paymentTransactions.filter(t => t.status === 'completed').length / paymentTransactions.length) * 100)
@@ -3604,7 +3604,7 @@ const AdminPanelPro = (): JSX.Element => {
                   </span>
                 </div>
                 <div className="stat-row">
-                  <span>ÔÜí Tempo Medio Pagam.:</span>
+                  <span>⏱️ Tempo Medio Pagam.:</span>
                   <span className="stat-value">2.3 giorni</span>
                 </div>
               </div>
@@ -3613,41 +3613,41 @@ const AdminPanelPro = (): JSX.Element => {
 
             {/* Metodi di Pagamento */}
             <div className="admin-pricing-section">
-              <h3>­ƒÄ» Metodi di Pagamento</h3>
+              <h3>🎨 Metodi di Pagamento</h3>
               <div className="admin-pricing-grid">
                 <div className="admin-pricing-card">
-                  <h4>­ƒÆ│ Stripe Integration</h4>
+                  <h4>💳 Stripe Integration</h4>
                   <div className="pricing-controls">
-                    <div className="sync-indicator success">Ô£à Connesso e Attivo</div>
+                    <div className="sync-indicator success">✅ Connesso e Attivo</div>
                     <label>Commissione Stripe:</label>
                     <input type="number" defaultValue="2.9" className="admin-input-small" aria-label="Commissione Stripe" step="0.1" />
                     <label>Valute Accettate:</label>
                     <div className="pricing-note">EUR, USD, GBP</div>
-                    <button className="admin-btn-secondary admin-btn-small" onClick={() => handleConfigureStripe()}>ÔÜÖ´©Å Configura</button>
+                    <button className="admin-btn-secondary admin-btn-small" onClick={() => handleConfigureStripe()}>⚙️ Configura</button>
                   </div>
                 </div>
                 
                 <div className="admin-pricing-card">
-                  <h4>­ƒÅª Bonifico Bancario</h4>
+                  <h4>🏦 Bonifico Bancario</h4>
                   <div className="pricing-controls">
-                    <div className="sync-indicator success">Ô£à Attivo</div>
+                    <div className="sync-indicator success">✅ Attivo</div>
                     <label>IBAN:</label>
                     <input type="text" defaultValue="IT02 L012 3456 789012345678901" className="admin-input" aria-label="IBAN" readOnly />
                     <label>Tempo Liquidazione:</label>
                     <input type="number" defaultValue="2" className="admin-input-small" aria-label="Giorni liquidazione" />
-                    <button className="admin-btn-secondary admin-btn-small" onClick={() => handleEditBankTransfer()}>Ô£Å´©Å Modifica</button>
+                    <button className="admin-btn-secondary admin-btn-small" onClick={() => handleEditBankTransfer()}>⚠️ Modifica</button>
                   </div>
                 </div>
                 
                 <div className="admin-pricing-card">
-                  <h4>­ƒÆ░ PayPal Business</h4>
+                  <h4>💰 PayPal Business</h4>
                   <div className="pricing-controls">
                     <div className="sync-indicator active">´┐¢ Attivo</div>
                     <label>Link PayPal:</label>
                     <input type="url" defaultValue="https://www.paypal.me/AntonioGuida320" className="admin-input" aria-label="Link PayPal" readOnly />
                     <label>Commissione PayPal:</label>
                     <input type="number" defaultValue="3.4" className="admin-input-small" aria-label="Commissione PayPal" step="0.1" />
-                    <button className="admin-btn-primary admin-btn-small" onClick={() => handleCompletePayPalSetup()}>Ô£à Setup Completo</button>
+                    <button className="admin-btn-primary admin-btn-small" onClick={() => handleCompletePayPalSetup()}>✅ Setup Completo</button>
                   </div>
                 </div>
               </div>
@@ -3655,22 +3655,22 @@ const AdminPanelPro = (): JSX.Element => {
             
             {/* Lista Transazioni Recenti */}
             <div className="admin-pricing-section">
-              <h3>­ƒÆ│ Transazioni Recenti</h3>
+              <h3>💳 Transazioni Recenti</h3>
               <div className="admin-pricing-card">
                 <div className="existing-services">
                   {paymentTransactions.map((transaction) => (
                     <div key={transaction.id} className="service-row">
                       <span>{transaction.guest || transaction.guestName}</span>
-                      <span>Ôé¼{(transaction.amount || 0).toFixed(2)}</span>
+                      <span>€{(transaction.amount || 0).toFixed(2)}</span>
                       <span className={`platform-badge ${transaction.method}`}>
-                        {transaction.method === 'stripe' && '­ƒÆ│ Stripe'}
-                        {transaction.method === 'paypal' && '­ƒÆ░ PayPal'}
-                        {transaction.method === 'bank_transfer' && '­ƒÅª Bonifico'}
+                        {transaction.method === 'stripe' && '💳 Stripe'}
+                        {transaction.method === 'paypal' && '💰 PayPal'}
+                        {transaction.method === 'bank_transfer' && '🏦 Bonifico'}
                       </span>
                       <span className={`status ${transaction.status}`}>
-                        {transaction.status === 'completed' && 'Ô£à Completato'}
-                        {transaction.status === 'pending' && '­ƒƒí In attesa'}
-                        {transaction.status === 'failed' && 'ÔØî Fallito'}
+                        {transaction.status === 'completed' && '✅ Completato'}
+                        {transaction.status === 'pending' && '⏳ In attesa'}
+                        {transaction.status === 'failed' && '❌ Fallito'}
                       </span>
                       <span>{new Date(transaction.date).toLocaleDateString('it-IT')}</span>
                       <div className="action-buttons">
@@ -3680,7 +3680,7 @@ const AdminPanelPro = (): JSX.Element => {
                             onClick={() => window.open(transaction.paypalLink, '_blank')}
                             title="Apri PayPal"
                           >
-                            ­ƒîÉ PayPal
+                            📱 PayPal
                           </button>
                         )}
                         {transaction.status === 'pending' && (
@@ -3689,7 +3689,7 @@ const AdminPanelPro = (): JSX.Element => {
                             onClick={() => handleCapturePayment(transaction.id)}
                             title="Cattura pagamento"
                           >
-                            ­ƒÆ░ Cattura
+                            💰 Cattura
                           </button>
                         )}
                         {transaction.status === 'completed' && (
@@ -3698,7 +3698,7 @@ const AdminPanelPro = (): JSX.Element => {
                             onClick={() => handleRefundPayment(transaction.id, transaction.amount)}
                             title="Rimborsa transazione"
                           >
-                            Ôå®´©Å Rimborso
+                            💰 Rimborso
                           </button>
                         )}
                         <button 
@@ -3706,7 +3706,7 @@ const AdminPanelPro = (): JSX.Element => {
                           onClick={() => window.open(`/admin/transaction/${transaction.id}`, '_blank')}
                           title="Vedi dettagli"
                         >
-                          ­ƒôä Dettagli
+                          📝 Dettagli
                         </button>
                       </div>
                     </div>
@@ -3723,7 +3723,7 @@ const AdminPanelPro = (): JSX.Element => {
 
             {/* Gestione Pagamenti Reali */}
             <div className="admin-pricing-section">
-              <h3>­ƒÆ│ Gestione Pagamenti</h3>
+              <h3>💳 Gestione Pagamenti</h3>
               <div className="bookings-table-container">
                 {realBookings.length > 0 ? (
                   <table className="bookings-table">
@@ -3741,14 +3741,14 @@ const AdminPanelPro = (): JSX.Element => {
                         <tr key={booking.id}>
                           <td>#{booking.id}</td>
                           <td>{booking.customer_name || booking.guestName}</td>
-                          <td>Ôé¼{(booking.total_amount || booking.totalPrice || 0).toFixed(2)}</td>
+                          <td>€{(booking.total_amount || booking.totalPrice || 0).toFixed(2)}</td>
                           <td>
                             <span className={`status ${booking.payment_status || 'pending'}`}>
-                              {booking.payment_status === 'paid' && 'Ô£à Pagato'}
-                              {booking.payment_status === 'pending' && '­ƒƒí In Attesa'}
-                              {booking.payment_status === 'partial' && '­ƒƒá Parziale'}
-                              {booking.payment_status === 'failed' && 'ÔØî Fallito'}
-                              {!booking.payment_status && 'ÔÅ│ Non Impostato'}
+                              {booking.payment_status === 'paid' && '✅ Pagato'}
+                              {booking.payment_status === 'pending' && '⏳ In Attesa'}
+                              {booking.payment_status === 'partial' && '­50% Parziale'}
+                              {booking.payment_status === 'failed' && '❌ Fallito'}
+                              {!booking.payment_status && '⏳ Non Impostato'}
                             </span>
                           </td>
                           <td>
@@ -3757,7 +3757,7 @@ const AdminPanelPro = (): JSX.Element => {
                                 className="admin-btn-small" 
                                 onClick={() => updateBookingStatus(booking.id, { payment_status: 'paid' })}
                               >
-                                Ô£à Marca Pagato
+                                ✅ Marca Pagato
                               </button>
                               <button 
                                 className="admin-btn-small" 
@@ -3769,7 +3769,7 @@ const AdminPanelPro = (): JSX.Element => {
                                 className="admin-btn-small" 
                                 onClick={() => updateBookingStatus(booking.id, { payment_status: 'failed' })}
                               >
-                                ÔØî Fallito
+                                ❌ Fallito
                               </button>
                             </div>
                           </td>
@@ -3779,12 +3779,12 @@ const AdminPanelPro = (): JSX.Element => {
                   </table>
                 ) : (
                   <div className="admin-pricing-card">
-                    <p>­ƒôè Nessuna prenotazione trovata</p>
+                    <p>📊 Nessuna prenotazione trovata</p>
                     <button 
                       className="admin-btn-primary" 
                       onClick={loadRealApiData}
                     >
-                      ­ƒöä Ricarica Prenotazioni
+                      🔄 Ricarica Prenotazioni
                     </button>
                   </div>
                 )}
@@ -3794,19 +3794,19 @@ const AdminPanelPro = (): JSX.Element => {
             {/* Configurazione Avanzata Pagamenti */}
             <div className="admin-pricing-section">
               <div className="admin-header">
-                <h3>ÔÜÖ´©Å Configurazione Pagamenti</h3>
+                <h3>⚙️ Configurazione Pagamenti</h3>
                 <button 
                   onClick={savePaymentSettings}
                   disabled={isUpdatingPayments}
                   className="admin-button primary"
                 >
-                  {isUpdatingPayments ? 'ÔÅ│ Salvando...' : '­ƒÆ¥ Salva Configurazione'}
+                  {isUpdatingPayments ? '⏳ Salvando...' : '💾 Salva Configurazione'}
                 </button>
               </div>
               
               <div className="admin-pricing-grid">
                 <div className="admin-pricing-card">
-                  <h4>­ƒÆ│ Stripe Settings</h4>
+                  <h4>💳 Stripe Settings</h4>
                   <div className="pricing-controls">
                     <label>
                       <input 
@@ -3835,7 +3835,7 @@ const AdminPanelPro = (): JSX.Element => {
                 </div>
 
                 <div className="admin-pricing-card">
-                  <h4>­ƒÅª Bonifico Bancario</h4>
+                  <h4>🏦 Bonifico Bancario</h4>
                   <div className="pricing-controls">
                     <label>
                       <input 
@@ -3871,33 +3871,33 @@ const AdminPanelPro = (): JSX.Element => {
             <div className="admin-pricing-actions">
               <button 
                 className="admin-btn-primary"
-                onClick={() => alert('­ƒöº Feature in sviluppo: Aggiunta metodo pagamento')}
+                onClick={() => alert('📧 Feature in sviluppo: Aggiunta metodo pagamento')}
               >
                 Ô×ò Aggiungi Metodo Pagamento
               </button>
               <button 
                 className="admin-btn-secondary"
-                onClick={() => alert('­ƒôè Feature in sviluppo: Report finanziario')}
+                onClick={() => alert('📊 Feature in sviluppo: Report finanziario')}
               >
-                ­ƒôè Report Finanziario Completo
+                📊 Report Finanziario Completo
               </button>
               <button 
                 className="admin-btn-secondary"
-                onClick={() => alert('­ƒôê Feature in sviluppo: Analisi trend')}
+                onClick={() => alert('📊 Feature in sviluppo: Analisi trend')}
               >
-                ­ƒôê Analisi Trend
+                📊 Analisi Trend
               </button>
               <button 
                 className="admin-btn-secondary"
-                onClick={() => alert('­ƒÆ¥ Feature in sviluppo: Export contabilit├á')}
+                onClick={() => alert('💾 Feature in sviluppo: Export contabilit├á')}
               >
-                ­ƒÆ¥ Esporta Contabilit├á
+                💾 Esporta Contabilit├á
               </button>
               <button 
                 className="admin-btn-secondary"
-                onClick={() => alert('­ƒöö Feature in sviluppo: Configurazione notifiche')}
+                onClick={() => alert('🔔 Feature in sviluppo: Configurazione notifiche')}
               >
-                ­ƒöö Configura Notifiche
+                🔔 Configura Notifiche
               </button>
             </div>
           </div>
@@ -3906,41 +3906,41 @@ const AdminPanelPro = (): JSX.Element => {
         {/* Sezione Email */}
         {activeTab === 'email' && (
           <div className="admin-email">
-            <h2>Ô£ë´©Å Sistema Email Marketing</h2>
+            <h2>📧 Sistema Email Marketing</h2>
             
             {/* Dashboard Email */}
             <div className="admin-pricing-section">
-              <h3>­ƒôè Performance Email</h3>
+              <h3>📊 Performance Email</h3>
               <div className="admin-pricing-grid">
                 <div className="admin-pricing-card">
-                  <h4>­ƒôê Statistiche Generali</h4>
+                  <h4>📊 Statistiche Generali</h4>
                   <div className="pricing-controls">
                     <div className="stat-row">
-                      <span>­ƒôñ Totale Inviate:</span>
+                      <span>📥 Totale Inviate:</span>
                       <span className="stat-value">1,247</span>
                     </div>
                     <div className="stat-row">
-                      <span>­ƒôû Tasso Apertura:</span>
+                      <span>🔔 Tasso Apertura:</span>
                       <span className="stat-value success">87.5%</span>
                     </div>
                     <div className="stat-row">
-                      <span>­ƒöù Click Through Rate:</span>
+                      <span>📤 Click Through Rate:</span>
                       <span className="stat-value">42.3%</span>
                     </div>
                     <div className="stat-row">
-                      <span>ÔØî Bounce Rate:</span>
+                      <span>❌ Bounce Rate:</span>
                       <span className="stat-value warning">1.2%</span>
                     </div>
                   </div>
                 </div>
                 
                 <div className="admin-pricing-card">
-                  <h4>ÔÜí Automazioni Attive</h4>
+                  <h4>⏱️ Automazioni Attive</h4>
                   <div className="pricing-controls">
-                    <div className="sync-indicator success">Ô£à Conferma Prenotazione: Attiva</div>
-                    <div className="sync-indicator success">Ô£à Check-in Reminder: Attiva</div>
-                    <div className="sync-indicator success">Ô£à Richiesta Recensione: Attiva</div>
-                    <div className="sync-indicator pending">­ƒƒí Follow-up Post Soggiorno: Test</div>
+                    <div className="sync-indicator success">✅ Conferma Prenotazione: Attiva</div>
+                    <div className="sync-indicator success">✅ Check-in Reminder: Attiva</div>
+                    <div className="sync-indicator success">✅ Richiesta Recensione: Attiva</div>
+                    <div className="sync-indicator pending">⏳ Follow-up Post Soggiorno: Test</div>
                   </div>
                 </div>
               </div>
@@ -3951,45 +3951,45 @@ const AdminPanelPro = (): JSX.Element => {
               <h3>´┐¢ Template Email</h3>
               <div className="admin-pricing-grid">
                 <div className="admin-pricing-card">
-                  <h4>­ƒÄ» Template Principali</h4>
+                  <h4>🎨 Template Principali</h4>
                   <div className="existing-services">
                     <div className="service-row">
-                      <span>­ƒôº Conferma Prenotazione</span>
+                      <span>📧 Conferma Prenotazione</span>
                       <span>87% apertura</span>
                       <button 
                         className="admin-btn-small"
                         onClick={() => handleEditTemplate('Conferma Prenotazione')}
                       >
-                        Ô£Å´©Å Modifica
+                        ⚠️ Modifica
                       </button>
-                      <button className="admin-btn-small" onClick={() => handleShowEmailStats('Conferma Prenotazione')}>­ƒôè Stats</button>
+                      <button className="admin-btn-small" onClick={() => handleShowEmailStats('Conferma Prenotazione')}>📊 Stats</button>
                     </div>
                     
                     <div className="service-row">
-                      <span>­ƒÅá Istruzioni Check-in</span>
+                      <span>📧 Istruzioni Check-in</span>
                       <span>95% apertura</span>
-                      <button className="admin-btn-small" onClick={() => handleEditTemplate('Istruzioni Check-in')}>Ô£Å´©Å Modifica</button>
-                      <button className="admin-btn-small" onClick={() => handleShowEmailStats('Istruzioni Check-in')}>­ƒôè Stats</button>
+                      <button className="admin-btn-small" onClick={() => handleEditTemplate('Istruzioni Check-in')}>⚠️ Modifica</button>
+                      <button className="admin-btn-small" onClick={() => handleShowEmailStats('Istruzioni Check-in')}>📊 Stats</button>
                     </div>
                     
                     <div className="service-row">
-                      <span>­ƒæï Messaggio Benvenuto</span>
+                      <span>👋 Messaggio Benvenuto</span>
                       <span>78% apertura</span>
-                      <button className="admin-btn-small" onClick={() => handleEditTemplate('Messaggio Benvenuto')}>Ô£Å´©Å Modifica</button>
-                      <button className="admin-btn-small" onClick={() => handleShowEmailStats('Messaggio Benvenuto')}>­ƒôè Stats</button>
+                      <button className="admin-btn-small" onClick={() => handleEditTemplate('Messaggio Benvenuto')}>⚠️ Modifica</button>
+                      <button className="admin-btn-small" onClick={() => handleShowEmailStats('Messaggio Benvenuto')}>📊 Stats</button>
                     </div>
                     
                     <div className="service-row">
-                      <span>Ô¡É Richiesta Recensione</span>
+                      <span>⭐ Richiesta Recensione</span>
                       <span>65% apertura</span>
-                      <button className="admin-btn-small" onClick={() => handleEditTemplate('Richiesta Recensione')}>Ô£Å´©Å Modifica</button>
-                      <button className="admin-btn-small" onClick={() => handleShowEmailStats('Richiesta Recensione')}>­ƒôè Stats</button>
+                      <button className="admin-btn-small" onClick={() => handleEditTemplate('Richiesta Recensione')}>⚠️ Modifica</button>
+                      <button className="admin-btn-small" onClick={() => handleShowEmailStats('Richiesta Recensione')}>📊 Stats</button>
                     </div>
                   </div>
                 </div>
                 
                 <div className="admin-pricing-card">
-                  <h4>ÔÜÖ´©Å Configurazione SMTP</h4>
+                  <h4>⚙️ Configurazione SMTP</h4>
                   <div className="pricing-controls">
                     <label>Provider Email:</label>
                     <select 
@@ -4013,14 +4013,14 @@ const AdminPanelPro = (): JSX.Element => {
                       aria-label="Email mittente" 
                     />
                     
-                    <div className="sync-indicator success">Ô£à Connessione SMTP attiva</div>
+                    <div className="sync-indicator success">✅ Connessione SMTP attiva</div>
                     
                     <button 
                       className="admin-btn-secondary admin-btn-small"
                       onClick={testEmailConnection}
                       disabled={loading}
                     >
-                      ­ƒöº {loading ? 'Test...' : 'Test Invio'}
+                      📧 {loading ? 'Test...' : 'Test Invio'}
                     </button>
                   </div>
                 </div>
@@ -4033,18 +4033,18 @@ const AdminPanelPro = (): JSX.Element => {
                 className="admin-btn-primary"
                 onClick={handleCreateTemplate}
               >
-                Ô£Å´©Å Nuovo Template
+                ⚠️ Nuovo Template
               </button>
               <button 
                 className="admin-btn-secondary"
                 onClick={saveEmailSettings}
                 disabled={loading}
               >
-                ­ƒÆ¥ {loading ? 'Salvataggio...' : 'Salva Configurazione'}
+                💾 {loading ? 'Salvataggio...' : 'Salva Configurazione'}
               </button>
-              <button className="admin-btn-secondary" onClick={() => handleEmailDetailedReport()}>­ƒôè Report Dettagliato</button>
-              <button className="admin-btn-secondary" onClick={() => handleMassEmailSend()}>­ƒôº Invio Massivo</button>
-              <button className="admin-btn-secondary" onClick={() => handleManageEmailAutomations()}>ÔÜí Gestisci Automazioni</button>
+              <button className="admin-btn-secondary" onClick={() => handleEmailDetailedReport()}>📊 Report Dettagliato</button>
+              <button className="admin-btn-secondary" onClick={() => handleMassEmailSend()}>📧 Invio Massivo</button>
+              <button className="admin-btn-secondary" onClick={() => handleManageEmailAutomations()}>⏱️ Gestisci Automazioni</button>
             </div>
           </div>
         )}
@@ -4052,11 +4052,11 @@ const AdminPanelPro = (): JSX.Element => {
         {/* GESTIONE ADMIN - SOLO SUPERADMIN */}
         {activeTab === 'admin-management' && isSuperAdmin && (
           <div className="admin-panel-management">
-            <h2>­ƒæí´©Å Gestione Admin e Password</h2>
+            <h2>👥´©Å Gestione Admin e Password</h2>
             
             {/* Sezione cambio password SuperAdmin */}
             <div className="admin-pricing-section">
-              <h3>­ƒöÉ Cambio Password SuperAdmin</h3>
+              <h3>🔐 Cambio Password SuperAdmin</h3>
               <div className="admin-pricing-grid">
                 <div className="admin-pricing-card">
                   <h4>Modifica Password Personale</h4>
@@ -4067,7 +4067,7 @@ const AdminPanelPro = (): JSX.Element => {
                         className="admin-btn-primary"
                         onClick={() => setShowSuperAdminSettings(true)}
                       >
-                        ­ƒöÉ Cambia Password
+                        🔐 Cambia Password
                       </button>
                     </div>
                   ) : (
@@ -4113,7 +4113,7 @@ const AdminPanelPro = (): JSX.Element => {
                           onClick={handleSuperAdminPasswordChange}
                           disabled={loading}
                         >
-                          {loading ? 'Salvataggio...' : 'Ô£à Salva Nuova Password'}
+                          {loading ? 'Salvataggio...' : '✅ Salva Nuova Password'}
                         </button>
                         <button 
                           className="admin-btn-secondary"
@@ -4122,7 +4122,7 @@ const AdminPanelPro = (): JSX.Element => {
                             setPasswordChangeForm({currentPassword: '', newPassword: '', confirmPassword: ''});
                           }}
                         >
-                          ÔÜí Annulla
+                          ⏱️ Annulla
                         </button>
                       </div>
                     </div>
@@ -4133,7 +4133,7 @@ const AdminPanelPro = (): JSX.Element => {
 
             {/* Sezione creazione nuovo admin */}
             <div className="admin-pricing-section">
-              <h3>­ƒæÄ Crea Nuovo Admin</h3>
+              <h3>👤 Crea Nuovo Admin</h3>
               <div className="admin-pricing-grid">
                 <div className="admin-pricing-card">
                   <h4>Aggiungi Amministratore</h4>
@@ -4144,7 +4144,7 @@ const AdminPanelPro = (): JSX.Element => {
                         className="admin-btn-primary"
                         onClick={() => setShowCreateAdminForm(true)}
                       >
-                        ­ƒæÄ Nuovo Admin
+                        👤 Nuovo Admin
                       </button>
                     </div>
                   ) : (
@@ -4198,7 +4198,7 @@ const AdminPanelPro = (): JSX.Element => {
                           onClick={handleCreateAdmin}
                           disabled={loading}
                         >
-                          {loading ? 'Creazione...' : 'Ô£à Crea Admin'}
+                          {loading ? 'Creazione...' : '✅ Crea Admin'}
                         </button>
                         <button 
                           className="admin-btn-secondary"
@@ -4207,7 +4207,7 @@ const AdminPanelPro = (): JSX.Element => {
                             setNewAdminForm({name: '', email: '', password: '', role: 'admin'});
                           }}
                         >
-                          ÔÜí Annulla
+                          ⏱️ Annulla
                         </button>
                       </div>
                     </div>
@@ -4218,7 +4218,7 @@ const AdminPanelPro = (): JSX.Element => {
 
             {/* Sezione gestione admin esistenti */}
             <div className="admin-pricing-section">
-              <h3>­ƒæí Gestione Admin Esistenti</h3>
+              <h3>👥 Gestione Admin Esistenti</h3>
               <div className="admin-pricing-grid">
                 {adminsList.length > 0 ? (
                   adminsList.map((admin: any) => (
@@ -4235,14 +4235,14 @@ const AdminPanelPro = (): JSX.Element => {
                             onClick={() => handleRequestAdminPasswordChange(admin)}
                             disabled={loading}
                           >
-                            ÔÜá Cambia Password
+                            ⚠️ Cambia Password
                           </button>
                           <button 
                             className="admin-btn-danger"
                             onClick={() => handleDeleteAdmin(admin)}
                             disabled={loading}
                           >
-                            ­ƒöá Elimina
+                            🗑️ Elimina
                           </button>
                         </div>
                       </div>
@@ -4257,7 +4257,7 @@ const AdminPanelPro = (): JSX.Element => {
                         onClick={loadAdminsList}
                         disabled={loading}
                       >
-                        {loading ? 'Caricamento...' : '­ƒöä Ricarica Admin'}
+                        {loading ? 'Caricamento...' : '🔄 Ricarica Admin'}
                       </button>
                     </div>
                   </div>
@@ -4267,12 +4267,12 @@ const AdminPanelPro = (): JSX.Element => {
 
             {/* Info gestione admin */}
             <div className="admin-pricing-section">
-              <h3>ÔÜá Informazioni Gestione Admin</h3>
+              <h3>⚠️ Informazioni Gestione Admin</h3>
               <div className="admin-notice">
-                <strong>­ƒöÉ Funzionalit├á disponibili:</strong><br/>
-                Ô£à <strong>Crea Admin:</strong> Aggiungi nuovi amministratori con credenziali sicure<br/>
-                ÔÜá <strong>Cambia Password:</strong> Richiedi il cambio password per un admin specifico<br/>
-                ­ƒöá <strong>Elimina Admin:</strong> Rimuovi account amministratore (azione irreversibile)<br/>
+                <strong>🔐 Funzionalit├á disponibili:</strong><br/>
+                ✅ <strong>Crea Admin:</strong> Aggiungi nuovi amministratori con credenziali sicure<br/>
+                ⚠️ <strong>Cambia Password:</strong> Richiedi il cambio password per un admin specifico<br/>
+                🗑️ <strong>Elimina Admin:</strong> Rimuovi account amministratore (azione irreversibile)<br/>
                 <br/>
                 <strong>Note Sicurezza:</strong><br/>
                 ÔÇó Solo il SuperAdmin pu├▓ creare o eliminare admin<br/>
@@ -4287,9 +4287,9 @@ const AdminPanelPro = (): JSX.Element => {
         {/* Sezione Sistema Professionale - SOLO CONFIGURAZIONI TECNICHE */}
         {activeTab === 'sistema' && (
           <div className="admin-sistema">
-            <h2>ÔÜÖ´©Å Configurazione Sistema e Database</h2>
+            <h2>⚙️ Configurazione Sistema e Database</h2>
             <div className="admin-notice">
-              <strong>­ƒÆí Nota:</strong> Per modificare prezzi, tariffe e configurazioni di prenotazione, utilizza la tab <strong>"­ƒÅÀ´©Å Prezzi"</strong>.
+              <strong>💡 Nota:</strong> Per modificare prezzi, tariffe e configurazioni di prenotazione, utilizza la tab <strong>"­💵 Prezzi"</strong>.
               Questa sezione ├¿ dedicata solo alle impostazioni tecniche del sistema.
             </div>
             
@@ -4298,7 +4298,7 @@ const AdminPanelPro = (): JSX.Element => {
               <h3>´┐¢´©Å Stato Database e Applicazione</h3>
               <div className="admin-pricing-grid">
                 <div className="admin-pricing-card">
-                  <h4>­ƒôè Statistiche Sistema</h4>
+                  <h4>📊 Statistiche Sistema</h4>
                   <div className="pricing-controls">
                     {systemSettings.length > 0 ? (
                       systemSettings.map((setting) => (
@@ -4333,19 +4333,19 @@ const AdminPanelPro = (): JSX.Element => {
                               onClick={async () => {
                                 try {
                                   await updateSystemSettingValue(setting.key, setting.value);
-                                  alert(`Ô£à ${setting.label} salvata!`);
+                                  alert(`✅ ${setting.label} salvata!`);
                                 } catch (error) {
-                                  alert(`ÔØî Errore salvataggio ${setting.label}`);
+                                  alert(`❌ Errore salvataggio ${setting.label}`);
                                 }
                               }}
                             >
-                              ­ƒÆ¥ Salva
+                              💾 Salva
                             </button>
                             <button 
                               className="admin-btn-small admin-btn-warning"
                               onClick={() => resetSystemSetting(setting.key)}
                             >
-                              ­ƒöä Reset
+                              🔄 Reset
                             </button>
                           </div>
                           <small>Categoria: {setting.category} | Valore attuale: {setting.value}</small>
@@ -4353,12 +4353,12 @@ const AdminPanelPro = (): JSX.Element => {
                       ))
                     ) : (
                       <div>
-                        <p>­ƒôè Nessuna impostazione caricata dal backend</p>
+                        <p>📊 Nessuna impostazione caricata dal backend</p>
                         <button 
                           className="admin-btn-primary" 
                           onClick={loadRealApiData}
                         >
-                          ­ƒöä Carica Impostazioni API
+                          🔄 Carica Impostazioni API
                         </button>
                       </div>
                     )}
@@ -4369,19 +4369,19 @@ const AdminPanelPro = (): JSX.Element => {
                   <h4>Statistiche API</h4>
                   <div className="pricing-controls">
                     <div className="stat-row">
-                      <span>­ƒôè Prenotazioni Backend:</span>
+                      <span>📊 Prenotazioni Backend:</span>
                       <span className="stat-value">{realBookings.length}</span>
                     </div>
                     <div className="stat-row">
-                      <span>ÔÜÖ´©Å Impostazioni Attive:</span>
+                      <span>⚙️ Impostazioni Attive:</span>
                       <span className="stat-value">{systemSettings.length}</span>
                     </div>
                     <div className="stat-row">
-                      <span>­ƒôê Analytics Records:</span>
+                      <span>📊 Analytics Records:</span>
                       <span className="stat-value">{analytics.length}</span>
                     </div>
                     <div className="stat-row">
-                      <span>­ƒöö Notifiche:</span>
+                      <span>🔔 Notifiche:</span>
                       <span className="stat-value">{notifications.length}</span>
                     </div>
                   </div>
@@ -4391,7 +4391,7 @@ const AdminPanelPro = (): JSX.Element => {
                       className="admin-btn-primary" 
                       onClick={loadRealApiData}
                     >
-                      ­ƒöä Ricarica Tutti i Dati API
+                      🔄 Ricarica Tutti i Dati API
                     </button>
                     <button 
                       className="admin-btn-secondary" 
@@ -4402,27 +4402,27 @@ const AdminPanelPro = (): JSX.Element => {
                             updateSystemSettingValue(setting.key, setting.value)
                           );
                           await Promise.all(savePromises);
-                          alert('Ô£à Tutte le impostazioni salvate con successo!');
+                          alert('✅ Tutte le impostazioni salvate con successo!');
                         } catch (error) {
-                          alert('ÔØî Errore nel salvataggio delle impostazioni');
+                          alert('❌ Errore nel salvataggio delle impostazioni');
                         }
                       }}
                     >
-                      ­ƒÆ¥ Salva Tutte le Impostazioni
+                      💾 Salva Tutte le Impostazioni
                     </button>
                     <button 
                       className="admin-btn-warning"
                       onClick={handleSystemBackup}
                       disabled={loading}
                     >
-                      ­ƒÆ¥ {loading ? 'Backup...' : 'Backup Sistema'}
+                      💾 {loading ? 'Backup...' : 'Backup Sistema'}
                     </button>
                     <button 
                       className="admin-btn-danger"
                       onClick={handleSystemRestore}
                       disabled={loading}
                     >
-                      ­ƒöä {loading ? 'Ripristino...' : 'Ripristina Sistema'}
+                      🔄 {loading ? 'Ripristino...' : 'Ripristina Sistema'}
                     </button>
                   </div>
                 </div>
@@ -4431,7 +4431,7 @@ const AdminPanelPro = (): JSX.Element => {
             
             {/* Informazioni Propriet├á */}
             <div className="admin-pricing-section">
-              <h3>­ƒÅá Informazioni Struttura</h3>
+              <h3>📧 Informazioni Struttura</h3>
               <div className="admin-pricing-grid">
                 <div className="admin-pricing-card">
                   <h4>Dati Principali</h4>
@@ -4471,7 +4471,7 @@ const AdminPanelPro = (): JSX.Element => {
 
             {/* Sicurezza e Backup */}
             <div className="admin-pricing-section">
-              <h3>­ƒöÉ Sicurezza e Backup</h3>
+              <h3>🔐 Sicurezza e Backup</h3>
               <div className="admin-pricing-grid">
                 <div className="admin-pricing-card">
                   <h4>Autenticazione</h4>
@@ -4497,9 +4497,9 @@ const AdminPanelPro = (): JSX.Element => {
                     <label>Conservazione Backup:</label>
                     <input type="number" defaultValue="30" className="admin-input-small" aria-label="Giorni conservazione" />
                     
-                    <div className="sync-indicator success">Ô£à Ultimo backup: Oggi 03:00</div>
+                    <div className="sync-indicator success">✅ Ultimo backup: Oggi 03:00</div>
                     
-                    <button className="admin-btn-secondary admin-btn-small">­ƒÆ¥ Backup Manuale</button>
+                    <button className="admin-btn-secondary admin-btn-small">💾 Backup Manuale</button>
                   </div>
                 </div>
               </div>
@@ -4507,16 +4507,16 @@ const AdminPanelPro = (): JSX.Element => {
 
             {/* Monitoraggio Sistema */}
             <div className="admin-pricing-section">
-              <h3>­ƒôè Monitoraggio Sistema</h3>
+              <h3>📊 Monitoraggio Sistema</h3>
               <div className="admin-pricing-grid">
                 <div className="admin-pricing-card">
                   <h4>Stato Servizi</h4>
                   <div className="pricing-controls">
-                    <div className="sync-indicator success">­ƒƒó Server Web: Operativo (99.9% uptime)</div>
-                    <div className="sync-indicator success">­ƒƒó Database: Connesso (12ms latenza)</div>
-                    <div className="sync-indicator success">­ƒƒó Email Service: Attivo</div>
-                    <div className="sync-indicator success">­ƒƒó API Google Calendar: Funzionante</div>
-                    <div className="sync-indicator warning">­ƒƒí Cache Redis: Alto utilizzo (78%)</div>
+                    <div className="sync-indicator success">✅ Server Web: Operativo (99.9% uptime)</div>
+                    <div className="sync-indicator success">✅ Database: Connesso (12ms latenza)</div>
+                    <div className="sync-indicator success">✅ Email Service: Attivo</div>
+                    <div className="sync-indicator success">✅ API Google Calendar: Funzionante</div>
+                    <div className="sync-indicator warning">⏳ Cache Redis: Alto utilizzo (78%)</div>
                   </div>
                 </div>
                 
@@ -4524,19 +4524,19 @@ const AdminPanelPro = (): JSX.Element => {
                   <h4>Performance</h4>
                   <div className="pricing-controls">
                     <div className="stat-row">
-                      <span>­ƒÆ¥ Utilizzo Disco:</span>
+                      <span>💾 Utilizzo Disco:</span>
                       <span className="stat-value">45.2 GB / 100 GB</span>
                     </div>
                     <div className="stat-row">
-                      <span>­ƒÜÇ RAM:</span>
+                      <span>🖥️ RAM:</span>
                       <span className="stat-value">2.1 GB / 4 GB</span>
                     </div>
                     <div className="stat-row">
-                      <span>­ƒôè CPU:</span>
+                      <span>📊 CPU:</span>
                       <span className="stat-value">12.3%</span>
                     </div>
                     <div className="stat-row">
-                      <span>­ƒîÉ Traffico Oggi:</span>
+                      <span>📱 Traffico Oggi:</span>
                       <span className="stat-value">847 visite</span>
                     </div>
                   </div>
@@ -4546,12 +4546,12 @@ const AdminPanelPro = (): JSX.Element => {
             
             {/* Azioni Sistema */}
             <div className="admin-pricing-actions">
-              <button className="admin-btn-primary">­ƒÆ¥ Salva Tutte le Configurazioni</button>
-              <button className="admin-btn-secondary">­ƒöä Riavvia Servizi</button>
-              <button className="admin-btn-secondary">­ƒôï Log Sistema Completo</button>
-              <button className="admin-btn-secondary">­ƒøí´©Å Test Sicurezza</button>
-              <button className="admin-btn-secondary">­ƒôè Report Performance</button>
-              <button className="admin-btn-secondary">ÔÜÖ´©Å Manutenzione Programmata</button>
+              <button className="admin-btn-primary">💾 Salva Tutte le Configurazioni</button>
+              <button className="admin-btn-secondary">🔄 Riavvia Servizi</button>
+              <button className="admin-btn-secondary">­📜 Log Sistema Completo</button>
+              <button className="admin-btn-secondary">🔐 Test Sicurezza</button>
+              <button className="admin-btn-secondary">📊 Report Performance</button>
+              <button className="admin-btn-secondary">⚙️ Manutenzione Programmata</button>
             </div>
           </div>
         )}
@@ -4559,29 +4559,29 @@ const AdminPanelPro = (): JSX.Element => {
         {/* Sezione Notifiche Professionale */}
         {activeTab === 'notifiche' && (
           <div className="admin-notifiche">
-            <h2>­ƒöö Centro Notifiche {isLoadingData && '(Caricamento...)'}</h2>
+            <h2>🔔 Centro Notifiche {isLoadingData && '(Caricamento...)'}</h2>
             
             {/* Notifiche Attive */}
             <div className="admin-pricing-section">
-              <h3>­ƒô¼ Notifiche Backend Live</h3>
+              <h3>🔔 Notifiche Backend Live</h3>
               <div className="admin-pricing-actions margin-bottom">
                 <button 
                   className="admin-btn-primary" 
                   onClick={loadRealApiData}
                 >
-                  ­ƒöä Ricarica Notifiche
+                  🔄 Ricarica Notifiche
                 </button>
                 <button 
                   className="admin-btn-secondary" 
                   onClick={markAllNotificationsAsRead}
                 >
-                  ­ƒôû Marca Tutte Lette
+                  🔔 Marca Tutte Lette
                 </button>
                 <button 
                   className="admin-btn-secondary" 
                   onClick={testNotification}
                 >
-                  ­ƒöö Test Notifica
+                  🔔 Test Notifica
                 </button>
               </div>
               
@@ -4612,14 +4612,14 @@ const AdminPanelPro = (): JSX.Element => {
                           <td>{notif.timestamp}</td>
                           <td>
                             <span className={`status ${getPriorityColor(notif.priority)}`}>
-                              {notif.priority === 'high' && '­ƒö┤ Alta'}
-                              {notif.priority === 'medium' && '­ƒƒí Media'}
-                              {notif.priority === 'low' && '­ƒƒó Bassa'}
+                              {notif.priority === 'high' && '❌ Alta'}
+                              {notif.priority === 'medium' && '⏳ Media'}
+                              {notif.priority === 'low' && '✅ Bassa'}
                             </span>
                           </td>
                           <td>
                             <span className={`status ${notif.read ? 'completed' : 'pending'}`}>
-                              {notif.read ? 'Ô£à Letta' : '­ƒöö Non Letta'}
+                              {notif.read ? '✅ Letta' : '🔔 Non Letta'}
                             </span>
                           </td>
                           <td>
@@ -4629,14 +4629,14 @@ const AdminPanelPro = (): JSX.Element => {
                                   className="admin-btn-small" 
                                   onClick={() => markNotificationAsRead(notif.id)}
                                 >
-                                  ­ƒæü´©Å Leggi
+                                  📖 Leggi
                                 </button>
                               )}
                               <button 
                                 className="admin-btn-small admin-btn-warning" 
                                 onClick={() => deleteNotification(notif.id)}
                               >
-                                ­ƒùæ´©Å Elimina
+                                🗑️ Elimina
                               </button>
                             </div>
                           </td>
@@ -4647,14 +4647,14 @@ const AdminPanelPro = (): JSX.Element => {
                 </div>
               ) : (
                 <div className="admin-pricing-card">
-                  <p>­ƒôè Nessuna notifica trovata nel sistema</p>
+                  <p>📊 Nessuna notifica trovata nel sistema</p>
                 </div>
               )}
             </div>
 
             {/* Statistiche Notifiche */}
             <div className="admin-pricing-section">
-              <h3>­ƒôè Statistiche Notifiche</h3>
+              <h3>📊 Statistiche Notifiche</h3>
               <div className="admin-stats-grid">
                 <div className="admin-stat-card">
                   <h3>Totale Notifiche</h3>
@@ -4684,10 +4684,10 @@ const AdminPanelPro = (): JSX.Element => {
 
             {/* Impostazioni Notifiche */}
             <div className="admin-pricing-section">
-              <h3>ÔÜÖ´©Å Configurazione Notifiche</h3>
+              <h3>⚙️ Configurazione Notifiche</h3>
               <div className="admin-pricing-grid">
                 <div className="admin-pricing-card">
-                  <h4>­ƒöö Canali di Notifica</h4>
+                  <h4>🔔 Canali di Notifica</h4>
                   <div className="pricing-controls">
                     <label className="checkbox-label">
                       <input 
@@ -4695,7 +4695,7 @@ const AdminPanelPro = (): JSX.Element => {
                         checked={notificationSettings.emailNotifications}
                         onChange={(e) => setNotificationSettings({...notificationSettings, emailNotifications: e.target.checked})}
                       />
-                      ­ƒôº Notifiche Email
+                      📧 Notifiche Email
                     </label>
                     
                     <label className="checkbox-label">
@@ -4704,7 +4704,7 @@ const AdminPanelPro = (): JSX.Element => {
                         checked={notificationSettings.smsNotifications}
                         onChange={(e) => setNotificationSettings({...notificationSettings, smsNotifications: e.target.checked})}
                       />
-                      ­ƒô▒ Notifiche SMS
+                      📱 Notifiche SMS
                     </label>
                     
                     <label className="checkbox-label">
@@ -4713,7 +4713,7 @@ const AdminPanelPro = (): JSX.Element => {
                         checked={notificationSettings.pushNotifications}
                         onChange={(e) => setNotificationSettings({...notificationSettings, pushNotifications: e.target.checked})}
                       />
-                      ­ƒöö Notifiche Push
+                      🔔 Notifiche Push
                     </label>
                     
                     <label className="checkbox-label">
@@ -4722,13 +4722,13 @@ const AdminPanelPro = (): JSX.Element => {
                         checked={notificationSettings.soundEnabled}
                         onChange={(e) => setNotificationSettings({...notificationSettings, soundEnabled: e.target.checked})}
                       />
-                      ­ƒöè Suoni Notifica
+                      🔊 Suoni Notifica
                     </label>
                   </div>
                 </div>
                 
                 <div className="admin-pricing-card">
-                  <h4>­ƒôï Tipi di Alert</h4>
+                  <h4>­📜 Tipi di Alert</h4>
                   <div className="pricing-controls">
                     <label className="checkbox-label">
                       <input 
@@ -4736,7 +4736,7 @@ const AdminPanelPro = (): JSX.Element => {
                         checked={notificationSettings.bookingAlerts}
                         onChange={(e) => setNotificationSettings({...notificationSettings, bookingAlerts: e.target.checked})}
                       />
-                      ­ƒÅá Alert Prenotazioni
+                      📧 Alert Prenotazioni
                     </label>
                     
                     <label className="checkbox-label">
@@ -4745,7 +4745,7 @@ const AdminPanelPro = (): JSX.Element => {
                         checked={notificationSettings.paymentAlerts}
                         onChange={(e) => setNotificationSettings({...notificationSettings, paymentAlerts: e.target.checked})}
                       />
-                      ­ƒÆ░ Alert Pagamenti
+                      💰 Alert Pagamenti
                     </label>
                     
                     <label className="checkbox-label">
@@ -4754,7 +4754,7 @@ const AdminPanelPro = (): JSX.Element => {
                         checked={notificationSettings.systemAlerts}
                         onChange={(e) => setNotificationSettings({...notificationSettings, systemAlerts: e.target.checked})}
                       />
-                      ÔÜÖ´©Å Alert Sistema
+                      ⚙️ Alert Sistema
                     </label>
                     
                     <label className="checkbox-label">
@@ -4763,7 +4763,7 @@ const AdminPanelPro = (): JSX.Element => {
                         checked={notificationSettings.reviewAlerts}
                         onChange={(e) => setNotificationSettings({...notificationSettings, reviewAlerts: e.target.checked})}
                       />
-                      Ô¡É Alert Recensioni
+                      ⭐ Alert Recensioni
                     </label>
                     
                     <label>Email Admin:</label>
@@ -4786,21 +4786,21 @@ const AdminPanelPro = (): JSX.Element => {
                 onClick={saveNotificationSettings}
                 disabled={loading}
               >
-                ­ƒÆ¥ {loading ? 'Salvataggio...' : 'Salva Impostazioni'}
+                💾 {loading ? 'Salvataggio...' : 'Salva Impostazioni'}
               </button>
               <button 
                 className="admin-btn-secondary" 
                 onClick={markAllNotificationsAsRead}
               >
-                Ô£à Segna Tutte Come Lette
+                ✅ Segna Tutte Come Lette
               </button>
               <button 
                 className="admin-btn-secondary"
                 onClick={testNotification}
               >
-                ­ƒöö Test Notifica
+                🔔 Test Notifica
               </button>
-              <button className="admin-btn-secondary">­ƒôè Report Notifiche</button>
+              <button className="admin-btn-secondary">📊 Report Notifiche</button>
             </div>
           </div>
         )}
@@ -4808,15 +4808,15 @@ const AdminPanelPro = (): JSX.Element => {
         {/* Sezione Analytics Professionale */}
         {activeTab === 'analytics' && (
           <div className="admin-analytics">
-            <h2>­ƒôê Analytics e Statistiche Avanzate</h2>
+            <h2>📊 Analytics e Statistiche Avanzate</h2>
             
             {/* Analytics Backend Reali */}
             <div className="admin-pricing-section">
-              <h3>­ƒöÑ Analytics Backend (Dati Reali 30 Giorni)</h3>
+              <h3>✨ Analytics Backend (Dati Reali 30 Giorni)</h3>
               <div className="admin-pricing-grid">
                 {analytics.length > 0 ? (
                   <div className="admin-pricing-card">
-                    <h4>­ƒôè Dati Giornalieri</h4>
+                    <h4>📊 Dati Giornalieri</h4>
                     <div className="analytics-table">
                       <table className="bookings-table">
                         <thead>
@@ -4833,10 +4833,10 @@ const AdminPanelPro = (): JSX.Element => {
                             <tr key={index}>
                               <td>{day.date}</td>
                               <td>{day.bookings}</td>
-                              <td>Ôé¼{day.revenue}</td>
+                              <td>€{day.revenue}</td>
                               <td>{day.occupancy}%</td>
                               <td>
-                                {day.occupancy > 70 ? '­ƒöÑ' : day.occupancy > 40 ? '­ƒôê' : '­ƒôë'}
+                                {day.occupancy > 70 ? '✨' : day.occupancy > 40 ? '📊' : '­❌'}
                               </td>
                             </tr>
                           ))}
@@ -4846,34 +4846,34 @@ const AdminPanelPro = (): JSX.Element => {
                   </div>
                 ) : (
                   <div className="admin-pricing-card">
-                    <h4>­ƒôè Nessun Dato Analytics</h4>
+                    <h4>📊 Nessun Dato Analytics</h4>
                     <p>Non sono stati trovati dati analytics dal backend</p>
                     <button 
                       className="admin-btn-primary" 
                       onClick={loadRealApiData}
                     >
-                      ­ƒöä Ricarica Analytics API
+                      🔄 Ricarica Analytics API
                     </button>
                   </div>
                 )}
                 
                 <div className="admin-pricing-card">
-                  <h4>­ƒôê Statistiche Aggregate</h4>
+                  <h4>📊 Statistiche Aggregate</h4>
                   <div className="pricing-controls">
                     <div className="stat-row">
-                      <span>­ƒôè Totale Record Analytics:</span>
+                      <span>📊 Totale Record Analytics:</span>
                       <span className="stat-value">{analytics.length}</span>
                     </div>
                     <div className="stat-row">
-                      <span>­ƒÆ░ Ricavo Medio Giornaliero:</span>
+                      <span>💰 Ricavo Medio Giornaliero:</span>
                       <span className="stat-value">
-                        Ôé¼{analytics.length > 0 
+                        €{analytics.length > 0 
                           ? (analytics.reduce((sum, day) => sum + (day.revenue || 0), 0) / analytics.length).toFixed(2)
                           : '0.00'}
                       </span>
                     </div>
                     <div className="stat-row">
-                      <span>­ƒÅá Occupancy Media:</span>
+                      <span>📧 Occupancy Media:</span>
                       <span className="stat-value">
                         {analytics.length > 0 
                           ? Math.round(analytics.reduce((sum, day) => sum + (day.occupancy || 0), 0) / analytics.length)
@@ -4881,7 +4881,7 @@ const AdminPanelPro = (): JSX.Element => {
                       </span>
                     </div>
                     <div className="stat-row">
-                      <span>­ƒôà Giorni con Prenotazioni:</span>
+                      <span>📅 Giorni con Prenotazioni:</span>
                       <span className="stat-value">
                         {analytics.filter(day => day.bookings > 0).length}
                       </span>
@@ -4893,9 +4893,9 @@ const AdminPanelPro = (): JSX.Element => {
 
             {/* Grafici e Trend */}
             <div className="admin-pricing-section">
-              <h3>­ƒôè Trend Visuali</h3>
+              <h3>📊 Trend Visuali</h3>
               <div className="admin-pricing-card">
-                <h4>­ƒôê Andamento Ricavi</h4>
+                <h4>📊 Andamento Ricavi</h4>
                 <div className="trend-chart">
                   {analytics.slice(0, 7).map((day, index) => (
                     <div 
@@ -4917,11 +4917,11 @@ const AdminPanelPro = (): JSX.Element => {
             {/* Azioni Analytics */}
             <div className="admin-pricing-actions">
               <button className="admin-btn-primary" onClick={loadRealApiData}>
-                ­ƒöä Aggiorna Dati Analytics
+                🔄 Aggiorna Dati Analytics
               </button>
-              <button className="admin-btn-secondary">­ƒôè Esporta CSV</button>
-              <button className="admin-btn-secondary">­ƒôê Report Mensile</button>
-              <button className="admin-btn-secondary">­ƒôº Invia Report Email</button>
+              <button className="admin-btn-secondary">📊 Esporta CSV</button>
+              <button className="admin-btn-secondary">📊 Report Mensile</button>
+              <button className="admin-btn-secondary">📧 Invia Report Email</button>
             </div>
           </div>
         )}
