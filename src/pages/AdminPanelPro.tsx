@@ -26,6 +26,7 @@ const AdminPanelPro = (): JSX.Element => {
   const [calendarEvents, setCalendarEvents] = useState<any[]>([]); // Eventi iCal esterni
   const [paymentTransactions, setPaymentTransactions] = useState<any[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(false);
+  const [isGoogleAuthenticated, setIsGoogleAuthenticated] = useState(false);
 
   // Filtro piattaforma prenotazioni (direct, airbnb, booking, holidu)
   const [platformFilter, setPlatformFilter] = useState<'all'|'direct'|'airbnb'|'booking'|'holidu'>('all');
