@@ -6,17 +6,24 @@ interface TwoFactorLoginProps {
   onLoginError?: (error: string) => void;
 }
 
+interface AvailableRole {
+  role: string;
+  id: number;
+}
+
 /**
  * Componente per login admin con autenticazione a 2 fattori
- * Flow: Email/Password → TOTP (se abilitato) → Success
+ * Flow: Email/Password → Role Selection (opzionale) → TOTP (se abilitato) → Success
  */
 export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
   onLoginSuccess,
   onLoginError
 }) => {
-  const [step, setStep] = useState<'password' | 'totp'>('password');
+  const [step, setStep] = useState<'password' | 'role' | 'totp'>('password');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [selectedRole, setSelectedRole] = useState('');
+  const [availableRoles, setAvailableRoles] = useState<AvailableRole[]>([]);
   const [totpToken, setTotpToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -46,6 +53,13 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
         throw new Error(data.error || 'Credenziali non valide');
       }
 
+      // Se è richiesta la selezione del ruolo
+      if (data.requiresRoleSelection) {
+        setAvailableRoles(data.availableRoles || []);
+        setStep('role');
+        return;
+      }
+
       // Se 2FA non è richiesto, login completato (LEGACY - NON DOVREBBE SUCCEDERE PIÙ)
       if (!data.requires2FA) {
         console.warn('⚠️ Login senza 2FA - Modalità legacy deprecata');
@@ -69,13 +83,69 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
           const qrResp = await fetch('/api/unified?action=admin/2fa/setup', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email })
+            body: JSON.stringify({ email, role: data.role })
           });
           const qrData = await qrResp.json();
           if (qrResp.ok && qrData.success) {
             setQrCodeUrl(qrData.qrCodeUrl || qrData.otpauthUrl || '');
           } else {
             console.warn('2FA setup non disponibile:', qrData.error);
+          }
+        } catch (e) {
+          console.warn('Errore fetch QR 2FA:', e);
+        }
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Errore di connessione';
+      setError(errorMessage);
+      if (onLoginError) onLoginError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Step 1b: Scegli il ruolo tra quelli disponibili
+   */
+  const handleRoleSelection = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedRole) {
+      setError('Seleziona un ruolo');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/unified?action=admin/login-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password, selectedRole })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Errore nella selezione del ruolo');
+      }
+
+      // Gestione 2FA
+      setRequiresSetup(!!data.requiresSetup);
+      setStep('totp');
+      
+      if (data.requiresSetup) {
+        try {
+          const qrResp = await fetch('/api/unified?action=admin/2fa/setup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, role: selectedRole })
+          });
+          const qrData = await qrResp.json();
+          if (qrResp.ok && qrData.success) {
+            setQrCodeUrl(qrData.qrCodeUrl || qrData.otpauthUrl || '');
           }
         } catch (e) {
           console.warn('Errore fetch QR 2FA:', e);
@@ -110,7 +180,7 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ email, token: totpToken })
+        body: JSON.stringify({ email, token: totpToken, selectedRole: selectedRole || undefined })
       });
 
       const data = await response.json();
@@ -140,8 +210,10 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
    */
   const handleBackToPassword = () => {
     setStep('password');
+    setSelectedRole('');
     setTotpToken('');
     setError('');
+    setAvailableRoles([]);
   };
 
   return (
@@ -190,6 +262,48 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
               className="two-factor-login-button"
             >
               {loading ? '⏳ Verifica...' : '→ Continua'}
+            </button>
+          </form>
+        )}
+
+        {/* STEP 1.5: Selezione Ruolo */}
+        {step === 'role' && (
+          <form onSubmit={handleRoleSelection} className="two-factor-login-form">
+            <div className="two-factor-login-field">
+              <label className="two-factor-login-label">Scegli il tuo ruolo:</label>
+              <select
+                value={selectedRole}
+                onChange={(e) => setSelectedRole(e.target.value)}
+                className="two-factor-login-input"
+                required
+                autoFocus
+              >
+                <option value="">-- Seleziona un ruolo --</option>
+                {availableRoles.map((role) => (
+                  <option key={role.id} value={role.role}>
+                    {role.role === 'superadmin' ? '👑 Superadmin' : '🔐 Admin'}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {error && <div className="two-factor-login-error">{error}</div>}
+
+            <button
+              type="submit"
+              disabled={loading || !selectedRole}
+              className="two-factor-login-button"
+            >
+              {loading ? '⏳ Verifica...' : '→ Continua'}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleBackToPassword}
+              className="two-factor-login-back-button"
+              disabled={loading}
+            >
+              ← Torna indietro
             </button>
           </form>
         )}

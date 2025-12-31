@@ -355,15 +355,15 @@ export default async function handler(req, res) {
   // ========================================
   if (action === 'admin/login-password') {
     try {
-      const { email, password } = req.body;
+      const { email, password, selectedRole } = req.body;
       
       if (!email || !password) {
         return res.status(400).json({ success: false, error: 'Email e password richiesti' });
       }
 
-      // Recupera utente
+      // Recupera tutti i ruoli disponibili per questa email
       const userResult = await pool.query(
-        'SELECT id, email, password_hash, role, two_factor_enabled FROM admin_users WHERE email = $1',
+        'SELECT id, email, password_hash, role, two_factor_enabled FROM admin_users WHERE email = $1 ORDER BY role DESC',
         [email]
       );
 
@@ -371,13 +371,32 @@ export default async function handler(req, res) {
         return res.status(401).json({ success: false, error: 'Credenziali non valide' });
       }
 
-      const user = userResult.rows[0];
-
-      // Verifica password
-      const passwordMatch = await bcrypt.compare(password, user.password_hash);
+      // Verifica password su qualsiasi ruolo (dovrebbero essere uguali)
+      const passwordMatch = await bcrypt.compare(password, userResult.rows[0].password_hash);
       
       if (!passwordMatch) {
         return res.status(401).json({ success: false, error: 'Credenziali non valide' });
+      }
+
+      // Se ci sono più ruoli disponibili, chiedi di scegliere
+      if (userResult.rows.length > 1 && !selectedRole) {
+        const availableRoles = userResult.rows.map(r => ({ role: r.role, id: r.id }));
+        return res.status(200).json({
+          success: true,
+          requiresRoleSelection: true,
+          availableRoles: availableRoles,
+          email: email,
+          message: 'Scegli un ruolo per accedere'
+        });
+      }
+
+      // Seleziona il ruolo specifico o il primo se ce n'è solo uno
+      const user = selectedRole 
+        ? userResult.rows.find(u => u.role === selectedRole)
+        : userResult.rows[0];
+
+      if (!user) {
+        return res.status(401).json({ success: false, error: 'Ruolo non disponibile' });
       }
 
       // Se 2FA non è abilitato, forza il setup (primo login)
@@ -388,6 +407,7 @@ export default async function handler(req, res) {
           requiresSetup: true, // Flag per indicare che serve setup iniziale
           userId: user.id,
           email: user.email,
+          role: user.role,
           message: '2FA obbligatorio - Configura Google Authenticator per continuare'
         });
       }
@@ -398,6 +418,8 @@ export default async function handler(req, res) {
         requires2FA: true,
         requiresSetup: false,
         userId: user.id,
+        email: user.email,
+        role: user.role,
         message: 'Inserisci il codice TOTP dalla tua app di autenticazione'
       });
 
@@ -412,7 +434,7 @@ export default async function handler(req, res) {
   // ========================================
   if (action === 'admin/login-totp') {
     try {
-      const { email, token } = req.body;
+      const { email, token, selectedRole } = req.body;
       
       if (!email || !token) {
         return res.status(400).json({ success: false, error: 'Email e token richiesti' });
@@ -426,11 +448,16 @@ export default async function handler(req, res) {
         });
       }
 
-      // Recupera utente
-      const userResult = await pool.query(
-        'SELECT id, email, role, two_factor_secret, two_factor_enabled, recovery_codes FROM admin_users WHERE email = $1',
-        [email]
-      );
+      // Recupera utente - Se è stato selezionato un ruolo, cerca quello specifico
+      let query = 'SELECT id, email, role, two_factor_secret, two_factor_enabled, recovery_codes FROM admin_users WHERE email = $1';
+      let params = [email];
+      
+      if (selectedRole) {
+        query += ' AND role = $2';
+        params.push(selectedRole);
+      }
+      
+      const userResult = await pool.query(query, params);
 
       if (userResult.rows.length === 0) {
         return res.status(401).json({ success: false, error: 'Credenziali non valide' });

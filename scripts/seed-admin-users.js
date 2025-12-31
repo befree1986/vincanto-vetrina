@@ -9,16 +9,16 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const { Client } = pkg;
 
-// Utenti amministratori reali
+// Utenti amministratori - credenziali da variabili d'ambiente
 const adminUsers = [
   {
-    email: 'g.marino787@gmail.com',
-    password: 'Noki@1986!',
+    email: process.env.ADMIN_SUPERADMIN_EMAIL || 'superadmin@vincanto.it',
+    password: process.env.ADMIN_SUPERADMIN_PASSWORD || 'ChangeMe123!',
     role: 'superadmin'
   },
   {
-    email: 'g.marino787@gmail.com',
-    password: 'Noki@1986!',
+    email: process.env.ADMIN_USER_EMAIL || 'admin@vincanto.it',
+    password: process.env.ADMIN_USER_PASSWORD || 'ChangeMe123!',
     role: 'admin'
   }
 ];
