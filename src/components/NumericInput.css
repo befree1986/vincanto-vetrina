@@ -22,17 +22,19 @@
 
 .input-wrapper .admin-input-small {
   width: 100%;
-  padding-right: 2rem; /* Spazio per il suffisso */
+  padding-right: 5rem; /* Spazio aumentato per il suffisso */
 }
 
 .input-suffix {
   position: absolute;
-  right: 0.75rem;
+  right: 0.5rem;
   top: 50%;
   transform: translateY(-50%);
   color: var(--admin-text-muted);
   font-weight: 500;
   pointer-events: none;
+  white-space: nowrap;
+  font-size: 0.9rem;
 }
 
 .input-hint {
