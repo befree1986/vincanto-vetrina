@@ -9,16 +9,16 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const { Client } = pkg;
 
-// Test credentials
-const testUsers = [
+// Utenti amministratori reali
+const adminUsers = [
   {
-    email: 'superadmin@vincanto.it',
-    password: 'Vincanto@2025',
+    email: 'g.marino787@gmail.com',
+    password: 'Noki@1986!',
     role: 'superadmin'
   },
   {
-    email: 'admin@vincanto.it',
-    password: 'Admin@2025',
+    email: 'g.marino787@gmail.com',
+    password: 'Noki@1986!',
     role: 'admin'
   }
 ];
@@ -37,7 +37,7 @@ async function seedAdminUsers() {
     await client.connect();
     console.log('✓ Connesso al database Neon');
 
-    for (const user of testUsers) {
+    for (const user of adminUsers) {
       // Hash password con bcrypt
       const passwordHash = await bcrypt.hash(user.password, 10);
 
@@ -60,10 +60,10 @@ async function seedAdminUsers() {
       console.log(`  Creato:   ${insertedUser.created_at}`);
     }
 
-    console.log('\n✅ Utenti di test creati con successo!\n');
-    console.log('📝 Credenziali per il testing:');
+    console.log('\n✅ Utenti amministratori creati con successo!\n');
+    console.log('📝 Credenziali:');
     console.log('─'.repeat(50));
-    testUsers.forEach(user => {
+    adminUsers.forEach(user => {
       console.log(`${user.email}`);
       console.log(`  Password: ${user.password}`);
       console.log(`  Ruolo:    ${user.role}\n`);
