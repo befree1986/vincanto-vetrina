@@ -854,13 +854,22 @@ const AdminPanelPro = (): JSX.Element => {
       setIsUpdatingPayments(true);
       log('💳 Salvataggio configurazione pagamenti:', paymentSettings);
       
-      // Simula salvataggio - TODO: implementare endpoint backend
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch('/api/unified?action=save-payment-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(paymentSettings)
+      });
+
+      const result = await response.json();
       
-      alert('✅ Configurazione pagamenti salvata con successo!');
+      if (result.success) {
+        alert('✅ Configurazione pagamenti salvata con successo!');
+      } else {
+        throw new Error(result.message || 'Errore sconosciuto');
+      }
     } catch (error) {
       console.error('❌ Errore salvataggio pagamenti:', error);
-      alert('❌ Errore nel salvataggio della configurazione pagamenti');
+      alert('❌ Errore nel salvataggio: ' + error.message);
     } finally {
       setIsUpdatingPayments(false);
     }
@@ -871,30 +880,55 @@ const AdminPanelPro = (): JSX.Element => {
     if (!confirm) return;
 
     try {
+      setIsLoadingData(true);
       log('💰 Elaborazione rimborso:', { transactionId, amount });
       
-      // Simula rimborso - TODO: implementare endpoint backend
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const response = await fetch('/api/unified?action=process-refund', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payment_id: transactionId, amount })
+      });
+
+      const result = await response.json();
       
-      alert('✅ Rimborso elaborato con successo!');
-      // Aggiorna la lista delle transazioni
+      if (result.success) {
+        alert(`✅ Rimborso elaborato con successo!\n\n💰 Importo: €${amount.toFixed(2)}\n🆔 Refund ID: ${result.refund_id || 'N/A'}`);
+        await loadRealApiData();
+      } else {
+        throw new Error(result.message || 'Errore rimborso');
+      }
     } catch (error) {
       console.error('❌ Errore rimborso:', error);
-      alert('❌ Errore nell\'elaborazione del rimborso');
+      alert('❌ Errore: ' + error.message);
+    } finally {
+      setIsLoadingData(false);
     }
   };
 
   const handleCapturePayment = async (transactionId: string) => {
     try {
+      setIsLoadingData(true);
       log('💳 Cattura pagamento:', transactionId);
       
-      // Simula cattura pagamento - TODO: implementare endpoint backend
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch('/api/unified?action=capture-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payment_id: transactionId })
+      });
+
+      const result = await response.json();
       
-      alert('✅ Pagamento catturato con successo!');
+      if (result.success) {
+        alert('✅ Pagamento catturato con successo!');
+        await loadRealApiData();
+      } else {
+        throw new Error(result.message || 'Errore cattura');
+      }
     } catch (error) {
       console.error('❌ Errore cattura pagamento:', error);
-      alert('❌ Errore nella cattura del pagamento');
+      alert('❌ Errore: ' + error.message);
+    } finally {
+      setIsLoadingData(false);
     }
   };
 
@@ -917,11 +951,23 @@ const AdminPanelPro = (): JSX.Element => {
     setLoading(true);
     try {
       log('📧 Salvataggio configurazione email:', emailSettings);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      alert('✅ Configurazione email salvata con successo!');
+      
+      const response = await fetch('/api/unified?action=save-email-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(emailSettings)
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        alert('✅ Configurazione email salvata con successo!');
+      } else {
+        throw new Error(result.message || 'Errore salvataggio');
+      }
     } catch (error) {
       console.error('❌ Errore salvataggio email:', error);
-      alert('❌ Errore nel salvataggio della configurazione email');
+      alert('❌ Errore: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -931,11 +977,25 @@ const AdminPanelPro = (): JSX.Element => {
     setLoading(true);
     try {
       log('📧 Test connessione SMTP...');
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      alert('✅ Test email inviata con successo! Controlla la tua casella di posta.');
+      
+      const response = await fetch('/api/unified?action=test-email-connection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          recipient: emailSettings.senderEmail || 'g.marino787@gmail.com' 
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        alert(`✅ Test email inviata con successo!\n\n📧 Destinatario: ${result.recipient || emailSettings.senderEmail}\n⏱️ Tempo: ${result.time || 'N/A'}\n\nControlla la casella di posta.`);
+      } else {
+        throw new Error(result.message || 'Errore invio test');
+      }
     } catch (error) {
       console.error('❌ Errore test email:', error);
-      alert('❌ Errore durante il test email');
+      alert('❌ Errore: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -1022,11 +1082,23 @@ const AdminPanelPro = (): JSX.Element => {
     setLoading(true);
     try {
       log('🔔 Salvataggio impostazioni notifiche:', notificationSettings);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      alert('✅ Impostazioni notifiche salvate con successo!');
+      
+      const response = await fetch('/api/unified?action=save-notification-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(notificationSettings)
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        alert('✅ Impostazioni notifiche salvate con successo!');
+      } else {
+        throw new Error(result.message || 'Errore salvataggio');
+      }
     } catch (error) {
       console.error('❌ Errore salvataggio notifiche:', error);
-      alert('❌ Errore nel salvataggio delle impostazioni notifiche');
+      alert('❌ Errore: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -4075,8 +4147,19 @@ const AdminPanelPro = (): JSX.Element => {
                               <div className="admin-flex admin-gap-sm">
                                 <button 
                                   className="admin-btn-sm admin-btn-info"
-                                  onClick={() => {
-                                    alert(`💳 Dettagli Transazione\n\nID: ${transaction.payment_id || transaction.id}\nCliente: ${transaction.customer_email}\nImporto: €${transaction.amount}\nStato: ${transaction.status}\nMetodo: ${transaction.payment_method}\n\n🔗 Stripe Dashboard: https://dashboard.stripe.com/payments/${transaction.payment_id}`);
+                                  onClick={async () => {
+                                    try {
+                                      const response = await fetch(`/api/unified?action=get-payment-details&payment_id=${transaction.payment_id || transaction.id}`);
+                                      const result = await response.json();
+                                      if (result.success) {
+                                        const data = result.data;
+                                        alert(`💳 Dettagli Transazione\n\n🆔 ID: ${data.payment_id}\n📧 Cliente: ${data.customer_email}\n💰 Importo: €${data.amount}\n📊 Stato: ${data.status}\n💳 Metodo: ${data.payment_method}\n📅 Data: ${new Date(data.created_at).toLocaleString('it-IT')}\n\n🔗 Stripe Dashboard:\nhttps://dashboard.stripe.com/payments/${data.payment_id}`);
+                                      } else {
+                                        throw new Error(result.message || 'Errore caricamento dettagli');
+                                      }
+                                    } catch (error) {
+                                      alert(`💳 Dettagli Transazione (Cache)\n\nID: ${transaction.payment_id || transaction.id}\nCliente: ${transaction.customer_email}\nImporto: €${transaction.amount}\nStato: ${transaction.status}\nMetodo: ${transaction.payment_method}\n\n⚠️ Errore caricamento dettagli real-time: ${error.message}`);
+                                    }
                                   }}
                                 >
                                   👁️ Dettagli
@@ -4084,11 +4167,7 @@ const AdminPanelPro = (): JSX.Element => {
                                 {(transaction.status === 'succeeded' || transaction.status === 'completed') && (
                                   <button 
                                     className="admin-btn-sm admin-btn-warning"
-                                    onClick={() => {
-                                      if (confirm(`⚠️ Confermi il rimborso di €${transaction.amount} al cliente ${transaction.customer_email}?`)) {
-                                        alert(`✅ Rimborso avviato!\n\n💰 Importo: €${transaction.amount}\n📧 Cliente: ${transaction.customer_email}\n\n⏱️ Il rimborso sarà visibile sul conto del cliente entro 5-10 giorni lavorativi.`);
-                                      }
-                                    }}
+                                    onClick={() => handleRefundPayment(transaction.payment_id || transaction.id, transaction.amount)}
                                   >
                                     💰 Rimborsa
                                   </button>
@@ -4114,13 +4193,80 @@ const AdminPanelPro = (): JSX.Element => {
               <button className="admin-btn-primary" onClick={loadRealApiData}>
                 🔄 Ricarica Transazioni
               </button>
-              <button className="admin-btn-secondary" onClick={() => {
-                alert('📊 Export Excel\n\nFormato: CSV\nInclude: ID, Cliente, Importo, Metodo, Stato, Data\n\n💾 Download avviato!');
+              <button className="admin-btn-secondary" onClick={async () => {
+                try {
+                  const transactions = paymentTransactions.filter(t => 
+                    t.status === 'succeeded' || t.status === 'completed'
+                  );
+
+                  if (transactions.length === 0) {
+                    alert('⚠️ Nessuna transazione da esportare');
+                    return;
+                  }
+
+                  // Genera CSV
+                  const headers = ['ID', 'Cliente', 'Importo', 'Metodo', 'Stato', 'Data'];
+                  const rows = transactions.map(t => [
+                    t.payment_id || t.id,
+                    t.customer_email || t.email || 'N/A',
+                    (t.amount || 0).toFixed(2),
+                    t.payment_method || 'N/A',
+                    t.status,
+                    new Date(t.created_at).toLocaleDateString('it-IT')
+                  ]);
+
+                  const csv = [
+                    headers.join(','),
+                    ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+                  ].join('\n');
+
+                  // Download
+                  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `vincanto-transazioni-${new Date().toISOString().split('T')[0]}.csv`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  window.URL.revokeObjectURL(url);
+
+                  alert(`💾 Export completato!\n\n📊 File: vincanto-transazioni-${new Date().toISOString().split('T')[0]}.csv\n📋 Transazioni: ${transactions.length}\n✅ Download avviato`);
+                } catch (error) {
+                  console.error('❌ Errore export:', error);
+                  alert('❌ Errore export: ' + error.message);
+                }
               }}>
                 📊 Esporta Excel
               </button>
-              <button className="admin-btn-secondary" onClick={() => {
-                alert('📧 Report Email\n\nDestinatari: g.marino787@gmail.com\nPeriodo: Ultimi 30 giorni\nAllegati: Riepilogo PDF + Excel\n\n✅ Email inviata!');
+              <button className="admin-btn-secondary" onClick={async () => {
+                try {
+                  setIsLoadingData(true);
+
+                  const response = await fetch('/api/unified?action=send-payment-report', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      recipient: 'g.marino787@gmail.com',
+                      period: '30days',
+                      includeCSV: true,
+                      transactions: paymentTransactions.slice(0, 50)
+                    })
+                  });
+
+                  const result = await response.json();
+
+                  if (result.success) {
+                    alert('✅ Report inviato!\n\n📧 Destinatario: g.marino787@gmail.com\n📊 Periodo: Ultimi 30 giorni\n📎 Allegati: PDF + CSV\n\n⏱️ Controlla la tua email.');
+                  } else {
+                    throw new Error(result.message || 'Errore invio');
+                  }
+                } catch (error) {
+                  console.error('❌ Errore invio report:', error);
+                  alert('❌ Errore: ' + error.message);
+                } finally {
+                  setIsLoadingData(false);
+                }
               }}>
                 📧 Invia Report
               </button>
