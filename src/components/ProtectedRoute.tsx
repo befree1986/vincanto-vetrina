@@ -27,7 +27,9 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     requiredRole, 
     hasAccess: hasAccess(requiredRole),
     token: localStorage.getItem('vincanto_admin_token'),
-    storedRole: localStorage.getItem('vincanto_admin_role')
+    storedRole: localStorage.getItem('vincanto_admin_role'),
+    isSuperAdminAccessingAdmin: role === 'superadmin' && requiredRole === 'admin',
+    shouldAllow: hasAccess(requiredRole)
   });
 
   // Reindirizza al login se non c'è token o il ruolo è guest

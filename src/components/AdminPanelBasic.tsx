@@ -152,17 +152,30 @@ const AdminPanelBasic = (): JSX.Element => {
             </div>
           </div>
           
-          <button 
-            className="admin-btn admin-btn-secondary"
-            onClick={() => {
-              localStorage.removeItem('vincanto_admin_token');
-              localStorage.removeItem('vincanto_admin_role');
-              window.location.href = '/admin/login';
-            }}
-          >
-            <span className="admin-hidden-mobile">🚪 Logout</span>
-            <span className="admin-visible-mobile">🚪</span>
-          </button>
+          <div className="admin-flex admin-items-center admin-gap-sm">
+            {role === 'superadmin' && (
+              <button 
+                className="admin-btn admin-btn-info admin-btn-sm"
+                onClick={() => window.location.href = '/admin'}
+                title="Torna al pannello SuperAdmin"
+              >
+                <span className="admin-hidden-mobile">⚡ SuperAdmin</span>
+                <span className="admin-visible-mobile">⚡</span>
+              </button>
+            )}
+            
+            <button 
+              className="admin-btn admin-btn-secondary"
+              onClick={() => {
+                localStorage.removeItem('vincanto_admin_token');
+                localStorage.removeItem('vincanto_admin_role');
+                window.location.href = '/admin/login';
+              }}
+            >
+              <span className="admin-hidden-mobile">🚪 Logout</span>
+              <span className="admin-visible-mobile">🚪</span>
+            </button>
+          </div>
         </div>
       </header>
 

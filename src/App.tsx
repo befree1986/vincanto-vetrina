@@ -101,6 +101,11 @@ function App() {
                 <AdminPanelBasic />
               </ProtectedRoute>
             } />
+            <Route path="/admin/dashboard" element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminPanelBasic />
+              </ProtectedRoute>
+            } />
             <Route path="/admin/setup" element={<AdminSetup />} />
             <Route path="/admin/security" element={
               <ProtectedRoute requiredRole="superadmin">
