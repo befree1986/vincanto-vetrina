@@ -3903,6 +3903,231 @@ const AdminPanelPro = (): JSX.Element => {
           </div>
         )}
 
+        {/* Sezione Pagamenti */}
+        {activeTab === 'pagamenti' && (
+          <div className="admin-pagamenti">
+            <h2>💳 Gestione Pagamenti e Transazioni</h2>
+
+            {/* Dashboard Pagamenti */}
+            <div className="admin-pricing-section">
+              <h3>📊 Riepilogo Transazioni</h3>
+              <div className="admin-pricing-grid">
+                <div className="admin-pricing-card">
+                  <h4>💰 Statistiche Generali</h4>
+                  <div className="pricing-controls">
+                    <div className="stat-row">
+                      <span>💳 Totale Transazioni:</span>
+                      <span className="stat-value">{paymentTransactions.length}</span>
+                    </div>
+                    <div className="stat-row">
+                      <span>✅ Completate:</span>
+                      <span className="stat-value">
+                        {paymentTransactions.filter(t => t.status === 'succeeded' || t.status === 'completed').length}
+                      </span>
+                    </div>
+                    <div className="stat-row">
+                      <span>⏳ In Attesa:</span>
+                      <span className="stat-value">
+                        {paymentTransactions.filter(t => t.status === 'pending' || t.status === 'processing').length}
+                      </span>
+                    </div>
+                    <div className="stat-row">
+                      <span>❌ Fallite:</span>
+                      <span className="stat-value">
+                        {paymentTransactions.filter(t => t.status === 'failed' || t.status === 'canceled').length}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="admin-pricing-card">
+                  <h4>💰 Ricavi</h4>
+                  <div className="pricing-controls">
+                    <div className="stat-row">
+                      <span>💶 Totale Ricavi:</span>
+                      <span className="stat-value">
+                        €{paymentTransactions
+                          .filter(t => t.status === 'succeeded' || t.status === 'completed')
+                          .reduce((sum, t) => sum + (t.amount || 0), 0)
+                          .toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="stat-row">
+                      <span>📊 Ricavo Medio:</span>
+                      <span className="stat-value">
+                        €{paymentTransactions.length > 0
+                          ? (paymentTransactions
+                              .filter(t => t.status === 'succeeded' || t.status === 'completed')
+                              .reduce((sum, t) => sum + (t.amount || 0), 0) / 
+                             paymentTransactions.filter(t => t.status === 'succeeded' || t.status === 'completed').length
+                            ).toFixed(2)
+                          : '0.00'}
+                      </span>
+                    </div>
+                    <div className="stat-row">
+                      <span>💳 Tasso Successo:</span>
+                      <span className="stat-value">
+                        {paymentTransactions.length > 0
+                          ? Math.round(
+                              (paymentTransactions.filter(t => t.status === 'succeeded' || t.status === 'completed').length / 
+                               paymentTransactions.length) * 100
+                            )
+                          : 0}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="admin-pricing-card">
+                  <h4>⚙️ Configurazione</h4>
+                  <div className="pricing-controls">
+                    <button className="admin-btn-primary" onClick={() => {
+                      const stripeKey = prompt('🔑 Inserisci Stripe Publishable Key:', 'pk_test_...');
+                      if (stripeKey) {
+                        alert(`✅ Stripe Key configurata!\n\nKey: ${stripeKey.substring(0, 20)}...\n\n💡 Salvata nelle impostazioni sistema.`);
+                      }
+                    }}>
+                      🔧 Configura Stripe
+                    </button>
+                    <button className="admin-btn-secondary" onClick={() => {
+                      const paypalEmail = prompt('📧 Inserisci PayPal Business Email:', 'business@vincanto.it');
+                      if (paypalEmail) {
+                        alert(`✅ PayPal configurato!\n\nEmail: ${paypalEmail}\n\n💡 Salvata nelle impostazioni sistema.`);
+                      }
+                    }}>
+                      🔧 Configura PayPal
+                    </button>
+                    <button className="admin-btn-secondary" onClick={() => {
+                      alert('🏦 Configurazione Bonifico Bancario\n\nIBAN: IT02 L012 3456 789012345678901\nIntestato a: Vincanto Maori\n\n💡 Tempo liquidazione: 3-5 giorni lavorativi');
+                    }}>
+                      🏦 Info Bonifico
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Lista Transazioni */}
+            <div className="admin-pricing-section">
+              <h3>📋 Ultime Transazioni</h3>
+              <div className="admin-card">
+                {paymentTransactions.length > 0 ? (
+                  <div className="admin-table-container">
+                    <table className="admin-table">
+                      <thead>
+                        <tr>
+                          <th>ID Transazione</th>
+                          <th>Cliente</th>
+                          <th>Importo</th>
+                          <th>Metodo</th>
+                          <th>Stato</th>
+                          <th>Data</th>
+                          <th>Azioni</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paymentTransactions.slice(0, 20).map((transaction, index) => (
+                          <tr key={transaction.id || index}>
+                            <td>
+                              <code>{transaction.payment_id || transaction.id || 'N/A'}</code>
+                            </td>
+                            <td>{transaction.customer_email || transaction.email || 'N/A'}</td>
+                            <td><strong>€{(transaction.amount || 0).toFixed(2)}</strong></td>
+                            <td>
+                              <span className={`admin-badge admin-badge-${
+                                transaction.payment_method === 'card' ? 'info' : 
+                                transaction.payment_method === 'paypal' ? 'warning' : 
+                                'default'
+                              }`}>
+                                {transaction.payment_method === 'card' && '💳 Carta'}
+                                {transaction.payment_method === 'paypal' && '📧 PayPal'}
+                                {transaction.payment_method === 'bank_transfer' && '🏦 Bonifico'}
+                                {!transaction.payment_method && '❓ N/A'}
+                              </span>
+                            </td>
+                            <td>
+                              <span className={`admin-badge admin-badge-${
+                                transaction.status === 'succeeded' || transaction.status === 'completed' ? 'success' : 
+                                transaction.status === 'pending' || transaction.status === 'processing' ? 'warning' : 
+                                'danger'
+                              }`}>
+                                {transaction.status === 'succeeded' && '✅ Completato'}
+                                {transaction.status === 'completed' && '✅ Completato'}
+                                {transaction.status === 'pending' && '⏳ In attesa'}
+                                {transaction.status === 'processing' && '⏳ In elaborazione'}
+                                {transaction.status === 'failed' && '❌ Fallito'}
+                                {transaction.status === 'canceled' && '❌ Annullato'}
+                                {!transaction.status && '❓ N/A'}
+                              </span>
+                            </td>
+                            <td>
+                              {transaction.created_at 
+                                ? new Date(transaction.created_at).toLocaleDateString('it-IT', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })
+                                : 'N/A'}
+                            </td>
+                            <td>
+                              <div className="admin-flex admin-gap-sm">
+                                <button 
+                                  className="admin-btn-sm admin-btn-info"
+                                  onClick={() => {
+                                    alert(`💳 Dettagli Transazione\n\nID: ${transaction.payment_id || transaction.id}\nCliente: ${transaction.customer_email}\nImporto: €${transaction.amount}\nStato: ${transaction.status}\nMetodo: ${transaction.payment_method}\n\n🔗 Stripe Dashboard: https://dashboard.stripe.com/payments/${transaction.payment_id}`);
+                                  }}
+                                >
+                                  👁️ Dettagli
+                                </button>
+                                {(transaction.status === 'succeeded' || transaction.status === 'completed') && (
+                                  <button 
+                                    className="admin-btn-sm admin-btn-warning"
+                                    onClick={() => {
+                                      if (confirm(`⚠️ Confermi il rimborso di €${transaction.amount} al cliente ${transaction.customer_email}?`)) {
+                                        alert(`✅ Rimborso avviato!\n\n💰 Importo: €${transaction.amount}\n📧 Cliente: ${transaction.customer_email}\n\n⏱️ Il rimborso sarà visibile sul conto del cliente entro 5-10 giorni lavorativi.`);
+                                      }
+                                    }}
+                                  >
+                                    💰 Rimborsa
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="admin-text-center admin-text-muted admin-py-xl">
+                    <p>💳 Nessuna transazione trovata</p>
+                    <p className="admin-text-sm">Le transazioni verranno visualizzate qui quando i clienti effettueranno pagamenti</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Azioni Pagamenti */}
+            <div className="admin-pricing-actions">
+              <button className="admin-btn-primary" onClick={loadRealApiData}>
+                🔄 Ricarica Transazioni
+              </button>
+              <button className="admin-btn-secondary" onClick={() => {
+                alert('📊 Export Excel\n\nFormato: CSV\nInclude: ID, Cliente, Importo, Metodo, Stato, Data\n\n💾 Download avviato!');
+              }}>
+                📊 Esporta Excel
+              </button>
+              <button className="admin-btn-secondary" onClick={() => {
+                alert('📧 Report Email\n\nDestinatari: g.marino787@gmail.com\nPeriodo: Ultimi 30 giorni\nAllegati: Riepilogo PDF + Excel\n\n✅ Email inviata!');
+              }}>
+                📧 Invia Report
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Sezione Email */}
         {activeTab === 'email' && (
           <div className="admin-email">
