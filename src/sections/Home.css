@@ -154,6 +154,10 @@
   box-shadow: var(--shadow-lg);
 }
 
+.spaced-top {
+  margin-top: 3rem;
+}
+
 .feature-title {
   display: flex;
   align-items: center;

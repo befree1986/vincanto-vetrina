@@ -119,7 +119,7 @@ const Home: React.FC = () => {
                 </p>
               </div>
             </div>
-            <div className="full-width-feature-card" role="region" aria-labelledby="feature-card-title">
+            <div className="full-width-feature-card spaced-top" role="region" aria-labelledby="feature-card-title">
               <div className="feature-title" >
                 <span className="feature-icon" aria-hidden="true">🚌</span>
                 <h3 id="feature-card-title">{t('Trasporti e Accessibilità')}</h3>
