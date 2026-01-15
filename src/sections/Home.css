@@ -140,12 +140,18 @@
 }
 
 .full-width-feature-card {
-  background: #f8f9fa;
+  background-color: var(--white);
   padding: 2rem;
   margin-bottom: 2.5rem;
   border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+  box-shadow: var-(--shadow-md);
   text-align: center;
+  transition: all 0.3s ease;
+}
+
+.full-width-feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
 }
 
 .feature-title {
