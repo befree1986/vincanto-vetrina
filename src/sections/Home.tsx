@@ -125,7 +125,12 @@ const Home: React.FC = () => {
                 <h3 id="feature-card-title">{t('Trasporti e Accessibilità')}</h3>
                 </div>
               <p>
-                {t('Testo da inserire e modificare')}
+                {t('🚍 Bus di Linea Collegamenti SITA Sud verso i principali borghi della Costiera. Fermate facilmente raggiungibili dalla residenza.')}
+              </p>
+              <p>{t('🚌 Navetta Comunale Servizio locale per spostarsi con semplicità tra centro, lungomare e porto.')}
+              </p>
+              <p>
+                {t('⛴️ Traghetti Partenze dal porto di Maiori verso Amalfi, Positano e Salerno. Il modo più rapido e scenografico per vivere la costa.')}
               </p>
             </div>
           </div>
