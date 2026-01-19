@@ -58,7 +58,7 @@ const Home: React.FC = () => {
                 <h3 id="feature-card-title">{t('Perfetta per Ogni Ospite')}</h3>
               </div>
               <p>
-                {t('Perfetta per famiglie, gruppi di amici, coppie e chiunque desideri una pausa rigenerante nella quiete della Costiera Amalfitana, senza rinunciare al comfort.')}
+                {t('section.full-width-feature-card-desc')}
               </p>
               <p>
                 {t('home.position.DescP')}
