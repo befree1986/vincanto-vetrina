@@ -1,65 +1,58 @@
 // API COMPLETAMENTE UNIFICATA - Vincanto System
 // Consolidation of all API endpoints in a single file
 import { Pool } from 'pg';
-import Stripe from 'stripe';
+import Stripe from 'stripe'; // ⚡ ES Module import per Vercel serverless
 import nodemailer from 'nodemailer';
+import { renderEmailTemplate } from '../email/templates/index.js';
+import { sendEmailWithAdminCopy } from '../email/emailSender.js';
+import { initializeEmailLogsTable } from '../email/emailLogger.js';
+import { detectLanguage } from '../email/i18n.js';
+import * as TwoFactorAuth from './2fa.js';
+import bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
-let bcrypt;
 
-// Database connection (guarded to surface init errors)
-let pool;
-let moduleInitError = null;
-try {
-  pool = new Pool({
-    connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-  });
-} catch (err) {
-  moduleInitError = err;
-  console.error('❌ Errore inizializzazione Pool PG:', err);
-}
+// Database connection
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
 
 // Email transporter configuration
 let emailTransporter = null;
-try {
-  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
-    const smtpPort = parseInt(process.env.SMTP_PORT) || 587;
-    // Porta 465 = SSL, 587 = STARTTLS
-    const smtpSecure = smtpPort === 465;
-    console.log('[SMTP DEBUG] Configurazione:', {
-      host: process.env.SMTP_HOST,
-      port: smtpPort,
-      secure: smtpSecure,
+if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
+  const smtpPort = parseInt(process.env.SMTP_PORT) || 587;
+  // Porta 465 = SSL, 587 = STARTTLS
+  const smtpSecure = smtpPort === 465;
+  console.log('[SMTP DEBUG] Configurazione:', {
+    host: process.env.SMTP_HOST,
+    port: smtpPort,
+    secure: smtpSecure,
+    user: process.env.SMTP_USER,
+    from: process.env.SMTP_FROM
+  });
+  emailTransporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: smtpPort,
+    secure: smtpSecure,
+    auth: {
       user: process.env.SMTP_USER,
-      from: process.env.SMTP_FROM
-    });
-    emailTransporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: smtpPort,
-      secure: smtpSecure,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASSWORD
-      },
-      connectionTimeout: 5000,
-      greetingTimeout: 5000,
-      socketTimeout: 5000
-    });
-    // Test connessione SMTP
-    emailTransporter.verify(function(error, success) {
-      if (error) {
-        console.error('[SMTP DEBUG] Errore connessione SMTP:', error);
-      } else {
-        console.log('[SMTP DEBUG] Connessione SMTP OK:', success);
-      }
-    });
-    console.log('✅ Email transporter configurato');
-  } else {
-    console.log('⚠️ Email transporter non configurato (variabili SMTP mancanti)');
-  }
-} catch (err) {
-  moduleInitError = moduleInitError || err;
-  console.error('❌ Errore inizializzazione SMTP:', err);
+      pass: process.env.SMTP_PASSWORD
+    },
+    connectionTimeout: 5000,
+    greetingTimeout: 5000,
+    socketTimeout: 5000
+  });
+  // Test connessione SMTP
+  emailTransporter.verify(function(error, success) {
+    if (error) {
+      console.error('[SMTP DEBUG] Errore connessione SMTP:', error);
+    } else {
+      console.log('[SMTP DEBUG] Connessione SMTP OK:', success);
+    }
+  });
+  console.log('✅ Email transporter configurato');
+} else {
+  console.log('⚠️ Email transporter non configurato (variabili SMTP mancanti)');
 }
 
 // Controllo configurazione database
@@ -108,47 +101,6 @@ async function initializeTables() {
     `);
     console.log('✅ Tabella bookings inizializzata');
 
-    // 🆕 Crea tabella pricing_config se non esiste
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS pricing_config (
-        id SERIAL PRIMARY KEY,
-        price_group_1to2 DECIMAL(10,2) DEFAULT 75,
-        price_group_3to4 DECIMAL(10,2) DEFAULT 95,
-        price_group_5to6 DECIMAL(10,2) DEFAULT 115,
-        price_group_7to8 DECIMAL(10,2) DEFAULT 135,
-        cleaning_fee DECIMAL(10,2) DEFAULT 50,
-        parking_fee DECIMAL(10,2) DEFAULT 20,
-        tourist_tax_adult DECIMAL(10,2) DEFAULT 2.00,
-        tourist_tax_child DECIMAL(10,2) DEFAULT 0,
-        weekend_surcharge DECIMAL(10,2) DEFAULT 0,
-        weekly_discount DECIMAL(10,2) DEFAULT 10,
-        monthly_discount DECIMAL(10,2) DEFAULT 15,
-        min_stay INTEGER DEFAULT 2,
-        max_stay INTEGER DEFAULT 14,
-        max_guests INTEGER DEFAULT 8,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-    console.log('✅ Tabella pricing_config inizializzata');
-
-    // 🆕 Crea tabella calendar_events se non esiste
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS calendar_events (
-        id SERIAL PRIMARY KEY,
-        uid VARCHAR(500) UNIQUE NOT NULL,
-        calendar_source VARCHAR(100) NOT NULL,
-        summary TEXT,
-        description TEXT,
-        start_date TIMESTAMP NOT NULL,
-        end_date TIMESTAMP NOT NULL,
-        location TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-    console.log('✅ Tabella calendar_events inizializzata');
-
     // 🆕 Crea tabella extra_services se non esiste
     await pool.query(`
       CREATE TABLE IF NOT EXISTS extra_services (
@@ -169,14 +121,8 @@ async function initializeTables() {
     `);
     console.log('✅ Tabella extra_services inizializzata');
 
-    // 🆕 Crea tabella email_logs (import lazy per evitare ReferenceError)
-    try {
-      const emailLogger = await import('../email/emailLogger.js');
-      await emailLogger.initializeEmailLogsTable();
-      console.log('✅ Tabella email_logs inizializzata');
-    } catch (err) {
-      console.warn('⚠️ Impossibile inizializzare email_logs:', err.message);
-    }
+    // 🆕 Crea tabella email_logs
+    await initializeEmailLogsTable();
 
     // 🔄 Aggiungi campi min_age e max_age se non esistono
     try {
@@ -226,46 +172,6 @@ async function initializeTables() {
 initializeTables();
 
 export default async function handler(req, res) {
-  try {
-    if (moduleInitError) {
-      console.error('❌ Errore durante init modulo unified:', moduleInitError);
-      return res.status(500).json({
-        success: false,
-        error: 'Errore inizializzazione modulo API',
-        details: moduleInitError.message,
-        stack: moduleInitError.stack
-      });
-    }
-
-    // Lazy import delle dipendenze email se necessarie
-    let renderEmailTemplate, sendEmailWithAdminCopy, initializeEmailLogsTable, detectLanguage, TwoFactorAuth;
-    
-    if (req.query.action?.includes('booking') || req.query.action?.includes('contact')) {
-      try {
-        const emailTemplates = await import('../email/templates/index.js');
-        renderEmailTemplate = emailTemplates.renderEmailTemplate;
-        
-        const emailSender = await import('../email/emailSender.js');
-        sendEmailWithAdminCopy = emailSender.sendEmailWithAdminCopy;
-        
-        const emailLogger = await import('../email/emailLogger.js');
-        initializeEmailLogsTable = emailLogger.initializeEmailLogsTable;
-        
-        const i18n = await import('../email/i18n.js');
-        detectLanguage = i18n.detectLanguage;
-      } catch (emailImportError) {
-        console.warn('⚠️ Email modules non disponibili:', emailImportError.message);
-      }
-    }
-    
-    if (req.query.action?.includes('2fa') || req.query.action?.includes('admin')) {
-      try {
-        TwoFactorAuth = await import('./2fa.js');
-      } catch (tfaImportError) {
-        console.warn('⚠️ 2FA module non disponibile:', tfaImportError.message);
-      }
-    }
-
         // Endpoint di health check DB
         if (req.query.action === 'db-health') {
           try {
@@ -301,22 +207,6 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // Assicuriamoci che req.body sia parsato correttamente
-  if (req.method === 'POST' && req.headers['content-type']?.includes('application/json')) {
-    try {
-      if (typeof req.body === 'string') {
-        req.body = JSON.parse(req.body);
-      }
-    } catch (parseError) {
-      console.error('❌ Errore parsing JSON body:', parseError);
-      return res.status(400).json({
-        success: false,
-        error: 'Errore parsing JSON nel body della richiesta',
-        details: parseError.message
-      });
-    }
-  }
-
   // Test connessione database per debugging
   try {
     await pool.query('SELECT 1');
@@ -338,35 +228,6 @@ export default async function handler(req, res) {
   }
 
   console.log('🎯 API UNIFICATA CONSOLIDATA - Action:', action, 'Method:', req.method);
-  console.log('📥 Request URL:', req.url);
-  console.log('📥 Request Query:', req.query);
-  if (req.method === 'POST') {
-    console.log('📥 Request Body:', req.body);
-  }
-
-  // Gestione richiesta senza action - Health check di default
-  if (!action) {
-    try {
-      const dbCheck = await pool.query('SELECT NOW()');
-      return res.status(200).json({
-        success: true,
-        message: 'API Unificata Vincanto - Operativa',
-        timestamp: dbCheck.rows[0].now,
-        endpoints: [
-          'db-health', 'booking', 'payments', 'calendar-sync', 'blocked-dates', 
-          'pricing-config', 'quote', 'extra-services', 'contact', 'analytics', 
-          'cancel-booking', 'admin/*'
-        ]
-      });
-    } catch (error) {
-      console.error('❌ Errore health check:', error);
-      return res.status(500).json({
-        success: false,
-        error: 'Errore connessione database',
-        details: error.message
-      });
-    }
-  }
 
   // ========================================
   // 2FA SETUP - Genera secret e QR code
@@ -494,11 +355,6 @@ export default async function handler(req, res) {
   // ========================================
   if (action === 'admin/login-password') {
     try {
-      if (!bcrypt) {
-        const mod = await import('bcrypt');
-        bcrypt = mod.default || mod;
-      }
-
       const { email, password, selectedRole } = req.body;
       
       if (!email || !password) {
@@ -1498,76 +1354,50 @@ export default async function handler(req, res) {
     // ========================================
     // Cancella o marca come cancelled un booking (usato quando pagamento fallisce)
     if (action === 'cancel-booking') {
-      console.log('🎯 Cancel booking endpoint raggiunto, metodo:', req.method);
-      
-      if (req.method !== 'POST') {
-        return res.status(405).json({
-          success: false,
-          error: 'Metodo non consentito. Usa POST.',
-          allowedMethods: ['POST']
-        });
-      }
-      
-      try {
-        console.log('📥 Cancel booking request body:', req.body);
-        console.log('📥 Cancel booking request query:', req.query);
-        
-        const { bookingId, reason } = req.body;
-        
-        if (!bookingId) {
-          console.log('❌ bookingId mancante nel request');
-          return res.status(400).json({
+      if (req.method === 'POST') {
+        try {
+          const { bookingId, reason } = req.body;
+          
+          if (!bookingId) {
+            return res.status(400).json({
+              success: false,
+              error: 'bookingId è richiesto'
+            });
+          }
+          
+          console.log(`🚫 Cancellazione booking: ${bookingId}, motivo: ${reason || 'non specificato'}`);
+          
+          // Aggiorna il booking a status 'cancelled'
+          const result = await pool.query(`
+            UPDATE bookings 
+            SET status = 'cancelled', 
+                payment_status = 'cancelled',
+                updated_at = NOW()
+            WHERE booking_id = $1 OR id = $1
+            RETURNING *
+          `, [bookingId]);
+          
+          if (result.rows.length === 0) {
+            return res.status(404).json({
+              success: false,
+              error: 'Booking non trovato'
+            });
+          }
+          
+          console.log(`✅ Booking ${bookingId} cancellato con successo`);
+          return res.status(200).json({
+            success: true,
+            message: 'Booking cancellato con successo',
+            bookingId: bookingId,
+            reason: reason
+          });
+        } catch (error) {
+          console.error('❌ Errore cancellazione booking:', error);
+          return res.status(500).json({
             success: false,
-            error: 'bookingId è richiesto'
+            error: 'Errore nella cancellazione del booking'
           });
         }
-        
-        console.log(`🚫 Cancellazione booking: ${bookingId}, motivo: ${reason || 'non specificato'}`);
-        
-        // Verifica se il booking esiste prima di aggiornarlo
-        const checkResult = await pool.query(`
-          SELECT id, booking_id, status, payment_status FROM bookings 
-          WHERE booking_id = $1 OR id = $1
-        `, [bookingId]);
-        
-        console.log('🔍 Booking trovato:', checkResult.rows);
-        
-        if (checkResult.rows.length === 0) {
-          console.log(`❌ Booking ${bookingId} non trovato nel database`);
-          return res.status(404).json({
-            success: false,
-            error: 'Booking non trovato'
-          });
-        }
-        
-        // Aggiorna il booking a status 'cancelled'
-        const result = await pool.query(`
-          UPDATE bookings 
-          SET status = 'cancelled', 
-              payment_status = 'cancelled',
-              updated_at = NOW()
-          WHERE booking_id = $1 OR id = $1
-          RETURNING *
-        `, [bookingId]);
-        
-        console.log('✅ Booking aggiornato:', result.rows[0]);
-        console.log(`✅ Booking ${bookingId} cancellato con successo`);
-        
-        return res.status(200).json({
-          success: true,
-          message: 'Booking cancellato con successo',
-          bookingId: bookingId,
-          reason: reason,
-          updatedBooking: result.rows[0]
-        });
-      } catch (error) {
-        console.error('❌ Errore cancellazione booking:', error);
-        console.error('Stack trace:', error.stack);
-        return res.status(500).json({
-          success: false,
-          error: 'Errore nella cancellazione del booking',
-          details: process.env.NODE_ENV === 'development' ? error.message : undefined
-        });
       }
     }
 
@@ -3482,19 +3312,19 @@ END:VEVENT
         'calendar-bookings', 'ical-export',
         'blocked-dates', 'pricing-config', 'quote', 'extra-services', 'contact', 'settings',
         'clear-test-bookings', 'update-calendar-config', 'delete-calendar-config', 
-        'calendar-sync-status', 'force-calendar-sync', 'test-calendar-connection', 'cancel-booking'
+        'calendar-sync-status', 'force-calendar-sync', 'test-calendar-connection'
       ],
       requestedAction: action,
       method: req.method
     });
 
-  } catch (fatalError) {
-    console.error('❌ Errore non gestito in unified handler:', fatalError);
+  } catch (error) {
+    console.error('❌ API Unificata Error:', error);
     return res.status(500).json({
       success: false,
-      error: 'Errore interno API unificata',
-      details: fatalError.message,
-      stack: fatalError.stack
+      error: 'Errore interno del server',
+      details: error.message,
+      action: action
     });
   }
 }
