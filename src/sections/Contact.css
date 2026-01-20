@@ -132,7 +132,9 @@
   .contact-info h3 {
     font-size: var(--font-size-lg, 1.4rem);
   }
-  .discount-info {
+}
+
+.discount-info {
   font-size: var(--font-size-sm, 0.9em);
   color: var(--text-color-secondary, #555);
   margin-left: var(--spacing-md, 1rem);
@@ -157,6 +159,4 @@
   width: 0;
   height: 0;
   opacity: 0;
-}
-
 }

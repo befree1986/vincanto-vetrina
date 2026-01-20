@@ -278,7 +278,7 @@
   "contact.form.message": "Richieste Speciali",
   "contact.form.submit": "Invia Richiesta",
   "contact.form.sending": "Invio in corso...",
-  "contact.form.select": "Seleziona",
+  "contact.form.select": "Seleziona", 
   "contact.form.success": "Grazie per la tua richiesta! Ti ricontatteremo al più presto.",
   "contact.form.error.invalidEmail": "Email non valida",
   "contact.form.error.generic": "Si è verificato un errore. Riprova più tardi.",
