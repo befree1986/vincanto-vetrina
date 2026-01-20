@@ -4,7 +4,7 @@ import { Pool } from 'pg';
 import Stripe from 'stripe';
 import nodemailer from 'nodemailer';
 import { randomBytes } from 'crypto';
-import bcrypt from 'bcrypt';
+let bcrypt;
 
 // Database connection
 const pool = new Pool({
@@ -472,6 +472,11 @@ export default async function handler(req, res) {
   // ========================================
   if (action === 'admin/login-password') {
     try {
+      if (!bcrypt) {
+        const mod = await import('bcrypt');
+        bcrypt = mod.default || mod;
+      }
+
       const { email, password, selectedRole } = req.body;
       
       if (!email || !password) {
