@@ -208,8 +208,9 @@ async function initializeTables() {
 initializeTables();
 
 export default async function handler(req, res) {
-  // Lazy import delle dipendenze email se necessarie
-  let renderEmailTemplate, sendEmailWithAdminCopy, initializeEmailLogsTable, detectLanguage, TwoFactorAuth;
+  try {
+    // Lazy import delle dipendenze email se necessarie
+    let renderEmailTemplate, sendEmailWithAdminCopy, initializeEmailLogsTable, detectLanguage, TwoFactorAuth;
     
     if (req.query.action?.includes('booking') || req.query.action?.includes('contact')) {
       try {
@@ -3454,5 +3455,13 @@ END:VEVENT
       method: req.method
     });
 
-}
+  } catch (fatalError) {
+    console.error('❌ Errore non gestito in unified handler:', fatalError);
+    return res.status(500).json({
+      success: false,
+      error: 'Errore interno API unificata',
+      details: fatalError.message,
+      stack: fatalError.stack
+    });
+  }
 }
