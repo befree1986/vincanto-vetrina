@@ -14,7 +14,7 @@ export type PolicyContent = {
 
 export const privacyPolicyContent: Record<string, PolicyContent> = {
 	it: {
-		lastUpdated: '10 dicembre 2025',
+		lastUpdated: '20 gennaio 2026',
 		intro:
 			'Questa informativa descrive come trattiamo i dati personali in relazione al sito, alle prenotazioni e ai servizi connessi (pagamenti, calendario, assistenza).',
 		sections: [
@@ -90,7 +90,15 @@ export const privacyPolicyContent: Record<string, PolicyContent> = {
 				id: 'cookies',
 				title: '8. Cookie e preferenze',
 				body:
-					'Usiamo cookie tecnici necessari. Analytics/marketing sono disattivati di default e vengono attivati solo con il tuo consenso dal banner cookie. Puoi modificare le preferenze in ogni momento dalla sezione dedicata del sito.'
+					'Usiamo cookie tecnici necessari. Analytics/marketing sono disattivati di default e vengono attivati solo con il tuo consenso dal banner cookie. Puoi modificare le preferenze in ogni momento dalla sezione dedicata del sito. Il consenso può essere revocato in qualsiasi momento senza pregiudicare la liceità del trattamento basata sul consenso prestato prima della revoca.',
+				list: [
+					'Cookie tecnici (essenziali): necessari per il funzionamento del sito, non richiedono consenso (base giuridica: legittimo interesse)',
+					'Cookie di analisi (Google Analytics): statistiche anonime e aggregate sui visitatori, attivati solo previo consenso',
+					'Cookie di marketing: personalizzazione contenuti e pubblicità, attivati solo previo consenso',
+					'Gestione preferenze: puoi modificare le tue scelte cookie dal footer del sito in qualsiasi momento',
+					'Durata consenso: le preferenze rimangono attive fino a modifica o scadenza (massimo 12 mesi)',
+					'Diritti: puoi revocare il consenso, accedere alle tue preferenze e richiedere la cancellazione dei dati di tracciamento'
+				]
 			},
 			{
 				id: 'updates',
@@ -102,7 +110,7 @@ export const privacyPolicyContent: Record<string, PolicyContent> = {
 	},
 
 	en: {
-		lastUpdated: '10 December 2025',
+		lastUpdated: '20 January 2026',
 		intro:
 			'This notice explains how we process personal data for the website, bookings, payments, calendar sync, and support.',
 		sections: [
@@ -178,7 +186,15 @@ export const privacyPolicyContent: Record<string, PolicyContent> = {
 				id: 'cookies',
 				title: '8. Cookies and preferences',
 				body:
-					'We use necessary technical cookies. Analytics/marketing cookies are off by default and activated only with your consent via the banner. You can change preferences anytime from the site cookie settings.'
+					'We use necessary technical cookies. Analytics/marketing cookies are disabled by default and activated only with your consent via the cookie banner. You can modify preferences anytime from the dedicated site section. Consent can be withdrawn at any time without affecting the lawfulness of processing based on consent before withdrawal.',
+				list: [
+					'Technical cookies (essential): necessary for site operation, do not require consent (legal basis: legitimate interest)',
+					'Analytics cookies (Google Analytics): anonymous and aggregated visitor statistics, activated only with prior consent',
+					'Marketing cookies: content and advertising personalization, activated only with prior consent',
+					'Preference management: you can modify your cookie choices from the site footer at any time',
+					'Consent duration: preferences remain active until modification or expiry (maximum 12 months)',
+					'Rights: you can withdraw consent, access your preferences and request deletion of tracking data'
+				]
 			},
 			{
 				id: 'updates',
@@ -190,7 +206,7 @@ export const privacyPolicyContent: Record<string, PolicyContent> = {
 	},
 
 	de: {
-		lastUpdated: '10. Dezember 2025',
+		lastUpdated: '20. Januar 2026',
 		intro:
 			'Diese Information erklärt, wie wir personenbezogene Daten für Website, Buchungen, Zahlungen, Kalender-Sync und Support verarbeiten.',
 		sections: [
@@ -266,7 +282,15 @@ export const privacyPolicyContent: Record<string, PolicyContent> = {
 				id: 'cookies',
 				title: '8. Cookies und Präferenzen',
 				body:
-					'Wir verwenden notwendige technische Cookies. Analytics/Marketing-Cookies sind standardmäßig aus und werden nur mit Ihrer Einwilligung über das Banner aktiviert. Präferenzen können jederzeit auf der Website angepasst werden.'
+					'Wir verwenden notwendige technische Cookies. Analytics/Marketing-Cookies sind standardmäßig aus und werden nur mit Ihrer Einwilligung über das Banner aktiviert. Präferenzen können jederzeit auf der Website angepasst werden. Die Einwilligung kann jederzeit widerrufen werden, ohne dass die Rechtmäßigkeit der aufgrund der Einwilligung bis zum Widerruf erfolgten Verarbeitung berührt wird.',
+				list: [
+					'Technische Cookies (essentiell): notwendig für den Website-Betrieb, erfordern keine Einwilligung (Rechtsgrundlage: berechtigtes Interesse)',
+					'Analyse-Cookies (Google Analytics): anonyme und aggregierte Besucherstatistiken, nur mit vorheriger Einwilligung aktiviert',
+					'Marketing-Cookies: Inhalts- und Werbepersonalisierung, nur mit vorheriger Einwilligung aktiviert',
+					'Präferenzenverwaltung: Sie können Ihre Cookie-Auswahl jederzeit über die Website-Fußzeile ändern',
+					'Einwilligungsdauer: Präferenzen bleiben bis zur Änderung oder zum Ablauf aktiv (maximal 12 Monate)',
+					'Rechte: Sie können die Einwilligung widerrufen, auf Ihre Präferenzen zugreifen und die Löschung von Tracking-Daten anfordern'
+				]
 			},
 			{
 				id: 'updates',
@@ -278,7 +302,7 @@ export const privacyPolicyContent: Record<string, PolicyContent> = {
 	},
 
 	fr: {
-		lastUpdated: '10 décembre 2025',
+		lastUpdated: '20 janvier 2026',
 		intro:
 			'La présente notice explique comment nous traitons les données personnelles pour le site, les réservations, les paiements, la synchronisation du calendrier et l’assistance.',
 		sections: [
@@ -354,7 +378,15 @@ export const privacyPolicyContent: Record<string, PolicyContent> = {
 				id: 'cookies',
 				title: '8. Cookies et préférences',
 				body:
-					'Nous utilisons des cookies techniques nécessaires. Les cookies d’analytics/marketing sont désactivés par défaut et activés uniquement avec votre consentement via le bandeau. Vous pouvez modifier vos préférences à tout moment sur le site.'
+					'Nous utilisons des cookies techniques nécessaires. Les cookies analytiques/marketing sont désactivés par défaut et ne sont activés qu\'avec votre consentement via la bannière cookies. Vous pouvez modifier les préférences à tout moment depuis la section dédiée du site. Le consentement peut être retiré à tout moment sans affecter la licéité du traitement fondé sur le consentement avant le retrait.',
+				list: [
+					'Cookies techniques (essentiels): nécessaires au fonctionnement du site, ne nécessitent pas de consentement (base légale: intérêt légitime)',
+					'Cookies d\'analyse (Google Analytics): statistiques anonymes et agrégées des visiteurs, activés seulement avec consentement préalable',
+					'Cookies marketing: personnalisation du contenu et de la publicité, activés seulement avec consentement préalable',
+					'Gestion des préférences: vous pouvez modifier vos choix de cookies depuis le pied de page du site à tout moment',
+					'Durée du consentement: les préférences restent actives jusqu\'à modification ou expiration (maximum 12 mois)',
+					'Droits: vous pouvez retirer votre consentement, accéder à vos préférences et demander la suppression des données de suivi'
+				]
 			},
 			{
 				id: 'updates',

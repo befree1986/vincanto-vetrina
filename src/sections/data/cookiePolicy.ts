@@ -2,7 +2,7 @@ import { PolicySection, PolicyContent } from './privacyPolicy';
 
 export const cookiePolicyContent: Record<string, PolicyContent> = {
 	it: {
-		lastUpdated: '10 dicembre 2025',
+		lastUpdated: '20 gennaio 2026',
 		intro:
 			'Questa Cookie Policy spiega come utilizziamo cookie e tecnologie simili e come puoi gestire le tue preferenze.',
 		sections: [
@@ -49,13 +49,24 @@ export const cookiePolicyContent: Record<string, PolicyContent> = {
 				id: 'changes',
 				title: '7. Aggiornamenti',
 				body:
-					'Questa policy può cambiare; verifica “Ultimo aggiornamento” per la versione vigente.'
-			}
+					'Questa policy può cambiare; verifica “Ultimo aggiornamento” per la versione vigente.'			},
+			{
+				id: 'rights',
+				title: '8. Diritti dell\'utente',
+				list: [
+					'Diritto di informazione: puoi richiedere informazioni sui cookie utilizzati e la loro finalità',
+					'Diritto di accesso: puoi visualizzare le tue preferenze cookie salvate',
+					'Diritto di modifica: puoi modificare le tue scelte in qualsiasi momento',
+					'Diritto di cancellazione: puoi revocare tutti i consensi e cancellare i cookie dal tuo browser',
+					'Diritto alla portabilità: puoi esportare le tue preferenze cookie per trasferirle',
+					'Diritto di opposizione: puoi opporti al trattamento per finalità di marketing diretto'
+				],
+				note: 'Per esercitare questi diritti, contattaci a info@vincantomaiori.it o utilizza le impostazioni cookie del sito.'			}
 		]
 	},
 
 	en: {
-		lastUpdated: '10 December 2025',
+		lastUpdated: '20 January 2026',
 		intro:
 			'This Cookie Policy explains how we use cookies/trackers and how you can manage your choices.',
 		sections: [
@@ -102,13 +113,25 @@ export const cookiePolicyContent: Record<string, PolicyContent> = {
 				id: 'changes',
 				title: '7. Updates',
 				body:
-					'We may update this policy; see “Last updated” for the current version.'
-			}
+					'We may update this policy; see "Last updated" for the current version.'
+			},
+			{
+				id: 'rights',
+				title: '8. User Rights',
+				list: [
+					'Right to information: you can request information about cookies used and their purpose',
+					'Right of access: you can view your saved cookie preferences',
+					'Right to modify: you can change your choices at any time',
+					'Right to deletion: you can revoke all consent and delete cookies from your browser',
+					'Right to portability: you can export your cookie preferences to transfer them',
+					'Right to object: you can object to processing for direct marketing purposes'
+				],
+				note: 'To exercise these rights, contact us at info@vincantomaiori.it or use the site cookie settings.'			}
 		]
 	},
 
 	de: {
-		lastUpdated: '10. Dezember 2025',
+		lastUpdated: '20. Januar 2026',
 		intro:
 			'Diese Cookie-Richtlinie erklärt, wie wir Cookies/Tracker nutzen und wie Sie Ihre Auswahl verwalten können.',
 		sections: [
@@ -156,12 +179,25 @@ export const cookiePolicyContent: Record<string, PolicyContent> = {
 				title: '7. Aktualisierungen',
 				body:
 					'Wir können diese Richtlinie aktualisieren; das Datum „Letzte Aktualisierung“ zeigt die aktuelle Version.'
+			},
+			{
+				id: 'rights',
+				title: '8. Nutzerrechte',
+				list: [
+					'Recht auf Information: Sie können Informationen über verwendete Cookies und deren Zweck anfordern',
+					'Zugriffsrecht: Sie können Ihre gespeicherten Cookie-Präferenzen einsehen',
+					'Recht auf Änderung: Sie können Ihre Auswahl jederzeit ändern',
+					'Recht auf Löschung: Sie können alle Einwilligungen widerrufen und Cookies aus Ihrem Browser löschen',
+					'Recht auf Datenübertragbarkeit: Sie können Ihre Cookie-Präferenzen exportieren, um sie zu übertragen',
+					'Widerspruchsrecht: Sie können der Verarbeitung für Direktmarketingzwecke widersprechen'
+				],
+				note: 'Um diese Rechte auszuüben, kontaktieren Sie uns unter info@vincantomaiori.it oder nutzen Sie die Cookie-Einstellungen der Website.'
 			}
 		]
 	},
 
 	fr: {
-		lastUpdated: '10 décembre 2025',
+		lastUpdated: '20 janvier 2026',
 		intro:
 			'Cette politique de cookies explique comment nous utilisons cookies/traceurs et comment gérer vos choix.',
 		sections: [
@@ -209,6 +245,19 @@ export const cookiePolicyContent: Record<string, PolicyContent> = {
 				title: '7. Mises à jour',
 				body:
 					'Cette politique peut évoluer ; « Dernière mise à jour » indique la version en vigueur.'
+			},
+			{
+				id: 'rights',
+				title: '8. Droits de l\'utilisateur',
+				list: [
+					'Droit à l\'information: vous pouvez demander des informations sur les cookies utilisés et leur finalité',
+					'Droit d\'accès: vous pouvez visualiser vos préférences cookies sauvegardées',
+					'Droit de modification: vous pouvez changer vos choix à tout moment',
+					'Droit à l\'effacement: vous pouvez révoquer tous les consentements et supprimer les cookies de votre navigateur',
+					'Droit à la portabilité: vous pouvez exporter vos préférences cookies pour les transférer',
+					'Droit d\'opposition: vous pouvez vous opposer au traitement à des fins de marketing direct'
+				],
+				note: 'Pour exercer ces droits, contactez-nous à info@vincantomaiori.it ou utilisez les paramètres cookies du site.'
 			}
 		]
 	}
