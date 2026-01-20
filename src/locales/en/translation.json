@@ -1,6 +1,42 @@
  {
   
-
+  "navbar":{
+    "navbarHome": "Home",
+    "navbarAbout": "About Us",
+    "navbarProperty": "The Property",
+    "navbarContact": "Contacts",
+    "navbarBookNow": "Book Now",
+    "navbarLanguage": "Language",
+    "navbarTheme": "Theme",
+    "navbarThemeLight": "Light",
+    "navbarThemeDark": "Dark",
+    "navbarThemeSystem": "System",
+    "navbarToggle": "Open/Close Navigation Menu",
+    "navbarClose": "Close Navigation Menu",
+    "navbarCheckAvailability": "Check Availability",
+    "navbarCurrentLanguage": "Current Language: English",
+    "navbarChangeLanguage": "Change Language",
+    "navbarGoToBooking": "Go to Booking",
+    "navbarGoToContact": "Go to Contact",
+    "navbarGoToPropriety": "Go to Property",
+    "navbarGoToAbout": "Go to About Us",
+    "navbarGoToHome": "Go to Home",
+    "navbarToggleTheme": "Change Theme",
+    "navbarAccessibility": "Accessibility Options",
+    "navbarLegalInfo": "Legal Information",
+    "navbarPrivacyPolicy": "Privacy Policy",
+    "navbarCookiePolicy": "Cookie Policy",
+    "navbarTermsConditions": "Terms and Conditions",
+    "navbarFollowUs": "Follow Us on Social Media",
+    "navbarQuickLinks": "Quick Links",
+    "navbarAllRightsReserved": "All rights reserved.",
+    "navbarLicense": "License SLSA000108-0026",
+    "navbarRegionLicense": "Regional License / CIN: IT065066C248Z362SX",
+    "navbarOpenBookingModal": "Open Booking Modal",
+    "navbarCloseBookingModal": "Close Booking Modal"
+  }
+  ,
+    
 
   "booking.title": "Book Your Stay",
   "booking.platforms": "We are present on the main online platforms.",
