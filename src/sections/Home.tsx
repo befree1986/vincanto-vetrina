@@ -20,10 +20,10 @@ const Home: React.FC = () => {
             <div className="hero-bar"></div>
             <img src="/logo.svg" alt="Vincanto Logo" className="hero-logo" />
             <h2>
-              {t('Un angolo di paradiso tra i limoni della Costiera Amalfitana')}
+              {t('hero-subtitle')}
             </h2>
             <a href="#booking" className="btn btn-accent">
-              {t('Prenota Ora')}
+              {t('home.BookNow')}
             </a>
           </div>
         </ParallaxBackground>
