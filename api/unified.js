@@ -157,8 +157,14 @@ async function initializeTables() {
     `);
     console.log('✅ Tabella extra_services inizializzata');
 
-    // 🆕 Crea tabella email_logs
-    await initializeEmailLogsTable();
+    // 🆕 Crea tabella email_logs (import lazy per evitare ReferenceError)
+    try {
+      const emailLogger = await import('../email/emailLogger.js');
+      await emailLogger.initializeEmailLogsTable();
+      console.log('✅ Tabella email_logs inizializzata');
+    } catch (err) {
+      console.warn('⚠️ Impossibile inizializzare email_logs:', err.message);
+    }
 
     // 🔄 Aggiungi campi min_age e max_age se non esistono
     try {
