@@ -1,15 +1,10 @@
 // API COMPLETAMENTE UNIFICATA - Vincanto System
 // Consolidation of all API endpoints in a single file
 import { Pool } from 'pg';
-import Stripe from 'stripe'; // ⚡ ES Module import per Vercel serverless
+import Stripe from 'stripe';
 import nodemailer from 'nodemailer';
-import { renderEmailTemplate } from '../email/templates/index.js';
-import { sendEmailWithAdminCopy } from '../email/emailSender.js';
-import { initializeEmailLogsTable } from '../email/emailLogger.js';
-import { detectLanguage } from '../email/i18n.js';
-import * as TwoFactorAuth from './2fa.js';
-import bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
+import bcrypt from 'bcrypt';
 
 // Database connection
 const pool = new Pool({
@@ -172,6 +167,36 @@ async function initializeTables() {
 initializeTables();
 
 export default async function handler(req, res) {
+  try {
+    // Lazy import delle dipendenze email se necessarie
+    let renderEmailTemplate, sendEmailWithAdminCopy, initializeEmailLogsTable, detectLanguage, TwoFactorAuth;
+    
+    if (req.query.action?.includes('booking') || req.query.action?.includes('contact')) {
+      try {
+        const emailTemplates = await import('../email/templates/index.js');
+        renderEmailTemplate = emailTemplates.renderEmailTemplate;
+        
+        const emailSender = await import('../email/emailSender.js');
+        sendEmailWithAdminCopy = emailSender.sendEmailWithAdminCopy;
+        
+        const emailLogger = await import('../email/emailLogger.js');
+        initializeEmailLogsTable = emailLogger.initializeEmailLogsTable;
+        
+        const i18n = await import('../email/i18n.js');
+        detectLanguage = i18n.detectLanguage;
+      } catch (emailImportError) {
+        console.warn('⚠️ Email modules non disponibili:', emailImportError.message);
+      }
+    }
+    
+    if (req.query.action?.includes('2fa') || req.query.action?.includes('admin')) {
+      try {
+        TwoFactorAuth = await import('./2fa.js');
+      } catch (tfaImportError) {
+        console.warn('⚠️ 2FA module non disponibile:', tfaImportError.message);
+      }
+    }
+
         // Endpoint di health check DB
         if (req.query.action === 'db-health') {
           try {
@@ -207,6 +232,22 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
+  // Assicuriamoci che req.body sia parsato correttamente
+  if (req.method === 'POST' && req.headers['content-type']?.includes('application/json')) {
+    try {
+      if (typeof req.body === 'string') {
+        req.body = JSON.parse(req.body);
+      }
+    } catch (parseError) {
+      console.error('❌ Errore parsing JSON body:', parseError);
+      return res.status(400).json({
+        success: false,
+        error: 'Errore parsing JSON nel body della richiesta',
+        details: parseError.message
+      });
+    }
+  }
+
   // Test connessione database per debugging
   try {
     await pool.query('SELECT 1');
@@ -228,6 +269,35 @@ export default async function handler(req, res) {
   }
 
   console.log('🎯 API UNIFICATA CONSOLIDATA - Action:', action, 'Method:', req.method);
+  console.log('📥 Request URL:', req.url);
+  console.log('📥 Request Query:', req.query);
+  if (req.method === 'POST') {
+    console.log('📥 Request Body:', req.body);
+  }
+
+  // Gestione richiesta senza action - Health check di default
+  if (!action) {
+    try {
+      const dbCheck = await pool.query('SELECT NOW()');
+      return res.status(200).json({
+        success: true,
+        message: 'API Unificata Vincanto - Operativa',
+        timestamp: dbCheck.rows[0].now,
+        endpoints: [
+          'db-health', 'booking', 'payments', 'calendar-sync', 'blocked-dates', 
+          'pricing-config', 'quote', 'extra-services', 'contact', 'analytics', 
+          'cancel-booking', 'admin/*'
+        ]
+      });
+    } catch (error) {
+      console.error('❌ Errore health check:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Errore connessione database',
+        details: error.message
+      });
+    }
+  }
 
   // ========================================
   // 2FA SETUP - Genera secret e QR code
@@ -1354,50 +1424,76 @@ export default async function handler(req, res) {
     // ========================================
     // Cancella o marca come cancelled un booking (usato quando pagamento fallisce)
     if (action === 'cancel-booking') {
-      if (req.method === 'POST') {
-        try {
-          const { bookingId, reason } = req.body;
-          
-          if (!bookingId) {
-            return res.status(400).json({
-              success: false,
-              error: 'bookingId è richiesto'
-            });
-          }
-          
-          console.log(`🚫 Cancellazione booking: ${bookingId}, motivo: ${reason || 'non specificato'}`);
-          
-          // Aggiorna il booking a status 'cancelled'
-          const result = await pool.query(`
-            UPDATE bookings 
-            SET status = 'cancelled', 
-                payment_status = 'cancelled',
-                updated_at = NOW()
-            WHERE booking_id = $1 OR id = $1
-            RETURNING *
-          `, [bookingId]);
-          
-          if (result.rows.length === 0) {
-            return res.status(404).json({
-              success: false,
-              error: 'Booking non trovato'
-            });
-          }
-          
-          console.log(`✅ Booking ${bookingId} cancellato con successo`);
-          return res.status(200).json({
-            success: true,
-            message: 'Booking cancellato con successo',
-            bookingId: bookingId,
-            reason: reason
-          });
-        } catch (error) {
-          console.error('❌ Errore cancellazione booking:', error);
-          return res.status(500).json({
+      console.log('🎯 Cancel booking endpoint raggiunto, metodo:', req.method);
+      
+      if (req.method !== 'POST') {
+        return res.status(405).json({
+          success: false,
+          error: 'Metodo non consentito. Usa POST.',
+          allowedMethods: ['POST']
+        });
+      }
+      
+      try {
+        console.log('📥 Cancel booking request body:', req.body);
+        console.log('📥 Cancel booking request query:', req.query);
+        
+        const { bookingId, reason } = req.body;
+        
+        if (!bookingId) {
+          console.log('❌ bookingId mancante nel request');
+          return res.status(400).json({
             success: false,
-            error: 'Errore nella cancellazione del booking'
+            error: 'bookingId è richiesto'
           });
         }
+        
+        console.log(`🚫 Cancellazione booking: ${bookingId}, motivo: ${reason || 'non specificato'}`);
+        
+        // Verifica se il booking esiste prima di aggiornarlo
+        const checkResult = await pool.query(`
+          SELECT id, booking_id, status, payment_status FROM bookings 
+          WHERE booking_id = $1 OR id = $1
+        `, [bookingId]);
+        
+        console.log('🔍 Booking trovato:', checkResult.rows);
+        
+        if (checkResult.rows.length === 0) {
+          console.log(`❌ Booking ${bookingId} non trovato nel database`);
+          return res.status(404).json({
+            success: false,
+            error: 'Booking non trovato'
+          });
+        }
+        
+        // Aggiorna il booking a status 'cancelled'
+        const result = await pool.query(`
+          UPDATE bookings 
+          SET status = 'cancelled', 
+              payment_status = 'cancelled',
+              updated_at = NOW()
+          WHERE booking_id = $1 OR id = $1
+          RETURNING *
+        `, [bookingId]);
+        
+        console.log('✅ Booking aggiornato:', result.rows[0]);
+        console.log(`✅ Booking ${bookingId} cancellato con successo`);
+        
+        return res.status(200).json({
+          success: true,
+          message: 'Booking cancellato con successo',
+          bookingId: bookingId,
+          reason: reason,
+          updatedBooking: result.rows[0]
+        });
+      } catch (error) {
+        console.error('❌ Errore cancellazione booking:', error);
+        console.error('Stack trace:', error.stack);
+        return res.status(500).json({
+          success: false,
+          error: 'Errore nella cancellazione del booking',
+          details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
       }
     }
 
@@ -3312,7 +3408,7 @@ END:VEVENT
         'calendar-bookings', 'ical-export',
         'blocked-dates', 'pricing-config', 'quote', 'extra-services', 'contact', 'settings',
         'clear-test-bookings', 'update-calendar-config', 'delete-calendar-config', 
-        'calendar-sync-status', 'force-calendar-sync', 'test-calendar-connection'
+        'calendar-sync-status', 'force-calendar-sync', 'test-calendar-connection', 'cancel-booking'
       ],
       requestedAction: action,
       method: req.method
