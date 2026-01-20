@@ -101,6 +101,47 @@ async function initializeTables() {
     `);
     console.log('✅ Tabella bookings inizializzata');
 
+    // 🆕 Crea tabella pricing_config se non esiste
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS pricing_config (
+        id SERIAL PRIMARY KEY,
+        price_group_1to2 DECIMAL(10,2) DEFAULT 75,
+        price_group_3to4 DECIMAL(10,2) DEFAULT 95,
+        price_group_5to6 DECIMAL(10,2) DEFAULT 115,
+        price_group_7to8 DECIMAL(10,2) DEFAULT 135,
+        cleaning_fee DECIMAL(10,2) DEFAULT 50,
+        parking_fee DECIMAL(10,2) DEFAULT 20,
+        tourist_tax_adult DECIMAL(10,2) DEFAULT 2.00,
+        tourist_tax_child DECIMAL(10,2) DEFAULT 0,
+        weekend_surcharge DECIMAL(10,2) DEFAULT 0,
+        weekly_discount DECIMAL(10,2) DEFAULT 10,
+        monthly_discount DECIMAL(10,2) DEFAULT 15,
+        min_stay INTEGER DEFAULT 2,
+        max_stay INTEGER DEFAULT 14,
+        max_guests INTEGER DEFAULT 8,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✅ Tabella pricing_config inizializzata');
+
+    // 🆕 Crea tabella calendar_events se non esiste
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS calendar_events (
+        id SERIAL PRIMARY KEY,
+        uid VARCHAR(500) UNIQUE NOT NULL,
+        calendar_source VARCHAR(100) NOT NULL,
+        summary TEXT,
+        description TEXT,
+        start_date TIMESTAMP NOT NULL,
+        end_date TIMESTAMP NOT NULL,
+        location TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✅ Tabella calendar_events inizializzata');
+
     // 🆕 Crea tabella extra_services se non esiste
     await pool.query(`
       CREATE TABLE IF NOT EXISTS extra_services (
