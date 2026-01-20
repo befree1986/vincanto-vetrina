@@ -18,13 +18,13 @@ const About: React.FC = () => {
       <section id="about" className="about-section">
       <ParallaxBackground imageUrl={`/lemon.webp${assetVersion}`}>
         <div className="about-hero">
-          <h2>{t('Chi Siamo')}</h2>
+          <h2>{t('about.title')}</h2>
         </div>
       </ParallaxBackground>
       <div className="container">
         <div className="about-content">
           <div className="about-description">
-            <h2 className="about-title">VINCANTO</h2>
+            <h2 className="about-title">{t('about.title')}</h2>
             <p className="proprieta-description">{t('about.longdesc1')}</p>
             <p className="proprieta-description">{t('about.longdesc2')}</p>
             <p className="proprieta-description">{t('about.longdesc3')}</p>
