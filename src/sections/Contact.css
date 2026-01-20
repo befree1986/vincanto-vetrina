@@ -74,6 +74,62 @@
   text-align: center;
 }
 
+/* Stato errori API/ri-try */
+.api-status {
+  margin-top: var(--spacing-lg, 1.5rem);
+  padding: var(--spacing-md, 1rem);
+  border-radius: var(--border-radius-md, 6px);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md, 0.75rem);
+  font-weight: 500;
+}
+
+.api-status.error {
+  background-color: var(--error-bg, #ffebee);
+  color: var(--error-text, #c62828);
+  border: 1px solid var(--error-border, #ef9a9a);
+}
+
+/* Varianti stato API */
+.api-status.neutral {
+  background-color: var(--info-bg, #eef6ff);
+  color: var(--info-text, #1e3a8a);
+  border: 1px solid var(--info-border, #bfdbfe);
+}
+
+.api-status.success {
+  background-color: var(--success-bg, #e6ffed);
+  color: var(--success-text, #2f6f4f);
+  border: 1px solid var(--success-border, #b7e4c7);
+}
+
+.api-status .retry-button {
+  margin-left: auto;
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--border-radius-sm, 4px);
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.api-status .retry-button:hover {
+  background-color: currentColor;
+  color: #fff;
+}
+
+.api-status .retry-button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.api-status .retry-button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .contact-details .contact-item {
   margin-bottom: var(--spacing-lg, 1.5rem);
 }
@@ -131,6 +187,13 @@
   .booking-form-container h3,
   .contact-info h3 {
     font-size: var(--font-size-lg, 1.4rem);
+  }
+  .api-status {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .api-status .retry-button {
+    margin-left: 0;
   }
 }
 
