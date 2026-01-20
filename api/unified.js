@@ -6,48 +6,60 @@ import nodemailer from 'nodemailer';
 import { randomBytes } from 'crypto';
 let bcrypt;
 
-// Database connection
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
+// Database connection (guarded to surface init errors)
+let pool;
+let moduleInitError = null;
+try {
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  });
+} catch (err) {
+  moduleInitError = err;
+  console.error('❌ Errore inizializzazione Pool PG:', err);
+}
 
 // Email transporter configuration
 let emailTransporter = null;
-if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
-  const smtpPort = parseInt(process.env.SMTP_PORT) || 587;
-  // Porta 465 = SSL, 587 = STARTTLS
-  const smtpSecure = smtpPort === 465;
-  console.log('[SMTP DEBUG] Configurazione:', {
-    host: process.env.SMTP_HOST,
-    port: smtpPort,
-    secure: smtpSecure,
-    user: process.env.SMTP_USER,
-    from: process.env.SMTP_FROM
-  });
-  emailTransporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: smtpPort,
-    secure: smtpSecure,
-    auth: {
+try {
+  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
+    const smtpPort = parseInt(process.env.SMTP_PORT) || 587;
+    // Porta 465 = SSL, 587 = STARTTLS
+    const smtpSecure = smtpPort === 465;
+    console.log('[SMTP DEBUG] Configurazione:', {
+      host: process.env.SMTP_HOST,
+      port: smtpPort,
+      secure: smtpSecure,
       user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASSWORD
-    },
-    connectionTimeout: 5000,
-    greetingTimeout: 5000,
-    socketTimeout: 5000
-  });
-  // Test connessione SMTP
-  emailTransporter.verify(function(error, success) {
-    if (error) {
-      console.error('[SMTP DEBUG] Errore connessione SMTP:', error);
-    } else {
-      console.log('[SMTP DEBUG] Connessione SMTP OK:', success);
-    }
-  });
-  console.log('✅ Email transporter configurato');
-} else {
-  console.log('⚠️ Email transporter non configurato (variabili SMTP mancanti)');
+      from: process.env.SMTP_FROM
+    });
+    emailTransporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: smtpPort,
+      secure: smtpSecure,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASSWORD
+      },
+      connectionTimeout: 5000,
+      greetingTimeout: 5000,
+      socketTimeout: 5000
+    });
+    // Test connessione SMTP
+    emailTransporter.verify(function(error, success) {
+      if (error) {
+        console.error('[SMTP DEBUG] Errore connessione SMTP:', error);
+      } else {
+        console.log('[SMTP DEBUG] Connessione SMTP OK:', success);
+      }
+    });
+    console.log('✅ Email transporter configurato');
+  } else {
+    console.log('⚠️ Email transporter non configurato (variabili SMTP mancanti)');
+  }
+} catch (err) {
+  moduleInitError = moduleInitError || err;
+  console.error('❌ Errore inizializzazione SMTP:', err);
 }
 
 // Controllo configurazione database
@@ -215,6 +227,16 @@ initializeTables();
 
 export default async function handler(req, res) {
   try {
+    if (moduleInitError) {
+      console.error('❌ Errore durante init modulo unified:', moduleInitError);
+      return res.status(500).json({
+        success: false,
+        error: 'Errore inizializzazione modulo API',
+        details: moduleInitError.message,
+        stack: moduleInitError.stack
+      });
+    }
+
     // Lazy import delle dipendenze email se necessarie
     let renderEmailTemplate, sendEmailWithAdminCopy, initializeEmailLogsTable, detectLanguage, TwoFactorAuth;
     
