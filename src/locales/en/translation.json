@@ -233,11 +233,19 @@
   "contacts":{
     "title": "Contact",
     "title.contact": "Contact Us",
-    "telephoneEmail": "Telefono & Email",
+    "address": "Address",
+    "addressValue": "Via Torre di Milo, 7",
+    "city": "Maiori, (SA)",
+    "cap": "84010, Italy",
+    "telephoneEmail": "Telephone & Email",
+    
     "transports":{
       "title": "Transports",
-      "salerno": "From Salerno: Ferry to Maiori (45 min) | Bus (60 min)",
-      "amalfi": "From Amalfi: Local bus (40 min)"
+      "salerno1": "From Salerno",
+      "salerno": "Ferry to Maiori (45 min) | Bus (60 min)",
+      "amalfi1": "From Amalfi",
+      "amalfi": "Local bus (40 min)"
+      
     }
   },
 
