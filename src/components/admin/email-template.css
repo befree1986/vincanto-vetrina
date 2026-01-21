@@ -1,0 +1,11 @@
+.email-editor-container {
+  min-height: 600px;
+  border: 1px solid #ddd;
+  margin-bottom: 16px;
+}
+.email-section-margin-top {
+  margin-top: 32px;
+}
+.email-section-margin-bottom {
+  margin-bottom: 16px;
+}

@@ -1,5 +1,6 @@
 
 import React, { useRef, useEffect, useState } from 'react';
+import './email-template.css';
 
 // Editor caricato solo lato client tramite import() dinamico
 const FallbackEditor = () => <div>Editor non disponibile in build</div>;
@@ -44,7 +45,7 @@ const EmailTemplateEditor: React.FC<EmailTemplateEditorProps> = ({ initialHtml, 
   return (
     <div>
       <h2>Editor Template Email</h2>
-      <div style={{ minHeight: 600, border: '1px solid #ddd', marginBottom: 16 }}>
+      <div className="email-editor-container">
         {EmailEditor ? (
           <EmailEditor
             ref={emailEditorRef}

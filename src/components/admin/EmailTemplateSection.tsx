@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import './email-template.css';
 import EmailTemplateEditor from './EmailTemplateEditor';
 
 // API reali per caricare/salvare il template email
@@ -100,9 +101,9 @@ const EmailTemplateSection: React.FC = () => {
   if (loading) return <div>Caricamento template email...</div>;
 
   return (
-    <div style={{marginTop:32}}>
+    <div className="email-section-margin-top">
       <h2>Personalizza Template Email Prenotazione</h2>
-      <div style={{marginBottom:16}}>
+      <div className="email-section-margin-bottom">
         <label>Scegli template attivo:&nbsp;
           <select value={selected} onChange={e => handleSelect(e.target.value)}>
             {DEFAULT_TEMPLATES.map(opt => (

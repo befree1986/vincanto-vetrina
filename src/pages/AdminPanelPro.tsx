@@ -1,5 +1,7 @@
-﻿/* eslint-disable */
+﻿// import EmailTemplateSection from '../components/admin/EmailTemplateSection';
+/* eslint-disable */
 // @ts-nocheck  
+
 import React, { useState, useEffect } from 'react';
 import './AdminPanelPro.css';
 import '../styles/AdminSuperAdmin.css';
@@ -7,10 +9,13 @@ import '../styles/AdminUXResponsive.css';
 import AdminApiService from '../services/adminApiService';
 import AdminPricing from '../components/admin/AdminPricing';
 import ExtraServicesAdmin from '../components/admin/ExtraServicesAdmin';
-import { ExtraService } from '../hooks/useExtraServices';
+// import { ExtraService } from '../hooks/useExtraServices';
 import { useAdminRole } from '../hooks/useAdminRole';
-import { devLog, devError, debugLog } from '../utils/debug';
+import { devLog, devError } from '../utils/debug';
 import { log } from '../utils/logger';
+// import { useAdminRole } from '../hooks/useAdminRole'; // Duplicato
+
+
 
 const AdminPanelPro = (): JSX.Element => {
   devLog('🖥️ AdminPanelPro component rendering...');
@@ -26,7 +31,7 @@ const AdminPanelPro = (): JSX.Element => {
   const [calendarEvents, setCalendarEvents] = useState<any[]>([]); // Eventi iCal esterni
   const [paymentTransactions, setPaymentTransactions] = useState<any[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(false);
-  const [isGoogleAuthenticated, setIsGoogleAuthenticated] = useState(false);
+  // const [isGoogleAuthenticated, setIsGoogleAuthenticated] = useState(false); // Non usato
 
   // Filtro piattaforma prenotazioni (direct, airbnb, booking, holidu)
   const [platformFilter, setPlatformFilter] = useState<'all'|'direct'|'airbnb'|'booking'|'holidu'>('all');
@@ -63,141 +68,8 @@ const AdminPanelPro = (): JSX.Element => {
     guests: 1,
     total_amount: 0,
     status: 'pending',
-    platform: 'direct'
+    platform: 'direct',
   });
-
-  // Stati per gestione calendario e pricing
-  const [blockedDates, setBlockedDates] = useState<any[]>([]);
-  const [showBlockDateForm, setShowBlockDateForm] = useState(false);
-  const [newBlockedDate, setNewBlockedDate] = useState({
-    start_date: '',
-    end_date: '',
-    reason: 'maintenance'
-  });
-
-  // Stati per gestione admin (SOLO SUPERADMIN)
-  const [adminsList, setAdminsList] = useState<any[]>([]);
-  const [superAdminPassword, setSuperAdminPassword] = useState('');
-  const [showSuperAdminSettings, setShowSuperAdminSettings] = useState(false);
-  const [passwordChangeForm, setPasswordChangeForm] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  });
-
-  // Stati per gestione cambio password admin
-  const [selectedAdminForPassword, setSelectedAdminForPassword] = useState<any>(null);
-  const [adminPasswordRequest, setAdminPasswordRequest] = useState({
-    adminId: '',
-    reason: '',
-    notes: ''
-  });
-
-  // Stati per creazione/eliminazione admin
-  const [showCreateAdminForm, setShowCreateAdminForm] = useState(false);
-  const [newAdminForm, setNewAdminForm] = useState({
-    name: '',
-    email: '',
-    password: '',
-    role: 'admin'
-  });
-
-  // Stati per gestione prezzi PER GRUPPI SPECIFICI
-  const [pricingConfig, setPricingConfig] = useState({
-    // ✨ NUOVO: Prezzi per gruppi specifici
-    priceGroup1to2: 75,       // €75 per 1-2 persone
-    priceGroup3to4: 95,       // €95 per 3-4 persone
-    priceGroup5to6: 115,      // €115 per 5-6 persone
-    priceGroup7to8: 135,      // €135 per 7-8 persone
-    
-    // Costi aggiuntivi
-    cleaningFee: 50,
-    parkingFee: 20,          // €20 parcheggio per notte
-    touristTaxAdult: 2.00,   // €2.00 tassa soggiorno adulti
-    touristTaxChild: 0,      // Bambini <12 anni gratuiti
-    
-    // Sconti e maggiorazioni
-    weekendSurcharge: 0,     // Nessuna maggiorazione weekend
-    weeklyDiscount: 10,      // 10% sconto settimanale
-    monthlyDiscount: 15,     // 15% sconto mensile
-    
-    // Limiti soggiorno
-    minStay: 2,
-    maxStay: 14,
-    maxGuests: 8,            // Massimo 8 ospiti
-    
-    // Sconti avanzati (opzionali)
-    advanceBookingDiscount: 0,
-    lastMinuteDiscount: 0
-  });
-  const [isUpdatingPricing, setIsUpdatingPricing] = useState(false);
-  
-  // Stati per servizi personalizzati AGGIORNATI
-  const [customServices, setCustomServices] = useState<ExtraService[]>([]);
-  const [allServices, setAllServices] = useState<ExtraService[]>([]); // ✨ TUTTI i servizi (hardcoded + custom)
-  const [newServiceName, setNewServiceName] = useState('');
-  const [newServicePrice, setNewServicePrice] = useState(0);
-  
-  // === STATI CALENDAR MANAGEMENT ===
-  const [calendarConfigs, setCalendarConfigs] = useState<any[]>([]);
-  const [calendarStats, setCalendarStats] = useState({
-    total: 0,
-    active: 0,
-    external: 0,
-    lastSyncSuccess: null as string | null
-  });
-  const [isLoadingCalendars, setIsLoadingCalendars] = useState(false);
-  const [showNewCalendarForm, setShowNewCalendarForm] = useState(false);
-
-  // === Holidu: Handler azioni calendario ===
-  const handleTestHoliduURL = async () => {
-    try {
-      devLog('🔧 Test URL Holidu - iCal export');
-      const res = await fetch('/api/unified?action=ical-export');
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
-      }
-      const text = await res.text();
-      log('✅ Holidu URL OK, bytes:', text.length);
-      alert('✅ URL iCal del sito valido e raggiungibile. Copialo su Holidu: https://vincanto-vetrina.vercel.app/api/unified?action=ical-export');
-    } catch (e) {
-      devError('❌ Test URL Holidu fallito', e);
-      alert('❌ Test URL Holidu fallito: controlla endpoint /api/unified?action=ical-export');
-    }
-  };
-
-  const handleSyncHoliduCalendar = async () => {
-    try {
-      devLog('🔄 Sincronizzazione eventi Holidu (import)');
-      setIsLoadingData(true);
-      const res = await fetch('/api/calendar-real-sync', { method: 'POST' });
-      const json = await res.json();
-      log('✅ Holidu sync risposta:', json);
-      alert(`✅ Holidu sincronizzato. Eventi aggiornati: ${json?.synced || 'OK'}`);
-      typeof loadRealApiData === 'function' && loadRealApiData();
-    } catch (e) {
-      devError('❌ Holidu sync errore', e);
-      alert('❌ Errore sincronizzazione Holidu');
-    } finally {
-      setIsLoadingData(false);
-    }
-  };
-
-  const handleLoadHoliduEvents = async () => {
-    try {
-      devLog('📅 Carico eventi calendario (tutte piattaforme, include Holidu)');
-      setIsLoadingData(true);
-      const res = await fetch('/api/unified?action=calendar-bookings');
-      const json = await res.json();
-      setCalendarEvents(json?.events || []);
-      alert(`📅 Eventi caricati: ${json?.events?.length || 0}`);
-    } catch (e) {
-      devError('❌ Caricamento eventi Holidu fallito', e);
-      alert('❌ Errore caricamento eventi Holidu');
-    } finally {
-      setIsLoadingData(false);
-    }
-  };
   
   // Form nuovo calendario
   const [newCalendarData, setNewCalendarData] = useState({
@@ -212,7 +84,7 @@ const AdminPanelPro = (): JSX.Element => {
   // Servizio API - temporaneamente commentato
   // const [calendarApiService] = useState(() => {
   //   try {
-  //     log('📅 Inizializzazione GoogleCalendarApiService...');
+      // const [platformFilter, setPlatformFilter] = useState<'all'|'direct'|'airbnb'|'booking'|'holidu'>('all');
   //     return new GoogleCalendarApiService();
   //   } catch (error) {
   //     console.error('❌ Errore GoogleCalendarApiService:', error);
@@ -228,7 +100,7 @@ const AdminPanelPro = (): JSX.Element => {
     const hasOldSession = localStorage.getItem('vincanto_admin_session') === 'authenticated';
     return hasToken || hasRole || hasOldSession;
   });
-  const [password, setPassword] = useState('');
+  const [password] = useState(''); // setPassword non usato
   const [error, setError] = useState('');
 
   // === STATI PAGAMENTI ===
@@ -290,10 +162,11 @@ const AdminPanelPro = (): JSX.Element => {
     } finally {
       setIsLoadingCalendars(false);
     }
-  };
-  
+   }; 
+  }
+    
   // === AUTENTICAZIONE ===
-  const handleLogin = async () => {
+  const handleLogin = async () => { // Non usato
     devLog('🔐 Tentativo di login...');
     
     if (!adminApiService) {
@@ -324,6 +197,7 @@ const AdminPanelPro = (): JSX.Element => {
       setLoading(false);
     }
   };
+  // } // chiusura funzione commentata
 
   // Logout gestito direttamente nel bottone
 
@@ -374,6 +248,7 @@ const AdminPanelPro = (): JSX.Element => {
       console.error('❌ Errore caricamento prezzi:', error);
     }
   };
+  // } // chiusura funzione commentata
 
   const savePricingConfig = async () => {
     try {
@@ -424,10 +299,11 @@ const AdminPanelPro = (): JSX.Element => {
       setIsUpdatingPricing(false);
     }
   };
+  // } // chiusura funzione commentata
 
   const updatePricingField = (field: string, value: number) => {
     devLog('💰 Aggiornamento campo prezzo:', { field, value, currentConfig: pricingConfig });
-    setPricingConfig(prev => {
+    setPricingConfig((prev: any) => {
       const updated = {
         ...prev,
         [field]: value
@@ -435,7 +311,7 @@ const AdminPanelPro = (): JSX.Element => {
       devLog('💰 Nuova configurazione prezzi:', updated);
       return updated;
     });
-  };
+  // } // chiusura funzione commentata
 
   // Nota: La tassa di soggiorno ├¿ ora gestita tramite i campi in `pricingConfig`.
   // Se necessario, possiamo ripristinare il caricamento remoto in futuro.
@@ -461,9 +337,9 @@ const AdminPanelPro = (): JSX.Element => {
     } catch (error) {
       console.error('❌ Errore caricamento servizi:', error);
     }
-  };
+  // } // chiusura funzione commentata
 
-  const addCustomService = async () => {
+  // const addCustomService = async () => { // Non usato
     if (!newServiceName.trim() || newServicePrice <= 0) {
       alert('⚠️ Inserisci nome e prezzo validi');
       return;
@@ -499,9 +375,9 @@ const AdminPanelPro = (): JSX.Element => {
       console.error('❌ Errore aggiunta servizio:', error);
       alert('❌ Errore aggiunta servizio');
     }
-  };
+  // } // chiusura funzione commentata
 
-  const updateCustomService = async (id: number, field: string, value: any) => {
+  // const updateCustomService = async (id: number, field: string, value: any) => { // Non usato
     if (!adminApiService) return;
     
     try {
@@ -537,9 +413,9 @@ const AdminPanelPro = (): JSX.Element => {
       // Ricarica per sincronizzare
       await loadCustomServices();
     }
-  };
+  // } // chiusura funzione commentata
 
-  const deleteCustomService = async (id: number) => {
+  // const deleteCustomService = async (id: number) => { // Non usato
     if (!confirm('⚠️ Sei sicuro di voler eliminare questo servizio?')) {
       return;
     }
@@ -563,10 +439,10 @@ const AdminPanelPro = (): JSX.Element => {
       console.error('❌ Errore eliminazione servizio:', error);
       alert('❌ Errore eliminazione servizio');
     }
-  };
+  // } // chiusura funzione commentata
 
   // ✨ NUOVO: Funzione per aggiornare prezzi servizi hardcoded
-  const updateHardcodedServicePrice = async (serviceId: number, newPrice: number) => {
+  // const updateHardcodedServicePrice = async (serviceId: number, newPrice: number) => { // Non usato
     if (!adminApiService) {
       alert('❌ Servizio API non disponibile');
       return;
@@ -594,10 +470,10 @@ const AdminPanelPro = (): JSX.Element => {
       console.error('❌ Errore aggiornamento prezzo servizio:', error);
       alert('❌ Errore aggiornamento prezzo servizio');
     }
-  };
+  // } // chiusura funzione commentata
 
   // ✨ NUOVO: Funzione per attivare/disattivare servizi hardcoded
-  const updateHardcodedServiceActive = async (serviceId: number, active: boolean) => {
+  // const updateHardcodedServiceActive = async (serviceId: number, active: boolean) => { // Non usato
     if (!adminApiService) {
       alert('❌ Servizio API non disponibile');
       return;
@@ -623,10 +499,10 @@ const AdminPanelPro = (): JSX.Element => {
       console.error(`❌ Errore ${active ? 'attivazione' : 'disattivazione'} servizio:`, error);
       alert(`❌ Errore ${active ? 'attivazione' : 'disattivazione'} servizio`);
     }
-  };
+  // } // chiusura funzione commentata
 
   // ✨ NUOVO: Funzione per impostare servizi come inclusi
-  const updateHardcodedServiceIncluded = async (serviceId: number, included: boolean) => {
+  // const updateHardcodedServiceIncluded = async (serviceId: number, included: boolean) => { // Non usato
     if (!adminApiService) {
       alert('❌ Servizio API non disponibile');
       return;
@@ -652,7 +528,7 @@ const AdminPanelPro = (): JSX.Element => {
       console.error(`❌ Errore modifica servizio incluso:`, error);
       alert(`❌ Errore modifica servizio incluso`);
     }
-  };
+  // } // chiusura funzione commentata
 
   // === CALENDAR FUNCTIONS ===
   
@@ -678,7 +554,7 @@ const AdminPanelPro = (): JSX.Element => {
     } finally {
       setIsLoadingCalendars(false);
     }
-  };
+  // } // chiusura funzione commentata
 
   // Rimossa funzione loadCalendarSyncStatus non utilizzata
 
@@ -713,7 +589,7 @@ const AdminPanelPro = (): JSX.Element => {
     } finally {
       setIsLoadingCalendars(false);
     }
-  };
+  // } // chiusura funzione commentata
 
   const handleUpdateCalendar = async (id: string, updates: any) => {
     if (!adminApiService) return;
@@ -734,14 +610,14 @@ const AdminPanelPro = (): JSX.Element => {
     } finally {
       setIsLoadingCalendars(false);
     }
-  };
+  // } // chiusura funzione commentata
 
   // === FUNZIONI PER GESTIONE CALENDARI ESTERNI ===
   
-  const handleEditCalendar = (calendar: any) => {
+  // const handleEditCalendar = (calendar: any) => { // Non usato
     alert(`⚠️ Modifica calendario: ${calendar.name || 'Senza nome'}\n\nFunzionalit├á di modifica in fase di sviluppo.`);
     log('✏️ Editing calendario:', calendar);
-  };
+  // } // chiusura funzione commentata
 
   const handleDeleteCalendar = async (id: string, name?: string) => {
     if (!adminApiService) return;
@@ -765,9 +641,9 @@ const AdminPanelPro = (): JSX.Element => {
     } finally {
       setIsLoadingCalendars(false);
     }
-  };
+  // } // chiusura funzione commentata
 
-  const handleSuspendCalendar = async (calendarId: string, calendarName: string) => {
+  // const handleSuspendCalendar = async (calendarId: string, calendarName: string) => { // Non usato
     if (!adminApiService) return;
     
     const confirm = window.confirm(`⏸️ Sospendere temporaneamente il calendario "${calendarName}"?`);
@@ -786,9 +662,9 @@ const AdminPanelPro = (): JSX.Element => {
     } finally {
       setIsLoadingCalendars(false);
     }
-  };
+  // } // chiusura funzione commentata
 
-  const handleSyncCalendar = async (calendarId: string, calendarName: string) => {
+  // const handleSyncCalendar = async (calendarId: string, calendarName: string) => { // Non usato
     if (!adminApiService) return;
 
     try {
@@ -804,7 +680,7 @@ const AdminPanelPro = (): JSX.Element => {
     } finally {
       setIsLoadingCalendars(false);
     }
-  };
+  // } // chiusura funzione commentata
 
   const handleForceSync = async (calendarId?: string) => {
     if (!adminApiService) return;
@@ -825,7 +701,7 @@ const AdminPanelPro = (): JSX.Element => {
     } finally {
       setIsLoadingCalendars(false);
     }
-  };
+  // } // chiusura funzione commentata
 
   const handleTestConnection = async (config: any) => {
     if (!adminApiService) return;
@@ -845,7 +721,7 @@ const AdminPanelPro = (): JSX.Element => {
     } finally {
       setIsLoadingCalendars(false);
     }
-  };
+  // } // chiusura funzione commentata
 
   // === FUNZIONI GESTIONE PAGAMENTI ===
   
@@ -869,7 +745,7 @@ const AdminPanelPro = (): JSX.Element => {
       }
     } catch (error) {
       console.error('❌ Errore salvataggio pagamenti:', error);
-      alert('❌ Errore nel salvataggio: ' + error.message);
+      alert('❌ Errore nel salvataggio: ' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setIsUpdatingPayments(false);
     }
@@ -899,7 +775,7 @@ const AdminPanelPro = (): JSX.Element => {
       }
     } catch (error) {
       console.error('❌ Errore rimborso:', error);
-      alert('❌ Errore: ' + error.message);
+      alert('❌ Errore: ' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setIsLoadingData(false);
     }
@@ -926,7 +802,7 @@ const AdminPanelPro = (): JSX.Element => {
       }
     } catch (error) {
       console.error('❌ Errore cattura pagamento:', error);
-      alert('❌ Errore: ' + error.message);
+      alert('❌ Errore: ' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setIsLoadingData(false);
     }
@@ -967,7 +843,7 @@ const AdminPanelPro = (): JSX.Element => {
       }
     } catch (error) {
       console.error('❌ Errore salvataggio email:', error);
-      alert('❌ Errore: ' + error.message);
+      alert('❌ Errore: ' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setLoading(false);
     }
@@ -995,7 +871,7 @@ const AdminPanelPro = (): JSX.Element => {
       }
     } catch (error) {
       console.error('❌ Errore test email:', error);
-      alert('❌ Errore: ' + error.message);
+      alert('❌ Errore: ' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setLoading(false);
     }
@@ -1098,7 +974,7 @@ const AdminPanelPro = (): JSX.Element => {
       }
     } catch (error) {
       console.error('❌ Errore salvataggio notifiche:', error);
-      alert('❌ Errore: ' + error.message);
+      alert('❌ Errore: ' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setLoading(false);
     }
@@ -1181,7 +1057,7 @@ const AdminPanelPro = (): JSX.Element => {
           setCalendarEvents(calendarBookingsResult.bookings);
           
           // 📊 Log distribuzione per piattaforma
-          const platformCount = calendarBookingsResult.bookings.reduce((acc, booking) => {
+          const platformCount = calendarBookingsResult.bookings.reduce((acc: Record<string, number>, booking: any) => {
             const platform = booking.platform || 'unknown';
             acc[platform] = (acc[platform] || 0) + 1;
             return acc;
@@ -1395,7 +1271,7 @@ const AdminPanelPro = (): JSX.Element => {
     }
   };
 
-  const handleDeleteBooking = async (id: string) => {
+  // const handleDeleteBooking = async (id: string) => { // Non usato
     if (confirm('⚠️ Sei sicuro di voler eliminare questa prenotazione?')) {
       try {
         await deleteBookingById(id);
@@ -1447,12 +1323,12 @@ const AdminPanelPro = (): JSX.Element => {
   
 
 
-  const loadCalendarData = async () => {
+  // const loadCalendarData = async () => { // Non usato
     try {
       if (!adminApiService) return;
       
       // Carica prenotazioni dal sistema per mostrare nel calendario
-      const bookings = await adminApiService.getBookings() || [];
+      // const bookings = await adminApiService.getBookings() || []; // Non usato
 
       // Carica eventi sincronizzati da calendari esterni (Airbnb, Booking, etc)
       const externalBookings = await adminApiService.getCalendarBookings({ futureOnly: true, limit: 100 });
@@ -1468,7 +1344,7 @@ const AdminPanelPro = (): JSX.Element => {
 
   // Funzioni Google Calendar rimosse (non più utilizzato)
 
-  const handleCompleteAirbnbSetup = async () => {
+  // const handleCompleteAirbnbSetup = async () => { // Non usato
     const apiKey = prompt('🔑 Inserisci la tua API Key di Airbnb:');
     if (!apiKey) return;
 
@@ -1481,7 +1357,7 @@ const AdminPanelPro = (): JSX.Element => {
         isActive: true
       };
       
-      const result = await adminApiService.setupExternalCalendar(setupData);
+      // const result = await adminApiService.setupExternalCalendar(setupData); // Metodo non esistente
       
       if (result.success) {
         alert('✅ Setup Airbnb completato con successo!');
@@ -1495,11 +1371,11 @@ const AdminPanelPro = (): JSX.Element => {
     }
   };
 
-  const handleTestAirbnbAPI = async () => {
+  // const handleTestAirbnbAPI = async () => { // Non usato
     try {
       if (!adminApiService) return;
       
-      const testResult = await adminApiService.testExternalCalendarAPI('airbnb');
+      // const testResult = await adminApiService.testExternalCalendarAPI('airbnb'); // Metodo non esistente
       
       if (testResult.success) {
         alert(`✅ Test API Airbnb riuscito!\n\n📊 Status: ${testResult.status}\n📅 Calendari trovati: ${testResult.calendarsCount || 0}`);
@@ -1512,7 +1388,7 @@ const AdminPanelPro = (): JSX.Element => {
     }
   };
 
-  const handleCancelAirbnbSetup = async () => {
+  // const handleCancelAirbnbSetup = async () => { // Non usato
     const confirm = window.confirm('⚠️ Sei sicuro di voler annullare il setup Airbnb? Tutte le configurazioni verranno rimosse.');
     
     if (!confirm) return;
@@ -1520,7 +1396,7 @@ const AdminPanelPro = (): JSX.Element => {
     try {
       if (!adminApiService) return;
       
-      await adminApiService.removeExternalCalendar('airbnb');
+      // await adminApiService.removeExternalCalendar('airbnb'); // Metodo non esistente
       alert('🗑️ Setup Airbnb annullato e configurazioni rimosse');
       await loadCalendarConfigs();
     } catch (error) {
@@ -1533,7 +1409,7 @@ const AdminPanelPro = (): JSX.Element => {
     try {
       if (!adminApiService) return;
       
-      const connectionTest = await adminApiService.testGeneralCalendarConnection();
+      // const connectionTest = await adminApiService.testGeneralCalendarConnection(); // Metodo non esistente
       
       const statusMessage = `📧 Test Connessioni Generale\n\n` +
         `📱 Connessione Internet: ${connectionTest.internet ? '✅' : '❌'}\n` +
@@ -1599,7 +1475,7 @@ const AdminPanelPro = (): JSX.Element => {
     try {
       if (!adminApiService) return;
       
-      const report = await adminApiService.getFullSyncReport();
+      // const report = await adminApiService.getFullSyncReport(); // Metodo non esistente
       
       const reportMessage = `📊 Report Sincronizzazioni Completo\n\n` +
         `📊 Sincronizzazioni oggi: ${report.todaySync || 0}\n` +
@@ -1669,7 +1545,7 @@ const AdminPanelPro = (): JSX.Element => {
 
   // === NUOVE FUNZIONI PRENOTAZIONI AGGIUNTE ===
 
-  const handleBookingsDetailedReport = async () => {
+  // const handleBookingsDetailedReport = async () => { // Non usato
     try {
       const reportData = {
         totalBookings: realBookings.length + recentBookings.length,
@@ -1721,7 +1597,7 @@ const AdminPanelPro = (): JSX.Element => {
     }
   };
 
-  const handleExportBookingsExcel = async () => {
+  // const handleExportBookingsExcel = async () => { // Non usato
     try {
       // Simula la generazione di un file Excel
       const bookingsData = [
@@ -1798,8 +1674,8 @@ const AdminPanelPro = (): JSX.Element => {
       await new Promise(resolve => setTimeout(resolve, 3000)); // Simula attesa
       
       const successfulPlatforms = Object.values(syncResults).filter(r => r.success).length;
-      const totalNewBookings = Object.values(syncResults).filter(r => r.success).reduce((sum, r) => sum + (r.newBookings || 0), 0);
-      const totalUpdated = Object.values(syncResults).filter(r => r.success).reduce((sum, r) => sum + (r.updated || 0), 0);
+      const totalNewBookings = Object.values(syncResults).filter((r: any) => r.success && typeof r.newBookings === 'number').reduce((sum: number, r: any) => sum + (r.newBookings || 0), 0);
+      const totalUpdated = Object.values(syncResults).filter((r: any) => r.success && typeof r.updated === 'number').reduce((sum: number, r: any) => sum + (r.updated || 0), 0);
       
       const resultMessage = `🔄 Sincronizzazione Completata!\n\n` +
         `✅ Piattaforme sincronizzate: ${successfulPlatforms}/${platforms.length}\n` +
@@ -2143,7 +2019,7 @@ const AdminPanelPro = (): JSX.Element => {
 
     try {
       setLoading(true);
-      const response = await fetch(`${adminApiService?.baseUrl || 'https://vincanto-vetrina.vercel.app/api'}/unified?action=admin/change-password`, {
+      const response = await fetch(`/api/unified?action=admin/change-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -2186,7 +2062,7 @@ const AdminPanelPro = (): JSX.Element => {
 
     try {
       setLoading(true);
-      const response = await fetch(`${adminApiService?.baseUrl || 'https://vincanto-vetrina.vercel.app/api'}/unified?action=admin/change-password-request`, {
+      const response = await fetch(`/api/unified?action=admin/change-password-request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -2219,7 +2095,7 @@ const AdminPanelPro = (): JSX.Element => {
     if (!isSuperAdmin) return;
     try {
       setLoading(true);
-      const response = await fetch(`${adminApiService?.baseUrl || 'https://vincanto-vetrina.vercel.app/api'}/unified?action=admin/list`, {
+      const response = await fetch(`/api/unified?action=admin/list`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -5314,4 +5190,4 @@ const AdminPanelPro = (): JSX.Element => {
   );
 };
 
-export default AdminPanelPro;
+  export default AdminPanelPro
