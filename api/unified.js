@@ -95,6 +95,7 @@ async function initializeTables() {
         notes TEXT,
         status VARCHAR(50) DEFAULT 'pending',
         payment_status VARCHAR(50) DEFAULT 'pending',
+        stripe_payment_intent VARCHAR(255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
@@ -209,8 +210,27 @@ async function initializeTables() {
   }
 }
 
+// 🔧 Funzione per migrare la struttura del database (aggiungere colonne mancanti)
+async function migrateDatabase() {
+  try {
+    // Aggiungi colonna stripe_payment_intent se non esiste
+    await pool.query(`
+      ALTER TABLE bookings
+      ADD COLUMN IF NOT EXISTS stripe_payment_intent VARCHAR(255)
+    `);
+    console.log('✅ Colonna stripe_payment_intent verificata/aggiunta');
+  } catch (error) {
+    if (error.message.includes('already exists')) {
+      console.log('ℹ️ Colonna stripe_payment_intent già esiste');
+    } else {
+      console.error('⚠️ Errore nella migrazione:', error.message);
+    }
+  }
+}
+
 // Inizializza tabelle all'avvio
 initializeTables();
+migrateDatabase();
 
 export default async function handler(req, res) {
         // Endpoint di health check DB
