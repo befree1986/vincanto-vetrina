@@ -1,3 +1,30 @@
+// Utility per caricare il template selezionato
+import fs from 'fs';
+import path from 'path';
+import { renderEmailTemplate } from './templates/index.js';
+
+const SELECTED_PATH = path.resolve(process.cwd(), 'email', 'selected-template.json');
+const CUSTOM_PATH = path.resolve(process.cwd(), 'email', 'custom-booking-template.html');
+
+// Carica il template attivo (ritorna HTML string)
+export async function getActiveEmailTemplate(data) {
+  let selected = 'custom';
+  try {
+    if (fs.existsSync(SELECTED_PATH)) {
+      const raw = fs.readFileSync(SELECTED_PATH, 'utf-8');
+      selected = JSON.parse(raw).selected || 'custom';
+    }
+  } catch {}
+  if (selected === 'custom') {
+    if (fs.existsSync(CUSTOM_PATH)) {
+      return fs.readFileSync(CUSTOM_PATH, 'utf-8');
+    }
+    // fallback: template base
+    return renderEmailTemplate('booking_confirmation', data);
+  }
+  // Template predefinito JS
+  return renderEmailTemplate(selected, data);
+}
 // Email sending wrapper with retry logic and logging
 import nodemailer from 'nodemailer';
 import { logEmail, updateEmailLog } from './emailLogger.js';
@@ -27,7 +54,7 @@ function getTransporter() {
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Send email with retry logic
-export async function sendEmailWithRetry({ to, subject, html, templateName = 'unknown', metadata = {} }) {
+export async function sendEmailWithRetry({ to, subject, html, templateName = 'unknown', metadata = {}, autoTemplate = false }) {
   if (!process.env.SMTP_HOST) {
     console.warn('⚠️ SMTP non configurato, skip invio email');
     return { success: false, error: 'SMTP not configured' };
@@ -38,11 +65,16 @@ export async function sendEmailWithRetry({ to, subject, html, templateName = 'un
     return { success: false, error: 'Transporter initialization failed' };
   }
 
+  // Se richiesto, genera il template dinamicamente
+  let htmlToSend = html;
+  if (autoTemplate && metadata) {
+    htmlToSend = await getActiveEmailTemplate(metadata);
+  }
   const mailOptions = {
     from: `"${process.env.SMTP_FROM_NAME || 'Vincanto Maori'}" <${process.env.SMTP_FROM}>`,
     to,
     subject,
-    html
+    html: htmlToSend
   };
 
   let logId = null;
@@ -114,13 +146,13 @@ function isTransientError(error) {
 }
 
 // Send to multiple recipients (admin copy helper)
-export async function sendEmailWithAdminCopy({ to, subject, html, templateName, metadata = {} }) {
+export async function sendEmailWithAdminCopy({ to, subject, html, templateName, metadata = {}, autoTemplate = false }) {
   const results = [];
   // Rimuovi eventuale marker admin dalla versione cliente
   const clientHtml = html.replace('<!--ADMIN_EXTRA-->', '');
 
   // Send to primary recipient
-  const primaryResult = await sendEmailWithRetry({ to, subject, html: clientHtml, templateName, metadata });
+  const primaryResult = await sendEmailWithRetry({ to, subject, html: clientHtml, templateName, metadata, autoTemplate });
   results.push({ recipient: to, ...primaryResult });
 
   // Send admin copy if configured
@@ -170,7 +202,8 @@ export async function sendEmailWithAdminCopy({ to, subject, html, templateName, 
       subject: adminSubject,
       html: adminHtml,
       templateName,
-      metadata: { ...metadata, isAdminCopy: true }
+      metadata: { ...metadata, isAdminCopy: true },
+      autoTemplate
     });
     results.push({ recipient: adminEmail, ...adminResult });
   }

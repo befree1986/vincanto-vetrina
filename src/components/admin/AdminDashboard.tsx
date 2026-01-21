@@ -1,5 +1,6 @@
 import React from 'react';
 import AdminApiService from '../../services/adminApiService';
+import EmailTemplateSection from './EmailTemplateSection';
 
 // Component per azioni su selezione calendario (crea prenotazione o blocco)
 const CalendarActions: React.FC<{
@@ -497,6 +498,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Sezione Email Templates */}
+      <div className="admin-section email-templates-section">
+        <h3>📧 Modelli Email</h3>
+        <EmailTemplateSection />
+      </div>
+
+      {/* Sezione editor visuale email */}
+      <EmailTemplateSection />
     </div>
   );
 };
