@@ -1,7 +1,12 @@
 import React, { useRef, useEffect, useState } from 'react';
-// Assicurati di installare react-email-editor: npm install react-email-editor
-// @ts-ignore
-import EmailEditor from 'react-email-editor';
+
+// Import dinamico solo lato client per evitare errori in build/SSR
+const isClient = typeof window !== 'undefined';
+let EmailEditor: any = () => <div>Editor non disponibile in build</div>;
+if (isClient) {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  EmailEditor = require('react-email-editor').default;
+}
 
 interface EmailTemplateEditorProps {
   initialHtml?: string;
