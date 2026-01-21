@@ -1,25 +1,33 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 
-// Import dinamico solo lato client per evitare errori in build/SSR
-const isClient = typeof window !== 'undefined';
-let EmailEditor: any = () => <div>Editor non disponibile in build</div>;
-if (isClient) {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  EmailEditor = require('react-email-editor').default;
-}
+// Editor caricato solo lato client tramite import() dinamico
+const FallbackEditor = () => <div>Editor non disponibile in build</div>;
 
 interface EmailTemplateEditorProps {
   initialHtml?: string;
   onSave?: (html: string) => void;
 }
 
+
 const EmailTemplateEditor: React.FC<EmailTemplateEditorProps> = ({ initialHtml, onSave }) => {
   const emailEditorRef = useRef<any>(null);
+  const [EmailEditor, setEmailEditor] = useState<any>(null);
   const [loaded, setLoaded] = useState(false);
+
+  // Carica dinamicamente il componente solo lato client
+  useEffect(() => {
+    let mounted = true;
+    if (typeof window !== 'undefined') {
+      import('react-email-editor').then(mod => {
+        if (mounted) setEmailEditor(() => mod.default);
+      }).catch(() => setEmailEditor(() => FallbackEditor));
+    }
+    return () => { mounted = false; };
+  }, []);
 
   useEffect(() => {
     if (loaded && initialHtml && emailEditorRef.current) {
-      // Carica il design HTML se fornito
       emailEditorRef.current.loadDesign({ html: initialHtml });
     }
   }, [loaded, initialHtml]);
@@ -37,11 +45,15 @@ const EmailTemplateEditor: React.FC<EmailTemplateEditorProps> = ({ initialHtml, 
     <div>
       <h2>Editor Template Email</h2>
       <div style={{ minHeight: 600, border: '1px solid #ddd', marginBottom: 16 }}>
-        <EmailEditor
-          ref={emailEditorRef}
-          minHeight={600}
-          onLoad={() => setLoaded(true)}
-        />
+        {EmailEditor ? (
+          <EmailEditor
+            ref={emailEditorRef}
+            minHeight={600}
+            onLoad={() => setLoaded(true)}
+          />
+        ) : (
+          <FallbackEditor />
+        )}
       </div>
       <button className="admin-btn-primary" onClick={handleSave}>
         Salva Template
