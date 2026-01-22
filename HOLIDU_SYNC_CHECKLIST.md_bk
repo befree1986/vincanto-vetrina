@@ -1,0 +1,141 @@
+# 🏖️ Holidu Calendar Sync - Diagnositca
+
+## Stato Attuale
+- ❌ **Holidu NON è sincronizzato** (0 prenotazioni caricate)
+- ✅ Airbnb: 62 prenotazioni
+- ✅ Booking: 4 prenotazioni  
+- ✅ VRBO: 34 prenotazioni
+
+## Debug Log da Controllare
+
+Quando il sync viene eseguito, cercare nei log:
+
+### 1️⃣ Verifica Configurazione (Constructor)
+```
+🔍 Environment Check - Calendar URLs:
+  AIRBNB_ICAL_URL: ✅ Presente
+  BOOKING_ICAL_URL: ✅ Presente
+  HOLIDU_ICAL_URL: ✅ Presente ← DEVE DIRE PRESENTE
+  GOOGLE_CALENDAR_CLIENT_ID: ✅ Presente
+```
+
+**Se vedi**: `HOLIDU_ICAL_URL: ❌ Mancante`
+→ **Problema**: Secret non configurato in Vercel/GitHub
+
+### 2️⃣ Aggiunta Holidu ai Calendari (Constructor)
+```
+🏖️ HOLIDU CONFIGURATO - URL: https://...
+🗓️ Calendar Sync inizializzato con: Airbnb (attivo), Booking.com (attivo), Holidu (attivo), ...
+```
+
+**Se vedi**: `🏖️ HOLIDU NON CONFIGURATO - HOLIDU_ICAL_URL mancante`
+→ **Problema**: URL non configurato
+
+### 3️⃣ Fetch iCal da Holidu
+```
+🏖️ === HOLIDU SYNC START ===
+🏖️ Holidu URL: https://...
+🏖️ Holidu iCal data length: 5234
+🏖️ Holidu iCal preview: BEGIN:VCALENDAR...
+```
+
+**Se vedi error HTTP**:
+```
+🏖️ HOLIDU HTTP ERROR: 404 Not Found
+```
+→ **Problema**: URL iCal errato o scaduto
+
+### 4️⃣ Parsing Evento iCal
+```
+📊 parseICalData: trovati 45 eventi validi su 2340 linee totali
+🏖️ Holidu eventi parsed: 45
+🏖️ Holidu primo evento: {
+  uid: "...",
+  summary: "Prenotazione",
+  start: "2025-12-10T14:00:00.000Z",
+  end: "2025-12-10T11:00:00.000Z",
+  ...
+}
+```
+
+**Se vedi**: `eventi parsed: 0`
+→ **Problema**: Formato iCal non supportato o no BEGIN:VEVENT
+
+### 5️⃣ Filtraggio Eventi Futuri
+```
+📅 Holidu: 25 eventi futuri
+🏖️ Holidu eventi futuri: 25
+```
+
+**Se vedi**: `eventi futuri: 0`
+→ **Problema**: Tutti gli eventi sono nel passato
+
+### 6️⃣ Salvataggio nel Database
+```
+💾 Salvando 25 eventi da holidu
+🏖️ HOLIDU DB SAVE: inizio salvataggio 25 eventi
+✅ Database connesso per holidu
+✅ Salvati 25/25 eventi da holidu
+🏖️ HOLIDU SYNC RESULT: {
+  "id": "holidu",
+  "name": "Holidu",
+  "status": "success",
+  "eventsFound": 45,
+  "futureEvents": 25,
+  "eventsUpdated": 25,
+  "lastSync": "2025-12-04T10:30:00.000Z"
+}
+```
+
+**Se vedi**: `Salvati 0/25 eventi`
+→ **Problema**: Errore nel database o constraint violation
+
+## Come Eseguire il Sync
+
+### Opzione 1: GitHub Actions (Manuale)
+1. Vai su: https://github.com/befree1986/vincanto-vetrina/actions
+2. Seleziona "Sync Calendari Automatico"
+3. Clicca "Run workflow"
+4. Attendi completamento
+5. Apri i log ed incolla tutto il contenuto dei log
+
+### Opzione 2: Deployment Trigger
+Vercel rideploay automaticamente e esegue il sync:
+1. Fai un push su master
+2. Attendi il deploy
+3. Controlla i log Vercel
+
+### Opzione 3: Manuale da Admin
+Se l'API espone l'endpoint:
+```bash
+curl -X POST https://vincanto-vetrina.vercel.app/api/calendar-real-sync \
+  -H "X-Sync-Token: calendar-sync-2024"
+```
+
+## Checklist Diagnostica
+
+- [ ] Verifica se `HOLIDU_ICAL_URL` è presente nell'Environment Check log
+- [ ] Verifica se il log "HOLIDU CONFIGURATO" appare
+- [ ] Verifica se Holidu inizia il fetch (BEGIN SYNC)
+- [ ] Verifica il HTTP status (deve essere 200)
+- [ ] Verifica la lunghezza dei dati iCal (deve essere > 0)
+- [ ] Verifica i BEGIN:VEVENT trovati nel file iCal
+- [ ] Verifica se gli eventi vengono parsati
+- [ ] Verifica se gli eventi sono nel futuro
+- [ ] Verifica il salvataggio nel DB (riga "Salvati X/Y")
+- [ ] Verifica il SYNC RESULT finale (status: success o error)
+
+## Prossimi Step
+
+Condividi i **log completi del sync** includendo tutto ciò che c'è tra:
+```
+🔍 Environment Check - Calendar URLs:
+```
+
+fino a:
+
+```
+🏖️ === HOLIDU SYNC END ===
+```
+
+Con questi log potremo identificare esattamente dove si blocca Holidu! 📊
