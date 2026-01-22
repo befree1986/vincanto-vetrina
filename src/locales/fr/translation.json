@@ -153,8 +153,7 @@
   "section.booking.rules.checkinoutList2": "Check-out : avant 10h00",
   "section.booking.rules.paymentTitle": "Confirmer la Réservation",
   "section.booking.rules.paymentList1": "Pour confirmer la réservation, un acompte de 30% est requis. Le solde restant doit être payé lors du check-in. Plus de détails seront fournis au moment de la réservation par email.",
-  "section.booking.openButton": "Réserver Maintenant",
-  "section.booking.ctaSubtitle": "Système de réservation sécurisé, rapide et facile à utiliser.",
+  
   
   "section.includedServices.title": "🛎️ Services Inclus",
   "section.includedServices.comfortTitle": "Confort",
@@ -286,5 +285,11 @@
   "booking.payment.amount": "Montant",
   "booking.payment.loading": "Chargement de PayPal...",
   "booking.payment.retry": "Réessayer",
-  "booking.payment.security": "SSL ✓ PayPal 💳 Sécurisé"
+  "booking.payment.security": "SSL ✓ PayPal 💳 Sécurisé",
+
+  "section.booking.title": "Réservez votre séjour dès aujourd'hui !",
+  "section.booking.subtitle": "Système de réservation sécurisé, rapide et facile à utiliser.",
+  "section.booking.platforms": "Nous sommes présents sur les principales plateformes en ligne.",
+  "section.booking.openButton": "Réserver Maintenant",
+  "section.booking.ctaSubtitle": "Système de réservation sécurisé, rapide et facile à utiliser."
 }
