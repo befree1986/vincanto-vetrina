@@ -49,7 +49,8 @@ export function bookingConfirmationTemplate(data) {
   const bankDetails = {
     iban: 'IT04D3608105038288844288937',
     bic: 'PPAYITR1XXX',
-    account_holder: ' Guida Antonio'
+    account_holder: 'Guida Antonio',
+    bank_name: 'PostePay S.p.A.'
   };
 
   return `
@@ -80,7 +81,7 @@ export function bookingConfirmationTemplate(data) {
           <p style="margin:4px 0;"><strong>${t.bank_beneficiary}:</strong> ${bankDetails.account_holder}</p>
           <p style="margin:4px 0;"><strong>${t.bank_iban}:</strong> ${bankDetails.iban}</p>
           <p style="margin:4px 0;"><strong>${t.bank_bic}:</strong> ${bankDetails.bic}</p>
-          <p style="margin:4px 0;"><strong>${t.bank_bank}:</strong> ${t.bankDetails.bank_name}</p>
+          <p style="margin:4px 0;"><strong>${t.bank_bank}:</strong> ${bankDetails.bank_name}</p>
           <p style="margin:4px 0;"><strong>${t.bank_reason}:</strong> ${t.bank_reason_reason_val} ${bookingId} - ${firstName} ${lastName}</p>
         </div>
       ` : ''}

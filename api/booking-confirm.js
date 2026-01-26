@@ -150,8 +150,10 @@ export default async function handler(req, res) {
       console.warn('⚠️ Errore blocco date (non-critico):', blockError.message);
     }
 
-    // Invia email di conferma (solo se successo pagamento)
-    if (payment_status === 'success' && process.env.SMTP_HOST) {
+    // Invia email di conferma (se pagamento successo o bonifico in attesa)
+    // Per il bonifico, l'email con i dettagli per pagare viene inviata subito.
+    const isBankTransfer = payment_method.toLowerCase().includes('bank');
+    if ((payment_status === 'success' || isBankTransfer) && process.env.SMTP_HOST) {
       try {
         const guestLanguage = detectLanguage(email, booking_data.language);
         const emailHtml = renderEmailTemplate('booking_confirmation', {

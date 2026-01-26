@@ -1873,10 +1873,10 @@ export default async function handler(req, res) {
             type: 'manual',
             enabled: true,
             account_details: {
-              iban: 'IT60X0542811101000000123456',
-              bic: 'BPMOIT22',
-              bank_name: 'Banco BPM',
-              account_holder: 'Vincanto Maori'
+              iban: 'IT04D3608105038288844288937',
+              bic: 'PPAYITR1XXX',
+              bank_name: 'PostePay S.p.A.',
+              account_holder: 'Guida Antonio'
             },
             description: 'Bonifico tradizionale su conto corrente'
           }
