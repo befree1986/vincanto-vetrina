@@ -105,7 +105,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
         {/* Contenuto scrollabile */}
         <div className="booking-modal-content">
           <ErrorBoundary>
-            <BookingSystem />
+            <BookingSystem onClose={onClose} />
           </ErrorBoundary>
         </div>
       </div>

@@ -93,6 +93,10 @@ export default async function handler(req, res) {
       paymentStatusDb = 'pending';
     }
 
+    //Calcola il valore da salvare come "acconto": se è saldo completp, è uguale al totale.
+    const isFullPayment = paymentStatusDb === 'paid_full';
+    const depositValue = isFullPayment ? totalAmount : Math.round(totalAmount * 0.3 * 100) / 100;
+
     console.log('✅ Dati validati:', { 
       checkin, checkout, guests, adults, children, 
       firstName, lastName, email, phone, totalAmount,
@@ -120,7 +124,7 @@ export default async function handler(req, res) {
       email,
       phone,
       totalAmount,
-      Math.round(totalAmount * 0.3 * 100) / 100, // 30% acconto
+      depositValue,
       notes,
       bookingStatus,
       paymentStatusDb
@@ -160,7 +164,7 @@ export default async function handler(req, res) {
           adults,
           children,
           totalAmount,
-          depositAmount: Math.round(totalAmount * 0.3 * 100) / 100,
+          depositAmount: depositValue, // passa il valore corretto al template
           fromEmail: process.env.SMTP_FROM,
           language: guestLanguage,
           paymentMethod: payment_method,

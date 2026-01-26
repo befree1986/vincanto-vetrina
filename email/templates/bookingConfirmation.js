@@ -23,7 +23,11 @@ export function bookingConfirmationTemplate(data) {
 
   const t = getEmailStrings('booking_confirmation', language);
   const formatDate = (d) => formatDateByLanguage(d, language);
-  const saldo = Number(totalAmount) - Number(depositAmount);
+  
+
+  //Logia: se l'acconto è >= al totale (meno 1 cent per arrotandamenti), è un pagamento completo
+  const isFullPayment = Number(depositAmount) >= (Number(totalAmount) - 0.01);
+  const saldo = isFullPayment ? 0 : (Number(totalAmount) - Number(depositAmount));
 
   const extraServices = Array.isArray(extraServicesRaw) ? extraServicesRaw
                       : Array.isArray(extraServicesAlt) ? extraServicesAlt
@@ -33,13 +37,20 @@ export function bookingConfirmationTemplate(data) {
   const extrasTotal = paidServices.reduce((sum, s) => sum + Number(s.price || 0), 0);
 
   const pm = String(paymentMethod || '').toLowerCase();
+  const isBankTransfer = pm.includes('bank');
   const baseUrl = 'https://www.vincantomaori.it';
   const methodIcon = pm.includes('paypal')
     ? baseUrl + '/icons/paypal_icon.webp'
-    : pm.includes('bank')
+    : isBankTransfer
       ? baseUrl + '/icons/bank_icon.webp'
       : baseUrl + '/icons/stripe_icon.webp';
-  const methodLabel = pm.includes('paypal') ? t.method_paypal : pm.includes('bank') ? t.method_bank_transfer : t.method_card;
+  const methodLabel = pm.includes('paypal') ? t.method_paypal : isBankTransfer ? t.method_bank_transfer : t.method_card;
+
+  const bankDetails = {
+    iban: 'IT04D3608105038288844288937',
+    bic: 'PPAYITR1XXX',
+    account_holder: ' Guida Antonio'
+  };
 
   return `
     <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; background:#ffffff;">
@@ -57,9 +68,23 @@ export function bookingConfirmationTemplate(data) {
         <p><strong>${t.guests}:</strong> ${guests} (${adults} ${t.adults.toLowerCase()}${children > 0 ? `, ${children} ${t.children.toLowerCase()}` : ''})</p>
         ${paymentMethod ? `<p><strong>${t.payment_method}:</strong> <img src="${methodIcon}" alt="${methodLabel}" width="20" height="20" style="vertical-align:middle;margin-right:6px;"/> ${methodLabel}</p>` : ''}
         <p><strong>${t.total_amount}:</strong> €${Number(totalAmount).toFixed(2)}</p>
-        <p><strong>${t.deposit_amount}:</strong> €${Number(depositAmount).toFixed(2)}</p>
+        ${!isFullPayment ? `<p><strong>${t.deposit_amount}:</strong> €${Number(depositAmount).toFixed(2)}</p>
         <p><strong>${t.remaining_balance}:</strong> €${saldo.toFixed(2)}</p>
+        ` : `
+        <p><strong>${t.payment_status}:</strong> ${t.paid_in_full}</p>`
+      }
       </div>
+      ${isBankTransfer ? `
+        <div style="background:#f0f4f8;padding:16px;border-left:4px solid #2c5282;margin:16px 0;border-radius:6px;">
+          <h3 style="margin-top:0;color:#2c5282;">${t.bank_transfer_details}</h3>
+          <p style="margin:4px 0;"><strong>${t.bank_beneficiary}:</strong> ${bankDetails.account_holder}</p>
+          <p style="margin:4px 0;"><strong>${t.bank_iban}:</strong> ${bankDetails.iban}</p>
+          <p style="margin:4px 0;"><strong>${t.bank_bic}:</strong> ${bankDetails.bic}</p>
+          <p style="margin:4px 0;"><strong>${t.bank_bank}:</strong> ${t.bankDetails.bank_name}</p>
+          <p style="margin:4px 0;"><strong>${t.bank_reason}:</strong> ${t.bank_reason_reason_val} ${bookingId} - ${firstName} ${lastName}</p>
+        </div>
+      ` : ''}
+      
       ${extraServices.length > 0 ? `
       <div style="background:#f0f4f8;padding:16px;border-left:4px solid #2c5282;margin:16px 0;border-radius:6px;">
         <h3 style="margin:0 0 8px 0;color:#2c5282;">${t.extra_services}</h3>

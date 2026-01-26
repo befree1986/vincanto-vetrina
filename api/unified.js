@@ -1204,6 +1204,7 @@ export default async function handler(req, res) {
           // ⚡ Estrai status dal payload (default 'pending' se non specificato)
           const bookingStatus = bookingData.status || 'pending';
           
+          
           const result = await pool.query(`
             INSERT INTO bookings (
               booking_id, check_in, check_out, guests, adults, children,

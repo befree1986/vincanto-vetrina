@@ -153,7 +153,11 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
 
 type Step = 'dates' | 'details' | 'payment' | 'confirmation';
 
-const BookingSystem: React.FC = () => {
+interface BookingSystemProps {
+    onClose?: () => void;
+}
+
+const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
     // ⚡ REACT HOOKS ORDER FIX - v2025.11.27
     // All hooks MUST be called at component top level in consistent order
     const { t } = useTranslation();
@@ -1119,8 +1123,11 @@ const BookingSystem: React.FC = () => {
                                     </div>
                                 )}
                                 
-                                <button onClick={startNewBooking} className="btn-primary">
-                                    {getSafeTranslation(t, 'booking.newBooking', 'Nuova Prenotazione')}
+                                <button onClick={() => {
+                                    if (onClose) onClose();
+                                    else window.location.reload();
+                                }} className="btn-primary">
+                                    {getSafeTranslation(t, 'booking.close', 'Chiudi')}
                                 </button>
                             </div>
                         )}
