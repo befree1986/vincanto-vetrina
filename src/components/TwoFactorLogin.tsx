@@ -275,6 +275,7 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
                 value={selectedRole}
                 onChange={(e) => setSelectedRole(e.target.value)}
                 className="two-factor-login-input"
+                title="Seleziona un ruolo"
                 required
                 autoFocus
               >
