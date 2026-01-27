@@ -1,4 +1,5 @@
 ﻿/* eslint-disable */
+﻿/* eslint-disable */
 // @ts-nocheck  
 import React, { useState, useEffect } from 'react';
 import './AdminPanelPro.css';
@@ -1071,6 +1072,7 @@ const AdminPanelPro = (): JSX.Element => {
     smsNotifications: false,
     pushNotifications: true,
     bookingAlerts: true,
+    bookingAlerts: false, // Disabilitato di default
     paymentAlerts: true,
     systemAlerts: true,
     reviewAlerts: true,

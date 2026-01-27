@@ -192,7 +192,7 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
         submitBooking,
         formErrors,
         validateForm,
-        resetForm,
+       // resetForm,
         calendar,
         isLoadingCalendar,
         loadCalendar
@@ -334,13 +334,14 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
         setError(errorMessage);
     };
 
-    const startNewBooking = () => {
-        resetForm();
-        setCurrentStep('dates');
-        setError(null);
-        setPaymentCompleted(false);
-        setShowPayment(false);
-    };
+   // const startNewBooking = () => {
+   //     resetForm();
+   //     setCurrentStep('dates');
+   //     setError(null);
+   //     setPaymentCompleted(false);
+   //     setShowPayment(false);   
+        
+   // };
 
     const renderStepIndicator = (): JSX.Element => (
         <div className="booking-steps">
