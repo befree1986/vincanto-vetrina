@@ -158,9 +158,7 @@ interface BookingSystemProps {
 }
 
 const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
-    // ⚡ REACT HOOKS ORDER FIX - v2025.11.27
-    // All hooks MUST be called at component top level in consistent order
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     
     // 🔍 DEBUG: Log mount/unmount
     React.useEffect(() => {
@@ -518,7 +516,8 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                 phone: formData.guest_phone,
                 guests: formData.num_adults + formData.num_children,
                 // 🛎️ Inoltra i servizi extra selezionati per l'email del backend
-                extra_services: selectedExtraServices.map(s => ({ id: s.id, name: s.name, price: s.price, included: !!s.included }))
+                extra_services: selectedExtraServices.map(s => ({ id: s.id, name: s.name, price: s.price, included: !!s.included })),
+                language: i18n.language || 'it'
             };
 
             // Salva la prenotazione come "pending" in attesa del bonifico
@@ -1115,8 +1114,8 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                                     <div className="bank-transfer-instructions">
                                         <h3>🏦 {getSafeTranslation(t, 'booking.bank.instructionsTitle', 'Istruzioni per il Bonifico')}</h3>
                                         <div className="bank-details">
-                                            <p><strong>{getSafeTranslation(t, 'booking.bank.beneficiary', 'Beneficiario')}:</strong> Vincanto Maori S.r.l.</p>
-                                            <p><strong>{getSafeTranslation(t, 'booking.bank.iban', 'IBAN')}:</strong> IT60 X054 2811 101 000000123456</p>
+                                            <p><strong>{getSafeTranslation(t, 'booking.bank.beneficiary', 'Beneficiario')}:</strong> Guida Antonio</p>
+                                            <p><strong>{getSafeTranslation(t, 'booking.bank.iban', 'IBAN')}:</strong> IT04 D360 8105 038 288844288937</p>
                                             <p><strong>{getSafeTranslation(t, 'booking.bank.reason', 'Causale')}:</strong> {getSafeTranslation(t, 'booking.bank.reason.booking', 'Prenotazione')} {bookingResult?.booking_id}</p>
                                             <p><strong>{getSafeTranslation(t, 'booking.bank.amountToTransfer', 'Importo da versare')}:</strong> €{bookingResult?.payment_amount?.toFixed(2)}</p>
                                         </div>

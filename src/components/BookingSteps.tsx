@@ -125,7 +125,8 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
           special_requests: bookingData.guest_message || bookingData.special_requests || '',
           email: bookingData.guest_email || bookingData.email,
           phone: bookingData.guest_phone || bookingData.phone || '',
-          guests: (bookingData.num_adults || bookingData.adults || 1) + (bookingData.num_children || bookingData.children || 0)
+          guests: (bookingData.num_adults || bookingData.adults || 1) + (bookingData.num_children || bookingData.children || 0),
+          language: i18n.language || 'it'
         };
 
         const resp = await fetch('/api/booking/confirm', {
@@ -199,7 +200,8 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
       special_requests: booking.formData.guest_message || booking.formData.special_requests || '',
       email: booking.formData.guest_email || booking.formData.email,
       phone: booking.formData.guest_phone || booking.formData.phone,
-      guests: (booking.formData.num_adults || booking.formData.adults || 1) + (booking.formData.num_children || booking.formData.children || 0)
+      guests: (booking.formData.num_adults || booking.formData.adults || 1) + (booking.formData.num_children || booking.formData.children || 0),
+      language: i18n.language || 'it'
     };
 
     fetch('/api/booking/confirm', {
@@ -265,7 +267,8 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
         special_requests: booking.formData.guest_message || booking.formData.special_requests || '',
         email: booking.formData.guest_email || booking.formData.email,
         phone: booking.formData.guest_phone || booking.formData.phone,
-        guests: (booking.formData.num_adults || booking.formData.adults || 1) + (booking.formData.num_children || booking.formData.children || 0)
+        guests: (booking.formData.num_adults || booking.formData.adults || 1) + (booking.formData.num_children || booking.formData.children || 0),
+        language: i18n.language || 'it'
       };
 
       fetch('/api/booking/confirm', {
