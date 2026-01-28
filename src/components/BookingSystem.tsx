@@ -291,7 +291,8 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                     payment_status: 'success',
                     amount_paid: amountPaid,
                     // 🛎️ Passa i servizi extra per includerli nell'email di conferma
-                    extra_services: selectedExtraServices.map(s => ({ id: s.id, name: s.name, price: s.price, included: !!s.included }))
+                    extra_services: selectedExtraServices.map(s => ({ id: s.id, name: s.name, price: s.price, included: !!s.included })),
+                    language: i18n.language || 'it'
                 }
             );
 

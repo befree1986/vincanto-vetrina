@@ -207,11 +207,13 @@ export async function updateBookingStatus(bookingId: string, status: 'confirmed'
     payment_status?: string;
     amount_paid?: number;
     extra_services?: { id?: number; name: string; price?: number; included?: boolean }[];
+    language?: string;
 }): Promise<{ success: boolean; message: string }> {
     const response = await api.post('/unified', {
         action: 'update-booking-status',
         booking_id: bookingId,
         status: status,
+        language: paymentData?.language,
         ...paymentData
     });
     return response.data;
