@@ -188,6 +188,7 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
         quote,
         isLoadingQuote,
         submitBooking,
+        isCreatingBooking,
         formErrors,
         validateForm,
        // resetForm,
@@ -481,80 +482,13 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                     selectedExtraServices.map(s => ({ id: s.id, name: s.name, price: s.price, included: !!s.included }))
                 );
                 setBookingResult(result || null);
-                await handleBankTransferBooking();
+                setCurrentStep('confirmation');
             } else {
                 // Metodo non riconosciuto: errore
                 setError('Metodo di pagamento non valido. Seleziona Carta, PayPal o Bonifico.');
             }
         } catch (e: any) {
             setError(e.message || 'Errore inatteso');
-        }
-    };
-
-    const handleBankTransferBooking = async () => {
-        try {
-            // Calcola importo INCLUSI SERVIZI EXTRA
-            const totalWithExtras = (quote?.totalAmount || 0) + extraServicesCost;
-            const amountPaid = formData.payment_type === 'deposit' && quote
-                ? Math.round(totalWithExtras * 0.3 * 100) / 100
-                : totalWithExtras;
-
-            const bookingData = {
-                guest_name: formData.guest_name,
-                guest_surname: formData.guest_surname,
-                guest_email: formData.guest_email,
-                guest_phone: formData.guest_phone,
-                check_in_date: formData.check_in_date?.toISOString().split('T')[0],
-                check_out_date: formData.check_out_date?.toISOString().split('T')[0],
-                adults: formData.num_adults,
-                children: formData.num_children,
-                children_ages: formData.children_ages,
-                parking_option: formData.parking_option,
-                payment_method: 'bank_transfer',
-                payment_type: formData.payment_type,
-                special_requests: formData.guest_message,
-                email: formData.guest_email,
-                phone: formData.guest_phone,
-                guests: formData.num_adults + formData.num_children,
-                // 🛎️ Inoltra i servizi extra selezionati per l'email del backend
-                extra_services: selectedExtraServices.map(s => ({ id: s.id, name: s.name, price: s.price, included: !!s.included })),
-                language: i18n.language || 'it'
-            };
-
-            // Salva la prenotazione come "pending" in attesa del bonifico
-            const response = await fetch('/api/booking/confirm', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    payment_method: 'bank_transfer',
-                    payment_status: 'pending',
-                    payment_id: null,
-                    amount: amountPaid,
-                    total_amount: quote?.totalAmount || 0,
-                    booking_data: bookingData
-                })
-            });
-
-            const result = await response.json();
-            
-            if (!result.success) {
-                throw new Error(result.error || 'Errore salvataggio prenotazione');
-            }
-
-            // Aggiorna il risultato con il booking ID reale
-            setBookingResult({
-                ...bookingResult,
-                booking_id: result.bookingId || result.booking?.bookingId,
-                id: result.id || result.booking?.id,
-                payment_amount: amountPaid,
-                payment_method: 'bank_transfer',
-                payment_status: 'pending'
-            });
-
-            setCurrentStep('confirmation');
-        } catch (error: any) {
-            console.error('Errore prenotazione bonifico:', error);
-            setError(`Errore nel salvataggio della prenotazione: ${error.message}`);
         }
     };
 
@@ -836,11 +770,11 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                     <button 
                         type="button" 
                         className="btn-primary" 
-                        disabled={isLoadingQuote || !isFormValid()} 
+                        disabled={isLoadingQuote || isCreatingBooking || !isFormValid()} 
                         onClick={handleDetailsSubmit}
                         title={!isFormValid() ? 'Compila tutti i campi obbligatori' : ''}
                     >
-                        {isLoadingQuote ? getSafeTranslation(t, 'booking.processing', 'Elaborazione...') : getSafeTranslation(t, 'booking.continueToPayment', 'Continua al Pagamento')}
+                        {isLoadingQuote || isCreatingBooking ? getSafeTranslation(t, 'booking.processing', 'Elaborazione...') : getSafeTranslation(t, 'booking.continueToPayment', 'Continua al Pagamento')}
                     </button>
                 </div>
                 {/* ℹ️ NOTA: PriceBreakdown nascosto qui - visibile solo in step payment/confirmation */}
