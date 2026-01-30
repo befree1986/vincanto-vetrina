@@ -286,21 +286,11 @@ export function getEmailStrings(templateName, language = 'it') {
 }
 
 // Detect language from email domain or user preference
-export function detectLanguage(email, userLanguage) {
-  // Priority: user preference > email domain > default Italian
+export function detectLanguage(userLanguage) {
+  // Priority: user preference > default Italian
   if (userLanguage && emailStrings[userLanguage]) {
     return userLanguage;
   }
-  
-  if (email) {
-    const domain = email.toLowerCase().split('@')[1];
-    if (domain) {
-      if (domain.endsWith('.de')) return 'de';
-      if (domain.endsWith('.fr')) return 'fr';
-      if (domain.endsWith('.uk') || domain.endsWith('.com')) return 'en';
-    }
-  }
-  
   return 'it'; // Default Italian
 }
 
