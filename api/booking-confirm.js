@@ -205,11 +205,11 @@ export default async function handler(req, res) {
         bookingId: savedBooking.booking_id,
         status: savedBooking.status,
         paymentStatus: savedBooking.payment_status,
-        totalAmount: parseFloat(savedBooking.depositAmount),
+        totalAmount: parseFloat(savedBooking.total_amount),
         depositAmount: parseFloat(savedBooking.deposit_amount),
         amountToPay: isFullPayment
           ? parseFloat(savedBooking.total_amount)
-          : parseFloat(savedBooking.depositAmount)
+          : parseFloat(savedBooking.deposit_amount)
       }
     });
 
