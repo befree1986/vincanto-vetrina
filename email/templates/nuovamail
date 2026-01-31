@@ -1,0 +1,229 @@
+return `
+  <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 680px; margin: 0 auto; background:#ffffff; color:#1A1A1A;">
+
+    <!-- ===========================
+         HERO IMAGE ULTRA PREMIUM
+         ===========================
+         ISTRUZIONI:
+         - Sostituisci INSERISCI_URL_IMMAGINE_HERO con una tua immagine (es. Costiera, appartamento)
+         - Dimensione consigliata: 1200x500
+    -->
+    <div style="width:100%; height:260px; background:url('INSERISCI_URL_IMMAGINE_HERO') center/cover no-repeat;">
+      <div style="background:linear-gradient(135deg, rgba(10,18,60,0.85), rgba(10,18,60,0.35)); width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:0 20px;">
+        
+        <!-- LOGO HERO (OPZIONALE) -->
+        <img src="https://www.vincantomaori.it/logo.svg" alt="Vincanto Maori" width="70" style="margin-bottom:10px; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));">
+
+        <div style="color:#FDFBF7; font-size:24px; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px;">
+          Vincanto Maori
+        </div>
+        <div style="color:#FDFBF7; font-size:16px; opacity:0.9;">
+          ${t.title}
+        </div>
+      </div>
+    </div>
+
+    <!-- INTRO -->
+    <div style="padding:22px 20px 10px;">
+      <p style="font-size:16px; line-height:1.6; margin:0 0 10px 0;">
+        ${t.greeting} <strong>${escapeHtml(firstName)} ${escapeHtml(lastName)}</strong>,
+      </p>
+      <p style="font-size:15px; line-height:1.6; margin:0;">
+        ${t.intro}
+      </p>
+    </div>
+
+    <!-- ===========================
+         CARD RIEPILOGO PRENOTAZIONE
+         =========================== -->
+    <div style="
+      background:#FFFFFF;
+      border-radius:14px;
+      padding:20px 20px 18px;
+      margin:18px 20px;
+      box-shadow:0 6px 18px rgba(0,0,0,0.08);
+      border-top:4px solid #C5A572;
+    ">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <h2 style="margin:0; color:#1A237E; font-size:18px; text-transform:uppercase; letter-spacing:1px;">
+          ${t.booking_code}: ${bookingId}
+        </h2>
+        <span style="font-size:12px; color:#777; text-transform:uppercase; letter-spacing:1px;">
+          ${formatDate(checkin)} • ${formatDate(checkout)}
+        </span>
+      </div>
+
+      <div style="border-top:1px solid #E5E5E5; padding-top:10px; margin-top:8px;">
+        <p style="margin:4px 0;"><strong>${t.check_in}:</strong> ${formatDate(checkin)}</p>
+        <p style="margin:4px 0;"><strong>${t.check_out}:</strong> ${formatDate(checkout)}</p>
+        <p style="margin:4px 0;">
+          <strong>${t.guests}:</strong> 
+          ${guests} (${adults} ${t.adults.toLowerCase()}${children > 0 ? `, ${children} ${t.children.toLowerCase()}` : ''})
+        </p>
+
+        <!-- METODO DI PAGAMENTO -->
+        <p style="margin:8px 0 4px 0;">
+          <strong>${t.payment_method}:</strong>
+          <!-- LOGO METODO PAGAMENTO:
+               - methodIcon e methodLabel sono già calcolati nel template
+               - Se vuoi loghi diversi per Stripe/PayPal/Bonifico, sostituisci methodIcon con URL specifici
+          -->
+          <img src="${methodIcon}" alt="${methodLabel}" width="22" style="vertical-align:middle; margin:0 6px 0 6px;">
+          ${methodLabel}
+        </p>
+
+        <p style="margin:8px 0 4px 0;"><strong>${t.total_amount}:</strong> €${Number(totalAmount).toFixed(2)}</p>
+
+        ${!isFullPayment ? `
+          <p style="margin:4px 0;"><strong>${t.deposit_amount}:</strong> €${Number(depositAmount).toFixed(2)}</p>
+          <p style="margin:4px 0;"><strong>${t.remaining_balance}:</strong> €${saldo.toFixed(2)}</p>
+        ` : `
+          <p style="margin:4px 0;"><strong>${t.amount_paid}:</strong> €${Number(totalAmount).toFixed(2)}</p>
+        `}
+      </div>
+    </div>
+
+    <!-- ===========================
+         BONIFICO BANCARIO (SE APPLICABILE)
+         =========================== -->
+    ${isBankTransfer ? `
+    <div style="
+      background:#F7F7F9;
+      border-radius:14px;
+      padding:20px;
+      margin:18px 20px;
+      border-left:5px solid #1A237E;
+    ">
+      <h3 style="margin:0 0 10px 0; color:#1A237E; font-size:17px;">
+        ${t.bank_transfer_details}
+      </h3>
+      <p style="margin:4px 0;"><strong>${t.bank_beneficiary}:</strong> ${bankDetails.account_holder}</p>
+      <p style="margin:4px 0;"><strong>${t.bank_iban}:</strong> ${bankDetails.iban}</p>
+      <p style="margin:4px 0;"><strong>${t.bank_bic}:</strong> ${bankDetails.bic}</p>
+      <p style="margin:4px 0;"><strong>${t.bank_bank}:</strong> ${bankDetails.bank_name}</p>
+      <p style="margin:4px 0;"><strong>${t.bank_reason}:</strong> ${t.bank_reason_val} ${bookingId} - ${firstName} ${lastName}</p>
+    </div>
+    ` : ''}
+
+    <!-- ===========================
+         SERVIZI EXTRA
+         =========================== -->
+    ${extraServices.length > 0 ? `
+    <div style="
+      background:#FFFFFF;
+      border-radius:14px;
+      padding:20px;
+      margin:18px 20px;
+      box-shadow:0 4px 14px rgba(0,0,0,0.06);
+    ">
+      <h3 style="margin:0 0 10px 0; color:#1A237E; font-size:17px;">
+        ${t.extra_services}
+      </h3>
+
+      ${includedServices.length > 0 ? `
+        <div style="font-weight:bold; margin:8px 0 4px 0;">${t.included_services}</div>
+        <ul style="margin:4px 0 10px 18px; padding:0;">
+          ${includedServices.map(s => `
+            <li style="margin:2px 0;">
+              ${escapeHtml(s.name || '')}
+            </li>
+          `).join('')}
+        </ul>
+      ` : ''}
+
+      ${paidServices.length > 0 ? `
+        <div style="font-weight:bold; margin:8px 0 4px 0;">${t.extra_services}</div>
+        <ul style="margin:4px 0 10px 18px; padding:0;">
+          ${paidServices.map(s => `
+            <li style="margin:2px 0;">
+              ${escapeHtml(s.name || '')}: €${Number(s.price || 0).toFixed(2)}
+            </li>
+          `).join('')}
+        </ul>
+        <div style="text-align:right; font-weight:bold; color:#1A1A1A;">
+          ${t.extras_total}: €${extrasTotal.toFixed(2)}
+        </div>
+      ` : `
+        <div style="color:#555; margin-top:6px;">${t.no_extras}</div>
+      `}
+    </div>
+    ` : ''}
+
+    <!-- ===========================
+         COME ARRIVARE (TESTO STATICO + LINK)
+         =========================== -->
+    <div style="
+      background:#FFFFFF;
+      border-radius:14px;
+      padding:20px;
+      margin:18px 20px;
+      box-shadow:0 4px 14px rgba(0,0,0,0.04);
+      border-left:4px solid #C5A572;
+    ">
+      <h3 style="margin:0 0 10px 0; color:#1A237E; font-size:17px;">
+        📍 ${t.important_info}
+      </h3>
+      <p style="margin:4px 0;">
+        Vincanto Maori, Maiori (SA), Costiera Amalfitana
+      </p>
+      <p style="margin:4px 0;">
+        <a href="INSERISCI_LINK_GOOGLE_MAPS" style="color:#1A237E; text-decoration:underline;">
+          Apri in Google Maps
+        </a>
+      </p>
+    </div>
+
+    <!-- ===========================
+         CONTATTI RAPIDI
+         =========================== -->
+    <div style="
+      background:#F7F7F9;
+      border-radius:14px;
+      padding:20px;
+      margin:18px 20px;
+      border-left:4px solid #1A237E;
+    ">
+      <h3 style="margin:0 0 10px 0; color:#1A237E; font-size:17px;">
+        📞 ${t.contact_us}
+      </h3>
+      <p style="margin:4px 0;">
+        Email: <a href="mailto:${fromEmail}" style="color:#1A237E;">${fromEmail}</a>
+      </p>
+      <p style="margin:4px 0;">
+        Telefono: INSERISCI_NUMERO_TELEFONO
+      </p>
+      <p style="margin:4px 0;">
+        WhatsApp: INSERISCI_NUMERO_WHATSAPP
+      </p>
+    </div>
+
+    <!-- ===========================
+         INFO IMPORTANTI (LISTA)
+         =========================== -->
+    <div style="
+      background:#EDE7D9;
+      border-left:6px solid #C5A572;
+      padding:20px;
+      margin:18px 20px 10px;
+      border-radius:14px;
+    ">
+      <h3 style="margin:0 0 10px 0; color:#5A4A3A; font-size:17px;">
+        ${t.important_info}
+      </h3>
+      <ul style="margin:8px 0 0 18px; padding:0;">
+        <li style="margin:3px 0;">${t.checkin_time}</li>
+        <li style="margin:3px 0;">${t.checkout_time}</li>
+        <li style="margin:3px 0;">${t.bring_id}</li>
+      </ul>
+    </div>
+
+    <!-- FOOTER -->
+    <hr style="margin:26px 20px 10px; border:none; border-top:1px solid #E0E0E0;">
+
+    <p style="font-size:12px; color:#777; text-align:center; margin:0 20px 16px;">
+      ${t.footer}<br>
+      ${t.website}
+    </p>
+
+  </div>
+`;
