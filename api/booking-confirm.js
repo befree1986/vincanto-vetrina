@@ -4,6 +4,7 @@ import { Pool } from 'pg';
 import { sendEmailWithAdminCopy } from '../email/emailSender.js';
 import { renderEmailTemplate } from '../email/templates/index.js';
 import { detectLanguage } from '../email/i18n.js';
+import { parse } from 'path';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
@@ -204,7 +205,11 @@ export default async function handler(req, res) {
         bookingId: savedBooking.booking_id,
         status: savedBooking.status,
         paymentStatus: savedBooking.payment_status,
-        totalAmount: parseFloat(savedBooking.total_amount)
+        totalAmount: parseFloat(savedBooking.depositAmount),
+        depositAmount: parseFloat(savedBooking.deposit_amount),
+        amountToPay: isFullPayment
+          ? parseFloat(savedBooking.total_amount)
+          : parseFloat(savedBooking.depositAmount)
       }
     });
 
