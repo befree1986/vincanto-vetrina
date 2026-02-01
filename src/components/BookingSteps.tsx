@@ -25,6 +25,7 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
   const defaultBooking = useBooking();
   const booking = propBooking || defaultBooking;
   const quote = booking.quote;
+  const totalGuests = quote ? (quote.adults) + (quote.children) : 0;
 
   // Calcola il costo extra dinamicamente in base a quote
   const getExtraServicesCost = () => {
@@ -345,6 +346,38 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
       </div>
 
       <div className="payment-summary-box">
+        
+        {/*Riepilogo costi//*/}
+        {quote && (
+          <>
+          <div className="summary-row">
+          <span>Soggiorno base: ({quote.nights} notti x {totalGuests} ospiti):</span>
+          <span>€{quote.accommodationCost.toFixed(2)}</span>
+          </div>
+
+          <div className="summary-row">
+            <span>Pulizia finale:</span>
+            <span>€{quote.cleaningFee.toFixed(2)}</span>
+          </div>
+
+          {quote.parkingCost > 0 && (
+          <div className="summary-row">
+            <span>Parcheggio Privato</span>
+            <span>€{quote.parkingCost.toFixed(2)}</span>
+          </div>
+          )}
+
+          <div className="summary-row">
+            <span>Tassa di Soggiorno</span>
+            <span>€{quote.touristTax.toFixed(2)}</span>
+          </div>
+
+
+          <hr className="summary-divider" />
+          </>
+
+        )}
+
         <div className="summary-row">
           <span>Totale soggiorno:</span>
           <span><strong>€{total.toFixed(2)}</strong></span>

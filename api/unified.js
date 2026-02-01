@@ -635,6 +635,62 @@ export default async function handler(req, res) {
     }
   }
 
+// ========================================
+// QUOTE API - Calcolo preventivo completo
+// ========================================
+if (action === 'quote') {
+  try {
+    const { checkIn, checkOut, guests = 1, adults = guests, children = 0, parking = 'none' } = req.query;
+
+    if (!checkIn || !checkOut) {
+      return res.status(400).json({ success: false, error: 'Date mancanti' });
+    }
+
+    const start = new Date(checkIn);
+    const end = new Date(checkOut);
+    const nights = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
+
+    const configResult = await pool.query('SELECT * FROM pricing_config LIMIT 1');
+    const config = configResult.rows[0];
+
+    let basePrice = Number(config.price_group_1to2);
+    if (adults <= 2) basePrice = Number(config.price_group_1to2);
+    else if (adults <= 4) basePrice = Number(config.price_group_3to4);
+    else if (adults <= 6) basePrice = Number(config.price_group_5to6);
+    else basePrice = Number(config.price_group_7to8);
+
+    const accommodationCost = basePrice * nights;
+    const cleaningFee = Number(config.cleaning_fee);
+    const parkingCost = parking === 'private' ? Number(config.parking_fee) * nights : 0;
+
+    const touristTax =
+      adults * Number(config.tourist_tax_adult) * nights +
+      children * Number(config.tourist_tax_child) * nights;
+
+    const totalAmount = accommodationCost + cleaningFee + parkingCost + touristTax;
+
+    return res.status(200).json({
+      success: true,
+      quote: {
+        nights,
+        adults,
+        children,
+        accommodationCost,
+        cleaningFee,
+        parkingCost,
+        touristTax,
+        totalAmount
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Errore quote:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+}
+
+
+
   // ...continua con la logica esistente senza ridichiarare 'action'
 
   try {

@@ -15,6 +15,14 @@ export const emailStrings = {
       guests: 'Ospiti',
       adults: 'Adulti',
       children: 'Bambini',
+
+      // ⭐ NUOVE CHIAVI
+      cost_breakdown: "Riepilogo costi",
+      accommodation_base: "Soggiorno base",
+      cleaning_fee: "Pulizia finale",
+      private_parking: "Parcheggio privato",
+      tourist_tax: "Tassa di soggiorno",
+
       total_amount: 'Importo Totale',
       deposit_amount: 'Acconto (30%)',
       amount_paid: 'Importo Pagato',
@@ -43,6 +51,7 @@ export const emailStrings = {
       footer: 'Vincanto Maori • Maiori, Costiera Amalfitana',
       website: 'www.vincantomaori.it'
     },
+
     // Final Payment Confirmation
     booking_final: {
       subject: 'Pagamento Ricevuto - Prenotazione',
@@ -70,9 +79,8 @@ export const emailStrings = {
       footer: 'Vincanto Maori • www.vincantomaori.it'
     }
   },
-  
+
   en: {
-    // Booking Confirmation
     booking_confirmation: {
       subject: 'Booking Confirmation',
       title: 'Booking Confirmed',
@@ -84,6 +92,14 @@ export const emailStrings = {
       guests: 'Guests',
       adults: 'Adults',
       children: 'Children',
+
+      // ⭐ NEW KEYS
+      cost_breakdown: "Cost breakdown",
+      accommodation_base: "Accommodation base",
+      cleaning_fee: "Final cleaning",
+      private_parking: "Private parking",
+      tourist_tax: "Tourist tax",
+
       total_amount: 'Total Amount',
       deposit_amount: 'Deposit (30%)',
       amount_paid: 'Amount Paid',
@@ -112,7 +128,7 @@ export const emailStrings = {
       footer: 'Vincanto Maori • Maiori, Amalfi Coast',
       website: 'www.vincantomaori.it'
     },
-    // Final Payment Confirmation
+
     booking_final: {
       subject: 'Payment Received - Booking',
       title: 'Payment Received - Booking Confirmed',
@@ -139,9 +155,8 @@ export const emailStrings = {
       footer: 'Vincanto Maori • www.vincantomaori.it'
     }
   },
-  
+
   de: {
-    // Booking Confirmation
     booking_confirmation: {
       subject: 'Buchungsbestätigung',
       title: 'Buchung Bestätigt',
@@ -153,6 +168,14 @@ export const emailStrings = {
       guests: 'Gäste',
       adults: 'Erwachsene',
       children: 'Kinder',
+
+      // ⭐ NEUE SCHLÜSSEL
+      cost_breakdown: "Kostenübersicht",
+      accommodation_base: "Grundpreis Unterkunft",
+      cleaning_fee: "Endreinigung",
+      private_parking: "Privater Parkplatz",
+      tourist_tax: "Kurtaxe",
+
       total_amount: 'Gesamtbetrag',
       deposit_amount: 'Anzahlung (30%)',
       amount_paid: 'Bezahlter Betrag',
@@ -181,7 +204,7 @@ export const emailStrings = {
       footer: 'Vincanto Maori • Maiori, Amalfiküste',
       website: 'www.vincantomaori.it'
     },
-    // Final Payment Confirmation
+
     booking_final: {
       subject: 'Zahlung Erhalten - Buchung',
       title: 'Zahlung Erhalten - Buchung Bestätigt',
@@ -208,9 +231,8 @@ export const emailStrings = {
       footer: 'Vincanto Maori • www.vincantomaori.it'
     }
   },
-  
+
   fr: {
-    // Booking Confirmation
     booking_confirmation: {
       subject: 'Confirmation de Réservation',
       title: 'Réservation Confirmée',
@@ -222,6 +244,14 @@ export const emailStrings = {
       guests: 'Invités',
       adults: 'Adultes',
       children: 'Enfants',
+
+      // ⭐ NOUVELLES CLÉS
+      cost_breakdown: "Détail des coûts",
+      accommodation_base: "Hébergement de base",
+      cleaning_fee: "Ménage final",
+      private_parking: "Parking privé",
+      tourist_tax: "Taxe de séjour",
+
       total_amount: 'Montant Total',
       deposit_amount: 'Acompte (30%)',
       amount_paid: 'Montant Payé',
@@ -250,7 +280,7 @@ export const emailStrings = {
       footer: 'Vincanto Maori • Maiori, Côte Amalfitaine',
       website: 'www.vincantomaori.it'
     },
-    // Final Payment Confirmation
+
     booking_final: {
       subject: 'Paiement Reçu - Réservation',
       title: 'Paiement Reçu - Réservation Confirmée',
@@ -287,11 +317,10 @@ export function getEmailStrings(templateName, language = 'it') {
 
 // Detect language from email domain or user preference
 export function detectLanguage(userLanguage) {
-  // Priority: user preference > default Italian
   if (userLanguage && emailStrings[userLanguage]) {
     return userLanguage;
   }
-  return 'it'; // Default Italian
+  return 'it';
 }
 
 // Format date based on language
