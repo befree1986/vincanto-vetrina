@@ -224,7 +224,7 @@
   
   "section.extraCosts.title": "💰 Costi Extra (non inclusi)",
   "section.extraCosts.mandatoryTitle": "Obbligatori",
-  "section.extraCosts.mandatoryList1": "Pulizia finale obbligatoria: 40€",
+  "section.extraCosts.mandatoryList1": "Pulizia finale obbligatoria: 60€",
   "section.extraCosts.mandatoryList2": "Tassa di soggiorno secondo normativa comunale",
   "section.extraCosts.onRequestTitle": "Su richiesta",
   "section.extraCosts.onRequestList2": "Culla per bambini 0-6 anni a 30€/soggiorno",
@@ -345,6 +345,13 @@
   "booking.payment.amount": "Importo",
   "booking.payment.loading": "Caricamento PayPal...",
   "booking.payment.retry": "Riprova",
-  "booking.payment.security": "SSL ✓ PayPal 💳 Sicuro"
+  "booking.payment.security": "SSL ✓ PayPal 💳 Sicuro",
+
+  "availability": {
+  "title": "Disponibilità e Trasporti",
+  "busLine": "🚍 Bus di Linea a 50 mt. dalla struttura: Collegamenti SITA Sud verso i principali borghi della Costiera. Fermate facilmente raggiungibili dalla residenza.",
+    "shuttle": "🚌 Navetta Comunale con fermata ai piedi della struttura: Servizio locale per spostarsi con semplicità tra centro, lungomare e porto.",
+    "ferries": "⛴️ Traghetti: Partenze dal porto di Maiori verso Amalfi, Positano e Salerno. Il modo più rapido e scenografico per vivere la costa."
+  }
 
 }

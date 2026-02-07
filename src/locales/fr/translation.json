@@ -174,7 +174,7 @@
   "section.includedServices.connectivityList2": "Connexion Ethernet LAN dans toutes les chambres",
   "section.extraCosts.title": "💰 Coûts supplémentaires (non inclus)",
   "section.extraCosts.mandatoryTitle": "Obligatoires",
-  "section.extraCosts.mandatoryList1": "Nettoyage final obligatoire : 40€",
+  "section.extraCosts.mandatoryList1": "Nettoyage final obligatoire : 60€",
   "section.extraCosts.mandatoryList2": "Taxe de séjour selon la réglementation communale",
   "section.extraCosts.onRequestTitle": "Sur demande",
   "section.extraCosts.onRequestList2": "Lit bébé 0-6 ans à 30€/séjour",
@@ -291,5 +291,12 @@
   "section.booking.subtitle": "Système de réservation sécurisé, rapide et facile à utiliser.",
   "section.booking.platforms": "Nous sommes présents sur les principales plateformes en ligne.",
   "section.booking.openButton": "Réserver Maintenant",
-  "section.booking.ctaSubtitle": "Système de réservation sécurisé, rapide et facile à utiliser."
+  "section.booking.ctaSubtitle": "Système de réservation sécurisé, rapide et facile à utiliser.",
+
+  "availability": {
+    "title": "Transports et Accessibilité",
+    "busLine": "🚍 Bus de Ligne à 50 m de la structure : Connexions SITA Sud vers les principaux villages de la Côte. Arrêts facilement accessibles depuis la résidence.",
+    "shuttle": "🚌 Navette Communale avec arrêt au pied de la structure : Service local pour se déplacer facilement entre le centre, le front de mer et le port.",
+    "ferries": "⛴️ Ferries : Départs du port de Maiori vers Amalfi, Positano et Salerne. Le moyen le plus rapide et pittoresque de découvrir la côte."
+    }
 }

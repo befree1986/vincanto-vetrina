@@ -179,7 +179,7 @@
   "section.includedServices.connectivityList2": "Ethernet-LAN-Anschluss in allen Zimmern",
   "section.extraCosts.title": "💰 Extrakosten (nicht inbegriffen)",
   "section.extraCosts.mandatoryTitle": "Obligatorisch",
-  "section.extraCosts.mandatoryList1": "Obligatorische Endreinigung: 40€",
+  "section.extraCosts.mandatoryList1": "Obligatorische Endreinigung: 60€",
   "section.extraCosts.mandatoryList2": "Kurtaxe gemäß den kommunalen Vorschriften",
   "section.extraCosts.onRequestTitle": "Auf Anfrage",
   "section.extraCosts.onRequestList2": "Babybett 0-6 Jahre zu 30€/Aufenthalt",
@@ -293,4 +293,11 @@
   "booking.payment.loading": "PayPal wird geladen...",
   "booking.payment.retry": "Erneut versuchen",
   "booking.payment.security": "SSL ✓ PayPal 💳 Sicher"
-}
+  ,
+  "availability": {
+    "title": "Verkehrsanbindung und Erreichbarkeit",
+    "busLine": "🚍 Linienbus 50 m von der Unterkunft entfernt: SITA Sud Verbindungen zu den wichtigsten Dörfern der Küste. Haltestellen sind von der Residenz aus leicht erreichbar.",
+    "shuttle": "🚌 Gemeindeshuttle mit Haltestelle am Fuße der Unterkunft: Lokaler Service, um sich leicht zwischen dem Zentrum, der Uferpromenade und dem Hafen zu bewegen.",
+    "ferries": "⛴️ Fähren: Abfahrten vom Hafen von Maiori nach Amalfi, Positano und Salerno. Der schnellste und malerischste Weg, die Küste zu erleben."
+  }
+  }
