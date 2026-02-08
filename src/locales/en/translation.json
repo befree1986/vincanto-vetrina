@@ -314,5 +314,27 @@
             "notAvailable": "Not available"
         },
         "retry": "Retry"
-    }
+    },
+
+    "gennaio": "January",
+    "febbraio": "February",
+    "marzo": "March",
+    "aprile": "April",
+    "maggio": "May",
+    "giugno": "June",
+    "luglio": "July",
+    "agosto": "August",
+    "settembre": "September",
+    "ottobre": "October",
+    "novembre": "November",
+    "dicembre": "December",
+    "👆 Clicca per selezionare la data di arrivo": "👆 Click to select the arrival date",
+    "Seleziona le Date":"Select the Dates",
+    "ℹ️ Soggiorno minimo richiesto: 3 notti":"ℹ️ Minimum stay required: 3 nights",
+    "📅 Seleziona le Date del Soggiorno":"📅 Select your stay dates",
+    "Scegli la data di arrivo e partenza per il tuo soggiorno":"Choose your arrival and departure dates for your stay",
+    "Disponibile":"Available",
+    "Selezionato":"Selected",
+    "Occupato":"Occupied",
+    "Dettagli":"Details"
 }
