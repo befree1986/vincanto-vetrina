@@ -653,13 +653,23 @@ if (action === 'quote') {
     const configResult = await pool.query('SELECT * FROM pricing_config LIMIT 1');
     const config = configResult.rows[0];
 
-    let basePrice = Number(config.price_group_1to2);
-    if (adults <= 2) basePrice = Number(config.price_group_1to2);
-    else if (adults <= 4) basePrice = Number(config.price_group_3to4);
-    else if (adults <= 6) basePrice = Number(config.price_group_5to6);
-    else basePrice = Number(config.price_group_7to8);
+    const priceTier1 = Number(config.price_group_1to2); // Prezzo per le prime 2 persone
+    const priceTier2 = Number(config.price_group_3to4); // Prezzo per la 3a e 4a persona
+    const priceTier3 = Number(config.price_group_5to6); // Prezzo per la 5a e 6a persona
+    const priceTier4 = Number(config.price_group_7to8); // Prezzo per la 7a e 8a persona
 
-    const accommodationCost = basePrice * nights;
+    let dailyRate = 0;
+    if (guests <= 2) {
+      dailyRate = guests * priceTier1;
+    } else if (guests <= 4) {
+      dailyRate = (2 * priceTier1) + ((guests - 2) * priceTier2);
+    } else if (guests <= 6) {
+      dailyRate = (2 * priceTier1) + (2 * priceTier2) + ((guests - 4) * priceTier3);
+    } else { // Per 7 o più ospiti
+      dailyRate = (2 * priceTier1) + (2 * priceTier2) + (2 * priceTier3) + ((guests - 6) * priceTier4);
+    }
+
+    const accommodationCost = dailyRate * nights;
     const cleaningFee = Number(config.cleaning_fee);
     const parkingCost = parking === 'private' ? Number(config.parking_fee) * nights : 0;
 
