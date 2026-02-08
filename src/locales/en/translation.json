@@ -47,7 +47,8 @@
     "booking.nights":  "nights",
     "booking.guests":  "Guests",
     "booking.parking":  "Parking",
-    "booking.extraServices":  "Extra Services",
+   
+
     "booking.cleaning":  "Final cleaning",
     "booking.depositRequired":  "Deposit required (30%)",
     "booking.depositNote":  "A 30% deposit is required to confirm the booking. The remaining balance will be paid at check-in.",
@@ -346,6 +347,8 @@
   "booking.noHiddenCosts": "Final prices all inclusive. No hidden costs.",
   "booking.extraServicesCount_one": "{{count}} extra service selected",
   "booking.extraServicesCount_other": "{{count}} extra services selected",
+  "booking.extraServicesDesc": "Personalize your stay with our additional services",
+  "booking.extraServices":"🛎️ Extra Services",
   "booking.step.dates": "Dates",
   "booking.step.details": "Details",
   "booking.step.payment": "Payment",
