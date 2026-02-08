@@ -425,6 +425,17 @@
       "available": "Available",
       "selected": "Selected",
       "occupied": "Occupied"
-    }
+    },
+    "🛎️ Servizi Extra":"🛎️ Extra Services",
+    "Personalizza il tuo soggiorno con i nostri servizi aggiuntivi":"Personalize your stay with our additional services",
+    "💰 Totale servizi extra":"💰 Total extra services",
+    "🚗 Parcheggio:": "🚗 Parking:",
+    "Seleziona": "Select",
+    "👶 Servizi per Bambini":"👶 Child Services",
+    "🛏️ Comfort & Benessere":"🛏️ Comfort & Wellness",
+    "⏰ Servizi di Comodità":"⏰ Convenience Services",
+    "🐕 Servizi per Animali":"🐕 Pet Services",
+    "⚙️ Servizi Personalizzati":"⚙️ Custom Services",
+    "Nessun servizio extra disponible al momento.":"No extra services available at the moment."
   }
 }
