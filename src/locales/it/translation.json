@@ -200,9 +200,12 @@
   "booking.navigation.back": "Indietro",
   "booking.navigation.next": "Continua",
   "booking.navigation.confirm": "Conferma Prenotazione",
+  "booking.checkin": "Check-in",
+  "booking.checkout": "Check-out",
   "booking.minimumStay.title": "Soggiorno minimo non rispettato",
   "booking.minimumStay.message": "Il soggiorno minimo richiesto è di 3 notti",
-  "booking.minimumStay.current": "Attualmente hai selezionato {nights} notte",
+  "booking.minimumStay.current_one": "Attualmente hai selezionato {{count}} notte",
+  "booking.minimumStay.current_other": "Attualmente hai selezionato {{count}} notti",
   
   "section.includedServices.title": "🛎️ Servizi Inclusi",
   "section.includedServices.comfortTitle": "Comfort",
@@ -352,6 +355,30 @@
   "busLine": "🚍 Bus di Linea a 50 mt. dalla struttura: Collegamenti SITA Sud verso i principali borghi della Costiera. Fermate facilmente raggiungibili dalla residenza.",
     "shuttle": "🚌 Navetta Comunale con fermata ai piedi della struttura: Servizio locale per spostarsi con semplicità tra centro, lungomare e porto.",
     "ferries": "⛴️ Traghetti: Partenze dal porto di Maiori verso Amalfi, Positano e Salerno. Il modo più rapido e scenografico per vivere la costa."
+  },
+  "calendar": {
+    "weekdays": {
+      "sun": "Dom",
+      "mon": "Lun",
+      "tue": "Mar",
+      "wed": "Mer",
+      "thu": "Gio",
+      "fri": "Ven",
+      "sat": "Sab"
+    },
+    "loading": "Caricamento...",
+    "tooltip": {
+      "notAvailable": "Data non disponibile",
+      "booked": "Data già prenotata",
+      "available": "Data disponibile",
+      "notSelectable": "Data non selezionabile"
+    },
+    "legend": {
+      "available": "Disponibile",
+      "booked": "Prenotato",
+      "notAvailable": "Non disponibile"
+    },
+    "retry": "Riprova"
   }
 
 }

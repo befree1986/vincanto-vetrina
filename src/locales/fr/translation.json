@@ -1,5 +1,9 @@
 {
   "booking.title": "Réservez votre séjour",
+  "booking.subtitle": "Système de réservation safegardé, rapide et facile à utiliser.",
+  "booking.openButton": "Réserver Maintenant",
+  "booking.ctaSubtitle": "Système de réservation safegardé, rapide et facile à utiliser.",
+  "booking.ctaButton": "Réserver Maintenant",
   "booking.platforms": "Nous sommes présents sur les principales plateformes en ligne.",
   "booking.priceBreakdown": "Détail des coûts",
   "booking.accommodationBase": "Tarif de base",
@@ -16,6 +20,12 @@
   "booking.cleaning": "Nettoyage final",
   "booking.depositRequired": "Acompte requis (30%)",
   "booking.depositNote": "Un acompte de 30% est requis pour confirmer la réservation. Le solde restant sera payé lors du check-in.",
+  "booking.checkin": "Arrivée",
+  "booking.checkout": "Départ",
+  "booking.minimumStay.title": "Séjour minimum non atteint",
+  "booking.minimumStay.message": "Le séjour minimum requis est de 3 nuits",
+  "booking.minimumStay.current_one": "Vous avez actuellement sélectionné {{count}} nuit",
+  "booking.minimumStay.current_other": "Vous avez actuellement sélectionné {{count}} nuits",
   "contact.address": "Adresse",
   "contact.address.value": "Via Torre di Milo, 7",
   "contact.city": "Maiori, (SA)",
@@ -257,6 +267,8 @@
     "proprieta": "La Propriété"
   }
   ,
+  "booking.quote": "Obtenir un devis",
+  "booking.children": "Enfants",
   "booking.payment": "Paiement",
   "booking.backToDetails": "Retour aux détails",
   "booking.paymentIncomplete.title": "Paiement non terminé",
@@ -298,5 +310,29 @@
     "busLine": "🚍 Bus de Ligne à 50 m de la structure : Connexions SITA Sud vers les principaux villages de la Côte. Arrêts facilement accessibles depuis la résidence.",
     "shuttle": "🚌 Navette Communale avec arrêt au pied de la structure : Service local pour se déplacer facilement entre le centre, le front de mer et le port.",
     "ferries": "⛴️ Ferries : Départs du port de Maiori vers Amalfi, Positano et Salerne. Le moyen le plus rapide et pittoresque de découvrir la côte."
+    },
+    "calendar": {
+        "weekdays": {
+            "sun": "Dim",
+            "mon": "Lun",
+            "tue": "Mar",
+            "wed": "Mer",
+            "thu": "Jeu",
+            "fri": "Ven",
+            "sat": "Sam"
+        },
+        "loading": "Chargement...",
+        "tooltip": {
+            "notAvailable": "Date non disponible",
+            "booked": "Date déjà réservée",
+            "available": "Date disponible",
+            "notSelectable": "Date non sélectionnable"
+        },
+        "legend": {
+            "available": "Disponible",
+            "booked": "Réservé",
+            "notAvailable": "Non disponible"
+        },
+        "retry": "Réessayer"
     }
 }

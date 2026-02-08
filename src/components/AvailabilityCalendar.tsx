@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import './AvailabilityCalendar.css';
 
 interface CalendarEvent {
@@ -29,6 +30,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
   monthsShown = 1,
   className = ''
 }) => {
+  const { t, i18n } = useTranslation();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [blockedDates, setBlockedDates] = useState<string[]>([]);
   const [bookings, setBookings] = useState<CalendarEvent[]>([]);
@@ -308,12 +310,15 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
     return className;
   };
 
-  const monthYear = currentMonth.toLocaleDateString('it-IT', { 
-    month: 'long', 
-    year: 'numeric' 
-  });
-
-  const weekDays = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+  const weekDays = [
+    t('calendar.weekdays.sun', 'Dom'),
+    t('calendar.weekdays.mon', 'Lun'),
+    t('calendar.weekdays.tue', 'Mar'),
+    t('calendar.weekdays.wed', 'Mer'),
+    t('calendar.weekdays.thu', 'Gio'),
+    t('calendar.weekdays.fri', 'Ven'),
+    t('calendar.weekdays.sat', 'Sab'),
+  ];
 
   // Genera array di mesi da visualizzare
   const getMonthsToShow = () => {
@@ -352,9 +357,9 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
       {/* Container per più mesi */}
       <div className="calendars-container">
         {getMonthsToShow().map((monthDate, monthIndex) => {
-          const monthYear = monthDate.toLocaleDateString('it-IT', { 
-            month: 'long', 
-            year: 'numeric' 
+          const monthYear = monthDate.toLocaleDateString(i18n.language, {
+            month: 'long',
+            year: 'numeric'
           });
 
           return (
@@ -418,7 +423,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
                   monthIndex === 0 && (
                     <div className="loading-overlay">
                       <div className="loading-spinner">🔄</div>
-                      <span>Caricamento...</span>
+                      <span>{t('calendar.loading', 'Caricamento...')}</span>
                     </div>
                   )
                 ) : (
@@ -431,10 +436,10 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
                       onMouseLeave={() => setHoveredDate(null)}
                       disabled={!isDateAvailable(date)}
                       title={
-                        isDateBlocked(date) ? 'Data non disponibile' :
-                        isDateBooked(date) ? 'Data già prenotata' :
-                        isDateAvailable(date) ? 'Data disponibile' : 
-                        'Data non selezionabile'
+                        isDateBlocked(date) ? t('calendar.tooltip.notAvailable', 'Data non disponibile') :
+                        isDateBooked(date) ? t('calendar.tooltip.booked', 'Data già prenotata') :
+                        isDateAvailable(date) ? t('calendar.tooltip.available', 'Data disponibile') : 
+                        t('calendar.tooltip.notSelectable', 'Data non selezionabile')
                       }
                     >
                       {date.getDate()}
@@ -451,15 +456,15 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
       <div className="calendar-legend">
         <div className="legend-item">
           <span className="legend-dot available"></span>
-          Disponibile
+          {t('calendar.legend.available', 'Disponibile')}
         </div>
         <div className="legend-item">
           <span className="legend-dot booked"></span>
-          Prenotato
+          {t('calendar.legend.booked', 'Prenotato')}
         </div>
         <div className="legend-item">
           <span className="legend-dot blocked"></span>
-          Non disponibile
+          {t('calendar.legend.notAvailable', 'Non disponibile')}
         </div>
       </div>
 
@@ -467,7 +472,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
         <div className="error-message">
           ⚠️ {error}
           <button onClick={loadCalendarData} className="retry-button">
-            Riprova
+            {t('calendar.retry', 'Riprova')}
           </button>
         </div>
       )}

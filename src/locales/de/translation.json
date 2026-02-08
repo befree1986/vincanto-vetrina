@@ -61,6 +61,12 @@
   "booking.cleaning": "Endreinigung",
   "booking.depositRequired": "Anzahlung erforderlich (30%)",
   "booking.depositNote": "Eine Anzahlung von 30% ist zur Bestätigung der Buchung erforderlich. Der Restbetrag ist beim Check-in zu zahlen.",
+  "booking.checkin": "Check-in",
+  "booking.checkout": "Check-out",
+  "booking.minimumStay.title": "Mindestaufenthalt nicht erreicht",
+  "booking.minimumStay.message": "Der erforderliche Mindestaufenthalt beträgt 3 Nächte",
+  "booking.minimumStay.current_one": "Sie haben derzeit {{count}} Nacht ausgewählt",
+  "booking.minimumStay.current_other": "Sie haben derzeit {{count}} Nächte ausgewählt",
   "contact.address": "Adresse",
   "contact.address.value": "Via Torre di Milo, 7",
   "contact.city": "Maiori, (SA)",
@@ -299,5 +305,29 @@
     "busLine": "🚍 Linienbus 50 m von der Unterkunft entfernt: SITA Sud Verbindungen zu den wichtigsten Dörfern der Küste. Haltestellen sind von der Residenz aus leicht erreichbar.",
     "shuttle": "🚌 Gemeindeshuttle mit Haltestelle am Fuße der Unterkunft: Lokaler Service, um sich leicht zwischen dem Zentrum, der Uferpromenade und dem Hafen zu bewegen.",
     "ferries": "⛴️ Fähren: Abfahrten vom Hafen von Maiori nach Amalfi, Positano und Salerno. Der schnellste und malerischste Weg, die Küste zu erleben."
+  },
+  "calendar": {
+    "weekdays": {
+      "sun": "So",
+      "mon": "Mo",
+      "tue": "Di",
+      "wed": "Mi",
+      "thu": "Do",
+      "fri": "Fr",
+      "sat": "Sa"
+    },
+    "loading": "Wird geladen...",
+    "tooltip": {
+      "notAvailable": "Datum nicht verfügbar",
+      "booked": "Datum bereits gebucht",
+      "available": "Datum verfügbar",
+      "notSelectable": "Datum nicht auswählbar"
+    },
+    "legend": {
+      "available": "Verfügbar",
+      "booked": "Gebucht",
+      "notAvailable": "Nicht verfügbar"
+    },
+    "retry": "Erneut versuchen"
   }
   }

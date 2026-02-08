@@ -357,13 +357,12 @@ const BookingSystemEnhanced: React.FC = () => {
                             {/* Riepilogo date selezionate */}
                             {booking.formData.check_in_date && (
                                 <div className="selected-dates-summary">
-                                    <div className="date-selection">
-                                        <span className="label">Check-in:</span>
-                                        <span className="date">{new Date(booking.formData.check_in_date).toLocaleDateString('it-IT')}</span>
-                                    </div>
-                                    {booking.formData.check_out_date && (
+                                                                         <div className="date-selection">
+                                                                            <span className="label">{getSafeTranslation(t, 'booking.checkin', 'Check-in')}:</span>
+                                                                            <span className="date">{new Date(booking.formData.check_in_date).toLocaleDateString('it-IT')}</span>
+                                                                        </div>                                    {booking.formData.check_out_date && (
                                         <div className="date-selection">
-                                            <span className="label">Check-out:</span>
+                                            <span className="label">{getSafeTranslation(t, 'booking.checkout', 'Check-out')}:</span>
                                             <span className="date">{new Date(booking.formData.check_out_date).toLocaleDateString('it-IT')}</span>
                                         </div>
                                     )}
@@ -378,8 +377,8 @@ const BookingSystemEnhanced: React.FC = () => {
                                 <div className="warning-content">
                                     <strong>{getSafeTranslation(t, 'booking.minimumStay.title', 'Soggiorno minimo non rispettato')}</strong>
                                     <p>
-                                        {getSafeTranslation(t, 'booking.minimumStay.message', 'Il soggiorno minimo richiesto è di 3 notti')}. 
-                                        {' '}Attualmente hai selezionato {nights} notte{nights !== 1 ? 'i' : ''}.
+                                        {getSafeTranslation(t, 'booking.minimumStay.message', 'Il soggiorno minimo richiesto è di 3 notti')}.
+                                        {' '}{t('booking.minimumStay.current', { count: nights })}
                                     </p>
                                 </div>
                             </div>
