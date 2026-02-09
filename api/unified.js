@@ -1885,7 +1885,7 @@ export default async function handler(req, res) {
             id: 'paypal',
             name: 'PayPal',
             type: 'redirect',
-            enabled: true,
+            enabled: false, // Disabilitato
             url: 'https://www.paypal.me/AntonioGuida320',
             description: 'Pagamento rapido e sicuro tramite PayPal',
             fees: 'Commissione PayPal: 3.4% + €0.35'
@@ -1894,7 +1894,7 @@ export default async function handler(req, res) {
             id: 'stripe_card',
             name: 'Carta di Credito/Debito',
             type: 'card',
-            enabled: true,
+            enabled: false, // Disabilitato
             supported_cards: ['visa', 'mastercard', 'amex'],
             description: 'Pagamento diretto con carta di credito o debito',
             fees: 'Commissione: 1.4% + €0.25'
@@ -1903,7 +1903,7 @@ export default async function handler(req, res) {
             id: 'stripe_sepa',
             name: 'Bonifico SEPA',
             type: 'bank_transfer',
-            enabled: true,
+            enabled: false, // Disabilitato
             description: 'Bonifico bancario diretto SEPA',
             fees: 'Commissione: €0.35'
           },
