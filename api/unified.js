@@ -1242,14 +1242,38 @@ export default async function handler(req, res) {
           const bookingStatus = bookingData.status || 'pending';
 
           // 🔒 VALIDAZIONE METODO DI PAGAMENTO (Blocco temporaneo metodi disabilitati)
-          const requestedMethod = bookingData.paymentMethod || bookingData.payment_method;
-          if (['paypal', 'stripe_card', 'stripe_sepa'].includes(requestedMethod)) {
+          // Controllo più aggressivo: blocca se contiene parole chiave vietate
+          const requestedMethod = (bookingData.paymentMethod || bookingData.payment_method || '').toLowerCase();
+          if (requestedMethod.includes('paypal') || requestedMethod.includes('stripe') || requestedMethod.includes('card')) {
              return res.status(400).json({ 
                success: false, 
                error: 'Questo metodo di pagamento è temporaneamente disabilitato. Si prega di scegliere Bonifico Bancario.' 
              });
           }
           
+          // 📅 VALIDAZIONE SOGGIORNO MINIMO (Server-Side Enforcement)
+          // Recupera regole dal DB per assicurarsi che non vengano bypassate
+          const pricingRulesResult = await pool.query('SELECT min_stay, min_stay_august FROM pricing_config ORDER BY id DESC LIMIT 1');
+          const rules = pricingRulesResult.rows[0] || { min_stay: 3, min_stay_august: 6 };
+          
+          const checkInDate = new Date(checkin);
+          const checkOutDate = new Date(checkout);
+          const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+          
+          const startMonth = checkInDate.getMonth(); // 0 = Gennaio, 7 = Agosto
+          let requiredMinStay = parseInt(rules.min_stay) || 3;
+          
+          if (startMonth === 7) { // Agosto
+            requiredMinStay = parseInt(rules.min_stay_august) || 6;
+          }
+
+          if (nights < requiredMinStay) {
+            console.error(`❌ Tentativo di prenotazione bloccato: ${nights} notti richieste, minimo ${requiredMinStay}.`);
+            return res.status(400).json({
+              success: false,
+              error: `Soggiorno minimo non rispettato. Per le date selezionate sono richieste almeno ${requiredMinStay} notti.`
+            });
+          }
           
           const result = await pool.query(`
             INSERT INTO bookings (
@@ -2605,7 +2629,7 @@ END:VEVENT
                 weekendSurcharge: parseFloat(pricing.weekend_surcharge) || 0,
                 weeklyDiscount: parseFloat(pricing.weekly_discount) || 10,
                 monthlyDiscount: parseFloat(pricing.monthly_discount) || 15,
-                minStay: parseInt(pricing.min_stay) || 2,
+                minStay: parseInt(pricing.min_stay) || 3, // Default allineato a 3 notti
                 maxStay: parseInt(pricing.max_stay) || 14,
                 maxGuests: parseInt(pricing.max_guests) || 8,
                 minStayAugust: parseInt(pricing.min_stay_august) || 6
@@ -2627,7 +2651,7 @@ END:VEVENT
                 weekendSurcharge: 0,
                 weeklyDiscount: 10,
                 monthlyDiscount: 15,
-                minStay: 2,
+                minStay: 3, // Default allineato a 3 notti
                 maxStay: 14,
                 maxGuests: 8,
                 minStayAugust: 6
@@ -2843,7 +2867,7 @@ END:VEVENT
               touristTaxChild: parseFloat(p.tourist_tax_child) || 0,
               weeklyDiscount: parseFloat(p.weekly_discount) || 10,
               monthlyDiscount: parseFloat(p.monthly_discount) || 15,
-              minStay: parseInt(p.min_stay) || 2,
+              minStay: parseInt(p.min_stay) || 3,
               minStayAugust: parseInt(p.min_stay_august) || 6
             };
           } else {
@@ -2859,7 +2883,7 @@ END:VEVENT
               touristTaxChild: 0,
               weeklyDiscount: 10,
               monthlyDiscount: 15,
-              minStay: 2,
+              minStay: 3,
               minStayAugust: 6
             };
           }
@@ -2876,7 +2900,7 @@ END:VEVENT
             touristTaxChild: 0,
             weeklyDiscount: 10,
             monthlyDiscount: 15,
-            minStay: 2,
+            minStay: 3,
             minStayAugust: 6
           };
         }
