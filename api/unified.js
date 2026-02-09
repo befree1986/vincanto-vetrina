@@ -2897,6 +2897,7 @@ END:VEVENT
         }
 
         // Calcola prezzo base per ospiti con LOGICA CORRETTA
+        // 🔢 CALCOLO PREZZO DINAMICO BASATO SU CONFIGURAZIONE DB (Admin Panel)
         const guestsNum = parseInt(guests);
         const adultsNum = parseInt(adults) || guestsNum;
         const childrenNum = parseInt(children) || 0;
@@ -2909,24 +2910,32 @@ END:VEVENT
           includeParking: includeParking
         });
         console.log('💰 PRICING CONFIG:', pricing);
+        let basePricePerNight = 0;
         
-        // NUOVA LOGICA: Prezzo base 150€ per 1-2 persone + 20€ per ogni persona aggiuntiva
-        let basePricePerNight;
-        if (guestsNum <= 2) {
-          // 1-2 persone: 150€ totale (75€ × 2)
-          basePricePerNight = pricing.priceGroup1to2 * 2; // 75€ × 2 = 150€
-          console.log(`🔢 CALCOLO BASE (1-2 persone): ${pricing.priceGroup1to2} × 2 = ${basePricePerNight}€`);
-        } else {
-          // 3+ persone: 150€ base + 20€ per ogni persona aggiuntiva
-          basePricePerNight = (pricing.priceGroup1to2 * 2) + ((guestsNum - 2) * 20);
-          console.log(`🔢 CALCOLO BASE (${guestsNum} persone): (${pricing.priceGroup1to2} × 2) + ((${guestsNum} - 2) × 20) = ${basePricePerNight}€`);
-          // Esempi:
-          // 3 persone: 150€ + (1 × 20€) = 170€
-          // 4 persone: 150€ + (2 × 20€) = 190€
-          // 5 persone: 150€ + (3 × 20€) = 210€
+        // Tier 1: Ospiti 1-2 (Prezzo a persona * numero persone, max 2)
+        const tier1Guests = Math.min(guestsNum, 2);
+        basePricePerNight += tier1Guests * pricing.priceGroup1to2;
+        
+        // Tier 2: Ospiti 3-4
+        if (guestsNum > 2) {
+          const tier2Guests = Math.min(guestsNum - 2, 2);
+          basePricePerNight += tier2Guests * pricing.priceGroup3to4;
         }
         
         console.log(`🔢 PREZZO BASE PER NOTTE: ${basePricePerNight}€`);
+        // Tier 3: Ospiti 5-6
+        if (guestsNum > 4) {
+          const tier3Guests = Math.min(guestsNum - 4, 2);
+          basePricePerNight += tier3Guests * pricing.priceGroup5to6;
+        }
+        
+        // Tier 4: Ospiti 7-8+
+        if (guestsNum > 6) {
+          const tier4Guests = guestsNum - 6; 
+          basePricePerNight += tier4Guests * pricing.priceGroup7to8;
+        }
+        
+        console.log(`🔢 CALCOLO BASE (${guestsNum} persone): ${basePricePerNight}€ (Configurazione DB usata)`);
 
         // Calcola subtotale alloggio
         const accommodationCost = basePricePerNight * nights;
