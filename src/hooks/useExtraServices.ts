@@ -59,7 +59,7 @@ export const useExtraServices = (): ExtraServicesData => {
           const transformedServices = data.services.map((service: any) => ({
             id: service.id,
             name: service.name,
-            price: service.price,
+            price: Number(service.price), // 🔥 Assicura che sia un numero
             unit: service.unit || 'soggiorno',
             description: service.description,
             category: service.category || 'general',
@@ -68,9 +68,27 @@ export const useExtraServices = (): ExtraServicesData => {
             included: service.included === true, // 🔥 USA VALORE DAL DATABASE
             minAge: service.minAge,
             maxAge: service.maxAge,
-            isParking: service.category === 'parcheggio' || service.category === 'parking'
+            isParking: service.category?.toLowerCase() === 'parcheggio' || service.category?.toLowerCase() === 'parking'
           }));
           
+          // 🔥 FIX: Se il parcheggio non c'è nell'API, aggiungilo manualmente (fallback)
+          const hasParking = transformedServices.some((s: any) => s.isParking);
+          if (!hasParking) {
+            console.warn('⚠️ EXTRA SERVICES: Parcheggio non trovato API, aggiungo fallback.');
+            transformedServices.push({
+              id: 9, // ID standard per parcheggio
+              name: t('extraServices.parking', 'Parcheggio Privato'),
+              price: 20,
+              unit: 'notte',
+              description: t('extraServices.parkingDesc', 'Posto auto riservato e custodito'),
+              category: 'parcheggio',
+              available: true,
+              active: true,
+              included: false,
+              isParking: true
+            });
+          }
+
           setServices(transformedServices);
           console.log('✅ EXTRA SERVICES: Servizi caricati dal database:', transformedServices.length);
         } else {
@@ -172,7 +190,7 @@ export const useExtraServices = (): ExtraServicesData => {
    */
   const getTotalCost = (opts?: { nights?: number; adults?: number; children?: number; guests?: number }) => {
     // fallback: 1 notte, 2 adulti, 0 bambini se non specificato
-    const nights = opts?.nights ?? 1;
+    const nights = opts?.nights || 1; // 🔥 FIX: Usa || invece di ?? per evitare che 0 notti azzeri il costo
     const adults = opts?.adults ?? 2;
     const children = opts?.children ?? 0;
     const guests = opts?.guests ?? (adults + children);
