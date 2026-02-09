@@ -67,13 +67,39 @@ export const useExtraServices = (): ExtraServicesData => {
             // Se è parcheggio, usa ID 9 per coerenza, MA solo se non crea conflitti (gestito dopo)
             const finalId = isParking ? 9 : service.id;
 
+            // 🌍 MAPPING TRADUZIONI (Frontend-side translation based on ID/Name)
+            let translatedName = service.name;
+            let translatedDesc = service.description;
+            const nameLower = service.name?.toLowerCase() || '';
+
+            // Mappa ID noti o pattern di nome alle chiavi di traduzione
+            if (finalId === 1 || nameLower.includes('late check')) {
+              translatedName = t('extraServices.lateCheckout', service.name);
+              translatedDesc = t('extraServices.lateCheckoutDesc', service.description);
+            } else if (finalId === 2 || nameLower.includes('early check')) {
+              translatedName = t('extraServices.earlyCheckin', service.name);
+              translatedDesc = t('extraServices.earlyCheckinDesc', service.description);
+            } else if (finalId === 4 || nameLower.includes('colazione') || nameLower.includes('breakfast')) {
+              translatedName = t('extraServices.breakfast', service.name);
+              translatedDesc = t('extraServices.breakfastDesc', service.description);
+            } else if (finalId === 6 || nameLower.includes('culla') || nameLower.includes('crib')) {
+              translatedName = t('extraServices.crib', service.name);
+              translatedDesc = t('extraServices.cribDesc', service.description);
+            } else if (finalId === 8 || nameLower.includes('welcome')) {
+              translatedName = t('extraServices.welcomeKit', service.name);
+              translatedDesc = t('extraServices.welcomeKitDesc', service.description);
+            } else if (isParking) {
+              translatedName = t('extraServices.parking', service.name);
+              translatedDesc = t('extraServices.parkingDesc', service.description);
+            }
+
             return {
               id: finalId, 
-              name: service.name,
+              name: translatedName,
               price: Number(service.price), // 🔥 Assicura che sia un numero
               // 🔥 FIX: Forza unità 'notte' per il parcheggio per garantire il calcolo corretto (moltiplicatore notti)
               unit: isParking ? 'notte' : (service.unit || 'soggiorno'),
-              description: service.description,
+              description: translatedDesc,
               category: service.category || 'general',
               available: service.active !== false,
               active: service.active !== false,
