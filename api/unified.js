@@ -295,6 +295,11 @@ export default async function handler(req, res) {
     action = req.body.action;
   }
 
+  // 🛡️ FIX: Pulisci action da eventuali parametri extra malformati (es. ?t=...)
+  if (action && typeof action === 'string' && action.includes('?')) {
+    action = action.split('?')[0];
+  }
+
   console.log('🎯 API UNIFICATA CONSOLIDATA - Action:', action, 'Method:', req.method);
 
   // ========================================
