@@ -25,15 +25,20 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
     getSelectedServices
   } = useExtraServices();
 
+  // 🔥 FIX: Destruttura le opzioni per evitare loop infiniti nel useEffect
+  // Se calcOptions è un oggetto nuovo ad ogni render, causava un re-render continuo
+  const { nights = 1, adults = 2, children = 0, guests = 2 } = calcOptions || {};
+
   React.useEffect(() => {
     if (onServicesChange) {
       const selected = getSelectedServices();
       // Calcolo indipendente: escludi gli INCLUSI dal costo ma passa tutti i selezionati al parent
-      const totalCost = getTotalCost();
-      console.log('🛍️ ExtraServices onChange:', { selected: selected.length, totalCost });
+      // Ricostruisci l'oggetto opzioni usando i valori destrutturati
+      const totalCost = getTotalCost({ nights, adults, children, guests });
+      // console.log('🛍️ ExtraServices onChange:', { selected: selected.length, totalCost, nights });
       onServicesChange(selected, totalCost);
     }
-  }, [selectedServices, services, onServicesChange, calcOptions]);
+  }, [selectedServices, services, onServicesChange, nights, adults, children, guests]); // 🔥 FIX: Usa dipendenze primitive stabili
 
   const isServiceRelevant = (service: ExtraService): boolean => {
     // Se il servizio è per bambini, controlla le età
@@ -133,9 +138,9 @@ const ExtraServices: React.FC<ExtraServicesProps> = ({
         </div>
       )}
       
-      {getTotalCost() > 0 && (
+      {getTotalCost({ nights, adults, children, guests }) > 0 && ( // 🔥 FIX: Usa valori destrutturati per coerenza
         <div className="total-cost">
-          <strong>💰 Totale servizi extra: €{getTotalCost()}</strong>
+          <strong>💰 Totale servizi extra: €{getTotalCost({ nights, adults, children, guests }).toFixed(2)}</strong>
         </div>
       )}
 

@@ -172,7 +172,14 @@ export default async function handler(req, res) {
           language: guestLanguage,
           paymentMethod: payment_method,
           // 🛎️ Servizi extra opzionali dal payload del frontend
-          extraServices: Array.isArray(booking_data.extra_services) ? booking_data.extra_services : []
+          extraServices: Array.isArray(booking_data.extra_services) ? booking_data.extra_services : [],
+          // 🔥 Passa il breakdown dei costi al template email
+          accommodationCost: booking_data.accommodationCost,
+          cleaningFee: booking_data.cleaningFee,
+          parkingCost: booking_data.parkingCost,
+          touristTax: booking_data.touristTax,
+          extraServicesCost: booking_data.extraServicesCost,
+          nights: booking_data.nights
         });
 
         await sendEmailWithAdminCopy({

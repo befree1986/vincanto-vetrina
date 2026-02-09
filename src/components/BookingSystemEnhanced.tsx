@@ -555,6 +555,13 @@ const BookingSystemEnhanced: React.FC = () => {
                         <ExtraServices
                             childrenAges={booking.formData.children_ages}
                             showHeader={false}
+                            // 🔥 FIX: Passa le opzioni di calcolo (notti, ospiti) al componente figlio
+                            calcOptions={{
+                                nights: nights > 0 ? nights : 1, // Usa il calcolo locale delle notti
+                                adults: booking.formData.num_adults,
+                                children: booking.formData.num_children,
+                                guests: booking.formData.num_adults + booking.formData.num_children
+                            }}
                             onServicesChange={(services) => {
                                 setSelectedExtraServices(services);
                                 
@@ -573,7 +580,7 @@ const BookingSystemEnhanced: React.FC = () => {
                                         if (s.included) return tot; // Servizi inclusi = €0
                                         let multiplier = 1;
                                         if (s.unit === 'notte' || s.unit === 'per_night') {
-                                            multiplier = booking.quote?.nights || 1;
+                                            multiplier = nights > 0 ? nights : 1; // 🔥 Usa variabile nights locale, più reattiva
                                         } else if (s.unit === 'persona' || s.unit === 'per_person') {
                                             multiplier = booking.quote?.guests || 1;
                                         } else if (s.unit === 'per_person_per_day') {

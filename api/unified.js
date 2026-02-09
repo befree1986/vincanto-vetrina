@@ -635,72 +635,6 @@ export default async function handler(req, res) {
     }
   }
 
-// ========================================
-// QUOTE API - Calcolo preventivo completo
-// ========================================
-if (action === 'quote') {
-  try {
-    const { checkIn, checkOut, guests = 1, adults = guests, children = 0, parking = 'none' } = req.query;
-
-    if (!checkIn || !checkOut) {
-      return res.status(400).json({ success: false, error: 'Date mancanti' });
-    }
-
-    const start = new Date(checkIn);
-    const end = new Date(checkOut);
-    const nights = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
-
-    const configResult = await pool.query('SELECT * FROM pricing_config LIMIT 1');
-    const config = configResult.rows[0];
-
-    const priceTier1 = Number(config.price_group_1to2); // Prezzo per le prime 2 persone
-    const priceTier2 = Number(config.price_group_3to4); // Prezzo per la 3a e 4a persona
-    const priceTier3 = Number(config.price_group_5to6); // Prezzo per la 5a e 6a persona
-    const priceTier4 = Number(config.price_group_7to8); // Prezzo per la 7a e 8a persona
-
-    let dailyRate = 0;
-    if (guests <= 2) {
-      dailyRate = guests * priceTier1;
-    } else if (guests <= 4) {
-      dailyRate = (2 * priceTier1) + ((guests - 2) * priceTier2);
-    } else if (guests <= 6) {
-      dailyRate = (2 * priceTier1) + (2 * priceTier2) + ((guests - 4) * priceTier3);
-    } else { // Per 7 o più ospiti
-      dailyRate = (2 * priceTier1) + (2 * priceTier2) + (2 * priceTier3) + ((guests - 6) * priceTier4);
-    }
-
-    const accommodationCost = dailyRate * nights;
-    const cleaningFee = Number(config.cleaning_fee);
-    const parkingCost = parking === 'private' ? Number(config.parking_fee) * nights : 0;
-
-    const touristTax =
-      adults * Number(config.tourist_tax_adult) * nights +
-      children * Number(config.tourist_tax_child) * nights;
-
-    const totalAmount = accommodationCost + cleaningFee + parkingCost + touristTax;
-
-    return res.status(200).json({
-      success: true,
-      quote: {
-        nights,
-        adults,
-        children,
-        accommodationCost,
-        cleaningFee,
-        parkingCost,
-        touristTax,
-        totalAmount
-      }
-    });
-
-  } catch (error) {
-    console.error('❌ Errore quote:', error);
-    return res.status(500).json({ success: false, error: error.message });
-  }
-}
-
-
-
   // ...continua con la logica esistente senza ridichiarare 'action'
 
   try {
@@ -1290,7 +1224,7 @@ if (action === 'quote') {
             email,
             phone,
             totalAmount,
-            totalAmount * 0.3, // 30% acconto
+            Math.round(totalAmount * 0.3 * 100) / 100, // 30% acconto arrotondato
             notes,
             bookingStatus, // ⚡ Usa status dal payload invece di hardcoded 'pending'
             'pending'
@@ -1310,12 +1244,20 @@ if (action === 'quote') {
                 adults,
                 children,
                 totalAmount,
-                depositAmount: totalAmount * 0.3,
+                depositAmount: Math.round(totalAmount * 0.3 * 100) / 100,
                 fromEmail: process.env.SMTP_FROM,
                 language: guestLanguage,
                 paymentMethod: bookingData.paymentMethod || bookingData.payment_method,
                 // 🛎️ Includi eventuali servizi extra passati dal frontend
-                extraServices: Array.isArray(bookingData.extraServices) ? bookingData.extraServices : (Array.isArray(bookingData.extra_services) ? bookingData.extra_services : [])
+                extraServices: Array.isArray(bookingData.extraServices) ? bookingData.extraServices : (Array.isArray(bookingData.extra_services) ? bookingData.extra_services : []),
+                // 🔥 Passa il breakdown dei costi al template email
+                accommodationCost: bookingData.accommodationCost,
+                cleaningFee: bookingData.cleaningFee,
+                parkingCost: bookingData.parkingCost,
+                touristTax: bookingData.touristTax,
+                extraServicesCost: bookingData.extraServicesCost,
+                nights: bookingData.nights
+
               });
               const emailResults = await sendEmailWithAdminCopy({
                 to: email,
@@ -1327,7 +1269,14 @@ if (action === 'quote') {
                   totalAmount, 
                   language: guestLanguage,
                   paymentMethod: bookingData.paymentMethod || bookingData.payment_method,
-                  extraServices: Array.isArray(bookingData.extraServices) ? bookingData.extraServices : (Array.isArray(bookingData.extra_services) ? bookingData.extra_services : [])
+                  extraServices: Array.isArray(bookingData.extraServices) ? bookingData.extraServices : (Array.isArray(bookingData.extra_services) ? bookingData.extra_services : []),
+                  // Admin copy metadata
+                  accommodationCost: bookingData.accommodationCost,
+                  cleaningFee: bookingData.cleaningFee,
+                  parkingCost: bookingData.parkingCost,
+                  touristTax: bookingData.touristTax,
+                  extraServicesCost: bookingData.extraServicesCost,
+                  nights: bookingData.nights
                 }
               });
               const primarySuccess = emailResults.find(r => r.recipient === email)?.success;

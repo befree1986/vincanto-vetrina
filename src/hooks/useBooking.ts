@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { log } from '../utils/logger';
 import {
     BookingQuoteRequest,
@@ -58,7 +58,7 @@ export interface BookingState {
     isCreatingBooking: boolean;
     bookingError: string | null;
     bookingResult: any | null;
-    submitBooking: (totalAmount?: number, options?: { status?: 'draft' | 'pending' | 'confirmed' }, extraServices?: { id?: number; name: string; price?: number; included?: boolean }[]) => Promise<void>;
+    submitBooking: (totalAmount?: number, options?: { status?: 'draft' | 'pending' | 'confirmed' }, extraServices?: { id?: number; name: string; price?: number; included?: boolean }[]) => Promise<any>;
     
     // Validation
     formErrors: Record<string, string>;
@@ -68,6 +68,7 @@ export interface BookingState {
     // Utils
     resetForm: () => void;
     resetErrors: () => void;
+    nights: number; // 🔥 NUOVO: Espone il numero di notti calcolato
 }
 
 const initialFormData: BookingFormData = {
@@ -112,6 +113,25 @@ export function useBooking(): BookingState {
     const [bookingError, setBookingError] = useState<string | null>(null);
     const [bookingResult, setBookingResult] = useState<any | null>(null);
     
+    // 🔥 FIX: Calcolo centralizzato delle notti per evitare "0 notti" nel riepilogo
+    const nights = useMemo(() => {
+        if (formData.check_in_date && formData.check_out_date) {
+            // 🔥 FIX: Assicura che siano oggetti Date validi, anche se arrivano come stringhe
+            const start = new Date(formData.check_in_date);
+            const end = new Date(formData.check_out_date);
+            
+            // 🔥 FIX: Validazione date per evitare NaN
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
+
+            const diffTime = Math.abs(end.getTime() - start.getTime());
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+            
+            // console.log('📅 Booking Nights Calc:', { start, end, diffDays });
+            return diffDays > 0 ? diffDays : 1; // Minimo 1 notte se le date sono valide
+        }
+        return 0;
+    }, [formData.check_in_date, formData.check_out_date]);
+
     // Form data setter with validation
     const setFormData = useCallback((data: Partial<BookingFormData>) => {
         setFormDataState(prev => ({ ...prev, ...data }));
@@ -384,6 +404,7 @@ export function useBooking(): BookingState {
         
         // Utils
         resetForm,
-        resetErrors
+        resetErrors,
+        nights // 🔥 FIX: Esposto per l'uso nei componenti di riepilogo
     };
 }

@@ -23,7 +23,7 @@ interface ExtraServicesData {
   error: string | null;
   selectedServices: number[];
   toggleService: (serviceId: number) => void;
-  getTotalCost: () => number;
+  getTotalCost: (opts?: { nights?: number; adults?: number; children?: number; guests?: number }) => number;
   getSelectedServices: () => ExtraService[];
   refreshServices: () => void; // 🔥 NUOVO: Funzione per ricaricare servizi
   // Funzioni specifiche per parcheggio
@@ -56,26 +56,44 @@ export const useExtraServices = (): ExtraServicesData => {
         
         if (data.success && data.services) {
           // Trasforma i servizi per compatibilità frontend
-          const transformedServices = data.services.map((service: any) => ({
-            id: service.id,
-            name: service.name,
-            price: Number(service.price), // 🔥 Assicura che sia un numero
-            unit: service.unit || 'soggiorno',
-            description: service.description,
-            category: service.category || 'general',
-            available: service.active !== false,
-            active: service.active !== false,
-            included: service.included === true, // 🔥 USA VALORE DAL DATABASE
-            minAge: service.minAge,
-            maxAge: service.maxAge,
-            isParking: service.category?.toLowerCase() === 'parcheggio' || service.category?.toLowerCase() === 'parking'
-          }));
+          const transformedServices = data.services.map((service: any) => {
+            // 🔥 Rilevamento robusto del parcheggio (categoria o nome)
+            const isParking = service.category?.toLowerCase() === 'parcheggio' || 
+                              service.category?.toLowerCase() === 'parking' ||
+                              service.name?.toLowerCase().includes('parcheggio') ||
+                              service.name?.toLowerCase().includes('parking') ||
+                              service.id === 9; // 🔥 FIX: Controllo anche ID standard
+            
+            // Se è parcheggio, usa ID 9 per coerenza, MA solo se non crea conflitti (gestito dopo)
+            const finalId = isParking ? 9 : service.id;
+
+            return {
+              id: finalId, 
+              name: service.name,
+              price: Number(service.price), // 🔥 Assicura che sia un numero
+              // 🔥 FIX: Forza unità 'notte' per il parcheggio per garantire il calcolo corretto (moltiplicatore notti)
+              unit: isParking ? 'notte' : (service.unit || 'soggiorno'),
+              description: service.description,
+              category: service.category || 'general',
+              available: service.active !== false,
+              active: service.active !== false,
+              included: service.included === true, // 🔥 USA VALORE DAL DATABASE
+              minAge: service.minAge,
+              maxAge: service.maxAge,
+              isParking: isParking
+            };
+          });
           
+          // 🔥 FIX: Rimuovi duplicati (es. se l'API restituisce 2 parcheggi e noi forziamo ID 9 su entrambi)
+          const uniqueServices = transformedServices.filter((s: any, index: number, self: any[]) => 
+            index === self.findIndex((t: any) => t.id === s.id)
+          );
+
           // 🔥 FIX: Se il parcheggio non c'è nell'API, aggiungilo manualmente (fallback)
-          const hasParking = transformedServices.some((s: any) => s.isParking);
+          const hasParking = uniqueServices.some((s: any) => s.isParking);
           if (!hasParking) {
             console.warn('⚠️ EXTRA SERVICES: Parcheggio non trovato API, aggiungo fallback.');
-            transformedServices.push({
+            uniqueServices.push({
               id: 9, // ID standard per parcheggio
               name: t('extraServices.parking', 'Parcheggio Privato'),
               price: 20,
@@ -89,8 +107,8 @@ export const useExtraServices = (): ExtraServicesData => {
             });
           }
 
-          setServices(transformedServices);
-          console.log('✅ EXTRA SERVICES: Servizi caricati dal database:', transformedServices.length);
+          setServices(uniqueServices);
+          console.log('✅ EXTRA SERVICES: Servizi caricati:', uniqueServices.length);
         } else {
           throw new Error(data.message || 'Errore caricamento servizi');
         }
@@ -190,7 +208,8 @@ export const useExtraServices = (): ExtraServicesData => {
    */
   const getTotalCost = (opts?: { nights?: number; adults?: number; children?: number; guests?: number }) => {
     // fallback: 1 notte, 2 adulti, 0 bambini se non specificato
-    const nights = opts?.nights || 1; // 🔥 FIX: Usa || invece di ?? per evitare che 0 notti azzeri il costo
+    // 🔥 FIX: Se nights è 0 (es. date non selezionate), usa 0 per il calcolo, altrimenti il prezzo sembrerebbe "per 1 notte" anche senza date
+    const nights = (opts?.nights !== undefined) ? opts.nights : 1; 
     const adults = opts?.adults ?? 2;
     const children = opts?.children ?? 0;
     const guests = opts?.guests ?? (adults + children);
@@ -207,7 +226,7 @@ export const useExtraServices = (): ExtraServicesData => {
       switch (service.unit) {
         case 'notte':
         case 'per_night':
-          multiplier = nights;
+          multiplier = Math.max(1, nights); // Almeno 1 per mostrare il prezzo unitario se nights è 0 o 1
           break;
         case 'persona':
         case 'per_person':
@@ -250,7 +269,7 @@ export const useExtraServices = (): ExtraServicesData => {
 
   const toggleParking = (enable: boolean) => {
     const parkingService = getParkingService();
-    if (parkingService) {
+    if (parkingService) { 
       if (enable && !selectedServices.includes(parkingService.id)) {
         setSelectedServices(prev => [...prev, parkingService.id]);
       } else if (!enable && selectedServices.includes(parkingService.id)) {
