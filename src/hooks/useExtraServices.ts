@@ -79,6 +79,12 @@ export const useExtraServices = (): ExtraServicesData => {
             } else if (finalId === 2 || nameLower.includes('early check')) {
               translatedName = t('extraServices.earlyCheckin', service.name);
               translatedDesc = t('extraServices.earlyCheckinDesc', service.description);
+            } else if (finalId === 3 || nameLower.includes('pulizia') || nameLower.includes('cleaning')) {
+              translatedName = t('extraServices.extraCleaning', service.name);
+              translatedDesc = t('extraServices.extraCleaningDesc', service.description);
+            } else if (finalId === 5 || nameLower.includes('transfer')) {
+              translatedName = t('extraServices.transfer', service.name);
+              translatedDesc = t('extraServices.transferDesc', service.description);
             } else if (finalId === 4 || nameLower.includes('colazione') || nameLower.includes('breakfast')) {
               translatedName = t('extraServices.breakfast', service.name);
               translatedDesc = t('extraServices.breakfastDesc', service.description);
