@@ -1,5 +1,6 @@
 // Hook per caricare servizi extra dinamici dal pannello admin
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export interface ExtraService {
   id: number;
@@ -32,6 +33,7 @@ interface ExtraServicesData {
 }
 
 export const useExtraServices = (): ExtraServicesData => {
+  const { t, i18n } = useTranslation();
   const [services, setServices] = useState<ExtraService[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -66,7 +68,7 @@ export const useExtraServices = (): ExtraServicesData => {
             included: service.included === true, // 🔥 USA VALORE DAL DATABASE
             minAge: service.minAge,
             maxAge: service.maxAge,
-            isParking: service.category === 'parcheggio'
+            isParking: service.category === 'parcheggio' || service.category === 'parking'
           }));
           
           setServices(transformedServices);
@@ -84,10 +86,10 @@ export const useExtraServices = (): ExtraServicesData => {
       setServices([
         { 
           id: 6, 
-          name: 'Culla per Bambini', 
+          name: t('extraServices.crib', 'Culla per Bambini'), 
           price: 30, // ✅ Allineato con database
           unit: 'soggiorno',
-          description: 'Culla con biancheria per bambini fino a 7 anni',
+          description: t('extraServices.cribDesc', 'Culla con biancheria per bambini fino a 7 anni'),
           category: 'bambini',
           available: true,
           included: false,
@@ -96,43 +98,54 @@ export const useExtraServices = (): ExtraServicesData => {
         },
         { 
           id: 1, 
-          name: 'Late Check-out', 
+          name: t('extraServices.lateCheckout', 'Late Check-out'), 
           price: 30, 
           unit: 'soggiorno',
-          description: 'Check-out posticipato alle 14:00 invece delle 10:00',
+          description: t('extraServices.lateCheckoutDesc', 'Check-out posticipato alle 14:00 invece delle 10:00'),
           category: 'convenience',
           available: true,
           included: false
         },
         { 
           id: 2, 
-          name: 'Early Check-in', 
+          name: t('extraServices.earlyCheckin', 'Early Check-in'), 
           price: 25, 
           unit: 'soggiorno',
-          description: 'Check-in anticipato dalle 12:00 invece delle 15:00',
+          description: t('extraServices.earlyCheckinDesc', 'Check-in anticipato dalle 12:00 invece delle 15:00'),
           category: 'convenience',
           available: true,
           included: false
         },
         { 
           id: 4, 
-          name: 'Colazione Italiana', 
+          name: t('extraServices.breakfast', 'Colazione Italiana'), 
           price: 15, 
           unit: 'persona',
-          description: 'Colazione italiana completa con prodotti locali',
+          description: t('extraServices.breakfastDesc', 'Colazione italiana completa con prodotti locali'),
           category: 'food',
           available: true,
           included: false
         },
         { 
           id: 8, 
-          name: 'Kit Welcome', 
+          name: t('extraServices.welcomeKit', 'Kit Welcome'), 
           price: 25, 
           unit: 'soggiorno',
-          description: 'Kit di benvenuto con prodotti tipici siciliani',
+          description: t('extraServices.welcomeKitDesc', 'Kit di benvenuto con prodotti tipici'),
           category: 'gift',
           available: true,
           included: true  // 🎁 SERVIZIO INCLUSO
+        },
+        {
+          id: 9,
+          name: t('extraServices.parking', 'Parcheggio Privato'),
+          price: 20,
+          unit: 'notte',
+          description: t('extraServices.parkingDesc', 'Posto auto riservato e custodito'),
+          category: 'parcheggio',
+          available: true,
+          included: false,
+          isParking: true
         }
       ]);
       
@@ -230,7 +243,7 @@ export const useExtraServices = (): ExtraServicesData => {
 
   useEffect(() => {
     fetchServices();
-  }, []);
+  }, [i18n.language]); // 🔥 Ricarica i servizi quando cambia la lingua
 
   // ✅ Seleziona automaticamente i servizi inclusi (INCLUSI) quando i servizi sono disponibili
   useEffect(() => {

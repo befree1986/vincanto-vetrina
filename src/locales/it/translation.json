@@ -446,6 +446,21 @@
   "booking.close": "Chiudi",
   "booking.error.paymentSuccessSaveFailed": "Pagamento riuscito ma errore nel salvataggio. Contattaci con il codice prenotazione",
   "booking.error.paymentFailedReason": "Pagamento fallito",
+  "booking.guestsDetail": "Ospiti (Adulti e Bambini)",
+  "extraServices": {
+    "crib": "Culla per Bambini",
+    "cribDesc": "Culla con biancheria per bambini fino a 7 anni",
+    "lateCheckout": "Late Check-out",
+    "lateCheckoutDesc": "Check-out posticipato alle 14:00 invece delle 10:00",
+    "earlyCheckin": "Early Check-in",
+    "earlyCheckinDesc": "Check-in anticipato dalle 12:00 invece delle 15:00",
+    "breakfast": "Colazione Italiana",
+    "breakfastDesc": "Colazione italiana completa con prodotti locali",
+    "welcomeKit": "Kit Welcome",
+    "welcomeKitDesc": "Kit di benvenuto con prodotti tipici",
+    "parking": "Parcheggio Privato",
+    "parkingDesc": "Posto auto riservato e custodito"
+  },
   "bookingCalendar": {
     "error": {
       "checkoutAfterCheckin": "Il check-out deve essere almeno il giorno dopo il check-in.",
