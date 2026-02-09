@@ -1159,14 +1159,39 @@ export default async function handler(req, res) {
             return res.status(400).json({ success: false, error: 'Importo totale mancante o non valido' });
           }
 
-          // 🔒 Controllo sovrapposizione date: blocca SOLO prenotazioni confermate
+          // 🔒 NUOVO CONTROLLO DISPONIBILITÀ UNIFICATO
+          // Controlla sovrapposizioni con prenotazioni confermate, date bloccate e eventi esterni.
           const overlappingBookings = await pool.query(
-            "SELECT * FROM bookings WHERE check_in < $2 AND check_out > $1 AND status = 'confirmed'",
+            `
+            WITH unavailable_periods AS (
+              -- Prenotazioni dirette confermate
+              SELECT check_in AS start_date, check_out AS end_date FROM bookings WHERE status = 'confirmed'
+              
+              UNION ALL
+      
+              -- Date bloccate manualmente dall'admin
+              SELECT start_date, end_date FROM blocked_dates
+      
+              UNION ALL
+      
+              -- Eventi esterni sincronizzati (da Airbnb, Booking.com, etc.)
+              -- Esclude blocchi di sistema non validi (già filtrati in calendar-real-sync)
+              SELECT start_date::date, end_date::date FROM calendar_events
+            )
+            SELECT 1
+            FROM unavailable_periods
+            WHERE start_date < $2 AND end_date > $1
+            LIMIT 1;
+            `,
             [checkin, checkout]
           );
+
           if (overlappingBookings.rows.length > 0) {
-            console.error('❌ Date non disponibili:', checkin, checkout);
-            return res.status(409).json({ success: false, error: 'Date non disponibili' });
+            console.error('❌ CONFLITTO: Le date richieste si sovrappongono con una prenotazione/blocco esistente.', { checkin, checkout });
+            return res.status(409).json({ 
+              success: false, 
+              error: 'Le date selezionate non sono più disponibili. Si prega di scegliere un altro periodo.' 
+            });
           }
           
           // Parsing nome/cognome da customerName o campi separati
@@ -2747,6 +2772,34 @@ END:VEVENT
           });
         }
 
+        // 🔒 CONTROLLO DISPONIBILITÀ UNIFICATO
+        // Controlla se le date sono disponibili interrogando bookings, blocked_dates e calendar_events
+        const availabilityCheck = await pool.query(
+          `
+          WITH unavailable_periods AS (
+            SELECT check_in AS start_date, check_out AS end_date FROM bookings WHERE status = 'confirmed'
+            UNION ALL
+            SELECT start_date, end_date FROM blocked_dates
+            UNION ALL
+            SELECT start_date::date, end_date::date FROM calendar_events
+          )
+          SELECT 1
+          FROM unavailable_periods
+          WHERE start_date < $2 AND end_date > $1
+          LIMIT 1;
+          `,
+          [checkIn, checkOut]
+        );
+
+        const isAvailable = availabilityCheck.rows.length === 0;
+
+        if (!isAvailable) {
+          console.warn('⚠️ Preventivo per date non disponibili:', { checkIn, checkOut });
+          // Non blocco il preventivo, ma segnalo che non è disponibile.
+          // Il blocco reale avverrà al momento della prenotazione.
+        }
+
+
         // Ottieni configurazione prezzi dal database
         let pricing;
         try {
@@ -2899,6 +2952,7 @@ END:VEVENT
         return res.status(200).json({
           success: true,
           quote: {
+            isAvailable: isAvailable, // 👈 Aggiunto flag di disponibilità
             checkIn: checkIn,
             checkOut: checkOut,
             guests: guestsNum,
