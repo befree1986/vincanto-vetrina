@@ -219,6 +219,13 @@ async function migrateDatabase() {
       ADD COLUMN IF NOT EXISTS stripe_payment_intent VARCHAR(255)
     `);
     console.log('✅ Colonna stripe_payment_intent verificata/aggiunta');
+
+    // Aggiungi colonna min_stay_august se non esiste
+    await pool.query(`
+      ALTER TABLE pricing_config
+      ADD COLUMN IF NOT EXISTS min_stay_august INTEGER DEFAULT 6
+    `);
+    console.log('✅ Colonna min_stay_august verificata/aggiunta');
   } catch (error) {
     if (error.message.includes('already exists')) {
       console.log('ℹ️ Colonna stripe_payment_intent già esiste');
@@ -1228,6 +1235,15 @@ export default async function handler(req, res) {
           
           // ⚡ Estrai status dal payload (default 'pending' se non specificato)
           const bookingStatus = bookingData.status || 'pending';
+
+          // 🔒 VALIDAZIONE METODO DI PAGAMENTO (Blocco temporaneo metodi disabilitati)
+          const requestedMethod = bookingData.paymentMethod || bookingData.payment_method;
+          if (['paypal', 'stripe_card', 'stripe_sepa'].includes(requestedMethod)) {
+             return res.status(400).json({ 
+               success: false, 
+               error: 'Questo metodo di pagamento è temporaneamente disabilitato. Si prega di scegliere Bonifico Bancario.' 
+             });
+          }
           
           
           const result = await pool.query(`
@@ -2586,7 +2602,8 @@ END:VEVENT
                 monthlyDiscount: parseFloat(pricing.monthly_discount) || 15,
                 minStay: parseInt(pricing.min_stay) || 2,
                 maxStay: parseInt(pricing.max_stay) || 14,
-                maxGuests: parseInt(pricing.max_guests) || 8
+                maxGuests: parseInt(pricing.max_guests) || 8,
+                minStayAugust: parseInt(pricing.min_stay_august) || 6
               }
             });
           } else {
@@ -2607,7 +2624,8 @@ END:VEVENT
                 monthlyDiscount: 15,
                 minStay: 2,
                 maxStay: 14,
-                maxGuests: 8
+                maxGuests: 8,
+                minStayAugust: 6
               }
             });
           }
@@ -2679,6 +2697,7 @@ END:VEVENT
                 min_stay = $12,
                 max_stay = $13,
                 max_guests = $14,
+                min_stay_august = $15,
                 updated_at = CURRENT_TIMESTAMP
               WHERE id = (SELECT id FROM pricing_config ORDER BY id DESC LIMIT 1)
               RETURNING *
@@ -2696,7 +2715,8 @@ END:VEVENT
               pricingData.monthlyDiscount || pricingData.monthly_discount || 15,
               pricingData.minStay || pricingData.min_stay || 2,
               pricingData.maxStay || pricingData.max_stay || 14,
-              pricingData.maxGuests || pricingData.max_guests || 8
+              pricingData.maxGuests || pricingData.max_guests || 8,
+              pricingData.minStayAugust || pricingData.min_stay_august || 6
             ]);
           } else {
             // INSERT nuova configurazione (solo se tabella vuota)
@@ -2705,8 +2725,8 @@ END:VEVENT
               INSERT INTO pricing_config (
                 price_group_1to2, price_group_3to4, price_group_5to6, price_group_7to8,
                 cleaning_fee, parking_fee, tourist_tax_adult, tourist_tax_child,
-                weekend_surcharge, weekly_discount, monthly_discount, min_stay, max_stay, max_guests
-              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                weekend_surcharge, weekly_discount, monthly_discount, min_stay, max_stay, max_guests, min_stay_august
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
               RETURNING *
             `, [
               pricingData.priceGroup1to2 || pricingData.price_group_1to2 || 75,
@@ -2722,7 +2742,8 @@ END:VEVENT
               pricingData.monthlyDiscount || pricingData.monthly_discount || 15,
               pricingData.minStay || pricingData.min_stay || 2,
               pricingData.maxStay || pricingData.max_stay || 14,
-              pricingData.maxGuests || pricingData.max_guests || 8
+              pricingData.maxGuests || pricingData.max_guests || 8,
+              pricingData.minStayAugust || pricingData.min_stay_august || 6
             ]);
           }
           
@@ -2816,7 +2837,9 @@ END:VEVENT
               touristTaxAdult: parseFloat(p.tourist_tax_adult) || 2.00,
               touristTaxChild: parseFloat(p.tourist_tax_child) || 0,
               weeklyDiscount: parseFloat(p.weekly_discount) || 10,
-              monthlyDiscount: parseFloat(p.monthly_discount) || 15
+              monthlyDiscount: parseFloat(p.monthly_discount) || 15,
+              minStay: parseInt(p.min_stay) || 2,
+              minStayAugust: parseInt(p.min_stay_august) || 6
             };
           } else {
             // Prezzi default se tabella vuota
@@ -2830,7 +2853,9 @@ END:VEVENT
               touristTaxAdult: 2.00,
               touristTaxChild: 0,
               weeklyDiscount: 10,
-              monthlyDiscount: 15
+              monthlyDiscount: 15,
+              minStay: 2,
+              minStayAugust: 6
             };
           }
         } catch (dbError) {
@@ -2845,8 +2870,25 @@ END:VEVENT
             touristTaxAdult: 2.00,
             touristTaxChild: 0,
             weeklyDiscount: 10,
-            monthlyDiscount: 15
+            monthlyDiscount: 15,
+            minStay: 2,
+            minStayAugust: 6
           };
+        }
+
+        // 📅 VALIDAZIONE SOGGIORNO MINIMO (AGOSTO)
+        const startMonth = checkInDate.getMonth(); // 0 = Gennaio, 7 = Agosto
+        let requiredMinStay = pricing.minStay;
+        
+        if (startMonth === 7) { // Se il check-in è ad Agosto
+          requiredMinStay = pricing.minStayAugust;
+        }
+
+        if (nights < requiredMinStay) {
+          return res.status(400).json({
+            success: false,
+            error: `Per le date selezionate è richiesto un soggiorno minimo di ${requiredMinStay} notti.`
+          });
         }
 
         // Calcola prezzo base per ospiti con LOGICA CORRETTA
