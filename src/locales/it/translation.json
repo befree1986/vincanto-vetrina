@@ -159,7 +159,7 @@
   "section.booking.rules.checkinoutList1": "Check-in: dalle 16:00 (possibilità di anticipazione a discrezione del proprietario)",
   "section.booking.rules.checkinoutList2": "Check-out: entro le 10:00",
   "section.booking.rules.paymentTitle": "Conferma Prenotazione",
-  "section.booking.rules.paymentList1": "Per confermare la prenotazione è richiesto un acconto del 30%. Il saldo restante deve essere pagato al momento del check-in. Maggiori dettagli verranno forniti al momento della prenotazione via email.",
+  "section.booking.rules.paymentList1": "Per confermare la prenotazione è richiesto un acconto del 20%. Il saldo restante deve essere pagato al momento del check-in. Maggiori dettagli verranno forniti al momento della prenotazione via email.",
   
   "booking.step1.title": "Seleziona Date e Ospiti",
   "booking.step1.subtitle": "Quando vuoi soggiornare da noi?",
@@ -420,7 +420,7 @@
   "booking.phone": "Telefono",
   "booking.specialRequests": "Richieste Speciali",
   "booking.paymentOptions": "Modalit� di Pagamento",
-  "booking.deposit30": "Acconto 30%",
+  "booking.deposit30": "Acconto 20%",
   "booking.fullPayment": "Saldo Completo",
   "booking.paymentMethod": "Metodo di Pagamento",
   "booking.card": "Carta di Credito/Debito (Non disponibile)",
