@@ -178,6 +178,8 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
     const [showEditOptions, setShowEditOptions] = useState(false);
     const [bookingResult, setBookingResult] = useState<any | null>(null);
     const [paymentCompleted, setPaymentCompleted] = useState(false);
+    const [paymentPopup, setPaymentPopup] = useState<{show: boolean, message: string}>({show: false, message: ''});
+    const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
     // 💰 Payment amount - stored before submitBooking to avoid quote state issues
     const [paymentAmount, setPaymentAmount] = useState<number>(0);
     
@@ -233,6 +235,28 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
     useEffect(() => {
         loadCalendar();
     }, [loadCalendar]);
+
+    useEffect(() => {
+        const fetchPaymentMethods = async () => {
+            try {
+                const apiUrl = import.meta.env.VITE_API_BASE_URL || 'https://vincanto-vetrina.vercel.app/api';
+                const response = await fetch(`${apiUrl}/unified?action=payment-methods`);
+                const data = await response.json();
+                if (data.success) {
+                    setPaymentMethods(data.methods);
+                }
+            } catch (e) {
+                console.error("Failed to fetch payment methods", e);
+                // Fallback in caso di errore API
+                setPaymentMethods([
+                    { id: 'stripe_card', name: 'Carta di Credito/Debito', enabled: false },
+                    { id: 'paypal', name: 'PayPal', enabled: false },
+                    { id: 'bank_transfer', name: 'Bonifico Bancario', enabled: true },
+                ]);
+            }
+        };
+        fetchPaymentMethods();
+    }, []);
 
     // 🛡️ Guard: quando si entra nello step pagamento, assicurati che paymentAmount sia valorizzato
     useEffect(() => {
@@ -392,7 +416,6 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                 onDateChange={handleDateSelection}
                 occupiedDates={calendar?.occupied_dates || []}
                 isLoading={isLoadingCalendar}
-                minNights={dynamicPricing.minStay || 3}
             />
         </div>
     );
@@ -492,6 +515,24 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
 
     const renderDetailsStep = (): JSX.Element => {
         // ⚡ FIX: Rimuovo useTranslation() da qui - usiamo il t definito al top level del componente
+
+        const handlePaymentMethodClick = (methodId: string) => {
+            const method = paymentMethods.find(m => m.id === methodId);
+            if (method && !method.enabled) {
+                setPaymentPopup({
+                    show: true, 
+                    message: t('booking.paymentDisabled.message', 'Questo metodo di pagamento è temporaneamente non disponibile. Ci scusiamo per il disagio.')
+                });
+            } else if (method) {
+                let formMethodId = methodId;
+                if (methodId === 'stripe_card') formMethodId = 'stripe';
+        
+                setFormData({ payment_method: formMethodId as 'stripe' | 'paypal' | 'bank_transfer' });
+                setPaymentCompleted(false);
+                setShowPayment(false);
+            }
+        };
+
         return (
             <div className="booking-step-content step-transition">
                 <h2>{getSafeTranslation(t, 'booking.detailsTitle', 'Dettagli Prenotazione')}</h2>
@@ -650,13 +691,9 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                     <div className="payment-method-selection-pro">
                         <h4>{getSafeTranslation(t, 'booking.paymentMethod', 'Metodo di Pagamento')}</h4>
                         <div className="payment-methods-grid">
-                            <div 
-                                className={`payment-card ${formData.payment_method === 'stripe' ? 'active' : ''}`}
-                                onClick={() => {
-                                    setFormData({ payment_method: 'stripe' });
-                                    setPaymentCompleted(false);
-                                    setShowPayment(false);
-                                }}
+                            <div
+                                className={`payment-card ${formData.payment_method === 'stripe' ? 'active' : ''} ${!paymentMethods.find(m=>m.id === 'stripe_card')?.enabled ? 'disabled' : ''}`}
+                                onClick={() => handlePaymentMethodClick('stripe_card')}
                             >
                                 <input type="radio" id="stripe" name="payment_method" value="stripe" checked={formData.payment_method==='stripe'} readOnly aria-label="Carta di Credito/Debito" />
                                 <div className="payment-card-content">
@@ -669,13 +706,9 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                                 <div className="payment-checkmark">✓</div>
                             </div>
 
-                            <div 
-                                className={`payment-card ${formData.payment_method === 'paypal' ? 'active' : ''}`}
-                                onClick={() => {
-                                    setFormData({ payment_method: 'paypal' });
-                                    setPaymentCompleted(false);
-                                    setShowPayment(false);
-                                }}
+                            <div
+                                className={`payment-card ${formData.payment_method === 'paypal' ? 'active' : ''} ${!paymentMethods.find(m=>m.id === 'paypal')?.enabled ? 'disabled' : ''}`}
+                                onClick={() => handlePaymentMethodClick('paypal')}
                             >
                                 <input type="radio" id="paypal" name="payment_method" value="paypal" checked={formData.payment_method==='paypal'} readOnly aria-label="PayPal" />
                                 <div className="payment-card-content">
@@ -688,13 +721,9 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                                 <div className="payment-checkmark">✓</div>
                             </div>
 
-                            <div 
-                                className={`payment-card ${formData.payment_method === 'bank_transfer' ? 'active' : ''}`}
-                                onClick={() => {
-                                    setFormData({ payment_method: 'bank_transfer' });
-                                    setPaymentCompleted(false);
-                                    setShowPayment(false);
-                                }}
+                            <div
+                                className={`payment-card ${formData.payment_method === 'bank_transfer' ? 'active' : ''} ${!paymentMethods.find(m=>m.id === 'bank_transfer')?.enabled ? 'disabled' : ''}`}
+                                onClick={() => handlePaymentMethodClick('bank_transfer')}
                             >
                                 <input type="radio" id="bank_transfer" name="payment_method" value="bank_transfer" checked={formData.payment_method==='bank_transfer'} readOnly aria-label="Bonifico Bancario" />
                                 <div className="payment-card-content">
@@ -789,6 +818,18 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                     <div className="error-message">
                         {error}
                         <button onClick={() => setError(null)}>✕</button>
+                    </div>
+                )}
+
+                {paymentPopup.show && (
+                    <div className="payment-popup-overlay" onClick={() => setPaymentPopup({show: false, message: ''})}>
+                        <div className="payment-popup-content" onClick={(e) => e.stopPropagation()}>
+                            <h4>{t('booking.paymentDisabled.title', 'Metodo non disponibile')}</h4>
+                            <p>{paymentPopup.message}</p>
+                            <button onClick={() => setPaymentPopup({show: false, message: ''})} className="btn-primary">
+                                {t('booking.close', 'Chiudi')}
+                            </button>
+                        </div>
                     </div>
                 )}
 

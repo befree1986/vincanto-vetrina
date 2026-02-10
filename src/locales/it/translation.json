@@ -448,6 +448,10 @@
   "booking.close": "Chiudi",
   "booking.error.paymentSuccessSaveFailed": "Pagamento riuscito ma errore nel salvataggio. Contattaci con il codice prenotazione",
   "booking.error.paymentFailedReason": "Pagamento fallito",
+  "booking.paymentDisabled": {
+    "title": "Metodo di Pagamento Disabilitato",
+    "message": "Questo metodo di pagamento è temporaneamente non disponibile. Ci scusiamo per il disagio."
+  },
   "booking.guestsDetail": "Ospiti (Adulti e Bambini)",
   "extraServices": {
     "crib": "Culla per Bambini",

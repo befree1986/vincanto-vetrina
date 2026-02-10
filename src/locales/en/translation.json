@@ -406,6 +406,10 @@
   "booking.close": "Close",
   "booking.error.paymentSuccessSaveFailed": "Payment successful but failed to save. Please contact us with booking code",
   "booking.error.paymentFailedReason": "Payment failed",
+  "booking.paymentDisabled": {
+    "title": "Payment Method Disabled",
+    "message": "This payment method is temporarily unavailable. We apologize for the inconvenience."
+  },
   "bookingCalendar": {
     "error": {
       "checkoutAfterCheckin": "Check-out must be at least one day after check-in.",
