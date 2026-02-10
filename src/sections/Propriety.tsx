@@ -326,6 +326,7 @@ const Propriety: React.FC = () => {
               <li>{t('section.includedServices.comfortList10')}</li>
               <li>{t('section.includedServices.comfortList11')}</li>
               <li>{t('section.includedServices.comfortList12')}</li>
+              <li>{t('section.includedServices.comfortList13')}</li>
             </ul>
           </div>
 
@@ -347,6 +348,7 @@ const Propriety: React.FC = () => {
             <ul className="section-list">
               <li>{t('section.extraCosts.mandatoryList1')}</li>
               <li>{t('section.extraCosts.mandatoryList2')}</li>
+              <li>{t('section.extraCosts.mandatoryList3')}</li>
             </ul>
           </div>
 

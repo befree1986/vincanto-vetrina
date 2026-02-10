@@ -100,11 +100,15 @@ export default async function handler(req, res) {
       const checkInDate = new Date(checkin);
       const checkOutDate = new Date(checkout);
       const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
-      const startMonth = checkInDate.getUTCMonth(); // 0 = Gennaio, 7 = Agosto
-      
-      let requiredMinStay = (startMonth === 7) ? (parseInt(rules.min_stay_august) || 6) : (parseInt(rules.min_stay) || 3);
+      const checkInYear = checkInDate.getUTCFullYear();
+      const augustStart = new Date(Date.UTC(checkInYear, 7, 1)); // August 1st
+      const septemberStart = new Date(Date.UTC(checkInYear, 8, 1)); // September 1st
 
-      console.log(`📅 BOOKING-CONFIRM CHECK: Data ${checkin}, Mese UTC ${startMonth}, MinStay DB ${rules.min_stay}, MinStay Agosto DB ${rules.min_stay_august}, Notti ${nights}, Minimo Richiesto ${requiredMinStay}`);
+      let requiredMinStay = parseInt(rules.min_stay) || 3;
+      if (checkInDate < septemberStart && checkOutDate > augustStart) {
+        requiredMinStay = parseInt(rules.min_stay_august) || 6;
+      }
+      console.log(`📅 BOOKING-CONFIRM CHECK: Range [${checkin}, ${checkout}], Overlaps August: ${checkInDate < septemberStart && checkOutDate > augustStart}, MinStay Required: ${requiredMinStay}, Notti: ${nights}`);
 
       if (nights < requiredMinStay) {
         console.error(`❌ Blocco booking-confirm: ${nights} notti richieste ad Agosto (min ${requiredMinStay})`);

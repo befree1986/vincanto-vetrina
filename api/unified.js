@@ -1241,7 +1241,6 @@ export default async function handler(req, res) {
           // ⚡ Estrai status dal payload (default 'pending' se non specificato)
           const bookingStatus = bookingData.status || 'pending';
 
-          // 🔒 VALIDAZIONE METODO DI PAGAMENTO (Blocco temporaneo metodi disabilitati)
            // 🔒 VALIDAZIONE METODO DI PAGAMENTO (Blocco temporaneo metodi disabilitati)
           // Controllo più aggressivo: blocca se contiene parole chiave vietate
           const requestedMethod = (bookingData.paymentMethod || bookingData.payment_method || '').toLowerCase();
@@ -1261,10 +1260,14 @@ export default async function handler(req, res) {
           const checkOutDate = new Date(checkout);
           const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
           
-          const startMonth = checkInDate.getUTCMonth(); // 0 = Gennaio, 7 = Agosto (Usa UTC per evitare problemi di fuso orario)
+          const checkInYear = checkInDate.getUTCFullYear();
+          const augustStart = new Date(Date.UTC(checkInYear, 7, 1)); // August 1st
+          const septemberStart = new Date(Date.UTC(checkInYear, 8, 1)); // September 1st
+
           let requiredMinStay = parseInt(rules.min_stay) || 3;
           
-          if (startMonth === 7) { // Agosto
+          // Controlla se l'intervallo di prenotazione si sovrappone ad Agosto
+          if (checkInDate < septemberStart && checkOutDate > augustStart) {
             requiredMinStay = parseInt(rules.min_stay_august) || 6;
           }
 
@@ -1276,7 +1279,6 @@ export default async function handler(req, res) {
             });
           }
           
-
           const result = await pool.query(`
             INSERT INTO bookings (
               booking_id, check_in, check_out, guests, adults, children,
@@ -2631,8 +2633,6 @@ END:VEVENT
                 weekendSurcharge: parseFloat(pricing.weekend_surcharge) || 0,
                 weeklyDiscount: parseFloat(pricing.weekly_discount) || 10,
                 monthlyDiscount: parseFloat(pricing.monthly_discount) || 15,
-                minStay: parseInt(pricing.min_stay) || 3, // Default allineato a 3 notti
-                minStay: parseInt(pricing.min_stay) || 2,
                 minStay: parseInt(pricing.min_stay) || 3,
                 maxStay: parseInt(pricing.max_stay) || 14,
                 maxGuests: parseInt(pricing.max_guests) || 8,
@@ -2655,8 +2655,6 @@ END:VEVENT
                 weekendSurcharge: 0,
                 weeklyDiscount: 10,
                 monthlyDiscount: 15,
-                minStay: 3, // Default allineato a 3 notti
-                minStay: 2,
                 minStay: 3,
                 maxStay: 14,
                 maxGuests: 8,
@@ -2748,7 +2746,6 @@ END:VEVENT
               pricingData.weekendSurcharge || pricingData.weekend_surcharge || 0,
               pricingData.weeklyDiscount || pricingData.weekly_discount || 10,
               pricingData.monthlyDiscount || pricingData.monthly_discount || 15,
-              pricingData.minStay || pricingData.min_stay || 2,
               pricingData.minStay || pricingData.min_stay || 3,
               pricingData.maxStay || pricingData.max_stay || 14,
               pricingData.maxGuests || pricingData.max_guests || 8,
@@ -2776,7 +2773,6 @@ END:VEVENT
               pricingData.weekendSurcharge || pricingData.weekend_surcharge || 0,
               pricingData.weeklyDiscount || pricingData.weekly_discount || 10,
               pricingData.monthlyDiscount || pricingData.monthly_discount || 15,
-              pricingData.minStay || pricingData.min_stay || 2,
               pricingData.minStay || pricingData.min_stay || 3,
               pricingData.maxStay || pricingData.max_stay || 14,
               pricingData.maxGuests || pricingData.max_guests || 8,
@@ -2876,7 +2872,6 @@ END:VEVENT
               weeklyDiscount: parseFloat(p.weekly_discount) || 10,
               monthlyDiscount: parseFloat(p.monthly_discount) || 15,
               minStay: parseInt(p.min_stay) || 3,
-              minStay: parseInt(p.min_stay) || 2,
               minStayAugust: parseInt(p.min_stay_august) || 6
             };
           } else {
@@ -2893,7 +2888,6 @@ END:VEVENT
               weeklyDiscount: 10,
               monthlyDiscount: 15,
               minStay: 3,
-              minStay: 2,
               minStayAugust: 6
             };
           }
@@ -2911,20 +2905,21 @@ END:VEVENT
             weeklyDiscount: 10,
             monthlyDiscount: 15,
             minStay: 3,
-            minStay: 2,
             minStayAugust: 6
           };
         }
 
         // 📅 VALIDAZIONE SOGGIORNO MINIMO (AGOSTO)
-        const startMonth = checkInDate.getUTCMonth(); // 0 = Gennaio, 7 = Agosto (Usa UTC per evitare problemi di fuso orario)
+        const checkInYear = checkInDate.getUTCFullYear();
+        const augustStart = new Date(Date.UTC(checkInYear, 7, 1)); // August 1st
+        const septemberStart = new Date(Date.UTC(checkInYear, 8, 1)); // September 1st
+
         let requiredMinStay = pricing.minStay;
         
-        if (startMonth === 7) { // Se il check-in è ad Agosto
+        // Controlla se l'intervallo di prenotazione si sovrappone ad Agosto
+        if (checkInDate < septemberStart && checkOutDate > augustStart) {
           requiredMinStay = pricing.minStayAugust;
         }
-
-        console.log(`📅 QUOTE CHECK: Data ${checkIn}, Mese UTC ${startMonth}, MinStay ${requiredMinStay}, Notti ${nights}`);
 
         if (nights < requiredMinStay) {
           return res.status(400).json({

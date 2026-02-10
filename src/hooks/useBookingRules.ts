@@ -52,8 +52,9 @@ export const useBookingRules = () => {
 
   const getMinStayForDate = useCallback((date: Date | undefined): number => {
     if (!date || !rules) return rules?.minStay ?? 3;
-    // getUTCMonth() è 0-indexed, quindi Agosto è 7
-    return date.getUTCMonth() === 7 ? rules.minStayAugust : rules.minStay;
+    // Usa getMonth() che rispetta il fuso orario locale dell'utente, corrispondente a ciò che vede sul calendario.
+    // getMonth() è 0-indexed, quindi Agosto è 7.
+    return date.getMonth() === 7 ? rules.minStayAugust : rules.minStay;
   }, [rules]);
 
   return { rules, loading, error, getMinStayForDate };
