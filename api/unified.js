@@ -1275,6 +1275,7 @@ export default async function handler(req, res) {
             });
           }
           
+
           const result = await pool.query(`
             INSERT INTO bookings (
               booking_id, check_in, check_out, guests, adults, children,
@@ -2630,6 +2631,7 @@ END:VEVENT
                 weeklyDiscount: parseFloat(pricing.weekly_discount) || 10,
                 monthlyDiscount: parseFloat(pricing.monthly_discount) || 15,
                 minStay: parseInt(pricing.min_stay) || 3, // Default allineato a 3 notti
+                minStay: parseInt(pricing.min_stay) || 2,
                 maxStay: parseInt(pricing.max_stay) || 14,
                 maxGuests: parseInt(pricing.max_guests) || 8,
                 minStayAugust: parseInt(pricing.min_stay_august) || 6
@@ -2652,6 +2654,7 @@ END:VEVENT
                 weeklyDiscount: 10,
                 monthlyDiscount: 15,
                 minStay: 3, // Default allineato a 3 notti
+                minStay: 2,
                 maxStay: 14,
                 maxGuests: 8,
                 minStayAugust: 6
@@ -2868,6 +2871,7 @@ END:VEVENT
               weeklyDiscount: parseFloat(p.weekly_discount) || 10,
               monthlyDiscount: parseFloat(p.monthly_discount) || 15,
               minStay: parseInt(p.min_stay) || 3,
+              minStay: parseInt(p.min_stay) || 2,
               minStayAugust: parseInt(p.min_stay_august) || 6
             };
           } else {
@@ -2884,6 +2888,7 @@ END:VEVENT
               weeklyDiscount: 10,
               monthlyDiscount: 15,
               minStay: 3,
+              minStay: 2,
               minStayAugust: 6
             };
           }
@@ -2901,6 +2906,7 @@ END:VEVENT
             weeklyDiscount: 10,
             monthlyDiscount: 15,
             minStay: 3,
+            minStay: 2,
             minStayAugust: 6
           };
         }
