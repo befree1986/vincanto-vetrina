@@ -469,7 +469,8 @@
     "error": {
       "checkoutAfterCheckin": "Il check-out deve essere almeno il giorno dopo il check-in.",
       "minStay_one": "Il soggiorno minimo � di {{count}} notte. Hai selezionato solo {{nights}} notte.",
-      "minStay_other": "Il soggiorno minimo � di {{count}} notti. Hai selezionato solo {{nights}} notti."
+      "minStay_other": "Il soggiorno minimo è di {{count}} notti. Hai selezionato solo {{nights}} notti.",
+      "minStayAugust_other": "Per le date selezionate ad Agosto, il soggiorno minimo è di {{count}} notti. Hai selezionato solo {{nights}} notti."
     },
     "loading": "Caricamento calendario...",
     "title": "?? Seleziona le Date del Soggiorno",

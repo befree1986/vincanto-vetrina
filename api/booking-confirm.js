@@ -92,7 +92,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // � VALIDAZIONE SOGGIORNO MINIMO (Sicurezza Backend)
+    // 📅 VALIDAZIONE SOGGIORNO MINIMO (Sicurezza Backend)
     try {
       const pricingResult = await pool.query('SELECT min_stay, min_stay_august FROM pricing_config ORDER BY id DESC LIMIT 1');
       const rules = pricingResult.rows[0] || { min_stay: 3, min_stay_august: 6 };

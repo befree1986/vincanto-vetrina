@@ -5,6 +5,7 @@ import { it, enUS, de, fr } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
 import './BookingCalendar.css';
 import { useTranslation } from 'react-i18next';
+import { useBookingRules } from '../hooks/useBookingRules';
 
 interface OccupiedDate {
     start: string;
@@ -19,7 +20,6 @@ interface BookingCalendarProps {
     onDateChange: (checkIn: Date | null, checkOut: Date | null) => void;
     occupiedDates: OccupiedDate[];
     isLoading?: boolean;
-    minNights?: number;
     className?: string;
 }
 
@@ -29,10 +29,10 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
     onDateChange,
     occupiedDates = [],
     isLoading = false,
-    minNights = 3,
     className = ''
 }) => {
     const { t, i18n } = useTranslation();
+    const { getMinStayForDate } = useBookingRules(); // 1. Inizializza l'hook qui
     const [startDate, setStartDate] = useState<Date | null>(selectedCheckIn);
     const [endDate, setEndDate] = useState<Date | null>(selectedCheckOut);
     const [minStayError, setMinStayError] = useState<string | null>(null);
@@ -73,8 +73,15 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
                 return;
             }
 
-            if (nights < minNights) {
-                setMinStayError(t('bookingCalendar.error.minStay', `Il soggiorno minimo è di {{count}} notti. Hai selezionato solo {{nights}} notte.`, { count: minNights, nights }));
+            // 2. Calcola il soggiorno minimo dinamico in base alla data di check-in
+            const requiredMinStay = getMinStayForDate(start);
+
+            if (nights < requiredMinStay) {
+                // 3. Mostra il messaggio specifico per Agosto se necessario
+                const isAugustRule = requiredMinStay >= 6; // Euristica: se min è 6 o più, è la regola di Agosto
+                const errorKey = isAugustRule ? 'bookingCalendar.error.minStayAugust' : 'bookingCalendar.error.minStay';
+                
+                setMinStayError(t(errorKey, `Il soggiorno minimo è di {{count}} notti.`, { count: requiredMinStay, nights }));
                 setStartDate(null);
                 setEndDate(null);
                 onDateChange(null, null);
@@ -114,12 +121,6 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
         }
         return 0;
     }, [startDate, endDate]);
-
-    const resetSelection = useCallback(() => {
-        setStartDate(null);
-        setEndDate(null);
-        onDateChange(null, null);
-    }, [onDateChange]);
 
     const getDayClassName = useCallback((date: Date) => {
         if (isDateDisabled(date)) return 'disabled-date';
