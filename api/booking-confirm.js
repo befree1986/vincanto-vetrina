@@ -82,7 +82,17 @@ export default async function handler(req, res) {
       return res.status(400).json({ success: false, error: 'Importo totale non valido' });
     }
 
-    // 📅 VALIDAZIONE SOGGIORNO MINIMO (Sicurezza Backend)
+    // 🔒 VALIDAZIONE METODO DI PAGAMENTO (Blocco temporaneo metodi disabilitati)
+    const requestedMethod = (payment_method || '').toLowerCase();
+    if (requestedMethod.includes('paypal') || requestedMethod.includes('stripe') || requestedMethod.includes('card')) {
+      console.error(`❌ Blocco booking-confirm: Tentativo di pagamento con metodo disabilitato (${requestedMethod})`);
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Questo metodo di pagamento è temporaneamente disabilitato. Si prega di scegliere Bonifico Bancario.' 
+      });
+    }
+
+    // � VALIDAZIONE SOGGIORNO MINIMO (Sicurezza Backend)
     try {
       const pricingResult = await pool.query('SELECT min_stay, min_stay_august FROM pricing_config ORDER BY id DESC LIMIT 1');
       const rules = pricingResult.rows[0] || { min_stay: 3, min_stay_august: 6 };
@@ -93,6 +103,8 @@ export default async function handler(req, res) {
       const startMonth = checkInDate.getUTCMonth(); // 0 = Gennaio, 7 = Agosto
       
       let requiredMinStay = (startMonth === 7) ? (parseInt(rules.min_stay_august) || 6) : (parseInt(rules.min_stay) || 3);
+
+      console.log(`📅 BOOKING-CONFIRM CHECK: Data ${checkin}, Mese UTC ${startMonth}, MinStay DB ${rules.min_stay}, MinStay Agosto DB ${rules.min_stay_august}, Notti ${nights}, Minimo Richiesto ${requiredMinStay}`);
 
       if (nights < requiredMinStay) {
         console.error(`❌ Blocco booking-confirm: ${nights} notti richieste ad Agosto (min ${requiredMinStay})`);
