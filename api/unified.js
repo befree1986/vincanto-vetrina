@@ -1242,6 +1242,7 @@ export default async function handler(req, res) {
           const bookingStatus = bookingData.status || 'pending';
 
           // 🔒 VALIDAZIONE METODO DI PAGAMENTO (Blocco temporaneo metodi disabilitati)
+           // 🔒 VALIDAZIONE METODO DI PAGAMENTO (Blocco temporaneo metodi disabilitati)
           // Controllo più aggressivo: blocca se contiene parole chiave vietate
           const requestedMethod = (bookingData.paymentMethod || bookingData.payment_method || '').toLowerCase();
           if (requestedMethod.includes('paypal') || requestedMethod.includes('stripe') || requestedMethod.includes('card')) {
@@ -2632,6 +2633,7 @@ END:VEVENT
                 monthlyDiscount: parseFloat(pricing.monthly_discount) || 15,
                 minStay: parseInt(pricing.min_stay) || 3, // Default allineato a 3 notti
                 minStay: parseInt(pricing.min_stay) || 2,
+                minStay: parseInt(pricing.min_stay) || 3,
                 maxStay: parseInt(pricing.max_stay) || 14,
                 maxGuests: parseInt(pricing.max_guests) || 8,
                 minStayAugust: parseInt(pricing.min_stay_august) || 6
@@ -2655,6 +2657,7 @@ END:VEVENT
                 monthlyDiscount: 15,
                 minStay: 3, // Default allineato a 3 notti
                 minStay: 2,
+                minStay: 3,
                 maxStay: 14,
                 maxGuests: 8,
                 minStayAugust: 6
@@ -2746,6 +2749,7 @@ END:VEVENT
               pricingData.weeklyDiscount || pricingData.weekly_discount || 10,
               pricingData.monthlyDiscount || pricingData.monthly_discount || 15,
               pricingData.minStay || pricingData.min_stay || 2,
+              pricingData.minStay || pricingData.min_stay || 3,
               pricingData.maxStay || pricingData.max_stay || 14,
               pricingData.maxGuests || pricingData.max_guests || 8,
               pricingData.minStayAugust || pricingData.min_stay_august || 6
@@ -2773,6 +2777,7 @@ END:VEVENT
               pricingData.weeklyDiscount || pricingData.weekly_discount || 10,
               pricingData.monthlyDiscount || pricingData.monthly_discount || 15,
               pricingData.minStay || pricingData.min_stay || 2,
+              pricingData.minStay || pricingData.min_stay || 3,
               pricingData.maxStay || pricingData.max_stay || 14,
               pricingData.maxGuests || pricingData.max_guests || 8,
               pricingData.minStayAugust || pricingData.min_stay_august || 6
