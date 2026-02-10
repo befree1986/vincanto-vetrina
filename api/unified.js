@@ -1260,7 +1260,7 @@ export default async function handler(req, res) {
           const checkOutDate = new Date(checkout);
           const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
           
-          const startMonth = checkInDate.getMonth(); // 0 = Gennaio, 7 = Agosto
+          const startMonth = checkInDate.getUTCMonth(); // 0 = Gennaio, 7 = Agosto (Usa UTC per evitare problemi di fuso orario)
           let requiredMinStay = parseInt(rules.min_stay) || 3;
           
           if (startMonth === 7) { // Agosto
@@ -2906,12 +2906,14 @@ END:VEVENT
         }
 
         // 📅 VALIDAZIONE SOGGIORNO MINIMO (AGOSTO)
-        const startMonth = checkInDate.getMonth(); // 0 = Gennaio, 7 = Agosto
+        const startMonth = checkInDate.getUTCMonth(); // 0 = Gennaio, 7 = Agosto (Usa UTC per evitare problemi di fuso orario)
         let requiredMinStay = pricing.minStay;
         
         if (startMonth === 7) { // Se il check-in è ad Agosto
           requiredMinStay = pricing.minStayAugust;
         }
+
+        console.log(`📅 QUOTE CHECK: Data ${checkIn}, Mese UTC ${startMonth}, MinStay ${requiredMinStay}, Notti ${nights}`);
 
         if (nights < requiredMinStay) {
           return res.status(400).json({

@@ -82,6 +82,26 @@ export default async function handler(req, res) {
       return res.status(400).json({ success: false, error: 'Importo totale non valido' });
     }
 
+    // 📅 VALIDAZIONE SOGGIORNO MINIMO (Sicurezza Backend)
+    try {
+      const pricingResult = await pool.query('SELECT min_stay, min_stay_august FROM pricing_config ORDER BY id DESC LIMIT 1');
+      const rules = pricingResult.rows[0] || { min_stay: 3, min_stay_august: 6 };
+      
+      const checkInDate = new Date(checkin);
+      const checkOutDate = new Date(checkout);
+      const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+      const startMonth = checkInDate.getUTCMonth(); // 0 = Gennaio, 7 = Agosto
+      
+      let requiredMinStay = (startMonth === 7) ? (parseInt(rules.min_stay_august) || 6) : (parseInt(rules.min_stay) || 3);
+
+      if (nights < requiredMinStay) {
+        console.error(`❌ Blocco booking-confirm: ${nights} notti richieste ad Agosto (min ${requiredMinStay})`);
+        return res.status(400).json({ success: false, error: `Soggiorno minimo non rispettato (${requiredMinStay} notti).` });
+      }
+    } catch (ruleError) {
+      console.warn('⚠️ Impossibile verificare regole soggiorno in booking-confirm:', ruleError);
+    }
+
     // Determina stato prenotazione
     let bookingStatus = 'pending';
     let paymentStatusDb = 'pending';
