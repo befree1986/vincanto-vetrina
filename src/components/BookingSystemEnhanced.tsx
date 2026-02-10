@@ -52,7 +52,7 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
     if (!costs) return null;
 
     const totalWithExtras = costs.totalAmount + extraServicesCost;
-    const depositWithExtras = totalWithExtras * 0.30;
+    const depositWithExtras = totalWithExtras * 0.20;
     const remainingAmount = totalWithExtras - depositWithExtras;
 
     return (
