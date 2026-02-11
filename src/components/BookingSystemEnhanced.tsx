@@ -178,7 +178,7 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
                         <div className="breakdown-item deposit">
                             <span className="item-label">
                                 <span className="icon">💳</span>
-                                {getSafeTranslation(t, 'booking.deposit', 'Acconto richiesto (30%)')}
+                                {getSafeTranslation(t, 'booking.deposit', 'Acconto richiesto ( 20%)')}
                             </span>
                             <span className="item-value">€{depositWithExtras?.toFixed(2) || '0.00'}</span>
                         </div>
@@ -194,7 +194,7 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
 
                     <div className="payment-note">
                         <small>
-                            {getSafeTranslation(t, 'booking.depositNote', 'L\'acconto del 30% è richiesto per confermare la prenotazione. Il saldo rimanente sarà pagato al momento del check-in.')}
+                            {getSafeTranslation(t, 'booking.depositNote', 'L\'acconto del  20% è richiesto per confermare la prenotazione. Il saldo rimanente sarà pagato al momento del check-in.')}
                         </small>
                     </div>
                 </div>

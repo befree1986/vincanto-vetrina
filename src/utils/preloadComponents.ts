@@ -28,7 +28,7 @@ export const handleMouseEnterAdmin = () => {
 
 // Preload intelligente basato su viewport
 export const setupIntelligentPreload = () => {
-  // Preload AdminPanel se siamo già vicini al 30% della pagina
+  // Preload AdminPanel se siamo già vicini al  30% della pagina
   const onScroll = () => {
     const scrollPercent = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
     

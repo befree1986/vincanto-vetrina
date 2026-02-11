@@ -1298,7 +1298,7 @@ export default async function handler(req, res) {
             email,
             phone,
             totalAmount,
-            Math.round(totalAmount * 0.3 * 100) / 100, // 30% acconto arrotondato
+            Math.round(totalAmount * 0.2 * 100) / 100, // 20% acconto arrotondato
             notes,
             bookingStatus, // ⚡ Usa status dal payload invece di hardcoded 'pending'
             'pending'
@@ -3034,7 +3034,7 @@ END:VEVENT
           touristTax: touristTax,
           totalAmount: totalAmount
         });
-        const depositAmount = totalAmount * 0.30; // Acconto 30%
+        const depositAmount = totalAmount * 0.20; // Acconto 20%
 
         // Risposta quote
         return res.status(200).json({
@@ -3064,7 +3064,7 @@ END:VEVENT
             parcheggio: parkingCost > 0 ? `€${pricing.parkingFee}/notte × ${nights} notti = €${parkingCost.toFixed(2)}` : null,
             tassa: taxDescription,
             totale: `€${totalAmount.toFixed(2)}`,
-            acconto: `€${depositAmount.toFixed(2)} (30%)`
+            acconto: `€${depositAmount.toFixed(2)} ( 20%)`
           }
         });
       } catch (error) {

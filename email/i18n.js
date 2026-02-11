@@ -24,7 +24,7 @@ export const emailStrings = {
       tourist_tax: "Tassa di soggiorno",
 
       total_amount: 'Importo Totale',
-      deposit_amount: 'Acconto (30%)',
+      deposit_amount: 'Acconto (20%)',
       amount_paid: 'Importo Pagato',
       remaining_balance: 'Saldo da pagare al check-in',
       payment_method: 'Metodo di pagamento',
@@ -101,7 +101,7 @@ export const emailStrings = {
       tourist_tax: "Tourist tax",
 
       total_amount: 'Total Amount',
-      deposit_amount: 'Deposit (30%)',
+      deposit_amount: 'Deposit (20%)',
       amount_paid: 'Amount Paid',
       remaining_balance: 'Balance due at check-in',
       payment_method: 'Payment method',
@@ -177,7 +177,7 @@ export const emailStrings = {
       tourist_tax: "Kurtaxe",
 
       total_amount: 'Gesamtbetrag',
-      deposit_amount: 'Anzahlung (30%)',
+      deposit_amount: 'Anzahlung (20%)',
       amount_paid: 'Bezahlter Betrag',
       remaining_balance: 'Restzahlung beim Check-in',
       payment_method: 'Zahlungsmethode',
@@ -253,7 +253,7 @@ export const emailStrings = {
       tourist_tax: "Taxe de séjour",
 
       total_amount: 'Montant Total',
-      deposit_amount: 'Acompte (30%)',
+      deposit_amount: 'Acompte (20%)',
       amount_paid: 'Montant Payé',
       remaining_balance: 'Solde à payer à l\'arrivée',
       payment_method: 'Mode de paiement',

@@ -54,7 +54,7 @@
                 <li>Costo pulizia: €<%= costs.cleaningFee.toFixed(2) %></li>
                 <li class="total-row">Totale da pagare online: €<%= costs.totalPayableOnline.toFixed(2) %></li>
                 <% if (paymentAmount === 'acconto') { %>
-                    <li><strong>Acconto (30%) da versare: €<%= costs.depositAmount.toFixed(2) %></strong></li>
+                    <li><strong>Acconto ( 20%) da versare: €<%= costs.depositAmount.toFixed(2) %></strong></li>
                 <% } %>
                 <li style="margin-top: 15px;">Tassa di soggiorno (da pagare in struttura): €<%= costs.touristTax.toFixed(2) %></li>
                 <li class="total-row">Importo Totale Soggiorno: €<%= costs.grandTotalWithTax.toFixed(2) %></li>

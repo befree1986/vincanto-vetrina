@@ -127,7 +127,7 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
                     {isDeposit && (
                         <div className="deposit-item">
                             <div className="deposit-badge">
-                                <span className="deposit-label">{getSafeTranslation(t, 'booking.deposit', 'Acconto richiesto (30%)')}</span>
+                                <span className="deposit-label">{getSafeTranslation(t, 'booking.deposit', 'Acconto richiesto (20%)')}</span>
                                 <span className="deposit-percentage">{t('booking.payNow', 'Da pagare ora')}</span>
                             </div>
                             <span className="deposit-value">€{Number(depositWithExtras || 0).toFixed(2)}</span>
@@ -677,7 +677,7 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                                 setPaymentCompleted(false);
                                 setShowPayment(false);
                             }} />
-                            <label htmlFor="deposit">{getSafeTranslation(t, 'booking.deposit30', 'Acconto 30%')} {quote && <span className="amount">€{((quote.totalAmount + extraServicesCost)*0.30).toFixed(2)}</span>}</label>
+                            <label htmlFor="deposit">{getSafeTranslation(t, 'booking.deposit30', 'Acconto 20%')} {quote && <span className="amount">€{((quote.totalAmount + extraServicesCost)*0.30).toFixed(2)}</span>}</label>
                         </div>
                         <div className="radio-group">
                             <input type="radio" id="full" name="payment_type" value="full" checked={formData.payment_type==='full'} onChange={(e)=>{
@@ -784,7 +784,7 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                                 </div>
                                 {formData.payment_type === 'deposit' && (
                                     <div className="price-deposit">
-                                        <span className="deposit-label">{getSafeTranslation(t, 'booking.depositRequired', 'Acconto 30%')}</span>
+                                        <span className="deposit-label">{getSafeTranslation(t, 'booking.depositRequired', 'Acconto 20%')}</span>
                                         <span className="deposit-value">€{Number(((quote.totalAmount || 0) + (extraServicesCost || 0)) * 0.30).toFixed(2)}</span>
                                     </div>
                                 )}

@@ -14,7 +14,7 @@ const LemonDivider: React.FC<LemonDividerProps> = ({ position }) => {
       ([entry]) => {
         setIsVisible(entry.isIntersecting);
       },
-      { threshold: 0.3 } // si attiva quando il 30% del divider è visibile
+      { threshold: 0.3 } // si attiva quando il  30% del divider è visibile
     );
 
     if (ref.current) {

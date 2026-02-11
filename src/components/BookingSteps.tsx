@@ -438,7 +438,7 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
         {booking.formData.payment_type === 'deposit' && (
           <>
             <div className="summary-row">
-              <span>Acconto richiesto (30%):</span>
+              <span>Acconto richiesto (20%):</span>
               <span>€{deposit.toFixed(2)}</span>
             </div>
             <div className="summary-row">
@@ -462,7 +462,7 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
             className={`choice-btn${booking.formData.payment_type === 'deposit' ? ' active' : ''}`}
             onClick={() => booking.setFormData({ payment_type: 'deposit' })}
           >
-            Acconto 30% ora, saldo al check-in
+            Acconto 20% ora, saldo al check-in
           </button>
           <button
             type="button"
@@ -570,9 +570,9 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
                 <PayPalScriptProvider options={{ "client-id": import.meta.env.VITE_PAYPAL_CLIENT_ID, clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID, currency: 'EUR' }}>
                   <PayPalButtons
                     createOrder={(_data, actions) => {
-                      // Calcola l'importo da pagare: acconto (30%) o totale completo
+                      // Calcola l'importo da pagare: acconto (20%) o totale completo
                       const paypalAmount = isDeposit 
-                        ? Math.round(total * 0.3 * 100) / 100  // 30% con extra services
+                        ? Math.round(total * 0.2 * 100) / 100  // 20% con extra services
                         : Math.round(total * 100) / 100;        // 100% con extra services
                       
                       return actions.order.create({
