@@ -136,7 +136,7 @@ export async function getBookingQuote(data: BookingQuoteRequest): Promise<Bookin
             subtotal: quote.discountedAccommodation + quote.cleaningFee,
             totalAmount: quote.totalAmount,
             depositAmount: quote.depositAmount,
-            depositPercentage: 0.30,
+            depositPercentage: 0.20,
             currency: 'EUR',
             pricingConfig: {
                 basePrice: quote.basePrice,

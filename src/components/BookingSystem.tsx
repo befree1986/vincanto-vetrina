@@ -29,7 +29,7 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
 
     // Calcola totale inclusi servizi extra
     const totalWithExtras = costs.totalAmount + extraServicesCost;
-    const depositWithExtras = isDeposit ? totalWithExtras * 0.30 : totalWithExtras;
+    const depositWithExtras = isDeposit ? totalWithExtras * 0.20 : totalWithExtras;
 
     return (
         <div className="price-breakdown-professional">
@@ -677,7 +677,7 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                                 setPaymentCompleted(false);
                                 setShowPayment(false);
                             }} />
-                            <label htmlFor="deposit">{getSafeTranslation(t, 'booking.deposit30', 'Acconto 20%')} {quote && <span className="amount">€{((quote.totalAmount + extraServicesCost)*0.30).toFixed(2)}</span>}</label>
+                            <label htmlFor="deposit">{getSafeTranslation(t, 'booking.deposit30', 'Acconto 20%')} {quote && <span className="amount">€{((quote.totalAmount + extraServicesCost)*0.20).toFixed(2)}</span>}</label>
                         </div>
                         <div className="radio-group">
                             <input type="radio" id="full" name="payment_type" value="full" checked={formData.payment_type==='full'} onChange={(e)=>{
@@ -785,7 +785,7 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                                 {formData.payment_type === 'deposit' && (
                                     <div className="price-deposit">
                                         <span className="deposit-label">{getSafeTranslation(t, 'booking.depositRequired', 'Acconto 20%')}</span>
-                                        <span className="deposit-value">€{Number(((quote.totalAmount || 0) + (extraServicesCost || 0)) * 0.30).toFixed(2)}</span>
+                                        <span className="deposit-value">€{Number(((quote.totalAmount || 0) + (extraServicesCost || 0)) * 0.20).toFixed(2)}</span>
                                     </div>
                                 )}
                             </div>
@@ -934,7 +934,7 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                             <div className="payment-form-section">
                                 {(() => {
                                     // 💰 Use stored paymentAmount instead of recalculating
-                                    const depositAmount = Math.round(paymentAmount * 0.30 * 100) / 100;
+                                    const depositAmount = Math.round(paymentAmount * 0.20 * 100) / 100;
                                     const finalAmount = formData.payment_type === 'deposit' ? depositAmount : paymentAmount;
                                     
                                     console.log('💳 Stripe Amount Calculation:', {
@@ -966,7 +966,7 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                             <div className="payment-form-section">
                                 {(() => {
                                     // 💰 Use stored paymentAmount instead of recalculating
-                                    const depositAmount = Math.round(paymentAmount * 0.30 * 100) / 100;
+                                    const depositAmount = Math.round(paymentAmount * 0.20 * 100) / 100;
                                     const finalAmount = formData.payment_type === 'deposit' ? depositAmount : paymentAmount;
                                     
                                     console.log('🅿️ PayPal Amount Calculation:', {
