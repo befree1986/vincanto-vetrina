@@ -90,7 +90,7 @@ export function bookingConfirmationTemplate(data) {
 
         </div>
       </div>
-
+20%
       <!-- INTRO -->
       <div style="padding:22px 20px 10px;">
         <p style="font-size:16px; line-height:1.6; margin:0 0 10px 0;">

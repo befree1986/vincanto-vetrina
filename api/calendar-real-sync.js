@@ -505,6 +505,38 @@ export class RealCalendarSync {
         }
       }
 
+      // 🧹 PULIZIA: Rimuovi eventi futuri nel DB che non sono più presenti nel feed (Cancellazioni)
+      // Questa logica vale per TUTTE le piattaforme (Airbnb, Booking, Holidu, ecc.)
+      // Raccogli gli UID degli eventi appena processati (quelli validi e confermati)
+      const activeUids = events.map(e => e.uid).filter(u => u && u.length > 0);
+
+      if (activeUids.length > 0) {
+        // Costruisci parametri per la query ($2, $3, ...)
+        const placeholders = activeUids.map((_, i) => `$${i + 2}`).join(',');
+        
+        // Cancella eventi che:
+        // 1. Appartengono a questa sorgente specifica (es. 'booking')
+        // 2. Sono nel futuro (start_date > NOW()) - non tocchiamo lo storico passato
+        // 3. NON sono presenti nella lista appena scaricata (NOT IN)
+        const deleteQuery = `
+          DELETE FROM calendar_events 
+          WHERE calendar_source = $1 
+            AND start_date > NOW() 
+            AND uid NOT IN (${placeholders})
+        `;
+        
+        await pool.query(deleteQuery, [calendarSource, ...activeUids]);
+      } else if (events.length === 0) {
+        // Se il feed è vuoto ma avevamo eventi futuri, significa che è stato cancellato tutto su quella piattaforma
+        // Cancella tutti gli eventi futuri per questa sorgente
+        await pool.query(`
+          DELETE FROM calendar_events 
+          WHERE calendar_source = $1 
+            AND start_date > NOW()
+        `, [calendarSource]);
+      }
+
+
       await pool.end();
       
       console.log(`✅ Salvati ${savedCount}/${events.length} eventi da ${calendarSource}`);
@@ -639,8 +671,9 @@ export function validateCalendarConfig() {
 
 // Handler API per Vercel/Next.js
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Metodo non consentito' });
+  // Permetti GET per i Cron Jobs automatici e POST per trigger manuali
+  if (req.method !== 'POST' && req.method !== 'GET') {
+    res.status(405).json({ error: 'Metodo non consentito. Usa GET (Cron) o POST (Manuale).' });
     return;
   }
   // Protezione opzionale tramite token di sincronizzazione

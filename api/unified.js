@@ -635,6 +635,12 @@ export default async function handler(req, res) {
               OR LOWER(summary) LIKE '%non-available%'
             )
           )
+          AND NOT (
+            LOWER(summary) LIKE '%canceled%'
+            OR LOWER(summary) LIKE '%cancelled%'
+            OR LOWER(description) LIKE '%canceled%'
+            OR LOWER(description) LIKE '%cancelled%'
+      )
         ORDER BY start_date ASC
       `);
       return res.status(200).json({
@@ -1189,6 +1195,39 @@ export default async function handler(req, res) {
               -- Eventi esterni sincronizzati (da Airbnb, Booking.com, etc.)
               -- Esclude blocchi di sistema non validi (già filtrati in calendar-real-sync)
               SELECT start_date::date, end_date::date FROM calendar_events
+              WHERE NOT (
+                LOWER(summary) LIKE '%canceled%'
+                OR LOWER(summary) LIKE '%cancelled%'
+                OR LOWER(description) LIKE '%canceled%'
+                OR LOWER(description) LIKE '%cancelled%'
+              )
+              AND NOT (
+                calendar_source = 'airbnb' AND (
+                  LOWER(summary) LIKE '%not available%'
+                  OR LOWER(summary) LIKE '%blocked%'
+                  OR LOWER(summary) LIKE '%holiday%'
+                  OR LOWER(summary) LIKE '%festività%'
+                  OR LOWER(summary) LIKE '%vacation%'
+                  OR LOWER(summary) LIKE '%break%'
+                  OR LOWER(summary) LIKE '%festa%'
+                )
+              )
+              AND NOT (
+                calendar_source = 'airbnb' AND (
+                  LOWER(summary) LIKE '%maintenance%'
+                  OR LOWER(summary) LIKE '%pulizie%'
+                  OR LOWER(summary) LIKE '%cleaning%'
+                  OR LOWER(summary) LIKE '%manutenzione%'
+                )
+              )
+              AND NOT (
+                calendar_source = 'holidu' AND (
+                  LOWER(summary) LIKE '%not available%'
+                  OR LOWER(summary) LIKE '%unavailable%'
+                  OR LOWER(summary) LIKE '%non disponibile%'
+                  OR LOWER(summary) LIKE '%non-available%'
+                )
+              )
             )
             SELECT 1
             FROM unavailable_periods
@@ -1318,7 +1357,7 @@ export default async function handler(req, res) {
                 adults,
                 children,
                 totalAmount,
-                depositAmount: Math.round(totalAmount * 0.3 * 100) / 100,
+                depositAmount: Math.round(totalAmount * 0.2 * 100) / 100,
                 fromEmail: process.env.SMTP_FROM,
                 language: guestLanguage,
                 paymentMethod: bookingData.paymentMethod || bookingData.payment_method,
@@ -1879,7 +1918,7 @@ export default async function handler(req, res) {
                   adults: booking.adults || booking.guests || 0,
                   children: booking.children || 0,
                   totalAmount: parseFloat(booking.total_amount) || 0,
-                  depositAmount: parseFloat(booking.deposit_amount) || parseFloat(booking.total_amount) * 0.3,
+                  depositAmount: parseFloat(booking.deposit_amount) || parseFloat(booking.total_amount) * 0.2,
                   fromEmail: process.env.SMTP_FROM,
                   language: guestLanguage,
                   paymentMethod: req.body.payment_method || req.body.paymentMethod,
@@ -2324,6 +2363,12 @@ export default async function handler(req, res) {
                 OR LOWER(summary) LIKE '%manutenzione%'
               )
             )
+            AND NOT (
+              LOWER(summary) LIKE '%canceled%'
+              OR LOWER(summary) LIKE '%cancelled%'
+              OR LOWER(description) LIKE '%canceled%'
+              OR LOWER(description) LIKE '%cancelled%'
+            )
         `;
 
         const params = [];
@@ -2364,7 +2409,14 @@ export default async function handler(req, res) {
               OR LOWER(summary) LIKE '%cleaning%'
               OR LOWER(summary) LIKE '%manutenzione%'
             )
-          )`;
+          )
+        And NOT (
+          LOWER(summary) LIKE '%canceled%'
+          OR LOWER(summary) LIKE '%cancelled%'
+          OR LOWER(description) LIKE '%canceled%'
+          OR LOWER(description) LIKE '%cancelled%'
+        )`;
+        
         if (futureOnly === 'true' || futureOnly === true) {
           countQuery += ' AND start_date >= CURRENT_DATE';
         }
@@ -2425,9 +2477,9 @@ export default async function handler(req, res) {
         // Helper: Formatta solo data (YYYYMMDD)
         const formatICalDateOnly = (dateStr) => {
           const date = new Date(dateStr);
-          const year = date.getFullYear();
-          const month = String(date.getMonth() + 1).padStart(2, '0');
-          const day = String(date.getDate()).padStart(2, '0');
+          const year = date.getUTCFullYear();
+          const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+          const day = String(date.getUTCDate()).padStart(2, '0');
           return `${year}${month}${day}`;
         };
 
@@ -2513,7 +2565,7 @@ END:VEVENT
           
           // Aggiungi 1 giorno all'end_date per iCal (end date è esclusivo in iCal)
           const icalEndDate = new Date(endDate);
-          icalEndDate.setDate(icalEndDate.getDate() + 1);
+          icalEndDate.setUTCDate(icalEndDate.getUTCDate() + 1);
 
           const uid = generateUID('blocked', blocked.id, formatICalDateOnly(startDate));
           const dtstart = formatICalDateOnly(startDate);
@@ -2836,6 +2888,39 @@ END:VEVENT
             SELECT start_date, end_date FROM blocked_dates
             UNION ALL
             SELECT start_date::date, end_date::date FROM calendar_events
+            WHERE NOT (
+              LOWER(summary) LIKE '%canceled%'
+              OR LOWER(summary) LIKE '%cancelled%'
+              OR LOWER(description) LIKE '%canceled%'
+              OR LOWER(description) LIKE '%cancelled%'
+            )
+            AND NOT (
+              calendar_source = 'airbnb' AND (
+                LOWER(summary) LIKE '%not available%'
+                OR LOWER(summary) LIKE '%blocked%'
+                OR LOWER(summary) LIKE '%holiday%'
+                OR LOWER(summary) LIKE '%festività%'
+                OR LOWER(summary) LIKE '%vacation%'
+                OR LOWER(summary) LIKE '%break%'
+                OR LOWER(summary) LIKE '%festa%'
+              )
+            )
+            AND NOT (
+              calendar_source = 'airbnb' AND (
+                LOWER(summary) LIKE '%maintenance%'
+                OR LOWER(summary) LIKE '%pulizie%'
+                OR LOWER(summary) LIKE '%cleaning%'
+                OR LOWER(summary) LIKE '%manutenzione%'
+              )
+            )
+            AND NOT (
+              calendar_source = 'holidu' AND (
+                LOWER(summary) LIKE '%not available%'
+                OR LOWER(summary) LIKE '%unavailable%'
+                OR LOWER(summary) LIKE '%non disponibile%'
+                OR LOWER(summary) LIKE '%non-available%'
+              )
+            )
           )
           SELECT 1
           FROM unavailable_periods
