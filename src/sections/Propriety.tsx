@@ -327,6 +327,7 @@ const Propriety: React.FC = () => {
               <li>{t('section.includedServices.comfortList11')}</li>
               <li>{t('section.includedServices.comfortList12')}</li>
               <li>{t('section.includedServices.comfortList13')}</li>
+              <li>{t('section.includedServices.comfortList14')}</li>
             </ul>
           </div>
 
