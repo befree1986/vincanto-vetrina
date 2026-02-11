@@ -16,32 +16,37 @@ export class RealCalendarSync {
     console.log('  HOLIDU_ICAL_URL:', process.env.HOLIDU_ICAL_URL ? '✅ Presente' : '❌ Mancante');
     console.log('  GOOGLE_CALENDAR_CLIENT_ID:', process.env.GOOGLE_CALENDAR_CLIENT_ID ? '✅ Presente' : '❌ Mancante');
     
+    // URL di fallback (presi da unified.js) per garantire il funzionamento anche senza ENV
+    const AIRBNB_URL = process.env.AIRBNB_ICAL_URL || 'https://www.airbnb.com/calendar/ical/1387891577187940063.ics?s=6622673f28e122e6b2b3336efd4d140e&locale=it';
+    const BOOKING_URL = process.env.BOOKING_ICAL_URL || 'https://ical.booking.com/v1/export?t=d6fd211b-ce0a-486b-b98c-6fda80504dd0';
+    const HOLIDU_URL = process.env.HOLIDU_ICAL_URL || 'https://api.host.holidu.com/pmc/rest/apartments/65376863/ical.ics?key=72d27a56f3e8836f690500877301d000';
+
     this.calendars = [];
-    if (process.env.AIRBNB_ICAL_URL) {
+    if (AIRBNB_URL) {
       this.calendars.push({
         id: 'airbnb',
         name: 'Airbnb',
         type: 'ical',
-        url: process.env.AIRBNB_ICAL_URL,
+        url: AIRBNB_URL,
         enabled: true
       });
     }
-    if (process.env.BOOKING_ICAL_URL) {
+    if (BOOKING_URL) {
       this.calendars.push({
         id: 'booking',
         name: 'Booking.com',
         type: 'ical',
-        url: process.env.BOOKING_ICAL_URL,
+        url: BOOKING_URL,
         enabled: true
       });
     }
-    if (process.env.HOLIDU_ICAL_URL) {
-      console.log('🏖️ HOLIDU CONFIGURATO - URL:', process.env.HOLIDU_ICAL_URL.substring(0, 50) + '...');
+    if (HOLIDU_URL) {
+      console.log('🏖️ HOLIDU CONFIGURATO - URL:', HOLIDU_URL.substring(0, 50) + '...');
       this.calendars.push({
         id: 'holidu',
         name: 'Holidu',
         type: 'ical',
-        url: process.env.HOLIDU_ICAL_URL,
+        url: HOLIDU_URL,
         enabled: true
       });
     } else {
@@ -265,7 +270,7 @@ export class RealCalendarSync {
         currentEvent = null;
       } else if (currentEvent && line.includes(':')) {
         const [key, ...values] = line.split(':');
-        const value = values.join(':');
+        const value = values.join(':').trim();
         
         const cleanKey = key.split(';')[0].toLowerCase();
         currentEvent[cleanKey] = value;
@@ -310,6 +315,12 @@ export class RealCalendarSync {
    * ESCLUDE: blocchi/unavailable da HOLIDU
    */
   isValidBooking(event) {
+    // 🚫 CHECK GLOBALE: Se lo status è CANCELLED, ignora sempre
+    if (event.status && event.status.toUpperCase() === 'CANCELLED') {
+      console.log(`🚫 Evento cancellato (STATUS:CANCELLED): "${event.summary}"`);
+      return false;
+    }
+
     if (!event.summary) return true; // Se no summary, considera come prenotazione
     
     // Se è da Booking.com, MANTIENI anche i "CLOSED" (chiusure reali del host)
@@ -525,6 +536,7 @@ export class RealCalendarSync {
             AND uid NOT IN (${placeholders})
         `;
         
+        console.log(`🧹 ${calendarSource}: Cancellazione di eventi obsoleti/cancellati...`);
         await pool.query(deleteQuery, [calendarSource, ...activeUids]);
       } else if (events.length === 0) {
         // Se il feed è vuoto ma avevamo eventi futuri, significa che è stato cancellato tutto su quella piattaforma

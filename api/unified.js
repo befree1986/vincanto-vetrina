@@ -10,6 +10,7 @@ import { detectLanguage } from '../email/i18n.js';
 import * as TwoFactorAuth from './2fa.js';
 import bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
+import { RealCalendarSync } from './calendar-real-sync.js'; // 👈 Importa la classe di sync reale
 
 // Database connection
 const pool = new Pool({
@@ -2036,7 +2037,7 @@ export default async function handler(req, res) {
             id: 2,
             name: 'Booking.com Principale',
             calendar_type: 'booking_com',
-            url: 'https://ical.booking.com/v1/export?t=d6fd211b-ce0a-486b-b98c-6fda80504dd0',
+            url: process.env.BOOKING_ICAL_URL || 'https://ical.booking.com/v1/export?t=d6fd211b-ce0a-486b-b98c-6fda80504dd0',
             is_active: true,
             sync_frequency: 60,
             last_sync: new Date(Date.now() - 3600000).toISOString(),
@@ -2048,7 +2049,7 @@ export default async function handler(req, res) {
             id: 3,
             name: 'Holidu Calendar',
             calendar_type: 'holidu',
-            url: 'https://api.host.holidu.com/pmc/rest/apartments/65376863/ical.ics?key=72d27a56f3e8836f690500877301d000',
+            url: process.env.HOLIDU_ICAL_URL || 'https://api.host.holidu.com/pmc/rest/apartments/65376863/ical.ics?key=72d27a56f3e8836f690500877301d000',
             is_active: true,
             sync_frequency: 60,
             last_sync: new Date(Date.now() - 1800000).toISOString(),
@@ -2060,7 +2061,7 @@ export default async function handler(req, res) {
             id: 4,
             name: 'Airbnb Calendar',
             calendar_type: 'airbnb',
-            url: 'https://www.airbnb.com/calendar/ical/1387891577187940063.ics?s=6622673f28e122e6b2b3336efd4d140e&locale=it',
+            url: process.env.AIRBNB_ICAL_URL || 'https://www.airbnb.com/calendar/ical/1387891577187940063.ics?s=6622673f28e122e6b2b3336efd4d140e&locale=it',
             is_active: true,
             sync_frequency: 30,
             last_sync: new Date(Date.now() - 1200000).toISOString(),
@@ -2088,14 +2089,20 @@ export default async function handler(req, res) {
 
     if (action === 'calendar-sync') {
       if (req.method === 'POST') {
-        // Forza sincronizzazione calendario
-        return res.status(200).json({
-          success: true,
-          message: 'Sincronizzazione calendario avviata',
-          sync_id: `sync_${Date.now()}`,
-          calendars_processed: 3,
-          events_found: 12
-        });
+        try {
+          console.log('🔄 Admin Panel: Avvio sincronizzazione reale calendari...');
+          const sync = new RealCalendarSync();
+          const result = await sync.syncAll(); // Esegue la vera sincronizzazione
+          
+          return res.status(200).json({
+            success: true,
+            message: 'Sincronizzazione completata con successo',
+            results: result
+          });
+        } catch (error) {
+          console.error('❌ Errore sync manuale:', error);
+          return res.status(500).json({ success: false, error: error.message });
+        }
       }
     }
 
@@ -2606,28 +2613,21 @@ END:VEVENT
     if (action === 'force-calendar-sync') {
       if (req.method === 'POST') {
         try {
-          const { calendarId, force } = req.body;
+          console.log('🔄 Admin Panel: Forzatura sincronizzazione...');
+          const sync = new RealCalendarSync();
+          const result = await sync.syncAll();
           
-          // Simula sincronizzazione forzata
-          const syncResults = {
-            calendarId: calendarId || 'all',
-            eventsProcessed: 15,
-            newEvents: 3,
-            updatedEvents: 2,
-            deletedEvents: 1,
-            errors: 0
-          };
-
           return res.status(200).json({
             success: true,
             message: 'Sincronizzazione forzata completata',
-            results: syncResults,
+            results: result,
             syncTime: new Date().toISOString()
           });
         } catch (error) {
+          console.error('❌ Errore force-sync:', error);
           return res.status(500).json({
             success: false,
-            error: 'Errore sincronizzazione forzata'
+            error: error.message
           });
         }
       }
