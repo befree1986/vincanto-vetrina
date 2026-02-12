@@ -1365,12 +1365,12 @@ export default async function handler(req, res) {
                 // 🛎️ Includi eventuali servizi extra passati dal frontend
                 extraServices: Array.isArray(bookingData.extraServices) ? bookingData.extraServices : (Array.isArray(bookingData.extra_services) ? bookingData.extra_services : []),
                 // 🔥 Passa il breakdown dei costi al template email
-                accommodationCost: bookingData.accommodationCost,
-                cleaningFee: bookingData.cleaningFee,
-                parkingCost: bookingData.parkingCost,
-                touristTax: bookingData.touristTax,
-                extraServicesCost: bookingData.extraServicesCost,
-                nights: bookingData.nights
+                accommodationCost: parseFloat(bookingData.accommodationCost) || 0,
+                cleaningFee: parseFloat(bookingData.cleaningFee) || 0,
+                parkingCost: parseFloat(bookingData.parkingCost) || 0,
+                touristTax: parseFloat(bookingData.touristTax) || 0,
+                extraServicesCost: parseFloat(bookingData.extraServicesCost) || 0,
+                nights: parseInt(bookingData.nights) || 0
 
               });
               const emailResults = await sendEmailWithAdminCopy({
@@ -1385,12 +1385,12 @@ export default async function handler(req, res) {
                   paymentMethod: bookingData.paymentMethod || bookingData.payment_method,
                   extraServices: Array.isArray(bookingData.extraServices) ? bookingData.extraServices : (Array.isArray(bookingData.extra_services) ? bookingData.extra_services : []),
                   // Admin copy metadata
-                  accommodationCost: bookingData.accommodationCost,
-                  cleaningFee: bookingData.cleaningFee,
-                  parkingCost: bookingData.parkingCost,
-                  touristTax: bookingData.touristTax,
-                  extraServicesCost: bookingData.extraServicesCost,
-                  nights: bookingData.nights
+                  accommodationCost: parseFloat(bookingData.accommodationCost) || 0,
+                  cleaningFee: parseFloat(bookingData.cleaningFee) || 0,
+                  parkingCost: parseFloat(bookingData.parkingCost) || 0,
+                  touristTax: parseFloat(bookingData.touristTax) || 0,
+                  extraServicesCost: parseFloat(bookingData.extraServicesCost) || 0,
+                  nights: parseInt(bookingData.nights) || 0
                 }
               });
               const primarySuccess = emailResults.find(r => r.recipient === email)?.success;
@@ -1405,7 +1405,11 @@ export default async function handler(req, res) {
           return res.status(201).json({
             success: true,
             message: 'Prenotazione creata con successo',
-            booking: result.rows[0],
+            booking: {
+              ...result.rows[0],
+              total_amount: parseFloat(result.rows[0].total_amount),
+              deposit_amount: parseFloat(result.rows[0].deposit_amount)
+            },
             // 💰 Frontend mapping: includi payment_amount per compatibilità StripePayment/PayPalPayment
             payment_amount: totalAmount,
             booking_id: result.rows[0].booking_id,
