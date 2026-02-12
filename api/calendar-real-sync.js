@@ -20,16 +20,56 @@ export class RealCalendarSync {
     const AIRBNB_URL = process.env.AIRBNB_ICAL_URL || 'https://www.airbnb.com/calendar/ical/1387891577187940063.ics?s=6622673f28e122e6b2b3336efd4d140e&locale=it';
     const BOOKING_URL = process.env.BOOKING_ICAL_URL || 'https://ical.booking.com/v1/export?t=d6fd211b-ce0a-486b-b98c-6fda80504dd0';
     const HOLIDU_URL = process.env.HOLIDU_ICAL_URL || 'https://api.host.holidu.com/pmc/rest/apartments/65376863/ical.ics?key=72d27a56f3e8836f690500877301d000';
+    this.calendars = [];
+  }
 
     this.calendars = [];
     if (AIRBNB_URL) {
       this.calendars.push({
         id: 'airbnb',
         name: 'Airbnb',
+  async loadCalendarsFromDB() {
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    });
+
+    try {
+      // Carica calendari attivi dal DB
+      const result = await pool.query('SELECT * FROM calendar_configs WHERE is_active = true');
+      
+      this.calendars = result.rows.map(row => ({
+        id: `cal_${row.id}`, // ID univoco per la sincronizzazione (es. cal_1, cal_2)
+        name: row.name,
         type: 'ical',
         url: AIRBNB_URL,
         enabled: true
       });
+        url: row.url,
+        enabled: row.is_active,
+        platform: row.calendar_type // 'airbnb', 'booking', 'holidu' (per la logica di parsing)
+      }));
+
+      // Aggiungi Google Calendar se configurato via ENV (gestione speciale API)
+      if (process.env.GOOGLE_CALENDAR_CLIENT_ID && process.env.GOOGLE_CALENDAR_REFRESH_TOKEN) {
+        this.calendars.push({
+          id: 'google',
+          name: 'Google Calendar',
+          type: 'api',
+          clientId: process.env.GOOGLE_CALENDAR_CLIENT_ID,
+          clientSecret: process.env.GOOGLE_CALENDAR_CLIENT_SECRET,
+          refreshToken: process.env.GOOGLE_CALENDAR_REFRESH_TOKEN,
+          calendarId: process.env.GOOGLE_CALENDAR_ID || 'primary',
+          enabled: true,
+          platform: 'google'
+        });
+      }
+      
+      console.log('🗓️ Calendari caricati dal DB:', this.calendars.length);
+    } catch (err) {
+      console.error('❌ Errore caricamento calendari dal DB:', err);
+    } finally {
+      await pool.end();
     }
     if (BOOKING_URL) {
       this.calendars.push({
@@ -71,6 +111,8 @@ export class RealCalendarSync {
    * Sincronizza tutti i calendari configurati
    */
   async syncAll() {
+    await this.loadCalendarsFromDB();
+    
     const results = [];
     
     for (const calendar of this.calendars) {
@@ -170,6 +212,8 @@ export class RealCalendarSync {
       }
 
       const events = this.parseICalData(icalData, calendar.id);
+      // Usa calendar.platform per la logica di parsing (es. filtri Airbnb vs Booking)
+      const events = this.parseICalData(icalData, calendar.platform);
       
       console.log(`✅ ${calendar.name}: trovati ${events.length} eventi`);
       
@@ -190,6 +234,8 @@ export class RealCalendarSync {
       
       // Salva eventi nel database
       const savedEvents = await this.saveEventsToDatabase(futureEvents, calendar.id);
+      // Usa calendar.id (es. cal_1) come sorgente univoca per evitare conflitti tra più calendari dello stesso tipo
+      const savedEvents = await this.saveEventsToDatabase(futureEvents, calendar.id, calendar.platform);
       
       if (calendar.id === 'holidu') {
         console.log('🏖️ Holidu eventi salvati nel DB:', savedEvents);
@@ -223,6 +269,7 @@ export class RealCalendarSync {
       
       // 3. Salva eventi nel database
       const savedEvents = await this.saveEventsToDatabase(events, calendar.id);
+      const savedEvents = await this.saveEventsToDatabase(events, calendar.id, calendar.platform);
       
       return {
         eventsFound: events.length,
@@ -239,6 +286,7 @@ export class RealCalendarSync {
    * Parse dati iCal in formato standard
    */
   parseICalData(icalText, calendar_source) {
+  parseICalData(icalText, platform) {
     const events = [];
     const lines = icalText.split('\n');
     let currentEvent = null;
@@ -253,6 +301,8 @@ export class RealCalendarSync {
         // 🔥 FILTRO: Esclude festività e blocchi Airbnb - sincronizza SOLO prenotazioni
         // 🔴 AGGIUNGI calendar_source per il filtro
         if (currentEvent.dtstart && currentEvent.dtend && this.isValidBooking({ ...currentEvent, calendar_source })) {
+        // 🔴 AGGIUNGI platform per il filtro
+        if (currentEvent.dtstart && currentEvent.dtend && this.isValidBooking({ ...currentEvent, calendar_source: platform })) {
           events.push({
             uid: currentEvent.uid || '',
             summary: currentEvent.summary || 'Prenotazione',
@@ -452,6 +502,7 @@ export class RealCalendarSync {
    * Salva eventi nel database PostgreSQL
    */
   async saveEventsToDatabase(events, calendarSource) {
+  async saveEventsToDatabase(events, calendarSource, platform) {
     console.log(`💾 Salvando ${events.length} eventi da ${calendarSource}`);
     
     if (calendarSource === 'holidu') {
@@ -488,6 +539,7 @@ export class RealCalendarSync {
           id SERIAL PRIMARY KEY,
           uid TEXT UNIQUE NOT NULL,
           calendar_source VARCHAR(50) NOT NULL,
+          platform VARCHAR(50),
           summary TEXT NOT NULL,
           description TEXT,
           start_date TIMESTAMP NOT NULL,
@@ -499,6 +551,11 @@ export class RealCalendarSync {
         )
       `);
 
+      // Aggiungi colonna platform se manca
+      try {
+        await pool.query(`ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS platform VARCHAR(50)`);
+      } catch (e) {}
+
       // Inserisci/aggiorna eventi
       for (const event of events) {
         try {
@@ -507,6 +564,8 @@ export class RealCalendarSync {
           const result = await pool.query(`
             INSERT INTO calendar_events (uid, calendar_source, summary, description, start_date, end_date, location)
             VALUES ($1, $2, $3, $4, $5, $6, $7)
+            INSERT INTO calendar_events (uid, calendar_source, platform, summary, description, start_date, end_date, location)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             ON CONFLICT (uid) 
             DO UPDATE SET 
               summary = EXCLUDED.summary,
@@ -514,11 +573,13 @@ export class RealCalendarSync {
               start_date = EXCLUDED.start_date,
               end_date = EXCLUDED.end_date,
               location = EXCLUDED.location,
+              platform = EXCLUDED.platform,
               updated_at = NOW()
             RETURNING id
           `, [
             eventUid,
             calendarSource,
+            platform || 'unknown',
             event.summary,
             event.description || '',
             event.start,

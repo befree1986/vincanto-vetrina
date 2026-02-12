@@ -143,6 +143,40 @@ async function initializeTables() {
       )
     `);
     console.log('✅ Tabella calendar_events inizializzata');
+    
+    // 🆕 Aggiungi colonna 'platform' a calendar_events se non esiste (per distinguere logica di filtro da sorgente unica)
+    try {
+      await pool.query(`ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS platform VARCHAR(50)`);
+    } catch (e) { console.log('Info: colonna platform già presente o errore:', e.message); }
+
+    // 🆕 Crea tabella calendar_configs per gestire i calendari dinamicamente
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS calendar_configs (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        calendar_type VARCHAR(50) NOT NULL,
+        url TEXT NOT NULL,
+        is_active BOOLEAN DEFAULT true,
+        sync_frequency INTEGER DEFAULT 60,
+        last_sync TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✅ Tabella calendar_configs inizializzata');
+
+    // Seed calendari di default se la tabella è vuota
+    const calendarsCount = await pool.query('SELECT COUNT(*) FROM calendar_configs');
+    if (parseInt(calendarsCount.rows[0].count) === 0) {
+      const defaultUrlBooking = process.env.BOOKING_ICAL_URL || 'https://ical.booking.com/v1/export?t=d6fd211b-ce0a-486b-b98c-6fda80504dd0';
+      const defaultUrlAirbnb = process.env.AIRBNB_ICAL_URL || 'https://www.airbnb.com/calendar/ical/1387891577187940063.ics?s=6622673f28e122e6b2b3336efd4d140e&locale=it';
+      const defaultUrlHolidu = process.env.HOLIDU_ICAL_URL || 'https://api.host.holidu.com/pmc/rest/apartments/65376863/ical.ics?key=72d27a56f3e8836f690500877301d000';
+
+      await pool.query("INSERT INTO calendar_configs (name, calendar_type, url, sync_frequency) VALUES ($1, $2, $3, $4)", ['Booking.com Principale', 'booking', defaultUrlBooking, 60]);
+      await pool.query("INSERT INTO calendar_configs (name, calendar_type, url, sync_frequency) VALUES ($1, $2, $3, $4)", ['Airbnb Calendar', 'airbnb', defaultUrlAirbnb, 30]);
+      await pool.query("INSERT INTO calendar_configs (name, calendar_type, url, sync_frequency) VALUES ($1, $2, $3, $4)", ['Holidu Calendar', 'holidu', defaultUrlHolidu, 60]);
+      console.log('✅ Calendari di default inseriti in calendar_configs');
+    }
 
     // 🆕 Crea tabella extra_services se non esiste
     await pool.query(`
@@ -1203,7 +1237,7 @@ export default async function handler(req, res) {
                 OR LOWER(description) LIKE '%cancelled%'
               )
               AND NOT (
-                calendar_source = 'airbnb' AND (
+                (platform = 'airbnb' OR calendar_source = 'airbnb') AND (
                   LOWER(summary) LIKE '%not available%'
                   OR LOWER(summary) LIKE '%blocked%'
                   OR LOWER(summary) LIKE '%holiday%'
@@ -1214,7 +1248,7 @@ export default async function handler(req, res) {
                 )
               )
               AND NOT (
-                calendar_source = 'airbnb' AND (
+                (platform = 'airbnb' OR calendar_source = 'airbnb') AND (
                   LOWER(summary) LIKE '%maintenance%'
                   OR LOWER(summary) LIKE '%pulizie%'
                   OR LOWER(summary) LIKE '%cleaning%'
@@ -1222,7 +1256,7 @@ export default async function handler(req, res) {
                 )
               )
               AND NOT (
-                calendar_source = 'holidu' AND (
+                (platform = 'holidu' OR calendar_source = 'holidu') AND (
                   LOWER(summary) LIKE '%not available%'
                   OR LOWER(summary) LIKE '%unavailable%'
                   OR LOWER(summary) LIKE '%non disponibile%'
@@ -2026,73 +2060,29 @@ export default async function handler(req, res) {
     // CALENDAR MANAGEMENT SECTION
     // ========================================
     if (action === 'calendar-configs') {
-      return res.status(200).json({
-        success: true,
-        calendars: [
-          {
-            id: 1,
-            name: 'Google Calendar Vincanto (Privato)',
-            calendar_type: 'google',
-            url: 'https://calendar.google.com/calendar/ical/vincantomaiori%40gmail.com/private-c093b952abd5d0bafc2261928153f36d/basic.ics',
-            is_active: true,
-            sync_frequency: 15,
-            last_sync: new Date().toISOString(),
-            status: 'connected',
-            events_synced: 12,
-            priority: 1
-          },
-          {
-            id: 2,
-            name: 'Booking.com Principale',
-            calendar_type: 'booking_com',
-            url: process.env.BOOKING_ICAL_URL || 'https://ical.booking.com/v1/export?t=d6fd211b-ce0a-486b-b98c-6fda80504dd0',
-            is_active: true,
-            sync_frequency: 60,
-            last_sync: new Date(Date.now() - 3600000).toISOString(),
-            status: 'connected',
-            events_synced: 8,
-            priority: 2
-          },
-          {
-            id: 3,
-            name: 'Holidu Calendar',
-            calendar_type: 'holidu',
-            url: process.env.HOLIDU_ICAL_URL || 'https://api.host.holidu.com/pmc/rest/apartments/65376863/ical.ics?key=72d27a56f3e8836f690500877301d000',
-            is_active: true,
-            sync_frequency: 60,
-            last_sync: new Date(Date.now() - 1800000).toISOString(),
-            status: 'connected',
-            events_synced: 7,
-            priority: 3
-          },
-          {
-            id: 4,
-            name: 'Airbnb Calendar',
-            calendar_type: 'airbnb',
-            url: process.env.AIRBNB_ICAL_URL || 'https://www.airbnb.com/calendar/ical/1387891577187940063.ics?s=6622673f28e122e6b2b3336efd4d140e&locale=it',
-            is_active: true,
-            sync_frequency: 30,
-            last_sync: new Date(Date.now() - 1200000).toISOString(),
-            status: 'connected',
-            events_synced: 5,
-            priority: 4
+      try {
+        const result = await pool.query('SELECT * FROM calendar_configs ORDER BY id ASC');
+        
+        return res.status(200).json({
+          success: true,
+          calendars: result.rows.map(row => ({
+            id: row.id,
+            name: row.name,
+            calendar_type: row.calendar_type,
+            url: row.url,
+            is_active: row.is_active,
+            sync_frequency: row.sync_frequency,
+            last_sync: row.last_sync,
+            status: row.is_active ? 'connected' : 'disabled'
+          })),
+          stats: {
+            total: result.rows.length,
+            active: result.rows.filter(r => r.is_active).length
           }
-        ],
-        stats: {
-          total: 4,
-          active: 4,
-          googleCalendar: 1,
-          external: 3,
-          lastSyncSuccess: new Date().toISOString(),
-          totalEventsSynced: 32,
-          calendarsConfigured: {
-            google: { active: true, url: 'vincantomaiori@gmail.com' },
-            booking: { active: true, url: 'ical.booking.com' },
-            holidu: { active: true, url: 'api.host.holidu.com' },
-            airbnb: { active: true, url: 'airbnb.com/1387891577187940063' }
-          }
-        }
-      });
+        });
+      } catch (error) {
+        return res.status(500).json({ success: false, error: error.message });
+      }
     }
 
     if (action === 'calendar-sync') {
@@ -2197,22 +2187,45 @@ export default async function handler(req, res) {
     // ADDITIONAL CALENDAR MANAGEMENT SECTION
     // ========================================
     
+    // Aggiungi nuovo calendario
+    if (action === 'add-calendar-config') {
+      if (req.method === 'POST') {
+        try {
+          const { name, calendar_type, url, sync_frequency } = req.body;
+          const result = await pool.query(
+            'INSERT INTO calendar_configs (name, calendar_type, url, sync_frequency) VALUES ($1, $2, $3, $4) RETURNING *',
+            [name, calendar_type, url, sync_frequency || 60]
+          );
+          return res.status(201).json({ success: true, calendar: result.rows[0] });
+        } catch (error) {
+          return res.status(500).json({ success: false, error: error.message });
+        }
+      }
+    }
+
     // Aggiorna configurazione calendario
     if (action === 'update-calendar-config') {
       if (req.method === 'PUT' || req.method === 'POST') {
         try {
           const { id } = req.query;
-          const configData = req.body;
+          const { name, calendar_type, url, is_active, sync_frequency } = req.body;
           
-          // Simula aggiornamento configurazione calendario
+          const result = await pool.query(
+            `UPDATE calendar_configs SET 
+              name = COALESCE($1, name), 
+              calendar_type = COALESCE($2, calendar_type), 
+              url = COALESCE($3, url), 
+              is_active = COALESCE($4, is_active), 
+              sync_frequency = COALESCE($5, sync_frequency),
+              updated_at = NOW()
+             WHERE id = $6 RETURNING *`,
+            [name, calendar_type, url, is_active, sync_frequency, id]
+          );
+
           return res.status(200).json({
             success: true,
             message: 'Configurazione calendario aggiornata',
-            calendar: {
-              id: id,
-              ...configData,
-              updated_at: new Date().toISOString()
-            }
+            calendar: result.rows[0]
           });
         } catch (error) {
           return res.status(500).json({
@@ -2228,6 +2241,7 @@ export default async function handler(req, res) {
       if (req.method === 'DELETE') {
         try {
           const { id } = req.query;
+          await pool.query('DELETE FROM calendar_configs WHERE id = $1', [id]);
           
           return res.status(200).json({
             success: true,
@@ -2360,7 +2374,7 @@ export default async function handler(req, res) {
           FROM calendar_events
           WHERE 1=1
             AND NOT (
-              calendar_source = 'airbnb' AND (
+              (platform = 'airbnb' OR calendar_source = 'airbnb') AND (
                 LOWER(summary) LIKE '%not available%'
                 OR LOWER(summary) LIKE '%blocked%'
                 OR LOWER(summary) LIKE '%holiday%'
@@ -2371,7 +2385,7 @@ export default async function handler(req, res) {
               )
             )
             AND NOT (
-              calendar_source = 'airbnb' AND (
+              (platform = 'airbnb' OR calendar_source = 'airbnb') AND (
                 LOWER(summary) LIKE '%maintenance%'
                 OR LOWER(summary) LIKE '%pulizie%'
                 OR LOWER(summary) LIKE '%cleaning%'
@@ -2384,6 +2398,14 @@ export default async function handler(req, res) {
               OR LOWER(description) LIKE '%canceled%'
               OR LOWER(description) LIKE '%cancelled%'
             )
+            AND NOT (
+              (platform = 'holidu' OR calendar_source = 'holidu') AND (
+                LOWER(summary) LIKE '%not available%'
+                OR LOWER(summary) LIKE '%unavailable%'
+                OR LOWER(summary) LIKE '%non disponibile%'
+                OR LOWER(summary) LIKE '%non-available%'
+              )
+            )
         `;
 
         const params = [];
@@ -2394,7 +2416,7 @@ export default async function handler(req, res) {
         }
 
         if (platform && platform !== 'all') {
-          query += ` AND calendar_source = $${paramCount}`;
+          query += ` AND (platform = $${paramCount} OR calendar_source = $${paramCount})`;
           params.push(platform);
           paramCount++;
         }
@@ -2407,7 +2429,7 @@ export default async function handler(req, res) {
         // Conta totale - 🔥 Applica gli stessi filtri (esclude Airbnb blocchi, mantiene Booking chiusure)
         let countQuery = `SELECT COUNT(*) as total FROM calendar_events WHERE 1=1
           AND NOT (
-            calendar_source = 'airbnb' AND (
+            (platform = 'airbnb' OR calendar_source = 'airbnb') AND (
               LOWER(summary) LIKE '%not available%'
               OR LOWER(summary) LIKE '%blocked%'
               OR LOWER(summary) LIKE '%holiday%'
@@ -2418,7 +2440,7 @@ export default async function handler(req, res) {
             )
           )
           AND NOT (
-            calendar_source = 'airbnb' AND (
+            (platform = 'airbnb' OR calendar_source = 'airbnb') AND (
               LOWER(summary) LIKE '%maintenance%'
               OR LOWER(summary) LIKE '%pulizie%'
               OR LOWER(summary) LIKE '%cleaning%'
@@ -2430,13 +2452,21 @@ export default async function handler(req, res) {
           OR LOWER(summary) LIKE '%cancelled%'
           OR LOWER(description) LIKE '%canceled%'
           OR LOWER(description) LIKE '%cancelled%'
+        )
+        AND NOT (
+          (platform = 'holidu' OR calendar_source = 'holidu') AND (
+            LOWER(summary) LIKE '%not available%'
+            OR LOWER(summary) LIKE '%unavailable%'
+            OR LOWER(summary) LIKE '%non disponibile%'
+            OR LOWER(summary) LIKE '%non-available%'
+          )
         )`;
         
         if (futureOnly === 'true' || futureOnly === true) {
           countQuery += ' AND start_date >= CURRENT_DATE';
         }
         if (platform && platform !== 'all') {
-          countQuery += ` AND calendar_source = '${platform}'`;
+          countQuery += ` AND (platform = '${platform}' OR calendar_source = '${platform}')`;
         }
         const countResult = await pool.query(countQuery);
 
@@ -2903,7 +2933,7 @@ END:VEVENT
               OR LOWER(description) LIKE '%cancelled%'
             )
             AND NOT (
-              calendar_source = 'airbnb' AND (
+              (platform = 'airbnb' OR calendar_source = 'airbnb') AND (
                 LOWER(summary) LIKE '%not available%'
                 OR LOWER(summary) LIKE '%blocked%'
                 OR LOWER(summary) LIKE '%holiday%'
@@ -2914,7 +2944,7 @@ END:VEVENT
               )
             )
             AND NOT (
-              calendar_source = 'airbnb' AND (
+              (platform = 'airbnb' OR calendar_source = 'airbnb') AND (
                 LOWER(summary) LIKE '%maintenance%'
                 OR LOWER(summary) LIKE '%pulizie%'
                 OR LOWER(summary) LIKE '%cleaning%'
@@ -2922,7 +2952,7 @@ END:VEVENT
               )
             )
             AND NOT (
-              calendar_source = 'holidu' AND (
+              (platform = 'holidu' OR calendar_source = 'holidu') AND (
                 LOWER(summary) LIKE '%not available%'
                 OR LOWER(summary) LIKE '%unavailable%'
                 OR LOWER(summary) LIKE '%non disponibile%'
