@@ -181,7 +181,7 @@ export class RealCalendarSync {
       }
       
       // Filtra solo eventi futuri
-      const futureEvents = events.filter(event => new Date(event.start) > new Date());
+      const futureEvents = events.filter(event => new Date(event.end) > new Date());
       console.log(`📅 ${calendar.name}: ${futureEvents.length} eventi futuri`);
       
       if (calendar.id === 'holidu') {
@@ -321,6 +321,18 @@ export class RealCalendarSync {
       return false;
     }
 
+    // 🚫 CHECK SUMMARY: Se il summary contiene "Cancelled", ignora (Safety Check)
+    if (event.summary && (event.summary.toLowerCase().includes('canceled') || event.summary.toLowerCase().includes('cancelled'))) {
+      console.log(`🚫 Evento cancellato (Summary): "${event.summary}"`);
+      return false;
+    }
+
+    // 🚫 CHECK TRANSPARENCY: Se è TRANSPARENT, significa che non blocca il calendario (es. disponibile o cancellato)
+    if (event.transp && event.transp.toUpperCase() === 'TRANSPARENT') {
+      console.log(`🚫 Evento trasparente (TRANSP:TRANSPARENT): "${event.summary}"`);
+      return false;
+    }
+
     if (!event.summary) return true; // Se no summary, considera come prenotazione
     
     // Se è da Booking.com, MANTIENI anche i "CLOSED" (chiusure reali del host)
@@ -348,6 +360,10 @@ export class RealCalendarSync {
       }
       // Mantiene: "Blocked", "Blocked by owner", "Maintenance", "Cleaning", testo generico
       // Questi sono probabilmente blocchi manuali dell'host
+      
+      // Log per debug Holidu
+      console.log(`✅ HOLIDU: Accettato evento "${event.summary}" (Status: ${event.status || 'N/A'}, Transp: ${event.transp || 'N/A'})`);
+      
       return true;
     }
     
@@ -532,7 +548,7 @@ export class RealCalendarSync {
         const deleteQuery = `
           DELETE FROM calendar_events 
           WHERE calendar_source = $1 
-            AND start_date > NOW() 
+            AND end_date >= NOW() 
             AND uid NOT IN (${placeholders})
         `;
         
@@ -544,7 +560,7 @@ export class RealCalendarSync {
         await pool.query(`
           DELETE FROM calendar_events 
           WHERE calendar_source = $1 
-            AND start_date > NOW()
+            AND end_date >= NOW()
         `, [calendarSource]);
       }
 
