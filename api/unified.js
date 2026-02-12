@@ -2376,6 +2376,14 @@ export default async function handler(req, res) {
               OR LOWER(description) LIKE '%canceled%'
               OR LOWER(description) LIKE '%cancelled%'
             )
+            AND NOT (
+              calendar_source = 'holidu' AND (
+                LOWER(summary) LIKE '%not available%'
+                OR LOWER(summary) LIKE '%unavailable%'
+                OR LOWER(summary) LIKE '%non disponibile%'
+                OR LOWER(summary) LIKE '%non-available%'
+              )
+            )
         `;
 
         const params = [];
@@ -2422,6 +2430,14 @@ export default async function handler(req, res) {
           OR LOWER(summary) LIKE '%cancelled%'
           OR LOWER(description) LIKE '%canceled%'
           OR LOWER(description) LIKE '%cancelled%'
+        )
+        AND NOT (
+          calendar_source = 'holidu' AND (
+            LOWER(summary) LIKE '%not available%'
+            OR LOWER(summary) LIKE '%unavailable%'
+            OR LOWER(summary) LIKE '%non disponibile%'
+            OR LOWER(summary) LIKE '%non-available%'
+          )
         )`;
         
         if (futureOnly === 'true' || futureOnly === true) {
