@@ -1,0 +1,13 @@
+name: 5-Min Calendar Sync
+
+on:
+  schedule:
+    # Esegue ogni 5 minuti
+    - cron: '*/5 * * * *'
+
+jobs:
+  cron:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Sync API
+        run: curl -L -X GET https://www.vincantomaiori.it/api/calendar-real-sync
