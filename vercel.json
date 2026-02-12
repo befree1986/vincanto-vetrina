@@ -4,5 +4,15 @@
       "path": "/api/calendar-real-sync",
       "schedule": "0 5 * * *"
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }
