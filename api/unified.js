@@ -2636,6 +2636,10 @@ END:VEVENT
         // Imposta header per download file .ics
         res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
         res.setHeader('Content-Disposition', 'attachment; filename="vincanto-calendar.ics"');
+        // 🔥 Disabilita cache per forzare le piattaforme esterne a leggere i dati aggiornati
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
         return res.status(200).send(icalContent);
 
       } catch (error) {
