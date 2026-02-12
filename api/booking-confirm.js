@@ -215,7 +215,9 @@ export default async function handler(req, res) {
           parkingCost: booking_data.parkingCost,
           touristTax: booking_data.touristTax,
           extraServicesCost: booking_data.extraServicesCost,
-          nights: booking_data.nights
+          nights: booking_data.nights,
+          logoUrl: 'https://www.vincantomaiori.it/logo.svg',
+          siteUrl: 'https://www.vincantomaiori.it'
         });
 
         await sendEmailWithAdminCopy({

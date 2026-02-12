@@ -1365,12 +1365,14 @@ export default async function handler(req, res) {
                 // 🛎️ Includi eventuali servizi extra passati dal frontend
                 extraServices: Array.isArray(bookingData.extraServices) ? bookingData.extraServices : (Array.isArray(bookingData.extra_services) ? bookingData.extra_services : []),
                 // 🔥 Passa il breakdown dei costi al template email
-                accommodationCost: bookingData.accommodationCost,
-                cleaningFee: bookingData.cleaningFee,
-                parkingCost: bookingData.parkingCost,
-                touristTax: bookingData.touristTax,
-                extraServicesCost: bookingData.extraServicesCost,
-                nights: bookingData.nights
+                accommodationCost: parseFloat(bookingData.accommodationCost) || 0,
+                cleaningFee: parseFloat(bookingData.cleaningFee) || 0,
+                parkingCost: parseFloat(bookingData.parkingCost) || 0,
+                touristTax: parseFloat(bookingData.touristTax) || 0,
+                extraServicesCost: parseFloat(bookingData.extraServicesCost) || 0,
+                nights: parseInt(bookingData.nights) || 0,
+                logoUrl: 'https://www.vincantomaiori.it/logo.svg',
+                siteUrl: 'https://www.vincantomaiori.it'
 
               });
               const emailResults = await sendEmailWithAdminCopy({
@@ -1385,12 +1387,12 @@ export default async function handler(req, res) {
                   paymentMethod: bookingData.paymentMethod || bookingData.payment_method,
                   extraServices: Array.isArray(bookingData.extraServices) ? bookingData.extraServices : (Array.isArray(bookingData.extra_services) ? bookingData.extra_services : []),
                   // Admin copy metadata
-                  accommodationCost: bookingData.accommodationCost,
-                  cleaningFee: bookingData.cleaningFee,
-                  parkingCost: bookingData.parkingCost,
-                  touristTax: bookingData.touristTax,
-                  extraServicesCost: bookingData.extraServicesCost,
-                  nights: bookingData.nights
+                  accommodationCost: parseFloat(bookingData.accommodationCost) || 0,
+                  cleaningFee: parseFloat(bookingData.cleaningFee) || 0,
+                  parkingCost: parseFloat(bookingData.parkingCost) || 0,
+                  touristTax: parseFloat(bookingData.touristTax) || 0,
+                  extraServicesCost: parseFloat(bookingData.extraServicesCost) || 0,
+                  nights: parseInt(bookingData.nights) || 0
                 }
               });
               const primarySuccess = emailResults.find(r => r.recipient === email)?.success;
@@ -1405,7 +1407,11 @@ export default async function handler(req, res) {
           return res.status(201).json({
             success: true,
             message: 'Prenotazione creata con successo',
-            booking: result.rows[0],
+            booking: {
+              ...result.rows[0],
+              total_amount: parseFloat(result.rows[0].total_amount),
+              deposit_amount: parseFloat(result.rows[0].deposit_amount)
+            },
             // 💰 Frontend mapping: includi payment_amount per compatibilità StripePayment/PayPalPayment
             payment_amount: totalAmount,
             booking_id: result.rows[0].booking_id,
@@ -1924,7 +1930,9 @@ export default async function handler(req, res) {
                   language: guestLanguage,
                   paymentMethod: req.body.payment_method || req.body.paymentMethod,
                   // 🛎️ Se il client invia i servizi extra nel corpo della richiesta, includili nell'email
-                  extraServices: Array.isArray(req.body.extra_services) ? req.body.extra_services : (Array.isArray(req.body.extraServices) ? req.body.extraServices : [])
+                  extraServices: Array.isArray(req.body.extra_services) ? req.body.extra_services : (Array.isArray(req.body.extraServices) ? req.body.extraServices : []),
+                  logoUrl: 'https://www.vincantomaiori.it/logo.svg',
+                  siteUrl: 'https://www.vincantomaiori.it'
                 });
 
                 const emailResults = await sendEmailWithAdminCopy({
@@ -2376,14 +2384,6 @@ export default async function handler(req, res) {
               OR LOWER(description) LIKE '%canceled%'
               OR LOWER(description) LIKE '%cancelled%'
             )
-            AND NOT (
-              calendar_source = 'holidu' AND (
-                LOWER(summary) LIKE '%not available%'
-                OR LOWER(summary) LIKE '%unavailable%'
-                OR LOWER(summary) LIKE '%non disponibile%'
-                OR LOWER(summary) LIKE '%non-available%'
-              )
-            )
         `;
 
         const params = [];
@@ -2430,14 +2430,6 @@ export default async function handler(req, res) {
           OR LOWER(summary) LIKE '%cancelled%'
           OR LOWER(description) LIKE '%canceled%'
           OR LOWER(description) LIKE '%cancelled%'
-        )
-        AND NOT (
-          calendar_source = 'holidu' AND (
-            LOWER(summary) LIKE '%not available%'
-            OR LOWER(summary) LIKE '%unavailable%'
-            OR LOWER(summary) LIKE '%non disponibile%'
-            OR LOWER(summary) LIKE '%non-available%'
-          )
         )`;
         
         if (futureOnly === 'true' || futureOnly === true) {
