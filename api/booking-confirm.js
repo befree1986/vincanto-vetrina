@@ -132,7 +132,7 @@ export default async function handler(req, res) {
 
     //Calcola il valore da salvare come "acconto": se è saldo completp, è uguale al totale.
     const isFullPayment = paymentStatusDb === 'paid_full';
-    const depositValue = isFullPayment ? totalAmount : Math.round(totalAmount * 0.3 * 100) / 100;
+    const depositValue = isFullPayment ? totalAmount : Math.round(totalAmount * 0.2 * 100) / 100;
 
     console.log('✅ Dati validati:', { 
       checkin, checkout, guests, adults, children, 

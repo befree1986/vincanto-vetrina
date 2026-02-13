@@ -49,7 +49,9 @@ export const emailStrings = {
       bank_reason_val: 'Prenotazione',
       contact_us: 'Per richieste o modifiche, rispondi a questa email',
       footer: 'Vincanto Maori • Maiori, Costiera Amalfitana',
-      website: 'www.vincantomaori.it'
+      website: 'www.vincantomaori.it',
+      final_greeting: "Ti aspettiamo a Maiori! Conserva questa email per riferimento.",
+      contact_info: "Per richieste o modifiche rispondi a <strong>prenotazioni@vincantomaiori.it</strong> o chiama il <strong>+39 333 148 1677</strong>."
     },
 
     // Final Payment Confirmation
@@ -76,7 +78,9 @@ export const emailStrings = {
       no_extras: 'Nessun servizio extra selezionato',
       waiting_for_you: 'Ti aspettiamo a Maiori! Conserva questa email per riferimento.',
       contact: 'Per richieste o modifiche rispondi direttamente a questa email',
-      footer: 'Vincanto Maori • www.vincantomaori.it'
+      footer: 'Vincanto Maori • www.vincantomaori.it',
+      final_greeting: "Ti aspettiamo a Maiori! Conserva questa email per riferimento.",
+      contact_info: "Per richieste o modifiche rispondi a <strong>prenotazioni@vincantomaiori.it</strong> o chiama il <strong>+39 333 148 1677</strong>."
     }
   },
 
@@ -126,7 +130,9 @@ export const emailStrings = {
       bank_reason_val: 'Booking',
       contact_us: 'For inquiries or changes, reply to this email',
       footer: 'Vincanto Maori • Maiori, Amalfi Coast',
-      website: 'www.vincantomaori.it'
+      website: 'www.vincantomaori.it',
+      final_greeting: "We look forward to welcoming you in Maiori! Please keep this email for your records.",
+      contact_info: "For requests or changes, reply to <strong>prenotazioni@vincantomaiori.it</strong> or call <strong>+39 333 148 1677</strong>."
     },
 
     booking_final: {
@@ -152,7 +158,9 @@ export const emailStrings = {
       no_extras: 'No extra services selected',
       waiting_for_you: 'We look forward to welcoming you in Maiori! Please keep this email for your records.',
       contact: 'For inquiries or changes, reply directly to this email',
-      footer: 'Vincanto Maori • www.vincantomaori.it'
+      footer: 'Vincanto Maori • www.vincantomaori.it',
+      final_greeting: "We look forward to welcoming you in Maiori! Please keep this email for your records.",
+      contact_info: "For requests or changes, reply to <strong>prenotazioni@vincantomaiori.it</strong> or call <strong>+39 333 148 1677</strong>."
     }
   },
 
@@ -202,7 +210,9 @@ export const emailStrings = {
       bank_reason_val: 'Buchung',
       contact_us: 'Bei Fragen oder Änderungen antworten Sie auf diese E-Mail',
       footer: 'Vincanto Maori • Maiori, Amalfiküste',
-      website: 'www.vincantomaori.it'
+      website: 'www.vincantomaori.it',
+      final_greeting: "Wir freuen uns, Sie in Maiori begrüßen zu dürfen! Bitte bewahren Sie diese E-Mail für Ihre Unterlagen auf.",
+      contact_info: "Für Anfragen oder Änderungen antworten Sie bitte an <strong>prenotazioni@vincantomaiori.it</strong> oder rufen Sie <strong>+39 333 148 1677</strong> an."
     },
 
     booking_final: {
@@ -228,7 +238,9 @@ export const emailStrings = {
       no_extras: 'Keine Zusatzleistungen ausgewählt',
       waiting_for_you: 'Wir freuen uns auf Sie in Maiori! Bitte bewahren Sie diese E-Mail auf.',
       contact: 'Bei Fragen oder Änderungen antworten Sie direkt auf diese E-Mail',
-      footer: 'Vincanto Maori • www.vincantomaori.it'
+      footer: 'Vincanto Maori • www.vincantomaori.it',
+      final_greeting: "Wir freuen uns, Sie in Maiori begrüßen zu dürfen! Bitte bewahren Sie diese E-Mail für Ihre Unterlagen auf.",
+      contact_info: "Für Anfragen oder Änderungen antworten Sie bitte an <strong>prenotazioni@vincantomaiori.it</strong> oder rufen Sie <strong>+39 333 148 1677</strong> an."
     }
   },
 
@@ -278,7 +290,9 @@ export const emailStrings = {
       bank_reason_val: 'Réservation',
       contact_us: 'Pour toute demande ou modification, répondez à cet email',
       footer: 'Vincanto Maori • Maiori, Côte Amalfitaine',
-      website: 'www.vincantomaori.it'
+      website: 'www.vincantomaori.it',
+      final_greeting: "Nous nous réjouissons de vous accueillir à Maiori ! Veuillez conserver cet e-mail pour vos dossiers.",
+      contact_info: "Pour toute demande ou modification, veuillez répondre à <strong>prenotazioni@vincantomaiori.it</strong> ou appeler le <strong>+39 333 148 1677</strong>."
     },
 
     booking_final: {
@@ -304,7 +318,9 @@ export const emailStrings = {
       no_extras: 'Aucun service supplémentaire sélectionné',
       waiting_for_you: 'Nous avons hâte de vous accueillir à Maiori ! Conservez cet email pour référence.',
       contact: 'Pour toute demande ou modification, répondez directement à cet email',
-      footer: 'Vincanto Maori • www.vincantomaori.it'
+      footer: 'Vincanto Maori • www.vincantomaori.it',
+      final_greeting: "Nous nous réjouissons de vous accueillir à Maiori ! Veuillez conserver cet e-mail pour vos dossiers.",
+      contact_info: "Pour toute demande ou modification, veuillez répondre à <strong>prenotazioni@vincantomaiori.it</strong> ou appeler le <strong>+39 333 148 1677</strong>."
     }
   }
 };

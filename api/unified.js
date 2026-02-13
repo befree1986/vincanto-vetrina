@@ -784,6 +784,58 @@ export default async function handler(req, res) {
     }
 
     // ========================================
+    // ADMIN - CONFERMA PAGAMENTO BONIFICO
+    // ========================================
+    if (action === 'admin/confirm-bank-payment') {
+      if (req.method === 'POST') {
+        try {
+          const { bookingId } = req.body;
+
+          if (!bookingId) {
+            return res.status(400).json({ success: false, error: 'ID Prenotazione obbligatorio' });
+          }
+
+          // 1. Aggiorna lo stato della prenotazione
+          const updateResult = await pool.query(
+            `UPDATE bookings 
+             SET status = 'confirmed', payment_status = 'paid_full', updated_at = NOW()
+             WHERE booking_id = $1 AND status = 'pending'
+             RETURNING *`,
+            [bookingId]
+          );
+
+          if (updateResult.rows.length === 0) {
+            return res.status(404).json({ success: false, error: `Prenotazione ${bookingId} non trovata o non in stato 'pending'.` });
+          }
+
+          const booking = updateResult.rows[0];
+          console.log(`✅ Pagamento bonifico confermato per ${bookingId}`);
+
+          // 2. Invia email di conferma finale
+          const guestLanguage = detectLanguage(booking.email);
+          const html = renderEmailTemplate('booking_final_confirmation', {
+            firstName: booking.first_name,
+            lastName: booking.last_name,
+            bookingId: booking.booking_id,
+            checkin: booking.check_in,
+            checkout: booking.check_out,
+            totalAmount: parseFloat(booking.total_amount),
+            amountPaid: parseFloat(booking.total_amount), // Confermando il bonifico, si assume il saldo
+            language: guestLanguage,
+            paymentMethod: 'bank_transfer'
+          });
+
+          await sendEmailWithAdminCopy({ to: booking.email, subject: `Pagamento ricevuto - Prenotazione ${booking.booking_id}`, html });
+          console.log(`✅ Email di conferma finale inviata a ${booking.email}`);
+
+          return res.status(200).json({ success: true, message: `Pagamento per ${bookingId} confermato.`, booking });
+        } catch (error) {
+          return res.status(500).json({ success: false, error: error.message });
+        }
+      }
+    }
+
+    // ========================================
     // RICHIESTA CAMBIO PASSWORD ADMIN
     // ========================================
     if (action === 'admin/change-password-request') {
