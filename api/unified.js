@@ -3643,6 +3643,54 @@ END:VEVENT
     }
 
     // ========================================
+    // EMAIL PREVIEW & TEST SECTION
+    // ========================================
+    if (action === 'preview-email') {
+      if (req.method === 'GET') {
+        try {
+          const { type, lang } = req.query;
+          const templateName = type || 'booking_confirmation';
+          const language = lang || 'it';
+
+          // Dati simulati per la preview
+          const mockData = {
+            firstName: 'Mario',
+            lastName: 'Rossi',
+            bookingId: 'VIN-PREVIEW-123',
+            checkin: new Date().toISOString().split('T')[0],
+            checkout: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0], // +3 giorni
+            guests: 2,
+            adults: 2,
+            children: 0,
+            totalAmount: 450.00,
+            depositAmount: 90.00,
+            amountPaid: 450.00, // Per template conferma finale
+            fromEmail: process.env.SMTP_FROM || 'info@vincantomaiori.it',
+            language: language,
+            paymentMethod: 'bank_transfer',
+            extraServices: ['Parcheggio Privato', 'Colazione'],
+            accommodationCost: 350.00,
+            cleaningFee: 60.00,
+            parkingCost: 40.00,
+            touristTax: 8.00,
+            extraServicesCost: 30.00,
+            nights: 3,
+            logoUrl: 'https://www.vincantomaiori.it/logo.svg',
+            siteUrl: 'https://www.vincantomaiori.it'
+          };
+
+          const html = renderEmailTemplate(templateName, mockData);
+
+          res.setHeader('Content-Type', 'text/html');
+          return res.status(200).send(html);
+        } catch (error) {
+          console.error('❌ Errore preview email:', error);
+          return res.status(500).send(`<h1>Errore generazione preview</h1><pre>${error.message}</pre>`);
+        }
+      }
+    }
+
+    // ========================================
     // GOOGLE CALENDAR INTEGRATION SECTION
     // ========================================
     // ERROR HANDLING - ACTION NOT FOUND
