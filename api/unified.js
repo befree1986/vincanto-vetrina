@@ -1652,10 +1652,17 @@ export default async function handler(req, res) {
           // Le date in blocked_dates sono inserite con descrizione "Prenotazione VIN..."
           const deleteBlocked = await pool.query(`
             DELETE FROM blocked_dates 
-            WHERE description LIKE 'Prenotazione ' || $1 || ' %'
+            WHERE description LIKE '%' || $1 || '%'
           `, [booking.booking_id]);
           
           console.log(`✅ Date liberate in blocked_dates: ${deleteBlocked.rowCount} righe rimosse`);
+
+          // 2.b Libera anche eventuali eventi calendario sincronizzati (calendar_events)
+          const deleteCalendarEvents = await pool.query(`
+            DELETE FROM calendar_events
+            WHERE description LIKE '%' || $1 || '%' OR summary LIKE '%' || $1 || '%'
+          `, [booking.booking_id]);
+          console.log(`✅ Eventi calendario rimossi: ${deleteCalendarEvents.rowCount}`);
 
           // 3. Invia email di cancellazione
           if (process.env.SMTP_HOST) {

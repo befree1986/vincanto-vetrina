@@ -175,7 +175,6 @@ export default async function handler(req, res) {
       await pool.query(`
         INSERT INTO blocked_dates (start_date, end_date, reason, description)
         VALUES ($1, $2, $3, $4)
-        ON CONFLICT DO NOTHING
       `, [
         checkin,
         checkout,
