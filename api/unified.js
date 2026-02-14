@@ -784,59 +784,6 @@ export default async function handler(req, res) {
     }
 
     // ========================================
-    // ADMIN - CONFERMA PAGAMENTO BONIFICO
-    // ========================================
-    if (action === 'admin/confirm-bank-payment') {
-      if (req.method === 'POST') {
-        try {
-          const { bookingId } = req.body;
-
-          if (!bookingId) {
-            return res.status(400).json({ success: false, error: 'ID Prenotazione obbligatorio' });
-          }
-
-          // 1. Aggiorna lo stato della prenotazione
-          const updateResult = await pool.query(
-            `UPDATE bookings 
-             SET status = 'confirmed', payment_status = 'paid_full', updated_at = NOW()
-             WHERE booking_id = $1 AND status = 'pending'
-             RETURNING *`,
-            [bookingId]
-          );
-
-          if (updateResult.rows.length === 0) {
-            return res.status(404).json({ success: false, error: `Prenotazione ${bookingId} non trovata o non in stato 'pending'.` });
-          }
-
-          const booking = updateResult.rows[0];
-          console.log(`✅ Pagamento bonifico confermato per ${bookingId}`);
-
-          // 2. Invia email di conferma finale
-          const guestLanguage = detectLanguage(booking.email);
-          const html = renderEmailTemplate('booking_final_confirmation', {
-            firstName: booking.first_name,
-            lastName: booking.last_name,
-            bookingId: booking.booking_id,
-            checkin: booking.check_in,
-            checkout: booking.check_out,
-            totalAmount: parseFloat(booking.total_amount),
-            amountPaid: parseFloat(booking.total_amount), // Confermando il bonifico, si assume il saldo
-            language: guestLanguage,
-            paymentMethod: 'bank_transfer',
-            notes: booking.notes // 📝 Passa le note anche alla conferma finale
-          });
-
-          await sendEmailWithAdminCopy({ to: booking.email, subject: `Pagamento ricevuto - Prenotazione ${booking.booking_id}`, html });
-          console.log(`✅ Email di conferma finale inviata a ${booking.email}`);
-
-          return res.status(200).json({ success: true, message: `Pagamento per ${bookingId} confermato.`, booking });
-        } catch (error) {
-          return res.status(500).json({ success: false, error: error.message });
-        }
-      }
-    }
-
-    // ========================================
     // RICHIESTA CAMBIO PASSWORD ADMIN
     // ========================================
     if (action === 'admin/change-password-request') {
@@ -1192,7 +1139,7 @@ export default async function handler(req, res) {
     if (action === 'booking') {
       if (req.method === 'GET') {
         try {
-          // Ottieni solo le prenotazioni CONFERMATE o IN ATTESA (non draft o cancellate)
+          // Ottieni le prenotazioni CONFERMATE, IN ATTESA e CANCELLATE (esclude solo draft/abbandonate)
           // draft = non ancora pagato, cancelled = rifiutato
           const result = await pool.query(`
             SELECT 
@@ -1210,7 +1157,7 @@ export default async function handler(req, res) {
               payment_status as payment_method,
               created_at
             FROM bookings 
-            WHERE status IN ('confirmed', 'pending')
+            WHERE status IN ('confirmed', 'pending', 'cancelled')
             ORDER BY created_at DESC
           `);
           
@@ -1692,12 +1639,21 @@ export default async function handler(req, res) {
           const booking = result.rows[0];
           console.log(`✅ Booking ${booking.booking_id} marcato come cancellato`);
 
+          // 1.b Salva il motivo della cancellazione nelle note (se presente)
+          if (reason) {
+            await pool.query(`
+              UPDATE bookings 
+              SET notes = COALESCE(notes, '') || E'\n[CANCELLATA]: ' || $1
+              WHERE id = $2
+            `, [reason, booking.id]);
+          }
+
           // 2. Libera le date nel calendario (rimuovi da blocked_dates)
           // Le date in blocked_dates sono inserite con descrizione "Prenotazione VIN..."
           const deleteBlocked = await pool.query(`
             DELETE FROM blocked_dates 
-            WHERE description LIKE $1
-          `, [`%${booking.booking_id}%`]);
+            WHERE description LIKE 'Prenotazione ' || $1 || ' %'
+          `, [booking.booking_id]);
           
           console.log(`✅ Date liberate in blocked_dates: ${deleteBlocked.rowCount} righe rimosse`);
 
@@ -3592,7 +3548,7 @@ END:VEVENT
     if (action === 'capture-payment') {
       if (req.method === 'POST') {
         try {
-          const { payment_id, booking_id } = req.body;
+          const { payment_id, booking_id, paymentType } = req.body; // paymentType: 'deposit' o 'full'
           // Supporta sia payment_id (spesso usato come ID prenotazione nel frontend admin) che booking_id
           const targetId = payment_id || booking_id;
 
@@ -3600,48 +3556,76 @@ END:VEVENT
             return res.status(400).json({ success: false, error: 'ID pagamento o prenotazione richiesto' });
           }
 
-          // 1. Aggiorna lo stato della prenotazione a CONFIRMED e PAID_FULL
-          const result = await pool.query(
-            `UPDATE bookings 
-             SET status = 'confirmed', payment_status = 'paid_full', updated_at = NOW()
+          // Recupera la prenotazione per ottenere gli importi corretti
+          const bookingResult = await pool.query(
+            `SELECT * FROM bookings
              WHERE id = $1 OR booking_id = $2
-             RETURNING *`,
+             `,
             [isNaN(Number(targetId)) ? null : Number(targetId), String(targetId)]
           );
 
-          if (result.rows.length === 0) {
+          if (bookingResult.rows.length === 0) {
             return res.status(404).json({ success: false, error: 'Prenotazione non trovata' });
           }
 
-          const booking = result.rows[0];
-          console.log(`✅ Pagamento catturato e prenotazione confermata: ${booking.booking_id}`);
+          const booking = bookingResult.rows[0];
+
+          // Determina il nuovo stato del pagamento e l'importo pagato
+          let newPaymentStatus;
+          let amountPaidForEmail;
+
+          if (paymentType === 'deposit') {
+            newPaymentStatus = 'deposit_paid';
+            amountPaidForEmail = parseFloat(booking.deposit_amount);
+          } else { // Default a pagamento completo se non specificato
+            newPaymentStatus = 'paid_full';
+            amountPaidForEmail = parseFloat(booking.total_amount);
+          }
+
+          // 1. Aggiorna lo stato della prenotazione a 'confirmed' e il payment_status corretto
+          const updateResult = await pool.query(
+            `UPDATE bookings 
+             SET status = 'confirmed', payment_status = $1, updated_at = NOW()
+             WHERE id = $2
+             RETURNING *`,
+            [newPaymentStatus, booking.id]
+          );
+
+          const updatedBooking = updateResult.rows[0];
+          console.log(`✅ Pagamento catturato e prenotazione confermata: ${updatedBooking.booking_id} -> ${newPaymentStatus}`);
 
           // 2. Invia email di conferma finale (Pagamento Ricevuto)
           if (process.env.SMTP_HOST) {
             try {
-              const guestLanguage = detectLanguage(booking.email);
+              const guestLanguage = detectLanguage(updatedBooking.email);
+              // Se la prenotazione era in 'pending', era un bonifico. Altrimenti, usa il metodo esistente.
+              const paymentMethodForEmail = booking.status === 'pending' ? 'bank_transfer' : (booking.stripe_payment_intent ? 'stripe' : 'bank_transfer');
+
+              const remainingAmount = parseFloat(updatedBooking.total_amount) - amountPaidForEmail;
+
               const emailHtml = renderEmailTemplate('booking_final_confirmation', {
-                firstName: booking.first_name,
-                lastName: booking.last_name,
-                bookingId: booking.booking_id,
-                checkin: booking.check_in,
-                checkout: booking.check_out,
-                totalAmount: parseFloat(booking.total_amount),
-                amountPaid: parseFloat(booking.total_amount),
+                firstName: updatedBooking.first_name,
+                lastName: updatedBooking.last_name,
+                bookingId: updatedBooking.booking_id,
+                checkin: updatedBooking.check_in,
+                checkout: updatedBooking.check_out,
+                totalAmount: parseFloat(updatedBooking.total_amount),
+                amountPaid: amountPaidForEmail,
+                remainingAmount: remainingAmount > 0 ? remainingAmount : 0,
                 language: guestLanguage,
-                paymentMethod: 'manual_capture',
-                notes: booking.notes,
+                paymentMethod: paymentMethodForEmail,
+                notes: updatedBooking.notes,
                 logoUrl: 'https://www.vincantomaiori.it/logo.png',
                 siteUrl: 'https://www.vincantomaiori.it'
               });
 
               await sendEmailWithAdminCopy({
-                to: booking.email,
-                subject: `Pagamento confermato - Prenotazione ${booking.booking_id}`,
+                to: updatedBooking.email,
+                subject: `Pagamento ricevuto - Prenotazione ${updatedBooking.booking_id}`,
                 html: emailHtml,
                 templateName: 'booking_final_confirmation'
               });
-              console.log(`✅ Email conferma pagamento inviata a ${booking.email}`);
+              console.log(`✅ Email conferma pagamento inviata a ${updatedBooking.email}`);
             } catch (emailError) {
               console.error('⚠️ Errore invio email conferma pagamento:', emailError.message);
             }
@@ -3651,8 +3635,8 @@ END:VEVENT
             success: true, 
             message: 'Pagamento catturato e prenotazione confermata con successo',
             payment: {
-                status: 'completed',
-                amount: booking.total_amount,
+                status: newPaymentStatus,
+                amount: amountPaidForEmail,
                 date: new Date().toISOString()
             }
           });

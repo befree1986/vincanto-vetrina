@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import '../pages/AdminPanelPro.css';
 import '../styles/AdminSuperAdmin.css';
+import './AdminPanelBasic.css';
 import ExtraServicesAdmin from './admin/ExtraServicesAdmin';
 import AdminDashboard from './admin/AdminDashboard';
 import { useAdminRole } from '../hooks/useAdminRole';
@@ -80,6 +81,72 @@ const AdminPanelBasic = (): JSX.Element => {
       log('✅ Dati caricati con successo');
     } catch (error) {
       devError('❌ Errore caricamento dati:', error);
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
+
+  // ✨ NUOVE FUNZIONI PER GESTIONE PAGAMENTI E CANCELLAZIONI
+  const handleConfirmPayment = async (bookingId: string, paymentType: 'deposit' | 'full') => {
+    const typeLabel = paymentType === 'deposit' ? "l'acconto" : "il saldo completo";
+    if (!confirm(`Sei sicuro di voler confermare la ricezione del${typeLabel}? Verrà inviata l'email di conferma al cliente.`)) {
+      return;
+    }
+
+    try {
+      setIsLoadingData(true);
+      // Usa l'endpoint unificato
+      const response = await fetch('/api/unified?action=capture-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          booking_id: bookingId,
+          paymentType: paymentType
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        alert('✅ Pagamento confermato con successo!');
+        await loadRealApiData();
+      } else {
+        alert('❌ Errore: ' + (result.error || result.message));
+      }
+    } catch (error) {
+      console.error('❌ Errore conferma pagamento:', error);
+      alert('❌ Errore di comunicazione con il server');
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
+
+  const handleCancelBookingAction = async (bookingId: string) => {
+    const reason = prompt("Inserisci il motivo della cancellazione (es. Mancato pagamento, Richiesta cliente):");
+    if (reason === null) return;
+
+    try {
+      setIsLoadingData(true);
+      const response = await fetch('/api/unified?action=cancel-booking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookingId: bookingId,
+          reason: reason
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        alert('✅ Prenotazione annullata e date liberate dal calendario!');
+        await loadRealApiData();
+      } else {
+        alert('❌ Errore: ' + (result.error || result.message));
+      }
+    } catch (error) {
+      console.error('❌ Errore cancellazione:', error);
+      alert('❌ Errore di comunicazione con il server');
     } finally {
       setIsLoadingData(false);
     }
@@ -256,6 +323,7 @@ const AdminPanelBasic = (): JSX.Element => {
                         <th>Ospiti</th>
                         <th>Stato</th>
                         <th>Totale</th>
+                        <th>Azioni</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -276,6 +344,44 @@ const AdminPanelBasic = (): JSX.Element => {
                             </span>
                           </td>
                           <td>€{(booking.total_amount || booking.totalPrice || 0).toFixed(2)}</td>
+                          <td>
+                            <div className="action-buttons action-buttons-flex">
+                              {/* Pulsanti Conferma Pagamento */}
+                              {booking.status !== 'cancelled' && booking.payment_method !== 'paid_full' && (
+                                <>
+                                  {booking.payment_method !== 'deposit_paid' && (
+                                    <button
+                                      className="admin-btn-small admin-btn-warning admin-btn-custom admin-btn-custom-warning"
+                                      onClick={() => handleConfirmPayment(booking.booking_id || booking.id, 'deposit')}
+                                      title="Conferma Acconto"
+                                    >
+                                      💰 Acconto
+                                    </button>
+                                  )}
+                                  <button
+                                    className="admin-btn-small admin-btn-success admin-btn-custom admin-btn-custom-success"
+                                    onClick={() => handleConfirmPayment(booking.booking_id || booking.id, 'full')}
+                                    title="Conferma Saldo"
+                                  >
+                                    ✅ Saldo
+                                  </button>
+                                </>
+                              )}
+
+                              {/* Pulsante Annulla */}
+                              {booking.status !== 'cancelled' ? (
+                                <button
+                                  className="admin-btn-small admin-btn-danger admin-btn-custom admin-btn-custom-danger"
+                                  onClick={() => handleCancelBookingAction(booking.booking_id || booking.id)}
+                                  title="Annulla"
+                                >
+                                  ❌ Annulla
+                                </button>
+                              ) : (
+                                <span className="admin-text-muted admin-text-cancelled-small">Già cancellata</span>
+                              )}
+                            </div>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
