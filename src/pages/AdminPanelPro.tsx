@@ -3676,6 +3676,17 @@ const AdminPanelPro = (): JSX.Element => {
                                 ) : (
                                   <span className="admin-text-muted">Già cancellata</span>
                                 )}
+
+                                {/* Pulsante Elimina Definitivo (per pulizia) */}
+                                {(booking.status === 'cancelled' || booking.status === 'pending' || isSuperAdmin) && (
+                                  <button
+                                    className="admin-btn-small admin-btn-danger admin-btn-delete-permanent"
+                                    onClick={() => handleDeleteBooking(booking.id)}
+                                    title="Elimina definitivamente dal database"
+                                  >
+                                    🗑️
+                                  </button>
+                                )}
                               </div>
                             </td>
                           </tr>

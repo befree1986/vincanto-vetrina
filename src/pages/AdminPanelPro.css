@@ -2398,3 +2398,8 @@
   font-size: 14px;
   line-height: 1.5;
 }
+
+.admin-btn-delete-permanent {
+  margin-left: 5px;
+  opacity: 0.8;
+}

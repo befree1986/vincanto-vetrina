@@ -1218,7 +1218,7 @@ export default async function handler(req, res) {
             `
             WITH unavailable_periods AS (
               -- Prenotazioni dirette confermate
-              SELECT check_in AS start_date, check_out AS end_date FROM bookings WHERE status = 'confirmed'
+              SELECT check_in AS start_date, check_out AS end_date FROM bookings WHERE status IN ('confirmed', 'pending')
               
               UNION ALL
       
@@ -1564,10 +1564,19 @@ export default async function handler(req, res) {
             });
           }
 
+          // Recupera booking_id prima di eliminare per pulire le date
+          const bookingCheck = await pool.query('SELECT booking_id FROM bookings WHERE id = $1', [id]);
+          const bookingIdToDelete = bookingCheck.rows[0]?.booking_id;
+
           const result = await pool.query(
             `DELETE FROM bookings WHERE id = $1 RETURNING *`,
             [id]
           );
+
+          if (bookingIdToDelete) {
+            await pool.query("DELETE FROM blocked_dates WHERE description LIKE '%' || $1 || '%'", [bookingIdToDelete]);
+            await pool.query("DELETE FROM calendar_events WHERE description LIKE '%' || $1 || '%' OR summary LIKE '%' || $1 || '%'", [bookingIdToDelete]);
+          }
 
           if (result.rows.length === 0) {
             return res.status(404).json({
@@ -1722,6 +1731,17 @@ export default async function handler(req, res) {
           // Cancella tutte le prenotazioni simulate/test/mock
           console.log('🗑️ Cancellando dati mock dal database...');
           
+          // Recupera ID per pulire blocked_dates
+          const bookingsToDelete = await pool.query(`
+            SELECT booking_id FROM bookings 
+            WHERE booking_id LIKE 'VIN%' 
+               OR email LIKE '%@email.com'
+               OR first_name IN ('Mario', 'Anna', 'Giuseppe', 'Marco', 'Silvia')
+               OR last_name IN ('Rossi', 'Bianchi', 'Verdi', 'Neri', 'Gialli')
+               OR id IN (1, 2, 3, 4, 5)
+          `);
+          const bookingIds = bookingsToDelete.rows.map(r => r.booking_id);
+
           // Cancella prenotazioni con pattern tipici dei dati mock
           const deleteResult = await pool.query(`
             DELETE FROM bookings 
@@ -1731,6 +1751,14 @@ export default async function handler(req, res) {
                OR last_name IN ('Rossi', 'Bianchi', 'Verdi', 'Neri', 'Gialli')
                OR id IN (1, 2, 3, 4, 5)
           `);
+
+          // Pulisci date bloccate associate
+          if (bookingIds.length > 0) {
+            for (const bid of bookingIds) {
+                await pool.query("DELETE FROM blocked_dates WHERE description LIKE '%' || $1 || '%'", [bid]);
+                await pool.query("DELETE FROM calendar_events WHERE description LIKE '%' || $1 || '%' OR summary LIKE '%' || $1 || '%'", [bid]);
+            }
+          }
           
           // Cancella anche richieste contatti mock
           const contactsResult = await pool.query(`
@@ -3014,7 +3042,7 @@ END:VEVENT
         const availabilityCheck = await pool.query(
           `
           WITH unavailable_periods AS (
-            SELECT check_in AS start_date, check_out AS end_date FROM bookings WHERE status = 'confirmed'
+            SELECT check_in AS start_date, check_out AS end_date FROM bookings WHERE status IN ('confirmed', 'pending')
             UNION ALL
             SELECT start_date, end_date FROM blocked_dates
             UNION ALL

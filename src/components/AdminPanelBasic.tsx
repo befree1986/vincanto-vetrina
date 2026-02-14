@@ -121,6 +121,22 @@ const AdminPanelBasic = (): JSX.Element => {
     }
   };
 
+  const handleDeleteBooking = async (id: string) => {
+    if (!confirm('⚠️ Sei sicuro di voler ELIMINARE definitivamente questa prenotazione? Questa azione rimuoverà anche le date bloccate.')) {
+      return;
+    }
+    try {
+      setIsLoadingData(true);
+      await adminApiService?.deleteBooking(id);
+      await loadRealApiData();
+      alert('✅ Prenotazione eliminata con successo!');
+    } catch (error) {
+      alert('❌ Errore nell\'eliminazione della prenotazione');
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
+
   const handleCancelBookingAction = async (bookingId: string) => {
     const reason = prompt("Inserisci il motivo della cancellazione (es. Mancato pagamento, Richiesta cliente):");
     if (reason === null) return;
@@ -380,6 +396,15 @@ const AdminPanelBasic = (): JSX.Element => {
                               ) : (
                                 <span className="admin-text-muted admin-text-cancelled-small">Già cancellata</span>
                               )}
+
+                              {/* Pulsante Elimina */}
+                              <button
+                                className="admin-btn-small admin-btn-danger admin-btn-custom admin-btn-custom-danger admin-ml-5px"
+                                onClick={() => handleDeleteBooking(booking.id)}
+                                title="Elimina definitivamente"
+                              >
+                                🗑️
+                              </button>
                             </div>
                           </td>
                         </tr>
