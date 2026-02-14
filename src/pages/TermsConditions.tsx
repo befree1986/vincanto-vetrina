@@ -21,9 +21,6 @@ const TermsConditions = () => {
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://www.vincantomaiori.it/terms-conditions" />
       </Helmet>
-      <style>{`
-        nav, .navbar, header { display: none !important; }
-      `}</style>
       <main className="policy-container">
         <h1>{lang === "it" ? "Termini e Condizioni" : lang === "de" ? "Allgemeine Geschäftsbedingungen" : lang === "fr" ? "Termes et Conditions" : "Terms and Conditions"}</h1>
         <p>Last updated / Ultimo aggiornamento: 20 gennaio 2026</p>
