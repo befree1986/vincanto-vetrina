@@ -32,3 +32,189 @@
 .admin-ml-5px {
   margin-left: 5px;
 }
+
+/* --- CALENDARIO OCCUPAZIONI --- */
+.admin-calendar-wrapper {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.calendar-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.calendar-controls h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  text-transform: capitalize;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.calendar-header-cell {
+  padding: 10px;
+  text-align: center;
+  font-weight: bold;
+  background: #f3f4f6;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.calendar-day-cell {
+  min-height: 100px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  padding: 5px;
+  position: relative;
+  font-size: 0.85rem;
+}
+
+.calendar-day-cell.empty {
+  background: #f9fafb;
+}
+
+.day-number {
+  font-weight: bold;
+  margin-bottom: 5px;
+  display: block;
+  color: #374151;
+}
+
+.calendar-event {
+  padding: 2px 4px;
+  margin-bottom: 2px;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  color: white;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: help;
+}
+
+.event-booking {
+  background-color: #3b82f6; /* Blu per prenotazioni */
+}
+
+.event-external {
+  background-color: #8b5cf6; /* Viola per esterni */
+}
+
+.event-blocked {
+  background-color: #ef4444; /* Rosso per chiusure */
+}
+
+.event-checkin {
+  border-left: 3px solid #10b981; /* Verde */
+}
+
+.event-checkout {
+  border-right: 3px solid #f59e0b; /* Arancio */
+}
+
+.event-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7em;
+}
+
+/* --- FORM GESTIONE --- */
+.admin-forms-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.admin-form-card {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.admin-form-card h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #111827;
+  border-bottom: 2px solid #f3f4f6;
+  padding-bottom: 10px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .admin-forms-container {
+    grid-template-columns: 1fr;
+  }
+  .calendar-grid {
+    font-size: 0.7rem;
+  }
+  .calendar-day-cell {
+    min-height: 60px;
+  }
+}
+
+/* --- UTILITY CLASSES (Sostituzione stili inline) --- */
+.admin-flex-between {
+  display: flex;
+  justify-content: space-between;
+}
+
+.admin-grid-2-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.admin-w-full {
+  width: 100%;
+}
+
+.calendar-legend-container {
+  margin-top: 10px;
+  display: flex;
+  gap: 15px;
+  font-size: 0.8rem;
+}
+
+.legend-item-flex {
+  display: flex;
+  align-items: center;
+}
+
+.legend-color-box {
+  width: 10px;
+  height: 10px;
+  margin-right: 5px;
+}
+
+.legend-color-blue { background-color: #3b82f6; }
+.legend-color-purple { background-color: #8b5cf6; }
+.legend-color-red { background-color: #ef4444; }
+.legend-color-checkin { border-left: 3px solid #10b981; }
+.legend-color-checkout { border-right: 3px solid #f59e0b; }
+
+.calendar-event-name {
+  font-weight: bold;
+}

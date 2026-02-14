@@ -36,6 +36,24 @@ const AdminPanelBasic = (): JSX.Element => {
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [isLoadingCalendar, setIsLoadingCalendar] = useState(false);
   
+  // Stati per Calendario Visuale
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+
+  // Stati per Form Manuali
+  const [showManualForm, setShowManualForm] = useState(false);
+  const [showBlockForm, setShowBlockForm] = useState(false);
+  const [manualBooking, setManualBooking] = useState({
+    customer_name: '',
+    customer_email: '',
+    check_in: '',
+    check_out: '',
+    guests: 2,
+    total_amount: 0,
+    status: 'confirmed',
+    platform: 'manual' // Identifica prenotazioni manuali
+  });
+  const [blockDate, setBlockDate] = useState({ start_date: '', end_date: '', reason: 'maintenance' });
+
   // Admin API Service
   const [adminApiService] = useState(() => {
     try {
@@ -166,6 +184,155 @@ const AdminPanelBasic = (): JSX.Element => {
     } finally {
       setIsLoadingData(false);
     }
+  };
+
+  // ✨ NUOVE FUNZIONI: Creazione Manuale e Blocco Date
+  const handleCreateManualBooking = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manualBooking.check_in || !manualBooking.check_out || !manualBooking.customer_name) {
+      alert('Compila tutti i campi obbligatori');
+      return;
+    }
+    try {
+      setIsLoadingData(true);
+      // Usa l'endpoint unificato per creare la prenotazione
+      const response = await fetch('/api/unified?action=booking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(manualBooking)
+      });
+      const result = await response.json();
+      if (result.success) {
+        alert('✅ Prenotazione manuale creata con successo!');
+        setShowManualForm(false);
+        setManualBooking({ customer_name: '', customer_email: '', check_in: '', check_out: '', guests: 2, total_amount: 0, status: 'confirmed', platform: 'manual' });
+        await loadRealApiData();
+      } else {
+        alert('❌ Errore: ' + (result.error || result.message));
+      }
+    } catch (error) {
+      console.error('Errore creazione manuale:', error);
+      alert('Errore di comunicazione');
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
+
+  const handleBlockDates = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!blockDate.start_date || !blockDate.end_date) {
+      alert('Seleziona le date');
+      return;
+    }
+    try {
+      setIsLoadingData(true);
+      const response = await fetch('/api/unified?action=blocked-dates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(blockDate)
+      });
+      const result = await response.json();
+      if (result.success) {
+        alert('✅ Date bloccate con successo!');
+        setShowBlockForm(false);
+        setBlockDate({ start_date: '', end_date: '', reason: 'maintenance' });
+        await loadRealApiData();
+      } else {
+        alert('❌ Errore: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Errore blocco date:', error);
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
+
+  // 📅 LOGICA CALENDARIO VISUALE
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const days = new Date(year, month + 1, 0).getDate();
+    const firstDay = new Date(year, month, 1).getDay(); // 0 = Dom, 1 = Lun...
+    return { days, firstDay };
+  };
+
+  const renderCalendar = () => {
+    const { days, firstDay } = getDaysInMonth(currentMonth);
+    const monthName = currentMonth.toLocaleString('it-IT', { month: 'long', year: 'numeric' });
+    const daysArray = Array.from({ length: days }, (_, i) => i + 1);
+    const blanks = Array.from({ length: firstDay === 0 ? 6 : firstDay - 1 }, (_, i) => i); // Adjust for Monday start
+
+    // Unifica tutti gli eventi per il calendario
+    const allEvents = [
+      ...realBookings.map(b => ({ ...b, type: 'booking', start: new Date(b.check_in), end: new Date(b.check_out) })),
+      ...calendarEvents.map(e => ({ ...e, type: 'external', start: new Date(e.checkIn || e.start_date), end: new Date(e.checkOut || e.end_date), customer_name: e.title || 'Esterno', platform: e.platform })),
+      ...blockedDates.map(b => ({ ...b, type: 'blocked', start: new Date(b.start_date), end: new Date(b.end_date), customer_name: 'Chiuso', platform: 'admin' }))
+    ];
+
+    return (
+      <div className="admin-calendar-wrapper">
+        <div className="calendar-controls">
+          <button className="admin-btn-secondary" onClick={() => setCurrentMonth(new Date(currentMonth.setMonth(currentMonth.getMonth() - 1)))}>◀ Mese Prec.</button>
+          <h3>{monthName}</h3>
+          <button className="admin-btn-secondary" onClick={() => setCurrentMonth(new Date(currentMonth.setMonth(currentMonth.getMonth() + 1)))}>Mese Succ. ▶</button>
+        </div>
+        <div className="calendar-grid">
+          {['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'].map(d => <div key={d} className="calendar-header-cell">{d}</div>)}
+          {blanks.map(b => <div key={`blank-${b}`} className="calendar-day-cell empty"></div>)}
+          {daysArray.map(day => {
+            const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+            const dateStr = date.toISOString().split('T')[0];
+            
+            // Trova eventi per questo giorno
+            const dayEvents = allEvents.filter(ev => {
+              const start = new Date(ev.start);
+              const end = new Date(ev.end);
+              start.setHours(0,0,0,0);
+              end.setHours(0,0,0,0);
+              // Mostra se il giorno è compreso nel range (inclusivo start, esclusivo end per checkout, ma mostriamo checkout come evento parziale)
+              return date >= start && date <= end;
+            });
+
+            return (
+              <div key={day} className="calendar-day-cell">
+                <span className="day-number">{day}</span>
+                {dayEvents.map((ev, idx) => {
+                  const isStart = new Date(ev.start).getDate() === day && new Date(ev.start).getMonth() === currentMonth.getMonth();
+                  const isEnd = new Date(ev.end).getDate() === day && new Date(ev.end).getMonth() === currentMonth.getMonth();
+                  
+                  let eventClass = 'calendar-event';
+                  if (ev.type === 'booking') eventClass += ' event-booking';
+                  if (ev.type === 'external') eventClass += ' event-external';
+                  if (ev.type === 'blocked') eventClass += ' event-blocked';
+                  if (isStart) eventClass += ' event-checkin';
+                  if (isEnd) eventClass += ' event-checkout';
+
+                  // Non mostrare se è solo checkout e non checkin (per evitare confusione visiva, o gestiscilo come preferisci)
+                  // Qui mostriamo tutto per chiarezza "Occupato"
+                  
+                  return (
+                    <div key={idx} className={eventClass} title={`${ev.customer_name} (${ev.platform})`}>
+                      <div className="event-info">
+                        <span>{isStart ? '📥' : isEnd ? '📤' : '🔒'}</span>
+                        <span>{ev.platform === 'direct' || ev.platform === 'manual' ? 'Sito' : ev.platform}</span>
+                      </div>
+                      <div className="calendar-event-name">{ev.customer_name || ev.guestName}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+        <div className="calendar-legend calendar-legend-container">
+          <span className="legend-item-flex"><div className="legend-color-box legend-color-blue"></div> Prenotazione Sito</span>
+          <span className="legend-item-flex"><div className="legend-color-box legend-color-purple"></div> Esterno (Airbnb/Booking)</span>
+          <span className="legend-item-flex"><div className="legend-color-box legend-color-red"></div> Chiuso/Bloccato</span>
+          <span className="legend-item-flex"><div className="legend-color-box legend-color-checkin"></div> Check-in</span>
+          <span className="legend-item-flex"><div className="legend-color-box legend-color-checkout"></div> Check-out</span>
+        </div>
+      </div>
+    );
   };
 
   const loadCalendarData = async () => {
@@ -315,17 +482,74 @@ const AdminPanelBasic = (): JSX.Element => {
           <div className="admin-prenotazioni">
             <h2>📅 Gestione Prenotazioni {isLoadingData && '(Caricamento...)'}</h2>
             
-            <div className="admin-pricing-actions margin-bottom">
-              <button 
-                className="admin-btn-primary" 
-                onClick={loadRealApiData}
-              >
-                🔄 Ricarica Dati
-              </button>
+            {/* SEZIONE AZIONI RAPIDE: NUOVA PRENOTAZIONE E BLOCCO DATE */}
+            <div className="admin-forms-container">
+              {/* Card Nuova Prenotazione */}
+              <div className="admin-form-card">
+                <div className="admin-flex-between">
+                  <h3>➕ Nuova Prenotazione Manuale</h3>
+                  <button className="admin-btn-small" onClick={() => setShowManualForm(!showManualForm)}>{showManualForm ? 'Chiudi' : 'Apri'}</button>
+                </div>
+                {showManualForm && (
+                  <form onSubmit={handleCreateManualBooking}>
+                    <div className="form-group">
+                      <label htmlFor="manual_customer_name">Nome Cliente:</label>
+                      <input id="manual_customer_name" type="text" className="admin-input" value={manualBooking.customer_name} onChange={e => setManualBooking({...manualBooking, customer_name: e.target.value})} required />
+                    </div>
+                    <div className="form-group admin-grid-2-col">
+                      <div><label htmlFor="manual_check_in">Check-in:</label><input id="manual_check_in" type="date" className="admin-input" value={manualBooking.check_in} onChange={e => setManualBooking({...manualBooking, check_in: e.target.value})} required /></div>
+                      <div><label htmlFor="manual_check_out">Check-out:</label><input id="manual_check_out" type="date" className="admin-input" value={manualBooking.check_out} onChange={e => setManualBooking({...manualBooking, check_out: e.target.value})} required /></div>
+                    </div>
+                    <div className="form-group admin-grid-2-col">
+                      <div><label htmlFor="manual_guests">Ospiti:</label><input id="manual_guests" type="number" className="admin-input" value={manualBooking.guests} onChange={e => setManualBooking({...manualBooking, guests: parseInt(e.target.value)})} min="1" /></div>
+                      <div><label htmlFor="manual_total_amount">Totale (€):</label><input id="manual_total_amount" type="number" className="admin-input" value={manualBooking.total_amount} onChange={e => setManualBooking({...manualBooking, total_amount: parseFloat(e.target.value)})} /></div>
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="manual_customer_email">Email (opzionale):</label>
+                      <input id="manual_customer_email" type="email" className="admin-input" value={manualBooking.customer_email} onChange={e => setManualBooking({...manualBooking, customer_email: e.target.value})} />
+                    </div>
+                    <button type="submit" className="admin-btn-primary admin-w-full">Salva Prenotazione</button>
+                  </form>
+                )}
+              </div>
+
+              {/* Card Blocca Date */}
+              <div className="admin-form-card">
+                <div className="admin-flex-between">
+                  <h3>🚫 Blocca/Chiudi Date</h3>
+                  <button className="admin-btn-small" onClick={() => setShowBlockForm(!showBlockForm)}>{showBlockForm ? 'Chiudi' : 'Apri'}</button>
+                </div>
+                {showBlockForm && (
+                  <form onSubmit={handleBlockDates}>
+                    <div className="form-group admin-grid-2-col">
+                      <div><label htmlFor="block_start_date">Dal:</label><input id="block_start_date" type="date" className="admin-input" value={blockDate.start_date} onChange={e => setBlockDate({...blockDate, start_date: e.target.value})} required /></div>
+                      <div><label htmlFor="block_end_date">Al:</label><input id="block_end_date" type="date" className="admin-input" value={blockDate.end_date} onChange={e => setBlockDate({...blockDate, end_date: e.target.value})} required /></div>
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="block_reason">Motivo:</label>
+                      <select id="block_reason" className="admin-input" value={blockDate.reason} onChange={e => setBlockDate({...blockDate, reason: e.target.value})}>
+                        <option value="maintenance">Manutenzione</option>
+                        <option value="closed">Chiusura Stagionale</option>
+                        <option value="private">Uso Privato</option>
+                        <option value="other">Altro</option>
+                      </select>
+                    </div>
+                    <button type="submit" className="admin-btn-danger admin-w-full">Blocca Date</button>
+                  </form>
+                )}
+              </div>
             </div>
 
             <div className="admin-pricing-section">
-              <h3>📥 Prenotazioni Attive</h3>
+              <div className="admin-flex-between margin-bottom">
+                <h3>📥 Prenotazioni Attive</h3>
+                <button 
+                  className="admin-btn-secondary" 
+                  onClick={loadRealApiData}
+                >
+                  🔄 Ricarica Dati
+                </button>
+              </div>
               <div className="bookings-table-container">
                 {realBookings.length > 0 ? (
                   <table className="bookings-table">
@@ -333,7 +557,6 @@ const AdminPanelBasic = (): JSX.Element => {
                       <tr>
                         <th>ID</th>
                         <th>Cliente</th>
-                        <th>Email</th>
                         <th>Check-in</th>
                         <th>Check-out</th>
                         <th>Ospiti</th>
@@ -439,50 +662,11 @@ const AdminPanelBasic = (): JSX.Element => {
             </div>
 
             <div className="admin-pricing-section">
-              <h3>📔 Eventi Calendario</h3>
-              <div className="bookings-table-container">
-                {calendarEvents.length > 0 ? (
-                  <table className="bookings-table">
-                    <thead>
-                      <tr>
-                        <th>Piattaforma</th>
-                        <th>Titolo</th>
-                        <th>Check-in</th>
-                        <th>Check-out</th>
-                        <th>Stato</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {calendarEvents.map((event, idx) => (
-                        <tr key={idx}>
-                          <td>
-                            <span className={`platform-badge ${event.platform}`}>
-                              {event.platform === 'holidu' && '🏠 Holidu'}
-                              {event.platform === 'airbnb' && '🏡 Airbnb'}
-                              {event.platform === 'booking' && '🏨 Booking'}
-                              {event.platform === 'google' && '📅 Google'}
-                              {!event.platform && '❓ Altro'}
-                            </span>
-                          </td>
-                          <td>{event.title || event.summary || 'Prenotazione'}</td>
-                          <td>{event.check_in ? new Date(event.check_in).toLocaleDateString('it-IT') : 'N/A'}</td>
-                          <td>{event.check_out ? new Date(event.check_out).toLocaleDateString('it-IT') : 'N/A'}</td>
-                          <td>
-                            <span className="status confirmed">✅ Confermato</span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                ) : (
-                  <div className="admin-pricing-card">
-                    <p>📊 Nessun evento calendario trovato</p>
-                    <button className="admin-btn-primary" onClick={loadCalendarData}>
-                      🔄 Ricarica Calendari
-                    </button>
-                  </div>
-                )}
-              </div>
+              <h3> Calendario Occupazioni</h3>
+              <p className="admin-section-description">
+                Visualizza tutte le occupazioni: prenotazioni dal sito (blu), calendari esterni (viola) e date chiuse manualmente (rosso).
+              </p>
+              {renderCalendar()}
             </div>
           </div>
         )}
