@@ -212,6 +212,8 @@
     "contact.form.emailPlacehoder":  "E.g. david.brown@example.com",
     "contact.form.messagePlaceholder":  "Special requests, preferred times, etc.",
     "contact.form.dateHelp":  "dd/mm/yyyy",
+    "contact.form.privacyLabel": "I have read and agree to the <1>Privacy Policy</1>",
+    "contact.form.error.privacyRequired": "You must accept the Privacy Policy to continue.",
     "seo":  {
                 "home.title":  "VINCANTO | Maiori - Amalfi Coast",
                 "home.description":  "Vincanto is a property nestled in the lemon groves of the Amalfi Coast in Maiori. Book your exclusive stay, comfort and premium services. Ideal for families and groups. Contact us for personalized offers.",

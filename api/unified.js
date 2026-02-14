@@ -3476,15 +3476,39 @@ END:VEVENT
     // ========================================
     if (action === 'contact') {
       if (req.method === 'POST') {
-        const { name, email, message, phone } = req.body;
-        
-        console.log('📧 Nuovo messaggio contatti:', { name, email, message, phone });
-        
-        return res.status(200).json({
-          success: true,
-          message: 'Messaggio inviato con successo',
-          contact_id: `contact_${Date.now()}`
-        });
+        try {
+          const { name, email, message, phone, guests, checkin, checkout, privacy_accepted } = req.body;
+          
+          // 🔒 GDPR Check: Verifica consenso privacy
+          // IMPORTANTE: Aggiornare il frontend per inviare { privacy_accepted: true }
+          if (privacy_accepted !== true && req.body.privacyConsent !== true) {
+            console.warn(`⚠️ GDPR Warning: Richiesta contatto da ${email} senza flag privacy esplicito.`);
+            return res.status(400).json({ success: false, error: 'È necessario accettare la Privacy Policy.' });
+          }
+
+          console.log('📧 Invio email contatto:', { name, email });
+
+          // Invia email all'admin
+          if (process.env.SMTP_HOST) {
+            const html = renderEmailTemplate('contact_notification', {
+              name, email, phone, message, guests, checkin, checkout,
+              logoUrl: 'https://www.vincantomaiori.it/logo.svg',
+              siteUrl: 'https://www.vincantomaiori.it'
+            });
+
+            await sendEmailWithAdminCopy({
+              to: process.env.SMTP_USER || 'info@vincantomaiori.it',
+              subject: `Nuova richiesta contatto da ${name}`,
+              html: html,
+              templateName: 'contact_notification'
+            });
+          }
+          
+          return res.status(200).json({ success: true, message: 'Messaggio inviato con successo' });
+        } catch (error) {
+          console.error('❌ Errore contact API:', error);
+          return res.status(500).json({ success: false, error: 'Errore invio messaggio' });
+        }
       }
     }
 

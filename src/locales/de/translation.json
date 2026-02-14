@@ -78,6 +78,7 @@
   "contact.transports.salerno": "Von Salerno: Fähre nach Maiori (45 Min.) | Bus (60 Min.)",
   "contact.transports.amalfi": "Von Amalfi: Lokaler Bus (40 Min.)",
   
+  
   "about": {
     "title": "Über uns",
     "positionTitle": "Unser Standort",
@@ -243,6 +244,8 @@
   "contact.form.emailPlacehoder": "Z.B. max.mustermann@example.com",
   "contact.form.messagePlaceholder": "Besondere Wünsche, bevorzugte Zeiten, etc.",
   "contact.form.dateHelp": "tt/mm/jjjj",
+  "contact.form.privacyLabel": "Ich akzeptiere die <1>Datenschutzrichtlinie</1>",
+  "contact.form.error.privacyRequired": "Sie sollten die Datenschutzrichtlinie akzeptieren, um fortfahren zu koennen.",
   "hero-subtitle": "Eine Ecke des Paradieses inmitten der Zitronen der Amalfiküste",
   "seo": {
     "home.title": "VINCANTO | Maiori - Amalfiküste",

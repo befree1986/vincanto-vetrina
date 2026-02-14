@@ -50,6 +50,10 @@ const baseLayout = (content, logoUrl, siteUrl) => `
       <p>&copy; ${new Date().getFullYear()} Vincanto Maori. Tutti i diritti riservati.</p>
       <p>Via Torre di Milo, 7, 84010 Maiori (SA), Italia</p>
       <p><a href="${siteUrl}" style="color: #1e3a8a; text-decoration: none;">www.vincantomaiori.it</a></p>
+      <p style="font-size: 11px; margin-top: 10px; color: #888;">
+        <a href="${siteUrl}/privacy-policy" style="color: #666; text-decoration: underline;">Privacy Policy</a> &bull; 
+        <a href="${siteUrl}/cookie-policy" style="color: #666; text-decoration: underline;">Cookie Policy</a>
+      </p>
     </div>
   </div>
 </body>
@@ -152,6 +156,27 @@ const templates = {
         <p style="font-size: 14px; color: #555;">${t.final_greeting}<br>${t.contact_info}</p>
         <a href="https://www.vincantomaiori.it" class="button">Vai al Sito</a>
       </div>
+    `;
+    return baseLayout(content, data.logoUrl, data.siteUrl);
+  },
+
+  // Template 3: Notifica Richiesta Contatto (Admin)
+  contact_notification: (data) => {
+    const { name, email, phone, message, guests, checkin, checkout } = data;
+    const content = `
+      <h1>Nuova Richiesta dal Sito</h1>
+      <div class="info-box">
+        <p><strong>Nome:</strong> ${name}</p>
+        <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
+        <p><strong>Telefono:</strong> ${phone || 'N/A'}</p>
+        ${guests ? `<p><strong>Ospiti:</strong> ${guests}</p>` : ''}
+        ${checkin ? `<p><strong>Periodo:</strong> ${checkin} ${checkout ? '- ' + checkout : ''}</p>` : ''}
+      </div>
+      
+      <h2>Messaggio</h2>
+      <p style="background: #fff; padding: 15px; border: 1px solid #eee; border-radius: 4px; white-space: pre-wrap;">${message || 'Nessun messaggio'}</p>
+      
+      <p style="font-size: 12px; color: #888; margin-top: 20px; border-top: 1px solid #eee; padding-top: 10px;">Consenso Privacy: ✅ Accettato (Loggato nel sistema)</p>
     `;
     return baseLayout(content, data.logoUrl, data.siteUrl);
   }

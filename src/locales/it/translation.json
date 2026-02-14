@@ -290,6 +290,8 @@
   "contact.form.error.generic": "Si è verificato un errore. Riprova più tardi.",
   "contact.form.error.invalidDate": "La data di partenza deve essere successiva a quella di arrivo.",
   "contact.form.dateHelp": "",
+  "contact.form.privacyLabel": "Ho letto e accetto la <1>Privacy Policy</1>",
+  "contact.form.error.privacyRequired": "È necessario accettare la Privacy Policy per continuare.",
 
   "hero-subtitle": "Un angolo di paradiso tra i limoni della Costiera Amalfitana",
 

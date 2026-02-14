@@ -221,6 +221,8 @@
   "contact.form.emailPlacehoder": "Ex. jean.dupont@example.com",
   "contact.form.messagePlaceholder": "Demandes spéciales, horaires préférés, etc.",
   "contact.form.dateHelp": "jj/mm/aaaa",
+  "contact.form.privacyLabel": "J'ai lu et j'accepte la <1>Politique de Confidentialité</1>",
+  "contact.form.error.privacyRequired": "Vous devez accepter la politique de confidentialité pour continuer.",
 
   "seo": {
     "home.title": "VINCANTO | Maiori - Côte Amalfitaine",

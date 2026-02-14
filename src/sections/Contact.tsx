@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './Contact.css';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import axios from 'axios';
 import { Helmet } from 'react-helmet';
 
@@ -17,6 +17,7 @@ interface FormData {
 
 const Contact: React.FC = () => {
   const { t } = useTranslation();
+  const [privacyAccepted, setPrivacyAccepted] = useState(false); // Simulazione accettazione privacy, da integrare con un vero sistema di gestione cookie
 
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -59,11 +60,20 @@ const Contact: React.FC = () => {
       return;
     }
 
+    // Controllo Privacy GDPR
+    if (!privacyAccepted) {
+      setErrorMsg(t('contact.form.error.privacyRequired'));
+      return;
+    }
+
     setLoading(true);
     setErrorMsg(null);
 
     try {
-      await axios.post('/api/contact-request', formData);
+      await axios.post('/api/unified?action=contact', {
+        ...formData,
+        privacy_accepted: true
+      });
       setSubmitted(true);
     } catch (error) {
       console.error(error);
@@ -227,6 +237,21 @@ const Contact: React.FC = () => {
                     aria-required="true"
                     placeholder={t('contact.form.messagePlaceholder')}
                   ></textarea>
+                </div>
+
+                {/* Checkbox Privacy GDPR */}
+                <div className="form-group privacy-checkbox-container">
+                  <input
+                    type="checkbox"
+                    id="privacyCheck"
+                    checked={privacyAccepted}
+                    onChange={(e) => setPrivacyAccepted(e.target.checked)}
+                    required
+                    aria-label={t('contact.form.privacyLabel').replace(/<[^>]+>/g, '')}
+                  />
+                  <label htmlFor="privacyCheck">
+                    <Trans i18nKey="contact.form.privacyLabel" components={{ 1: <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" aria-label={t('navbar.navbarPrivacyPolicy')} /> }} />
+                  </label>
                 </div>
 
                 {errorMsg && (
