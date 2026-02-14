@@ -216,7 +216,7 @@ export default async function handler(req, res) {
           touristTax: booking_data.touristTax,
           extraServicesCost: booking_data.extraServicesCost,
           nights: booking_data.nights,
-          logoUrl: 'https://www.vincantomaiori.it/logo.svg',
+          logoUrl: 'https://www.vincantomaiori.it/logo.png',
           siteUrl: 'https://www.vincantomaiori.it'
         });
 

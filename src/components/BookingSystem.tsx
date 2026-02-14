@@ -301,6 +301,16 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                 throw new Error('Booking ID mancante - impossibile confermare pagamento');
             }
 
+            // Dati riepilogo costi per email (recuperati dallo stato corrente)
+            const breakdownData = quote ? {
+                accommodationCost: (quote as any).accommodationCost,
+                cleaningFee: quote.cleaningFee,
+                parkingCost: quote.parkingCost,
+                touristTax: quote.touristTax,
+                extraServicesCost: extraServicesCost,
+                nights: quote.nights
+            } : {};
+
             // Calcola l'importo pagato (acconto o totale) INCLUSI SERVIZI EXTRA
             const totalWithExtras = (quote?.totalAmount || 0) + extraServicesCost;
             const amountPaid = formData.payment_type === 'deposit' && quote
@@ -317,7 +327,8 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                     amount_paid: amountPaid,
                     // 🛎️ Passa i servizi extra per includerli nell'email di conferma
                     extra_services: selectedExtraServices.map(s => ({ id: s.id, name: s.name, price: s.price, included: !!s.included })),
-                    language: i18n.language || 'it'
+                    language: i18n.language || 'it',
+                    ...breakdownData
                 }
             );
 
@@ -457,6 +468,16 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
             // ✅ Calcola totale completo (quote + servizi extra)
             const totalAmount = quote ? (quote.totalAmount + extraServicesCost) : 0;
             
+            // Dati riepilogo costi per email
+            const breakdownData = quote ? {
+                accommodationCost: (quote as any).accommodationCost,
+                cleaningFee: quote.cleaningFee,
+                parkingCost: quote.parkingCost,
+                touristTax: quote.touristTax,
+                extraServicesCost: extraServicesCost,
+                nights: quote.nights
+            } : {};
+
             // 🔍 DEBUG: Verifica valori PRIMA di salvare paymentAmount
             console.log('🔍 PRE-PAYMENT DEBUG [v2.0]:', {
                 quote_exists: !!quote,
@@ -489,7 +510,10 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                 // Verrà aggiornato a CONFIRMED in handlePaymentSuccess() dopo verifica pagamento
                 const result: any = await submitBooking(
                     totalAmount,
-                    { status: 'draft' },
+                    { 
+                        status: 'draft',
+                        ...breakdownData
+                    },
                     selectedExtraServices.map(s => ({ id: s.id, name: s.name, price: s.price, included: !!s.included }))
                 );
                 setBookingResult(result || null);
@@ -499,7 +523,10 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                 // Bonifico bancario: crea booking subito come PENDING (pagamento offline)
                 const result: any = await submitBooking(
                     totalAmount,
-                    { status: 'pending' },
+                    { 
+                        status: 'pending',
+                        ...breakdownData
+                    },
                     selectedExtraServices.map(s => ({ id: s.id, name: s.name, price: s.price, included: !!s.included }))
                 );
                 setBookingResult(result || null);

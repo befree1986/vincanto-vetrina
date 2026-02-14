@@ -1459,7 +1459,7 @@ export default async function handler(req, res) {
                 touristTax: parseFloat(bookingData.touristTax) || 0,
                 extraServicesCost: parseFloat(bookingData.extraServicesCost) || 0,
                 nights: parseInt(bookingData.nights) || 0,
-                logoUrl: 'https://www.vincantomaiori.it/logo.svg',
+                logoUrl: 'https://www.vincantomaiori.it/logo.png',
                 siteUrl: 'https://www.vincantomaiori.it'
 
               });
@@ -2020,7 +2020,14 @@ export default async function handler(req, res) {
                   notes: booking.notes, // 📝 Passa le note
                   // 🛎️ Se il client invia i servizi extra nel corpo della richiesta, includili nell'email
                   extraServices: Array.isArray(req.body.extra_services) ? req.body.extra_services : (Array.isArray(req.body.extraServices) ? req.body.extraServices : []),
-                  logoUrl: 'https://www.vincantomaiori.it/logo.svg',
+                  // 🔥 Passa il breakdown dei costi dal body della richiesta (il DB non ha questi campi)
+                  accommodationCost: parseFloat(req.body.accommodationCost) || 0,
+                  cleaningFee: parseFloat(req.body.cleaningFee) || 0,
+                  parkingCost: parseFloat(req.body.parkingCost) || 0,
+                  touristTax: parseFloat(req.body.touristTax) || 0,
+                  extraServicesCost: parseFloat(req.body.extraServicesCost) || 0,
+                  nights: parseInt(req.body.nights) || 0,
+                  logoUrl: 'https://www.vincantomaiori.it/logo.png',
                   siteUrl: 'https://www.vincantomaiori.it'
                 });
 
