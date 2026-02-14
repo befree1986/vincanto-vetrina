@@ -1071,7 +1071,6 @@ const AdminPanelPro = (): JSX.Element => {
     emailNotifications: true,
     smsNotifications: false,
     pushNotifications: true,
-    bookingAlerts: true,
     bookingAlerts: false, // Disabilitato di default
     paymentAlerts: true,
     systemAlerts: true,
