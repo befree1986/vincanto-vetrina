@@ -1517,11 +1517,16 @@ export default async function handler(req, res) {
 
       if (req.method === 'PUT') {
         try {
-          const { id, ...updates } = req.body;
-          if (!id) {
+          const { id, booking_id, ...updates } = req.body;
+          
+          // Supporta aggiornamento tramite id (numerico) o booking_id (stringa)
+          const targetId = id;
+          const targetBookingId = booking_id;
+
+          if (!targetId && !targetBookingId) {
             return res.status(400).json({
               success: false,
-              error: 'ID prenotazione obbligatorio'
+              error: 'ID prenotazione obbligatorio (id o booking_id)'
             });
           }
 
@@ -1554,6 +1559,11 @@ export default async function handler(req, res) {
             updateFields.push(`status = $${paramIndex++}`);
             updateValues.push(updates.status);
           }
+          // Aggiungi supporto per payment_status se inviato
+          if (updates.payment_status) {
+            updateFields.push(`payment_status = $${paramIndex++}`);
+            updateValues.push(updates.payment_status);
+          }
 
           if (updateFields.length === 0) {
             return res.status(400).json({
@@ -1563,14 +1573,15 @@ export default async function handler(req, res) {
           }
 
           updateFields.push(`updated_at = NOW()`);
-          updateValues.push(id);
-
-          const query = `
-            UPDATE bookings 
-            SET ${updateFields.join(', ')}
-            WHERE id = $${paramIndex}
-            RETURNING *
-          `;
+          
+          let query = '';
+          if (targetId) {
+              updateValues.push(targetId);
+              query = `UPDATE bookings SET ${updateFields.join(', ')} WHERE id = $${paramIndex} RETURNING *`;
+          } else {
+              updateValues.push(targetBookingId);
+              query = `UPDATE bookings SET ${updateFields.join(', ')} WHERE booking_id = $${paramIndex} RETURNING *`;
+          }
 
           const result = await pool.query(query, updateValues);
 
@@ -2421,6 +2432,7 @@ export default async function handler(req, res) {
 
         // Costruisci query - 🔥 Filtra solo prenotazioni valide, esclude blocchi/festività
         let query = `
+        let sqlQuery = `
           SELECT 
             id,
             uid,
@@ -2475,18 +2487,22 @@ export default async function handler(req, res) {
 
         if (futureOnly === 'true' || futureOnly === true) {
           query += ` AND start_date >= CURRENT_DATE`;
+          sqlQuery += ` AND start_date >= CURRENT_DATE`;
         }
 
         if (platform && platform !== 'all') {
           query += ` AND (platform = $${paramCount} OR calendar_source = $${paramCount})`;
+          sqlQuery += ` AND (platform = $${paramCount} OR calendar_source = $${paramCount})`;
           params.push(platform);
           paramCount++;
         }
 
         query += ` ORDER BY start_date ASC LIMIT $${paramCount}`;
+        sqlQuery += ` ORDER BY start_date ASC LIMIT $${paramCount}`;
         params.push(parseInt(limit));
 
         const result = await pool.query(query, params);
+        const result = await pool.query(sqlQuery, params);
 
         // Conta totale - 🔥 Applica gli stessi filtri (esclude Airbnb blocchi, mantiene Booking chiusure)
         let countQuery = `SELECT COUNT(*) as total FROM calendar_events WHERE 1=1
@@ -2510,6 +2526,7 @@ export default async function handler(req, res) {
             )
           )
         And NOT (
+          AND NOT (
           LOWER(summary) LIKE '%canceled%'
           OR LOWER(summary) LIKE '%cancelled%'
           OR LOWER(description) LIKE '%canceled%'
@@ -3520,6 +3537,90 @@ END:VEVENT
           return res.status(500).json({ success: false, error: 'Errore invio messaggio' });
         }
       }
+    }
+
+    // ========================================
+    // PAYMENT MANAGEMENT (ADMIN)
+    // ========================================
+    if (action === 'capture-payment') {
+      if (req.method === 'POST') {
+        try {
+          const { payment_id, booking_id } = req.body;
+          // Supporta sia payment_id (spesso usato come ID prenotazione nel frontend admin) che booking_id
+          const targetId = payment_id || booking_id;
+
+          if (!targetId) {
+            return res.status(400).json({ success: false, error: 'ID pagamento o prenotazione richiesto' });
+          }
+
+          // Logica di cattura (simulata o reale se integrata con Stripe)
+          // Qui aggiorniamo lo stato a 'paid_full' assumendo che l'admin abbia verificato/catturato il pagamento
+          const result = await pool.query(
+            `UPDATE bookings 
+             SET payment_status = 'paid_full', updated_at = NOW()
+             WHERE id = $1 OR booking_id = $2
+             RETURNING *`,
+            [isNaN(Number(targetId)) ? null : Number(targetId), String(targetId)]
+          );
+
+          if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Prenotazione non trovata' });
+          }
+
+          return res.status(200).json({ 
+            success: true, 
+            message: 'Pagamento catturato con successo',
+            payment: {
+                status: 'completed',
+                amount: result.rows[0].total_amount,
+                date: new Date().toISOString()
+            }
+          });
+        } catch (error) {
+          console.error('❌ Errore capture-payment:', error);
+          return res.status(500).json({ success: false, error: error.message });
+        }
+      }
+    }
+
+    if (action === 'get-payment-details') {
+        try {
+            const { payment_id } = req.query;
+            if (!payment_id) {
+                return res.status(400).json({ success: false, error: 'payment_id richiesto' });
+            }
+
+            const result = await pool.query(
+                `SELECT id, booking_id, total_amount, deposit_amount, payment_status, stripe_payment_intent, first_name, last_name, email, created_at 
+                 FROM bookings 
+                 WHERE id = $1 OR booking_id = $2`,
+                [isNaN(Number(payment_id)) ? null : Number(payment_id), String(payment_id)]
+            );
+
+            if (result.rows.length === 0) {
+                return res.status(404).json({ success: false, error: 'Pagamento non trovato' });
+            }
+
+            const booking = result.rows[0];
+            return res.status(200).json({
+                success: true,
+                payment: {
+                    id: booking.id,
+                    booking_id: booking.booking_id,
+                    amount: parseFloat(booking.total_amount),
+                    deposit: parseFloat(booking.deposit_amount),
+                    status: booking.payment_status,
+                    method: booking.stripe_payment_intent ? 'stripe' : 'bank_transfer',
+                    customer: `${booking.first_name} ${booking.last_name}`,
+                    email: booking.email,
+                    transaction_id: booking.stripe_payment_intent,
+                    date: booking.created_at
+                }
+            });
+        } catch (error) {
+            console.error('❌ Errore get-payment-details:', error);
+            return res.status(500).json({ success: false, error: error.message });
+        }
     }
 
     // ========================================
