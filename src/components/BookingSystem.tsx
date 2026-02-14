@@ -313,9 +313,12 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
 
             // Calcola l'importo pagato (acconto o totale) INCLUSI SERVIZI EXTRA
             const totalWithExtras = (quote?.totalAmount || 0) + extraServicesCost;
-            const amountPaid = formData.payment_type === 'deposit' && quote
-                ? Math.round(totalWithExtras * 0.3 * 100) / 100
+            const isDeposit = formData.payment_type === 'deposit';
+            const amountPaid = isDeposit && quote
+                ? Math.round(totalWithExtras * 0.2 * 100) / 100 // Corretto a 20% per coerenza
                 : totalWithExtras;
+            
+            const dbPaymentStatus = isDeposit ? 'deposit_paid' : 'paid_full';
 
             // Aggiorna booking da DRAFT a CONFIRMED con dati pagamento
             const updateResult = await updateBookingStatus(
@@ -323,7 +326,7 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                 'confirmed',
                 {
                     payment_id: data?.payment_intent_id || data?.paymentId || null,
-                    payment_status: 'success',
+                    payment_status: dbPaymentStatus, // Invia stato specifico invece di 'success' generico
                     amount_paid: amountPaid,
                     // 🛎️ Passa i servizi extra per includerli nell'email di conferma
                     extra_services: selectedExtraServices.map(s => ({ id: s.id, name: s.name, price: s.price, included: !!s.included })),

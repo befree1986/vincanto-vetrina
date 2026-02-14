@@ -1982,7 +1982,7 @@ export default async function handler(req, res) {
 
           if (payment_status) {
             updateFields.push(`payment_status = $${paramIndex}`);
-            values.push(payment_status === 'success' ? 'paid_deposit' : payment_status);
+            values.push(payment_status === 'success' ? 'deposit_paid' : payment_status);
             paramIndex++;
           }
 
