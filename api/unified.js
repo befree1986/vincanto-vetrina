@@ -2431,7 +2431,6 @@ export default async function handler(req, res) {
         }
 
         // Costruisci query - 🔥 Filtra solo prenotazioni valide, esclude blocchi/festività
-        let query = `
         let sqlQuery = `
           SELECT 
             id,
@@ -2486,22 +2485,18 @@ export default async function handler(req, res) {
         let paramCount = 1;
 
         if (futureOnly === 'true' || futureOnly === true) {
-          query += ` AND start_date >= CURRENT_DATE`;
           sqlQuery += ` AND start_date >= CURRENT_DATE`;
         }
 
         if (platform && platform !== 'all') {
-          query += ` AND (platform = $${paramCount} OR calendar_source = $${paramCount})`;
           sqlQuery += ` AND (platform = $${paramCount} OR calendar_source = $${paramCount})`;
           params.push(platform);
           paramCount++;
         }
 
-        query += ` ORDER BY start_date ASC LIMIT $${paramCount}`;
         sqlQuery += ` ORDER BY start_date ASC LIMIT $${paramCount}`;
         params.push(parseInt(limit));
 
-        const result = await pool.query(query, params);
         const result = await pool.query(sqlQuery, params);
 
         // Conta totale - 🔥 Applica gli stessi filtri (esclude Airbnb blocchi, mantiene Booking chiusure)
@@ -2525,21 +2520,20 @@ export default async function handler(req, res) {
               OR LOWER(summary) LIKE '%manutenzione%'
             )
           )
-        And NOT (
           AND NOT (
-          LOWER(summary) LIKE '%canceled%'
-          OR LOWER(summary) LIKE '%cancelled%'
-          OR LOWER(description) LIKE '%canceled%'
-          OR LOWER(description) LIKE '%cancelled%'
-        )
-        AND NOT (
-          (platform = 'holidu' OR calendar_source = 'holidu') AND (
-            LOWER(summary) LIKE '%not available%'
-            OR LOWER(summary) LIKE '%unavailable%'
-            OR LOWER(summary) LIKE '%non disponibile%'
-            OR LOWER(summary) LIKE '%non-available%'
+            LOWER(summary) LIKE '%canceled%'
+            OR LOWER(summary) LIKE '%cancelled%'
+            OR LOWER(description) LIKE '%canceled%'
+            OR LOWER(description) LIKE '%cancelled%'
           )
-        )`;
+          AND NOT (
+            (platform = 'holidu' OR calendar_source = 'holidu') AND (
+              LOWER(summary) LIKE '%not available%'
+              OR LOWER(summary) LIKE '%unavailable%'
+              OR LOWER(summary) LIKE '%non disponibile%'
+              OR LOWER(summary) LIKE '%non-available%'
+            )
+          )`;
         
         if (futureOnly === 'true' || futureOnly === true) {
           countQuery += ' AND start_date >= CURRENT_DATE';
