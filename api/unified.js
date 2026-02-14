@@ -235,7 +235,7 @@ async function initializeTables() {
         ('Colazione Italiana', 'Colazione italiana completa con prodotti locali', 15.00, 'food', 'per_person_per_day', true, true, NULL, NULL, 4),
         ('Transfer Aeroporto', 'Servizio transfer da/per Aeroporto di Palermo', 45.00, 'transport', 'per_stay', true, false, NULL, NULL, 5),
         ('Culla per Bambini', 'Culla con biancheria per bambini 0-6 anni', 30.00, 'bambini', 'per_stay', true, false, 0, 7, 6),
-        ('Parcheggio Privato Extra', 'Posto auto aggiuntivo nel parcheggio privato', 10.00, 'parking', 'per_night', false, false, NULL, NULL, 7),
+        ('Parcheggio Privato Extra', 'Posto auto aggiuntivo nel parcheggio privato', 20.00, 'parking', 'per_night', false, false, NULL, NULL, 7),
         ('Kit Welcome', 'Kit di benvenuto con prodotti tipici siciliani', 25.00, 'gift', 'per_stay', true, true, NULL, NULL, 8)
       `);
       console.log('✅ Servizi extra di default inseriti');
@@ -822,7 +822,8 @@ export default async function handler(req, res) {
             totalAmount: parseFloat(booking.total_amount),
             amountPaid: parseFloat(booking.total_amount), // Confermando il bonifico, si assume il saldo
             language: guestLanguage,
-            paymentMethod: 'bank_transfer'
+            paymentMethod: 'bank_transfer',
+            notes: booking.notes // 📝 Passa le note anche alla conferma finale
           });
 
           await sendEmailWithAdminCopy({ to: booking.email, subject: `Pagamento ricevuto - Prenotazione ${booking.booking_id}`, html });
@@ -1445,6 +1446,7 @@ export default async function handler(req, res) {
                 children,
                 totalAmount,
                 depositAmount: Math.round(totalAmount * 0.2 * 100) / 100,
+                notes, // 📝 Passa il messaggio dell'utente al template
                 fromEmail: process.env.SMTP_FROM,
                 language: guestLanguage,
                 paymentMethod: bookingData.paymentMethod || bookingData.payment_method,
@@ -2015,6 +2017,7 @@ export default async function handler(req, res) {
                   fromEmail: process.env.SMTP_FROM,
                   language: guestLanguage,
                   paymentMethod: req.body.payment_method || req.body.paymentMethod,
+                  notes: booking.notes, // 📝 Passa le note
                   // 🛎️ Se il client invia i servizi extra nel corpo della richiesta, includili nell'email
                   extraServices: Array.isArray(req.body.extra_services) ? req.body.extra_services : (Array.isArray(req.body.extraServices) ? req.body.extraServices : []),
                   logoUrl: 'https://www.vincantomaiori.it/logo.svg',

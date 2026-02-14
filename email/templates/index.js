@@ -65,8 +65,12 @@ const templates = {
   booking_confirmation: (data) => {
     const t = getEmailStrings('booking_confirmation', data.language);
     const formatDate = (d) => formatDateByLanguage(d, data.language);
-    const { firstName, lastName, bookingId, checkin, checkout, guests, totalAmount, depositAmount, paymentMethod, extraServices, accommodationCost, cleaningFee, parkingCost, touristTax } = data;
+    const { firstName, lastName, bookingId, checkin, checkout, guests, totalAmount, depositAmount, paymentMethod, extraServices, accommodationCost, cleaningFee, parkingCost, touristTax, extraServicesCost, notes, fromEmail } = data;
     
+    // Fallback email se non presente nei dati
+    const contactEmail = fromEmail || 'info@vincantomaiori.it';
+    const mailtoSubject = encodeURIComponent(`Assistenza Prenotazione ${bookingId}`);
+
     const content = `
       <h1>${t.title}</h1>
       <p>${t.greeting} <strong>${firstName} ${lastName}</strong>,</p>
@@ -78,6 +82,11 @@ const templates = {
         <p><strong>${t.check_out}:</strong> ${formatDate(checkout)}</p>
         <p><strong>${t.guests}:</strong> ${guests}</p>
       </div>
+
+      ${notes ? `<div style="background-color: #fff3cd; padding: 15px; margin: 20px 0; border-radius: 4px; border-left: 4px solid #ffc107;">
+        <strong>Messaggio dell'ospite:</strong><br>
+        <i>${notes}</i>
+      </div>` : ''}
 
       <h2>${t.cost_breakdown}</h2>
       <table class="price-table">
@@ -94,6 +103,8 @@ const templates = {
           <td>${t.tourist_tax}</td>
           <td style="text-align: right;">${formatCurrency(touristTax)}</td>
         </tr>
+        ${extraServicesCost > 0 ? `<tr><td>Servizi Extra</td><td style="text-align: right;">${formatCurrency(extraServicesCost)}</td></tr>` : ''}
+        ${extraServices && extraServices.length > 0 ? `<tr><td colspan="2" style="font-size: 0.85em; color: #666; padding-top: 0;"><em>${extraServices.map(s => s.name || s).join(', ')}</em></td></tr>` : ''}
         <tr class="total">
           <td>Totale</td>
           <td style="text-align: right;">${formatCurrency(totalAmount)}</td>
@@ -114,7 +125,7 @@ const templates = {
 
       <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
         <p style="font-size: 14px; color: #555;">${t.final_greeting}<br>${t.contact_info}</p>
-        <a href="https://www.vincantomaiori.it/contact" class="button">Contattaci</a>
+        <a href="mailto:${contactEmail}?subject=${mailtoSubject}" class="button">Contattaci via Email</a>
       </div>
     `;
     return baseLayout(content, data.logoUrl, data.siteUrl);
@@ -124,7 +135,7 @@ const templates = {
   booking_final_confirmation: (data) => {
     const t = getEmailStrings('booking_final', data.language);
     const formatDate = (d) => formatDateByLanguage(d, data.language);
-    const { firstName, lastName, bookingId, checkin, checkout, totalAmount, amountPaid, paymentMethod } = data;
+    const { firstName, lastName, bookingId, checkin, checkout, totalAmount, amountPaid, paymentMethod, notes } = data;
     
     const content = `
       <h1>${t.title}</h1>
@@ -135,6 +146,11 @@ const templates = {
         <p><strong>${t.check_in}:</strong> ${formatDate(checkin)}</p>
         <p><strong>${t.check_out}:</strong> ${formatDate(checkout)}</p>
       </div>
+
+      ${notes ? `<div style="background-color: #fff3cd; padding: 15px; margin: 20px 0; border-radius: 4px; border-left: 4px solid #ffc107;">
+        <strong>Note:</strong><br>
+        <i>${notes}</i>
+      </div>` : ''}
 
       <h2>Dettagli Pagamento</h2>
       <table class="price-table">

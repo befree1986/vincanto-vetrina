@@ -913,7 +913,7 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                                             onChange={(e) => setFormData({ parking_option: e.target.value as any })}
                                         />
                                         <label htmlFor="parking-private-pay">
-                                            {t('booking.privateParking', 'Parcheggio privato riservato e custodito')}
+                                            {t('booking.privateParking', 'Parcheggio riservato ')}
                                         </label>
                                     </div>
 

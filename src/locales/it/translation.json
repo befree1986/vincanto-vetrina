@@ -234,7 +234,7 @@
   "section.extraCosts.mandatoryList3": "Biglietti Navetta acquistabili direattamente sul mezzo di trasporto",
   "section.extraCosts.onRequestTitle": "Su richiesta",
   "section.extraCosts.onRequestList2": "Culla per bambini 0-6 anni a 30€/soggiorno",
-  "section.extraCosts.onRequestList1": "Posto auto riservato e custodito a 20€/giorno",
+  "section.extraCosts.onRequestList1": "Posto auto riservato a 20€/giorno",
   
   "about.longdesc1": "Ogni dettaglio di VINCANTO è pensato per offrirti un soggiorno indimenticabile. Gli interni, completamente rinnovati, uniscono design contemporaneo e materiali di pregio: pavimenti e rivestimenti in elegante gres porcellanato, applique in ceramica vietrese decorate a mano, arredi ricercati e finiture di alta qualità. I nuovi infissi in PVC garantiscono silenzio e comfort, mentre le zanzariere su porte e finestre ti permettono di godere della brezza della campagna in totale relax.",
   "about.longdesc2": "La struttura dispone di due camere matrimoniali con letti King Size, una camera con due letti singoli, luminose e accoglienti, e tre bagni moderni e funzionali con ampi piatti doccia per il massimo comfort e privacy. La cucina open space, completamente attrezzata, è perfetta per condividere momenti conviviali e preparare i tuoi piatti preferiti.",
@@ -415,7 +415,7 @@
   "booking.noParking": "Nessun parcheggio",
   "booking.streetParking": "Parcheggio su strada",
   "booking.subjectToAvailability": "Soggetto a disponibilit�",
-  "booking.privateParking": "Parcheggio privato riservato e custodito",
+  "booking.privateParking": "Parcheggio riservato",
   "booking.guestInfo": "Informazioni Ospite",
   "booking.firstName": "Nome",
   "booking.lastName": "Cognome",
@@ -472,7 +472,7 @@
     "welcomeKit": "Kit Welcome",
     "welcomeKitDesc": "Kit di benvenuto con prodotti tipici",
     "parking": "Parcheggio Privato",
-    "parkingDesc": "Posto auto riservato e custodito"
+    "parkingDesc": "Posto auto riservato"
   },
   "bookingCalendar": {
     "error": {
