@@ -1,0 +1,19 @@
+/* Nascondi la navigazione per la pagina di accessibilità */
+nav, .navbar, header {
+  display: none !important;
+}
+
+.accessibility-container {
+  padding: 2rem;
+  max-width: 800px;
+  margin: auto;
+}
+
+.accessibility-actions {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.accessibility-thanks {
+  margin-top: 2rem;
+}

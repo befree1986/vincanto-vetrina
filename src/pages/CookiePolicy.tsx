@@ -32,6 +32,9 @@ const CookiePolicy = () => {
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://www.vincantomaiori.it/cookie-policy" />
       </Helmet>
+      <style>{`
+        nav, .navbar, header { display: none !important; }
+      `}</style>
       <main className="policy-container">
       <h1>{lang === "it" ? "Cookie Policy" : lang === "de" ? "Cookie-Richtlinie" : lang === "fr" ? "Politique de Cookies" : "Cookie Policy"}</h1>
       <p>Last updated / Ultimo aggiornamento: {content.lastUpdated}</p>
@@ -55,7 +58,13 @@ const CookiePolicy = () => {
 
       <div className="policy-actions">
         <button
-          onClick={() => window.history.back()}
+          onClick={() => {
+            window.close();
+            // Fallback: se il browser impedisce la chiusura, torna alla home
+            setTimeout(() => {
+              window.location.href = '/';
+            }, 500);
+          }}
           className="close-page-btn"
           aria-label="Close page"
         >
