@@ -1,0 +1,30 @@
+.action-buttons-flex {
+  display: flex;
+  gap: 5px;
+}
+
+.admin-btn-custom {
+  color: white;
+  border: none;
+  padding: 2px 5px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8em;
+}
+
+.admin-btn-custom-warning {
+  background-color: #f59e0b;
+}
+
+.admin-btn-custom-success {
+  background-color: #10b981;
+}
+
+.admin-btn-custom-danger {
+  background-color: #ef4444;
+}
+
+.admin-text-cancelled-small {
+  font-size: 0.8em;
+  color: #6b7280;
+}
