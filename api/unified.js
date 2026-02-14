@@ -1648,7 +1648,7 @@ export default async function handler(req, res) {
     // ========================================
     // CANCEL BOOKING ENDPOINT
     // ========================================
-    // Cancella o marca come cancelled un booking (usato quando pagamento fallisce)
+    // Cancella o marca come cancelled un booking (usato quando pagamento fallisce o da admin)
     if (action === 'cancel-booking') {
       if (req.method === 'POST') {
         try {
@@ -1661,17 +1661,26 @@ export default async function handler(req, res) {
             });
           }
           
-          console.log(`🚫 Cancellazione booking: ${bookingId}, motivo: ${reason || 'non specificato'}`);
+          console.log(`🚫 Cancellazione booking richiesta: ${bookingId}, motivo: ${reason || 'non specificato'}`);
           
-          // Aggiorna il booking a status 'cancelled'
-          const result = await pool.query(`
-            UPDATE bookings 
-            SET status = 'cancelled', 
-                payment_status = 'cancelled',
-                updated_at = NOW()
-            WHERE booking_id = $1 OR id = $1
-            RETURNING *
-          `, [bookingId]);
+          // 1. Aggiorna il booking a status 'cancelled'
+          // Gestione sicura ID numerico vs stringa
+          let result;
+          if (!isNaN(Number(bookingId))) {
+             result = await pool.query(`
+                UPDATE bookings 
+                SET status = 'cancelled', payment_status = 'cancelled', updated_at = NOW()
+                WHERE id = $1 OR booking_id = $2
+                RETURNING *
+             `, [Number(bookingId), String(bookingId)]);
+          } else {
+             result = await pool.query(`
+                UPDATE bookings 
+                SET status = 'cancelled', payment_status = 'cancelled', updated_at = NOW()
+                WHERE booking_id = $1
+                RETURNING *
+             `, [String(bookingId)]);
+          }
           
           if (result.rows.length === 0) {
             return res.status(404).json({
@@ -1680,11 +1689,55 @@ export default async function handler(req, res) {
             });
           }
           
-          console.log(`✅ Booking ${bookingId} cancellato con successo`);
+          const booking = result.rows[0];
+          console.log(`✅ Booking ${booking.booking_id} marcato come cancellato`);
+
+          // 2. Libera le date nel calendario (rimuovi da blocked_dates)
+          // Le date in blocked_dates sono inserite con descrizione "Prenotazione VIN..."
+          const deleteBlocked = await pool.query(`
+            DELETE FROM blocked_dates 
+            WHERE description LIKE $1
+          `, [`%${booking.booking_id}%`]);
+          
+          console.log(`✅ Date liberate in blocked_dates: ${deleteBlocked.rowCount} righe rimosse`);
+
+          // 3. Invia email di cancellazione
+          if (process.env.SMTP_HOST) {
+            try {
+              const guestLanguage = detectLanguage(booking.email);
+              const subject = guestLanguage === 'it' ? `Cancellazione Prenotazione ${booking.booking_id}` : `Booking Cancellation ${booking.booking_id}`;
+              const messageBody = guestLanguage === 'it' 
+                ? `La tua prenotazione ${booking.booking_id} è stata cancellata.${reason ? '<br>Motivo: ' + reason : ''}`
+                : `Your booking ${booking.booking_id} has been cancelled.${reason ? '<br>Reason: ' + reason : ''}`;
+              
+              const html = `
+                <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 8px;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <img src="https://www.vincantomaiori.it/logo.png" alt="Vincanto Maori" style="height: 60px;">
+                    </div>
+                    <h2 style="color: #d32f2f; text-align: center;">${subject}</h2>
+                    <p style="font-size: 16px; line-height: 1.5;">${messageBody}</p>
+                    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+                    <p style="font-size: 14px; color: #666; text-align: center;">Vincanto Maori - Maiori, Costiera Amalfitana</p>
+                </div>
+              `;
+
+              await sendEmailWithAdminCopy({
+                  to: booking.email,
+                  subject: subject,
+                  html: html,
+                  templateName: 'cancellation'
+              });
+              console.log(`✅ Email cancellazione inviata a ${booking.email}`);
+            } catch (e) {
+              console.error('⚠️ Errore invio email cancellazione:', e.message);
+            }
+          }
+
           return res.status(200).json({
             success: true,
-            message: 'Booking cancellato con successo',
-            bookingId: bookingId,
+            message: 'Booking cancellato con successo e date liberate',
+            bookingId: booking.booking_id,
             reason: reason
           });
         } catch (error) {
@@ -3547,11 +3600,10 @@ END:VEVENT
             return res.status(400).json({ success: false, error: 'ID pagamento o prenotazione richiesto' });
           }
 
-          // Logica di cattura (simulata o reale se integrata con Stripe)
-          // Qui aggiorniamo lo stato a 'paid_full' assumendo che l'admin abbia verificato/catturato il pagamento
+          // 1. Aggiorna lo stato della prenotazione a CONFIRMED e PAID_FULL
           const result = await pool.query(
             `UPDATE bookings 
-             SET payment_status = 'paid_full', updated_at = NOW()
+             SET status = 'confirmed', payment_status = 'paid_full', updated_at = NOW()
              WHERE id = $1 OR booking_id = $2
              RETURNING *`,
             [isNaN(Number(targetId)) ? null : Number(targetId), String(targetId)]
@@ -3561,12 +3613,46 @@ END:VEVENT
             return res.status(404).json({ success: false, error: 'Prenotazione non trovata' });
           }
 
+          const booking = result.rows[0];
+          console.log(`✅ Pagamento catturato e prenotazione confermata: ${booking.booking_id}`);
+
+          // 2. Invia email di conferma finale (Pagamento Ricevuto)
+          if (process.env.SMTP_HOST) {
+            try {
+              const guestLanguage = detectLanguage(booking.email);
+              const emailHtml = renderEmailTemplate('booking_final_confirmation', {
+                firstName: booking.first_name,
+                lastName: booking.last_name,
+                bookingId: booking.booking_id,
+                checkin: booking.check_in,
+                checkout: booking.check_out,
+                totalAmount: parseFloat(booking.total_amount),
+                amountPaid: parseFloat(booking.total_amount),
+                language: guestLanguage,
+                paymentMethod: 'manual_capture',
+                notes: booking.notes,
+                logoUrl: 'https://www.vincantomaiori.it/logo.png',
+                siteUrl: 'https://www.vincantomaiori.it'
+              });
+
+              await sendEmailWithAdminCopy({
+                to: booking.email,
+                subject: `Pagamento confermato - Prenotazione ${booking.booking_id}`,
+                html: emailHtml,
+                templateName: 'booking_final_confirmation'
+              });
+              console.log(`✅ Email conferma pagamento inviata a ${booking.email}`);
+            } catch (emailError) {
+              console.error('⚠️ Errore invio email conferma pagamento:', emailError.message);
+            }
+          }
+
           return res.status(200).json({ 
             success: true, 
-            message: 'Pagamento catturato con successo',
+            message: 'Pagamento catturato e prenotazione confermata con successo',
             payment: {
                 status: 'completed',
-                amount: result.rows[0].total_amount,
+                amount: booking.total_amount,
                 date: new Date().toISOString()
             }
           });
