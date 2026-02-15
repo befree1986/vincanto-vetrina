@@ -1199,7 +1199,7 @@ export default async function handler(req, res) {
           const guests = bookingData.guests || (bookingData.adults || 0) + (bookingData.children || 0) || 1;
           const adults = bookingData.adults || bookingData.guests || 1;
           const children = bookingData.children || 0;
-          const email = bookingData.customerEmail || bookingData.email;
+          const email = bookingData.customerEmail || bookingData.email || bookingData.customer_email; // 🔧 FIX: Supporto customer_email
           const phone = bookingData.customerPhone || bookingData.phone;
           // Normalizza e forza a numero - accetta sia interi che decimali
           const totalAmount = parseFloat(bookingData.totalPrice) || parseFloat(bookingData.total_amount) || 0;
@@ -1302,15 +1302,18 @@ export default async function handler(req, res) {
             });
           }
           
-          if (!email) {
-            console.error('❌ Email cliente mancante');
-            return res.status(400).json({
-              success: false,
-              error: 'Email cliente obbligatoria'
-            });
+          // 🔧 FIX: Email facoltativa per prenotazioni manuali
+          let finalEmail = email;
+          if (!finalEmail && bookingData.platform === 'manual') {
+             finalEmail = `manual-booking-${Date.now()}@vincanto-local.it`; // Placeholder per DB
+          } else if (!finalEmail) {
+             return res.status(400).json({
+               success: false,
+               error: 'Email cliente obbligatoria'
+             });
           }
           
-          console.log('✅ Dati normalizzati:', { checkin, checkout, guests, adults, children, firstName, lastName, email, phone, totalAmount });
+          console.log('✅ Dati normalizzati:', { checkin, checkout, guests, adults, children, firstName, lastName, email: finalEmail, phone, totalAmount });
           
           // ⚡ Estrai status dal payload (default 'pending' se non specificato)
           const bookingStatus = bookingData.status || 'pending';
@@ -1369,7 +1372,7 @@ export default async function handler(req, res) {
             children,
             firstName,
             lastName,
-            email,
+            finalEmail,
             phone,
             totalAmount,
             Math.round(totalAmount * 0.2 * 100) / 100, // 20% acconto arrotondato
@@ -1379,7 +1382,7 @@ export default async function handler(req, res) {
           ]);
           
           // 📧 Invia email di conferma SOLO se status non è DRAFT
-          if (bookingStatus !== 'draft' && process.env.SMTP_HOST) {
+          if (bookingStatus !== 'draft' && process.env.SMTP_HOST && email) { // Invia solo se email reale presente
             try {
               const guestLanguage = detectLanguage(email);
               const emailHtml = renderEmailTemplate('booking_confirmation', {
@@ -1597,6 +1600,39 @@ export default async function handler(req, res) {
             message: 'Errore eliminazione prenotazione',
             error: error.message
           });
+        }
+      }
+
+      // 🔧 FIX: Aggiunto metodo DELETE per eliminare date bloccate
+      if (req.method === 'DELETE') {
+        try {
+          const { id } = req.body;
+          if (!id) return res.status(400).json({ success: false, error: 'ID richiesto' });
+          
+          await pool.query('DELETE FROM blocked_dates WHERE id = $1', [id]);
+          return res.status(200).json({ success: true, message: 'Data bloccata eliminata' });
+        } catch (error) {
+           console.error('❌ Errore eliminazione blocked-date:', error);
+           return res.status(500).json({ success: false, error: error.message });
+        }
+      }
+
+      // 🔧 FIX: Aggiunto metodo PUT per modificare date bloccate
+      if (req.method === 'PUT') {
+        try {
+          const { id, start_date, end_date, reason } = req.body;
+          if (!id) return res.status(400).json({ success: false, error: 'ID richiesto' });
+
+          await pool.query(`
+            UPDATE blocked_dates 
+            SET start_date = $1, end_date = $2, reason = $3 
+            WHERE id = $4
+          `, [start_date, end_date, reason, id]);
+          
+          return res.status(200).json({ success: true, message: 'Data bloccata aggiornata' });
+        } catch (error) {
+           console.error('❌ Errore modifica blocked-date:', error);
+           return res.status(500).json({ success: false, error: error.message });
         }
       }
     }
@@ -2655,7 +2691,7 @@ export default async function handler(req, res) {
 
         // Query date bloccate admin
         const blockedQuery = await pool.query(`
-          SELECT id, start_date, end_date, reason
+          SELECT id, start_date::text, end_date::text, reason
           FROM blocked_dates
           ORDER BY start_date DESC
         `);
@@ -3752,6 +3788,18 @@ END:VEVENT
         try {
           // Crea nuova data bloccata nel database
           const { start_date, end_date, reason, description } = req.body;
+
+          // 🔒 CHECK CONFLITTI: Verifica se le date sono già prenotate
+          const conflict = await pool.query(`
+            SELECT booking_id FROM bookings 
+            WHERE status IN ('confirmed', 'pending')
+            AND check_in < $2 AND check_out > $1
+            LIMIT 1
+          `, [start_date, end_date]);
+
+          if (conflict.rows.length > 0) {
+            return res.status(409).json({ success: false, error: `Impossibile bloccare: date già prenotate (Booking: ${conflict.rows[0].booking_id})` });
+          }
           
           const result = await pool.query(`
             INSERT INTO blocked_dates (start_date, end_date, reason, description)
@@ -3781,6 +3829,51 @@ END:VEVENT
               description: req.body.description || 'Data bloccata'
             }
           });
+        }
+      }
+
+      // 🔧 FIX: Metodo PUT per modificare date bloccate (Spostato qui)
+      if (req.method === 'PUT') {
+        try {
+          const { id, start_date, end_date, reason } = req.body;
+          if (!id) return res.status(400).json({ success: false, error: 'ID richiesto' });
+
+          // 🔒 CHECK CONFLITTI SU MODIFICA
+          const conflict = await pool.query(`
+            SELECT booking_id FROM bookings 
+            WHERE status IN ('confirmed', 'pending')
+            AND check_in < $2 AND check_out > $1
+            LIMIT 1
+          `, [start_date, end_date]);
+
+          if (conflict.rows.length > 0) {
+            return res.status(409).json({ success: false, error: `Impossibile aggiornare: date già prenotate (Booking: ${conflict.rows[0].booking_id})` });
+          }
+
+          await pool.query(`
+            UPDATE blocked_dates 
+            SET start_date = $1, end_date = $2, reason = $3 
+            WHERE id = $4
+          `, [start_date, end_date, reason, id]);
+          
+          return res.status(200).json({ success: true, message: 'Data bloccata aggiornata' });
+        } catch (error) {
+           console.error('❌ Errore modifica blocked-date:', error);
+           return res.status(500).json({ success: false, error: error.message });
+        }
+      }
+
+      // 🔧 FIX: Metodo DELETE per eliminare date bloccate (Spostato qui)
+      if (req.method === 'DELETE') {
+        try {
+          const { id } = req.body;
+          if (!id) return res.status(400).json({ success: false, error: 'ID richiesto' });
+          
+          await pool.query('DELETE FROM blocked_dates WHERE id = $1', [id]);
+          return res.status(200).json({ success: true, message: 'Data bloccata eliminata' });
+        } catch (error) {
+           console.error('❌ Errore eliminazione blocked-date:', error);
+           return res.status(500).json({ success: false, error: error.message });
         }
       }
     }

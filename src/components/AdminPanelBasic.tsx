@@ -53,6 +53,7 @@ const AdminPanelBasic = (): JSX.Element => {
     platform: 'manual' // Identifica prenotazioni manuali
   });
   const [blockDate, setBlockDate] = useState({ start_date: '', end_date: '', reason: 'maintenance' });
+  const [editingBlockId, setEditingBlockId] = useState<string | null>(null); // Stato per modifica blocco
 
   // Admin API Service
   const [adminApiService] = useState(() => {
@@ -226,16 +227,24 @@ const AdminPanelBasic = (): JSX.Element => {
     }
     try {
       setIsLoadingData(true);
+      
+      // Determina se è una creazione (POST) o modifica (PUT)
+      const method = editingBlockId ? 'PUT' : 'POST';
+      const body = editingBlockId 
+        ? { ...blockDate, id: editingBlockId }
+        : blockDate;
+
       const response = await fetch('/api/unified?action=blocked-dates', {
-        method: 'POST',
+        method: method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(blockDate)
+        body: JSON.stringify(body)
       });
       const result = await response.json();
       if (result.success) {
-        alert('✅ Date bloccate con successo!');
+        alert(editingBlockId ? '✅ Blocco aggiornato!' : '✅ Date bloccate con successo!');
         setShowBlockForm(false);
         setBlockDate({ start_date: '', end_date: '', reason: 'maintenance' });
+        setEditingBlockId(null);
         await loadRealApiData();
       } else {
         alert('❌ Errore: ' + result.error);
@@ -245,6 +254,44 @@ const AdminPanelBasic = (): JSX.Element => {
     } finally {
       setIsLoadingData(false);
     }
+  };
+
+  // 🔧 FIX: Funzione diretta per eliminare date bloccate
+  const handleDeleteBlockedDate = async (id: string) => {
+    if (!confirm('⚠️ Rimuovere il blocco per queste date?')) return;
+    
+    try {
+      setIsLoadingData(true);
+      const response = await fetch('/api/unified?action=blocked-dates', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
+      const result = await response.json();
+      if (result.success) {
+        alert('✅ Blocco rimosso!');
+        await loadRealApiData();
+      } else {
+        alert('❌ Errore: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Errore rimozione blocco:', error);
+      alert('❌ Errore di comunicazione');
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
+
+  const handleEditBlockedDate = (block: any) => {
+    setBlockDate({
+      start_date: block.start_date,
+      end_date: block.end_date,
+      reason: block.reason
+    });
+    setEditingBlockId(block.id);
+    setShowBlockForm(true);
+    // Scroll to form
+    document.querySelector('.admin-form-card')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   // 📅 LOGICA CALENDARIO VISUALE
@@ -550,8 +597,11 @@ const AdminPanelBasic = (): JSX.Element => {
               {/* Card Blocca Date */}
               <div className="admin-form-card">
                 <div className="admin-flex-between">
-                  <h3>🚫 Blocca/Chiudi Date</h3>
-                  <button className="admin-btn-small" onClick={() => setShowBlockForm(!showBlockForm)}>{showBlockForm ? 'Chiudi' : 'Apri'}</button>
+                  <h3>{editingBlockId ? '✏️ Modifica Blocco' : '🚫 Blocca/Chiudi Date'}</h3>
+                  <button className="admin-btn-small" onClick={() => {
+                    setShowBlockForm(!showBlockForm);
+                    if(showBlockForm) { setEditingBlockId(null); setBlockDate({ start_date: '', end_date: '', reason: 'maintenance' }); }
+                  }}>{showBlockForm ? 'Chiudi' : 'Apri'}</button>
                 </div>
                 {showBlockForm && (
                   <form onSubmit={handleBlockDates}>
@@ -568,7 +618,7 @@ const AdminPanelBasic = (): JSX.Element => {
                         <option value="other">Altro</option>
                       </select>
                     </div>
-                    <button type="submit" className="admin-btn-danger admin-w-full">Blocca Date</button>
+                    <button type="submit" className="admin-btn-danger admin-w-full">{editingBlockId ? 'Aggiorna Blocco' : 'Blocca Date'}</button>
                   </form>
                 )}
               </div>
