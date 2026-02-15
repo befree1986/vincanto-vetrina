@@ -256,6 +256,17 @@ const AdminPanelBasic = (): JSX.Element => {
     return { days, firstDay };
   };
 
+  // Helper per visualizzare nomi piattaforma leggibili (es. cal_3 -> Holidu)
+  const getPlatformLabel = (platform: string) => {
+    if (!platform) return 'Altro';
+    const p = platform.toLowerCase();
+    if (p === 'direct' || p === 'manual') return 'Sito';
+    if (p === 'cal_3' || p === 'holidu') return 'Holidu';
+    if (p === 'airbnb') return 'Airbnb';
+    if (p === 'booking' || p === 'booking.com') return 'Booking';
+    return p.charAt(0).toUpperCase() + p.slice(1);
+  };
+
   const renderCalendar = () => {
     const { days, firstDay } = getDaysInMonth(currentMonth);
     const monthName = currentMonth.toLocaleString('it-IT', { month: 'long', year: 'numeric' });
@@ -311,10 +322,10 @@ const AdminPanelBasic = (): JSX.Element => {
                   // Qui mostriamo tutto per chiarezza "Occupato"
                   
                   return (
-                    <div key={idx} className={eventClass} title={`${ev.customer_name} (${ev.platform})`}>
+                    <div key={idx} className={eventClass} title={`${ev.customer_name} (${getPlatformLabel(ev.platform)})`}>
                       <div className="event-info">
                         <span>{isStart ? '📥' : isEnd ? '📤' : '🔒'}</span>
-                        <span>{ev.platform === 'direct' || ev.platform === 'manual' ? 'Sito' : ev.platform}</span>
+                        <span>{getPlatformLabel(ev.platform)}</span>
                       </div>
                       <div className="calendar-event-name">{ev.customer_name || ev.guestName}</div>
                     </div>
@@ -461,20 +472,31 @@ const AdminPanelBasic = (): JSX.Element => {
       <main className="admin-main">
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
-          <AdminDashboard
-            dashboardStats={dashboardStats}
-            realBookings={realBookings}
-            paymentTransactions={paymentTransactions}
-            notifications={notifications}
-            systemSettings={systemSettings}
-            analytics={analytics}
-            calendarEvents={calendarEvents}
-            blockedDates={blockedDates}
-            isLoadingData={isLoadingData}
-            isLoadingCalendar={isLoadingCalendar}
-            loadCalendarData={loadCalendarData}
-            setActiveTab={setActiveTab}
-          />
+          <div className="admin-dashboard-wrapper">
+            <AdminDashboard
+              dashboardStats={dashboardStats}
+              realBookings={realBookings}
+              paymentTransactions={paymentTransactions}
+              notifications={notifications}
+              systemSettings={systemSettings}
+              analytics={analytics}
+              calendarEvents={calendarEvents}
+              blockedDates={blockedDates}
+              isLoadingData={isLoadingData}
+              isLoadingCalendar={isLoadingCalendar}
+              loadCalendarData={loadCalendarData}
+              setActiveTab={setActiveTab}
+            />
+            
+            {/* Calendario aggiunto anche nella Dashboard */}
+            <div className="admin-pricing-section admin-mt-20">
+              <h3>📅 Calendario Occupazioni</h3>
+              <p className="admin-section-description">
+                Panoramica rapida delle disponibilità.
+              </p>
+              {renderCalendar()}
+            </div>
+          </div>
         )}
 
         {/* Prenotazioni Tab */}

@@ -33,6 +33,10 @@
   margin-left: 5px;
 }
 
+.admin-mt-20 {
+  margin-top: 20px;
+}
+
 /* --- CALENDARIO OCCUPAZIONI --- */
 .admin-calendar-wrapper {
   background: white;
