@@ -170,22 +170,6 @@ export default async function handler(req, res) {
     const savedBooking = result.rows[0];
     console.log('✅ Prenotazione salvata:', savedBooking);
 
-    // Inserisci date bloccate nel calendario
-    try {
-      await pool.query(`
-        INSERT INTO blocked_dates (start_date, end_date, reason, description)
-        VALUES ($1, $2, $3, $4)
-      `, [
-        checkin,
-        checkout,
-        'booking',
-        `Prenotazione ${bookingId} - ${firstName} ${lastName}`
-      ]);
-      console.log('✅ Date bloccate nel calendario');
-    } catch (blockError) {
-      console.warn('⚠️ Errore blocco date (non-critico):', blockError.message);
-    }
-
     // Invia email di conferma (se pagamento successo o bonifico in attesa)
     // Per il bonifico, l'email con i dettagli per pagare viene inviata subito.
     const isBankTransfer = payment_method.toLowerCase().includes('bank');
