@@ -1495,15 +1495,23 @@ const AdminPanelPro = (): JSX.Element => {
   };
 
   const handleRemoveBlockedDate = async (id: string) => {
-    if (!adminApiService) return;
-    
     if (confirm('⚠️ Rimuovere il blocco per queste date?')) {
       try {
-        await adminApiService.removeBlockedDate(id);
+        setIsLoadingData(true);
+        const response = await fetch('/api/unified?action=blocked-dates', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id })
+        });
+        const result = await response.json();
+        if (!result.success) throw new Error(result.error);
+        
         await loadRealApiData();
         alert('✅ Blocco rimosso con successo!');
       } catch (error) {
         alert('❌ Errore nella rimozione del blocco');
+      } finally {
+        setIsLoadingData(false);
       }
     }
   };
