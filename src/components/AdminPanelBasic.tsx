@@ -472,31 +472,20 @@ const AdminPanelBasic = (): JSX.Element => {
       <main className="admin-main">
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
-          <div className="admin-dashboard-wrapper">
-            <AdminDashboard
-              dashboardStats={dashboardStats}
-              realBookings={realBookings}
-              paymentTransactions={paymentTransactions}
-              notifications={notifications}
-              systemSettings={systemSettings}
-              analytics={analytics}
-              calendarEvents={calendarEvents}
-              blockedDates={blockedDates}
-              isLoadingData={isLoadingData}
-              isLoadingCalendar={isLoadingCalendar}
-              loadCalendarData={loadCalendarData}
-              setActiveTab={setActiveTab}
-            />
-            
-            {/* Calendario aggiunto anche nella Dashboard */}
-            <div className="admin-pricing-section admin-mt-20">
-              <h3>📅 Calendario Occupazioni</h3>
-              <p className="admin-section-description">
-                Panoramica rapida delle disponibilità.
-              </p>
-              {renderCalendar()}
-            </div>
-          </div>
+          <AdminDashboard
+            dashboardStats={dashboardStats}
+            realBookings={realBookings}
+            paymentTransactions={paymentTransactions}
+            notifications={notifications}
+            systemSettings={systemSettings}
+            analytics={analytics}
+            calendarEvents={calendarEvents}
+            blockedDates={blockedDates}
+            isLoadingData={isLoadingData}
+            isLoadingCalendar={isLoadingCalendar}
+            loadCalendarData={loadCalendarData}
+            setActiveTab={setActiveTab}
+          />
         )}
 
         {/* Prenotazioni Tab */}
