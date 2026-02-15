@@ -273,12 +273,26 @@ const AdminPanelBasic = (): JSX.Element => {
     const daysArray = Array.from({ length: days }, (_, i) => i + 1);
     const blanks = Array.from({ length: firstDay === 0 ? 6 : firstDay - 1 }, (_, i) => i); // Adjust for Monday start
 
+    // Helper per normalizzare le date a mezzanotte locale per confronto corretto
+    const normalizeDate = (dateInput: string | Date) => {
+      if (!dateInput) return null;
+      const d = new Date(dateInput);
+      if (isNaN(d.getTime())) return null;
+      // Se è una stringa YYYY-MM-DD, forziamo l'interpretazione locale per evitare shift di fuso orario
+      if (typeof dateInput === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
+        const [y, m, day] = dateInput.split('-').map(Number);
+        return new Date(y, m - 1, day);
+      }
+      // Altrimenti convertiamo a data locale pura
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    };
+
     // Unifica tutti gli eventi per il calendario
     const allEvents = [
-      ...realBookings.map(b => ({ ...b, type: 'booking', start: new Date(b.check_in), end: new Date(b.check_out) })),
-      ...calendarEvents.map(e => ({ ...e, type: 'external', start: new Date(e.checkIn || e.start_date), end: new Date(e.checkOut || e.end_date), customer_name: e.title || 'Esterno', platform: e.platform })),
-      ...blockedDates.map(b => ({ ...b, type: 'blocked', start: new Date(b.start_date), end: new Date(b.end_date), customer_name: 'Chiuso', platform: 'admin' }))
-    ];
+      ...realBookings.map(b => ({ ...b, type: 'booking', start: normalizeDate(b.check_in), end: normalizeDate(b.check_out) })),
+      ...calendarEvents.map(e => ({ ...e, type: 'external', start: normalizeDate(e.checkIn || e.start_date), end: normalizeDate(e.checkOut || e.end_date), customer_name: e.title || 'Esterno', platform: e.platform })),
+      ...blockedDates.map(b => ({ ...b, type: 'blocked', start: normalizeDate(b.start_date), end: normalizeDate(b.end_date), customer_name: 'Chiuso', platform: 'admin' }))
+    ].filter(e => e.start && e.end); // Rimuove eventi con date non valide
 
     return (
       <div className="admin-calendar-wrapper">
@@ -296,10 +310,8 @@ const AdminPanelBasic = (): JSX.Element => {
             
             // Trova eventi per questo giorno
             const dayEvents = allEvents.filter(ev => {
-              const start = new Date(ev.start);
-              const end = new Date(ev.end);
-              start.setHours(0,0,0,0);
-              end.setHours(0,0,0,0);
+              const start = ev.start;
+              const end = ev.end;
               // Mostra se il giorno è compreso nel range (inclusivo start, esclusivo end per checkout, ma mostriamo checkout come evento parziale)
               return date >= start && date <= end;
             });
@@ -308,8 +320,8 @@ const AdminPanelBasic = (): JSX.Element => {
               <div key={day} className="calendar-day-cell">
                 <span className="day-number">{day}</span>
                 {dayEvents.map((ev, idx) => {
-                  const isStart = new Date(ev.start).getDate() === day && new Date(ev.start).getMonth() === currentMonth.getMonth();
-                  const isEnd = new Date(ev.end).getDate() === day && new Date(ev.end).getMonth() === currentMonth.getMonth();
+                  const isStart = ev.start.getTime() === date.getTime();
+                  const isEnd = ev.end.getTime() === date.getTime();
                   
                   let eventClass = 'calendar-event';
                   if (ev.type === 'booking') eventClass += ' event-booking';
@@ -472,20 +484,31 @@ const AdminPanelBasic = (): JSX.Element => {
       <main className="admin-main">
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
-          <AdminDashboard
-            dashboardStats={dashboardStats}
-            realBookings={realBookings}
-            paymentTransactions={paymentTransactions}
-            notifications={notifications}
-            systemSettings={systemSettings}
-            analytics={analytics}
-            calendarEvents={calendarEvents}
-            blockedDates={blockedDates}
-            isLoadingData={isLoadingData}
-            isLoadingCalendar={isLoadingCalendar}
-            loadCalendarData={loadCalendarData}
-            setActiveTab={setActiveTab}
-          />
+          <div className="admin-dashboard-wrapper">
+            <AdminDashboard
+              dashboardStats={dashboardStats}
+              realBookings={realBookings}
+              paymentTransactions={paymentTransactions}
+              notifications={notifications}
+              systemSettings={systemSettings}
+              analytics={analytics}
+              calendarEvents={calendarEvents}
+              blockedDates={blockedDates}
+              isLoadingData={isLoadingData}
+              isLoadingCalendar={isLoadingCalendar}
+              loadCalendarData={loadCalendarData}
+              setActiveTab={setActiveTab}
+            />
+            
+            {/* Calendario aggiunto anche nella Dashboard */}
+            <div className="admin-pricing-section admin-mt-20">
+              <h3>📅 Calendario Occupazioni</h3>
+              <p className="admin-section-description">
+                Panoramica rapida delle disponibilità.
+              </p>
+              {renderCalendar()}
+            </div>
+          </div>
         )}
 
         {/* Prenotazioni Tab */}

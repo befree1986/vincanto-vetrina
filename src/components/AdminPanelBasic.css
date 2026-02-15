@@ -222,3 +222,8 @@
 .calendar-event-name {
   font-weight: bold;
 }
+
+/* Nascondi il calendario interno rotto della dashboard per evitare duplicati */
+.admin-dashboard-wrapper .admin-calendar-card {
+  display: none !important;
+}
