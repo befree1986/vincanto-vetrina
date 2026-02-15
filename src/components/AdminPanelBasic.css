@@ -168,14 +168,81 @@
 }
 
 @media (max-width: 768px) {
+  /* Layout generale */
+  .admin-main {
+    padding: 10px !important;
+  }
+
+  /* Form a colonna singola */
   .admin-forms-container {
     grid-template-columns: 1fr;
+    gap: 15px;
   }
+  
+  .admin-grid-2-col {
+    grid-template-columns: 1fr;
+  }
+
+  /* Calendario ottimizzato per mobile */
+  .admin-calendar-wrapper {
+    padding: 10px;
+  }
+
+  .calendar-controls {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .calendar-controls h3 {
+    order: -1; /* Titolo in alto */
+    margin-bottom: 5px;
+  }
+
+  .calendar-controls button {
+    width: 100%;
+  }
+
   .calendar-grid {
+    font-size: 0.65rem;
+    gap: 2px;
+  }
+
+  .calendar-header-cell {
+    padding: 5px 2px;
     font-size: 0.7rem;
   }
+
   .calendar-day-cell {
-    min-height: 60px;
+    min-height: 50px;
+    padding: 2px;
+  }
+
+  .calendar-event {
+    padding: 1px 2px;
+    font-size: 0.6rem;
+    line-height: 1.1;
+  }
+
+  /* Nascondi nome piattaforma su mobile per risparmiare spazio */
+  .event-info span:last-child {
+    display: none;
+  }
+
+  .calendar-legend-container {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  /* Pulsanti azioni in tabella impilati */
+  .action-buttons-flex {
+    flex-direction: column;
+    min-width: 80px;
+  }
+
+  .admin-btn-custom {
+    width: 100%;
+    margin-bottom: 4px;
+    padding: 8px 4px; /* Area tocco più grande */
   }
 }
 
@@ -183,6 +250,15 @@
 .admin-flex-between {
   display: flex;
   justify-content: space-between;
+}
+
+/* Responsive flex-between */
+@media (max-width: 768px) {
+  .admin-flex-between {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
 }
 
 .admin-grid-2-col {
@@ -233,4 +309,12 @@
 /* 2. Nascondi l'intera sezione che contiene il calendario vecchio (titolo + card) */
 .admin-dashboard-wrapper .admin-pricing-section:has(.admin-calendar-card) {
   display: none !important;
+}
+
+/* Fix per tabelle su mobile */
+@media (max-width: 768px) {
+  .bookings-table-container {
+    overflow-x: auto;
+    margin-bottom: 15px;
+  }
 }
