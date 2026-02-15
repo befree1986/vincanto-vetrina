@@ -223,7 +223,14 @@
   font-weight: bold;
 }
 
-/* Nascondi il calendario interno rotto della dashboard per evitare duplicati */
+/* 🛠️ FIX: Nascondi il calendario "vecchio" interno alla dashboard */
+
+/* 1. Nascondi la card del calendario vecchio */
 .admin-dashboard-wrapper .admin-calendar-card {
+  display: none !important;
+}
+
+/* 2. Nascondi l'intera sezione che contiene il calendario vecchio (titolo + card) */
+.admin-dashboard-wrapper .admin-pricing-section:has(.admin-calendar-card) {
   display: none !important;
 }
