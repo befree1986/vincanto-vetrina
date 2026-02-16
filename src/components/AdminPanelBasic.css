@@ -319,40 +319,109 @@
   }
 }
 
-/* --- PERSONALIZZAZIONI TEMA (Sovrascrittura stili ereditati) --- */
-/* Qui puoi incollare e modificare le classi che vuoi cambiare dal pannello Pro */
+/* --- PERSONALIZZAZIONI TEMA & LAYOUT SIDEBAR --- */
 
-.admin-panel-pro .admin-header {
-  background: #19f294;
-  border-bottom: none;
+/* 1. Layout a Griglia per Sidebar a Sinistra (Solo Desktop) */
+@media (min-width: 769px) {
+  .admin-panel-pro {
+    display: grid !important;
+    grid-template-areas: 
+      "header header"
+      "nav main";
+    grid-template-columns: 260px 1fr; /* Larghezza fissa sidebar | resto fluido */
+    grid-template-rows: auto 1fr;
+    min-height: 100vh;
+  }
+
+  .admin-header {
+    grid-area: header;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .admin-nav {
+    grid-area: nav;
+    flex-direction: column !important;
+    height: calc(100vh - 80px); /* Altezza viewport meno header */
+    position: sticky;
+    top: 80px;
+    overflow-y: auto;
+    padding: 20px 15px !important;
+    border-right: 1px solid #e2e8f0;
+    border-bottom: none !important;
+    background-color: #fff;
+    display: flex !important;
+    gap: 10px;
+  }
+
+  .admin-main {
+    grid-area: main;
+    overflow-x: hidden;
+    padding: 30px !important;
+  }
+  
+  /* Stile bottoni nella sidebar */
+  .admin-nav-link {
+    width: 100%;
+    text-align: left;
+    justify-content: flex-start;
+    padding: 12px 15px !important;
+    border-radius: 8px !important;
+    margin: 0 !important;
+    border: none;
+    background: transparent;
+    color: #4b5563;
+    font-weight: 500;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .admin-nav-link:hover {
+    background-color: #ecfdf5 !important; /* Verde chiarissimo hover */
+    color: #059669 !important;
+    transform: translateX(5px);
+  }
+
+  .admin-nav-link.active {
+    background-color: #19f294 !important; /* Il tuo verde */
+    color: #064e3b !important; /* Testo scuro per contrasto */
+    font-weight: 600;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
 }
+
+/* 2. Personalizzazione Colori Header (Tuo verde) */
+.admin-panel-pro .admin-header {
+  background: #19f294 !important;
+  border-bottom: 1px solid #10b981;
+}
+
 .admin-panel-pro .admin-header h1 {
   background: none;
-  -webkit-text-fill-color: white;
-  color: white;
+  -webkit-text-fill-color: #064e3b !important; /* Testo scuro leggibile */
+  color: #064e3b !important;
 }
 
-.admin-panel-pro .admin-nav-container {
-  background-color: #19f294;
-  display: flex;
-  gap: 8px;
-  min-width: max-content;
-  padding: 12px 0
+.admin-panel-pro .admin-header .admin-text-muted {
+  color: #065f46 !important;
 }
-.admin-panel-pro .admin-nav-item {
-  padding: 12px 20px;
-  border: none;
-  background: #19f294;
-  color: white;
-  font-weight: 500;
-  cursor: pointer;
-  border-radius: var(--admin-radius);
-  transition: var(--admin-transition);
-  font-size: 0.9rem;
-  white-space: nowrap;
-  position: relative;
-  overflow: hidden;
-}
-.admin-panel-pro .admin-nav {
-  background-color: #19f294;
+
+/* 3. Fix Mobile (Torna orizzontale) */
+@media (max-width: 768px) {
+  .admin-nav-link {
+    padding: 10px 15px;
+    border: none;
+    background: #f3f4f6;
+    border-radius: 20px;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  
+  .admin-nav-link.active {
+    background-color: #19f294;
+    color: #064e3b;
+    font-weight: bold;
+  }
 }
