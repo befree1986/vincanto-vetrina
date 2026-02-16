@@ -318,3 +318,18 @@
     margin-bottom: 15px;
   }
 }
+
+/* --- PERSONALIZZAZIONI TEMA (Sovrascrittura stili ereditati) --- */
+/* Qui puoi incollare e modificare le classi che vuoi cambiare dal pannello Pro */
+
+/* Esempio: Cambia colore Header */
+
+.admin-panel-pro .admin-header {
+  background: #19f294;
+  border-bottom: none;
+}
+.admin-panel-pro .admin-header h1 {
+  background: none;
+  -webkit-text-fill-color: white;
+  color: white;
+}
