@@ -1204,6 +1204,10 @@ export default async function handler(req, res) {
           // Normalizza e forza a numero - accetta sia interi che decimali
           const totalAmount = parseFloat(bookingData.totalPrice) || parseFloat(bookingData.total_amount) || 0;
           const notes = bookingData.specialRequests || bookingData.notes || '';
+
+          // 🔧 Helper per estrarre costi (supporta flat o nested in booking_data)
+          const getCost = (key) => parseFloat(bookingData[key]) || parseFloat(bookingData.booking_data?.[key]) || 0;
+
           // Log di debug per il totale
           console.log('DEBUG totalAmount calcolato:', totalAmount, 'tipo:', typeof totalAmount);
           // Blocca se il totale non è valido (solo se realmente 0 o NaN)
@@ -1403,12 +1407,12 @@ export default async function handler(req, res) {
                 // 🛎️ Includi eventuali servizi extra passati dal frontend
                 extraServices: Array.isArray(bookingData.extraServices) ? bookingData.extraServices : (Array.isArray(bookingData.extra_services) ? bookingData.extra_services : []),
                 // 🔥 Passa il breakdown dei costi al template email
-                accommodationCost: parseFloat(bookingData.accommodationCost) || 0,
-                cleaningFee: parseFloat(bookingData.cleaningFee) || 0,
-                parkingCost: parseFloat(bookingData.parkingCost) || 0,
-                touristTax: parseFloat(bookingData.touristTax) || 0,
-                extraServicesCost: parseFloat(bookingData.extraServicesCost) || 0,
-                nights: parseInt(bookingData.nights) || 0,
+                accommodationCost: getCost('accommodationCost'),
+                cleaningFee: getCost('cleaningFee'),
+                parkingCost: getCost('parkingCost'),
+                touristTax: getCost('touristTax'),
+                extraServicesCost: getCost('extraServicesCost'),
+                nights: parseInt(bookingData.nights || bookingData.booking_data?.nights) || 0,
                 logoUrl: 'https://www.vincantomaiori.it/logo.png',
                 siteUrl: 'https://www.vincantomaiori.it'
 
@@ -1442,6 +1446,11 @@ export default async function handler(req, res) {
             console.log('ℹ️ Email non configurata, skip invio');
           }
           
+          // Calcola importo da pagare per il frontend
+          const amountToPay = bookingData.payment_type === 'deposit' 
+            ? parseFloat(result.rows[0].deposit_amount) 
+            : parseFloat(result.rows[0].total_amount);
+
           return res.status(201).json({
             success: true,
             message: 'Prenotazione creata con successo',
@@ -1452,6 +1461,7 @@ export default async function handler(req, res) {
             },
             // 💰 Frontend mapping: includi payment_amount per compatibilità StripePayment/PayPalPayment
             payment_amount: totalAmount,
+            amountToPay: amountToPay, // 🔧 FIX: Restituisci importo da pagare esplicito
             booking_id: result.rows[0].booking_id,
             id: result.rows[0].id
           });
@@ -2040,6 +2050,9 @@ export default async function handler(req, res) {
             });
           }
 
+          // 🔧 Helper per estrarre costi dal body
+          const getCost = (key) => parseFloat(req.body[key]) || 0;
+
           // Prepara update query con dati payment opzionali
           const updateFields = ['status = $1', 'updated_at = NOW()'];
           const values = [status];
@@ -2112,11 +2125,11 @@ export default async function handler(req, res) {
                   // 🛎️ Se il client invia i servizi extra nel corpo della richiesta, includili nell'email
                   extraServices: Array.isArray(req.body.extra_services) ? req.body.extra_services : (Array.isArray(req.body.extraServices) ? req.body.extraServices : []),
                   // 🔥 Passa il breakdown dei costi dal body della richiesta (il DB non ha questi campi)
-                  accommodationCost: parseFloat(req.body.accommodationCost) || 0,
-                  cleaningFee: parseFloat(req.body.cleaningFee) || 0,
-                  parkingCost: parseFloat(req.body.parkingCost) || 0,
-                  touristTax: parseFloat(req.body.touristTax) || 0,
-                  extraServicesCost: parseFloat(req.body.extraServicesCost) || 0,
+                  accommodationCost: getCost('accommodationCost'),
+                  cleaningFee: getCost('cleaningFee'),
+                  parkingCost: getCost('parkingCost'),
+                  touristTax: getCost('touristTax'),
+                  extraServicesCost: getCost('extraServicesCost'),
                   nights: parseInt(req.body.nights) || 0,
                   logoUrl: 'https://www.vincantomaiori.it/logo.png',
                   siteUrl: 'https://www.vincantomaiori.it'

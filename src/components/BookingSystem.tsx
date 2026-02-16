@@ -481,6 +481,8 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                 nights: quote.nights
             } : {};
 
+            console.log('📧 Invio breakdown costi per email:', breakdownData);
+
             // 🔍 DEBUG: Verifica valori PRIMA di salvare paymentAmount
             console.log('🔍 PRE-PAYMENT DEBUG [v2.0]:', {
                 quote_exists: !!quote,
@@ -1111,7 +1113,7 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                                         ? getSafeTranslation(t, 'booking.summary.amountToPay', 'Importo da Pagare') 
                                         : getSafeTranslation(t, 'booking.summary.totalPaid', 'Totale Pagato')
                                         }:
-                                        </strong> €{bookingResult.amountToPay?.toFixed(2)}
+                                        </strong> €{(bookingResult.amountToPay || (formData.payment_type === 'deposit' ? bookingResult.booking?.deposit_amount : bookingResult.booking?.total_amount) || 0).toFixed(2)}
                                         </p>
                                         {formData.payment_method === 'bank_transfer' && (
                                             <p className="pending-status">{getSafeTranslation(t, 'booking.summary.statusPending', 'Stato: In attesa di pagamento')}</p>
@@ -1127,6 +1129,7 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                                             <p><strong>{getSafeTranslation(t, 'booking.bank.iban', 'IBAN')}:</strong> IT04 D360 8105 038 288844288937</p>
                                             <p><strong>{getSafeTranslation(t, 'booking.bank.reason', 'Causale')}:</strong> {getSafeTranslation(t, 'booking.bank.reason.booking', 'Prenotazione')} {bookingResult?.booking_id}</p>
                                             <p><strong>{getSafeTranslation(t, 'booking.bank.amountToTransfer', 'Importo da versare')}:</strong> €{bookingResult?.amountToPay?.toFixed(2)}</p>
+                                            <p><strong>{getSafeTranslation(t, 'booking.bank.amountToTransfer', 'Importo da versare')}:</strong> €{(bookingResult?.amountToPay || (formData.payment_type === 'deposit' ? bookingResult?.booking?.deposit_amount : bookingResult?.booking?.total_amount) || 0).toFixed(2)}</p>
                                         </div>
                                         <p className="bank-note">⚠️ {getSafeTranslation(t, 'booking.bank.note', 'Importante: Ti abbiamo inviato una email con tutti i dettagli. La prenotazione sarà confermata definitivamente dopo la ricezione e verifica del bonifico bancario. Ti contatteremo entro 24-48 ore dalla ricezione del pagamento.')}</p>
                                     </div>
