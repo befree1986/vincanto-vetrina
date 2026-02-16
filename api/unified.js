@@ -1720,30 +1720,25 @@ export default async function handler(req, res) {
           console.log(`✅ Eventi calendario rimossi: ${deleteCalendarEvents.rowCount}`);
 
           // 3. Invia email di cancellazione
-          if (process.env.SMTP_HOST) {
+          if (process.env.SMTP_HOST && booking.email) {
             try {
               const guestLanguage = detectLanguage(booking.email);
               const subject = guestLanguage === 'it' ? `Cancellazione Prenotazione ${booking.booking_id}` : `Booking Cancellation ${booking.booking_id}`;
-              const messageBody = guestLanguage === 'it' 
-                ? `La tua prenotazione ${booking.booking_id} è stata cancellata.${reason ? '<br>Motivo: ' + reason : ''}`
-                : `Your booking ${booking.booking_id} has been cancelled.${reason ? '<br>Reason: ' + reason : ''}`;
               
-              const html = `
-                <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 8px;">
-                    <div style="text-align: center; margin-bottom: 20px;">
-                        <img src="https://www.vincantomaiori.it/logo.png" alt="Vincanto Maori" style="height: 60px;">
-                    </div>
-                    <h2 style="color: #d32f2f; text-align: center;">${subject}</h2>
-                    <p style="font-size: 16px; line-height: 1.5;">${messageBody}</p>
-                    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-                    <p style="font-size: 14px; color: #666; text-align: center;">Vincanto Maori - Maiori, Costiera Amalfitana</p>
-                </div>
-              `;
+              // 🔧 REFACTOR: Usa il sistema di template per coerenza
+              const emailHtml = renderEmailTemplate('cancellation', {
+                language: guestLanguage,
+                bookingId: booking.booking_id,
+                reason: reason || 'Nessun motivo specificato',
+                firstName: booking.first_name,
+                logoUrl: 'https://www.vincantomaiori.it/logo.png',
+                siteUrl: 'https://www.vincantomaiori.it'
+              });
 
               await sendEmailWithAdminCopy({
                   to: booking.email,
                   subject: subject,
-                  html: html,
+                  html: emailHtml,
                   templateName: 'cancellation'
               });
               console.log(`✅ Email cancellazione inviata a ${booking.email}`);
