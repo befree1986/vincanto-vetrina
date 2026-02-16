@@ -29,6 +29,7 @@ const AdminPanelBasic = (): JSX.Element => {
   const [realBookings, setRealBookings] = useState<any[]>([]);
   const [calendarEvents, setCalendarEvents] = useState<any[]>([]);
   const [blockedDates, setBlockedDates] = useState<any[]>([]);
+  const [extraServices, setExtraServices] = useState<any[]>([]); // 🛎️ Servizi extra
   const [systemSettings, setSystemSettings] = useState<any[]>([]);
   const [analytics, setAnalytics] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -43,13 +44,19 @@ const AdminPanelBasic = (): JSX.Element => {
   const [showManualForm, setShowManualForm] = useState(false);
   const [showBlockForm, setShowBlockForm] = useState(false);
   const [manualBooking, setManualBooking] = useState({
-    customer_name: '',
+    id: '', // Per modifiche
+    first_name: '',
+    last_name: '',
     customer_email: '',
+    phone: '',
     check_in: '',
     check_out: '',
     guests: 2,
     total_amount: 0,
     status: 'confirmed',
+    payment_method: 'bank_transfer',
+    payment_type: 'deposit', // 'deposit' o 'full'
+    selected_services: [] as any[],
     platform: 'manual' // Identifica prenotazioni manuali
   });
   const [blockDate, setBlockDate] = useState({ start_date: '', end_date: '', reason: 'maintenance' });
@@ -77,7 +84,7 @@ const AdminPanelBasic = (): JSX.Element => {
     try {
       log('📄 Caricamento dati API...');
       
-      const [stats, bookings, calendarBookings, settings, analyticsData, notifs, transactions, blocks] = await Promise.allSettled([
+      const [stats, bookings, calendarBookings, settings, analyticsData, notifs, transactions, blocks, services] = await Promise.allSettled([
         adminApiService.getDashboardStats(),
         adminApiService.getBookings(),
         adminApiService.getCalendarBookings({ futureOnly: true, limit: 100 }),
@@ -85,7 +92,8 @@ const AdminPanelBasic = (): JSX.Element => {
         adminApiService.getAnalytics(),
         adminApiService.getNotifications(),
         adminApiService.getPayments(),
-        adminApiService.getBlockedDates()
+        adminApiService.getBlockedDates(),
+        adminApiService.getExtraServices()
       ]);
 
       if (stats.status === 'fulfilled') setDashboardStats(stats.value || {});
@@ -96,6 +104,7 @@ const AdminPanelBasic = (): JSX.Element => {
       if (notifs.status === 'fulfilled') setNotifications(notifs.value || []);
       if (transactions.status === 'fulfilled') setPaymentTransactions(transactions.value || []);
       if (blocks.status === 'fulfilled') setBlockedDates(blocks.value || []);
+      if (services.status === 'fulfilled') setExtraServices(services.value || []);
 
       log('✅ Dati caricati con successo');
     } catch (error) {
@@ -190,23 +199,35 @@ const AdminPanelBasic = (): JSX.Element => {
   // ✨ NUOVE FUNZIONI: Creazione Manuale e Blocco Date
   const handleCreateManualBooking = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!manualBooking.check_in || !manualBooking.check_out || !manualBooking.customer_name) {
+    if (!manualBooking.check_in || !manualBooking.check_out || !manualBooking.first_name || !manualBooking.last_name) {
       alert('Compila tutti i campi obbligatori');
       return;
     }
     try {
       setIsLoadingData(true);
-      // Usa l'endpoint unificato per creare la prenotazione
+      
+      // Determina se è creazione o modifica
+      const isEdit = !!manualBooking.id;
+      const method = isEdit ? 'PUT' : 'POST';
+      
+      // Prepara payload
+      const payload = {
+        ...manualBooking,
+        customer_name: `${manualBooking.first_name} ${manualBooking.last_name}`, // Fallback
+        // Se è modifica, assicurati di passare l'ID corretto
+        booking_id: isEdit ? manualBooking.id : undefined
+      };
+
       const response = await fetch('/api/unified?action=booking', {
-        method: 'POST',
+        method: method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(manualBooking)
+        body: JSON.stringify(payload)
       });
       const result = await response.json();
       if (result.success) {
-        alert('✅ Prenotazione manuale creata con successo!');
+        alert(isEdit ? '✅ Prenotazione aggiornata!' : '✅ Prenotazione manuale creata!');
         setShowManualForm(false);
-        setManualBooking({ customer_name: '', customer_email: '', check_in: '', check_out: '', guests: 2, total_amount: 0, status: 'confirmed', platform: 'manual' });
+        resetManualForm();
         await loadRealApiData();
       } else {
         alert('❌ Errore: ' + (result.error || result.message));
@@ -217,6 +238,65 @@ const AdminPanelBasic = (): JSX.Element => {
     } finally {
       setIsLoadingData(false);
     }
+  };
+
+  const resetManualForm = () => {
+    setManualBooking({
+      id: '',
+      first_name: '',
+      last_name: '',
+      customer_email: '',
+      phone: '',
+      check_in: '',
+      check_out: '',
+      guests: 2,
+      total_amount: 0,
+      status: 'confirmed',
+      payment_method: 'bank_transfer',
+      payment_type: 'deposit',
+      selected_services: [],
+      platform: 'manual'
+    });
+  };
+
+  const handleEditBooking = (booking: any) => {
+    // Parsing nome se necessario
+    const nameParts = (booking.customer_name || booking.guestName || '').split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+
+    setManualBooking({
+      id: booking.booking_id || booking.id, // Usa booking_id preferibilmente
+      first_name: firstName,
+      last_name: lastName,
+      customer_email: booking.customer_email || booking.email || '',
+      phone: booking.phone || '',
+      check_in: booking.check_in ? new Date(booking.check_in).toISOString().split('T')[0] : '',
+      check_out: booking.check_out ? new Date(booking.check_out).toISOString().split('T')[0] : '',
+      guests: booking.guests || 2,
+      total_amount: booking.total_amount || 0,
+      status: booking.status || 'confirmed',
+      payment_method: booking.payment_method || 'bank_transfer',
+      payment_type: booking.deposit_amount && booking.deposit_amount < booking.total_amount ? 'deposit' : 'full',
+      selected_services: [], // Difficile recuperare servizi dalle note, lasciamo vuoto o da gestire
+      platform: 'manual'
+    });
+    setShowManualForm(true);
+    document.querySelector('.admin-form-card')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const toggleService = (service: any) => {
+    const isSelected = manualBooking.selected_services.find(s => s.id === service.id);
+    let newServices = isSelected 
+      ? manualBooking.selected_services.filter(s => s.id !== service.id)
+      : [...manualBooking.selected_services, service];
+    
+    // Aggiorna totale (opzionale, ma utile)
+    const servicesTotal = newServices.reduce((sum, s) => sum + parseFloat(s.price), 0);
+    // Nota: qui non sommiamo al totale base perché l'utente può volerlo modificare manualmente
+    // Ma potremmo suggerire un aggiornamento
+    
+    setManualBooking({ ...manualBooking, selected_services: newServices });
   };
 
   const handleBlockDates = async (e: React.FormEvent) => {
@@ -568,28 +648,69 @@ const AdminPanelBasic = (): JSX.Element => {
               {/* Card Nuova Prenotazione */}
               <div className="admin-form-card">
                 <div className="admin-flex-between">
-                  <h3>➕ Nuova Prenotazione Manuale</h3>
-                  <button className="admin-btn-small" onClick={() => setShowManualForm(!showManualForm)}>{showManualForm ? 'Chiudi' : 'Apri'}</button>
+                  <h3>{manualBooking.id ? '✏️ Modifica Prenotazione' : '➕ Nuova Prenotazione Manuale'}</h3>
+                  <button className="admin-btn-small" onClick={() => {
+                    setShowManualForm(!showManualForm);
+                    if (showManualForm) resetManualForm();
+                  }}>{showManualForm ? 'Chiudi' : 'Apri'}</button>
                 </div>
                 {showManualForm && (
                   <form onSubmit={handleCreateManualBooking}>
-                    <div className="form-group">
-                      <label htmlFor="manual_customer_name">Nome Cliente:</label>
-                      <input id="manual_customer_name" type="text" className="admin-input" value={manualBooking.customer_name} onChange={e => setManualBooking({...manualBooking, customer_name: e.target.value})} required />
+                    <div className="form-group admin-grid-2-col">
+                      <div><label htmlFor="manual_first_name">Nome:</label><input id="manual_first_name" type="text" className="admin-input" value={manualBooking.first_name} onChange={e => setManualBooking({...manualBooking, first_name: e.target.value})} required /></div>
+                      <div><label htmlFor="manual_last_name">Cognome:</label><input id="manual_last_name" type="text" className="admin-input" value={manualBooking.last_name} onChange={e => setManualBooking({...manualBooking, last_name: e.target.value})} required /></div>
+                    </div>
+                    <div className="form-group admin-grid-2-col">
+                      <div><label htmlFor="manual_email">Email:</label><input id="manual_email" type="email" className="admin-input" value={manualBooking.customer_email} onChange={e => setManualBooking({...manualBooking, customer_email: e.target.value})} /></div>
+                      <div><label htmlFor="manual_phone">Telefono:</label><input id="manual_phone" type="text" className="admin-input" value={manualBooking.phone} onChange={e => setManualBooking({...manualBooking, phone: e.target.value})} /></div>
                     </div>
                     <div className="form-group admin-grid-2-col">
                       <div><label htmlFor="manual_check_in">Check-in:</label><input id="manual_check_in" type="date" className="admin-input" value={manualBooking.check_in} onChange={e => setManualBooking({...manualBooking, check_in: e.target.value})} required /></div>
                       <div><label htmlFor="manual_check_out">Check-out:</label><input id="manual_check_out" type="date" className="admin-input" value={manualBooking.check_out} onChange={e => setManualBooking({...manualBooking, check_out: e.target.value})} required /></div>
                     </div>
+                    
+                    {/* Servizi Extra */}
+                    <div className="form-group">
+                      <label>Servizi Extra:</label>
+                      <div className="admin-services-grid">
+                        {extraServices.map(service => (
+                          <label key={service.id} className="admin-service-label">
+                            <input 
+                              type="checkbox" 
+                              checked={!!manualBooking.selected_services.find(s => s.id === service.id)}
+                              onChange={() => toggleService(service)}
+                              className="admin-service-checkbox"
+                            />
+                            {service.name} (€{service.price})
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
                     <div className="form-group admin-grid-2-col">
                       <div><label htmlFor="manual_guests">Ospiti:</label><input id="manual_guests" type="number" className="admin-input" value={manualBooking.guests} onChange={e => setManualBooking({...manualBooking, guests: parseInt(e.target.value)})} min="1" /></div>
                       <div><label htmlFor="manual_total_amount">Totale (€):</label><input id="manual_total_amount" type="number" className="admin-input" value={manualBooking.total_amount} onChange={e => setManualBooking({...manualBooking, total_amount: parseFloat(e.target.value)})} /></div>
                     </div>
-                    <div className="form-group">
-                      <label htmlFor="manual_customer_email">Email (opzionale):</label>
-                      <input id="manual_customer_email" type="email" className="admin-input" value={manualBooking.customer_email} onChange={e => setManualBooking({...manualBooking, customer_email: e.target.value})} />
+                    
+                    <div className="form-group admin-grid-2-col">
+                      <div>
+                        <label htmlFor="manual_payment_method">Metodo Pagamento:</label>
+                        <select id="manual_payment_method" className="admin-input" value={manualBooking.payment_method} onChange={e => setManualBooking({...manualBooking, payment_method: e.target.value})}>
+                          <option value="bank_transfer">Bonifico</option>
+                          <option value="cash">Contanti</option>
+                          <option value="pos">POS / Carta</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label htmlFor="manual_payment_type">Tipo Pagamento:</label>
+                        <select id="manual_payment_type" className="admin-input" value={manualBooking.payment_type} onChange={e => setManualBooking({...manualBooking, payment_type: e.target.value})}>
+                          <option value="deposit">Acconto (20%)</option>
+                          <option value="full">Saldo Completo</option>
+                        </select>
+                      </div>
                     </div>
-                    <button type="submit" className="admin-btn-primary admin-w-full">Salva Prenotazione</button>
+
+                    <button type="submit" className="admin-btn-primary admin-w-full">{manualBooking.id ? 'Aggiorna Prenotazione' : 'Crea Prenotazione'}</button>
                   </form>
                 )}
               </div>
@@ -669,6 +790,15 @@ const AdminPanelBasic = (): JSX.Element => {
                           <td>€{(booking.total_amount || booking.totalPrice || 0).toFixed(2)}</td>
                           <td>
                             <div className="action-buttons action-buttons-flex">
+                              {/* Pulsante Modifica */}
+                              <button
+                                className="admin-btn-small admin-btn-custom admin-btn-edit"
+                                onClick={() => handleEditBooking(booking)}
+                                title="Modifica"
+                              >
+                                ✏️
+                              </button>
+
                               {/* Pulsanti Conferma Pagamento */}
                               {booking.status !== 'cancelled' && booking.payment_method !== 'paid_full' && (
                                 <>

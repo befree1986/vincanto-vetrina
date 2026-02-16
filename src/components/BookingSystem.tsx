@@ -157,6 +157,14 @@ interface BookingSystemProps {
     onClose?: () => void;
 }
 
+const internalStyles = `
+.summary-extras { margin: 10px 0; }
+.summary-extras ul { margin: 5px 0 5px 20px; padding: 0; }
+.summary-divider { margin: 10px 0; border: 0; border-top: 1px solid #eee; }
+.amount-highlight { font-size: 1.1em; color: #2563eb; margin-top: 10px; }
+.balance-note { font-size: 0.9em; color: #666; }
+`;
+
 const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
     const { t, i18n } = useTranslation();
     
@@ -182,6 +190,7 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
     const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
     // 💰 Payment amount - stored before submitBooking to avoid quote state issues
     const [paymentAmount, setPaymentAmount] = useState<number>(0);
+    const [storedBreakdown, setStoredBreakdown] = useState<any>(null); // 💾 Persistenza costi
     
     // 🎯 Custom hooks (dopo tutti gli useState)
     const {
@@ -302,14 +311,15 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
             }
 
             // Dati riepilogo costi per email (recuperati dallo stato corrente)
-            const breakdownData = quote ? {
-                accommodationCost: (quote as any).accommodationCost,
-                cleaningFee: quote.cleaningFee,
-                parkingCost: quote.parkingCost,
-                touristTax: quote.touristTax,
-                extraServicesCost: extraServicesCost,
-                nights: quote.nights
-            } : {};
+            // 🔧 FIX: Usa storedBreakdown se disponibile (più sicuro), altrimenti prova a ricostruirlo
+            const breakdownData = storedBreakdown || (quote ? {
+                accommodationCost: (quote as any).accommodationCost || 0,
+                cleaningFee: quote.cleaningFee || 0,
+                parkingCost: quote.parkingCost || 0,
+                touristTax: quote.touristTax || 0,
+                extraServicesCost: extraServicesCost || 0,
+                nights: quote.nights || 0
+            } : {});
 
             // Calcola l'importo pagato (acconto o totale) INCLUSI SERVIZI EXTRA
             const totalWithExtras = (quote?.totalAmount || 0) + extraServicesCost;
@@ -480,6 +490,8 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                 extraServicesCost: extraServicesCost,
                 nights: quote.nights
             } : {};
+            
+            setStoredBreakdown(breakdownData); // 💾 Salva breakdown per uso futuro (es. post-pagamento)
 
             console.log('📧 Invio breakdown costi per email:', breakdownData);
 
@@ -843,6 +855,7 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
 
     return (
         <div className="booking-system">
+            <style>{internalStyles}</style>
             {renderStepIndicator()}
             
             <div className="booking-content">
@@ -1109,15 +1122,58 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                                         <p><strong>{getSafeTranslation(t, 'booking.summary.checkIn', 'Check-in')}:</strong> {formData.check_in_date?.toLocaleDateString()}</p>
                                         <p><strong>{getSafeTranslation(t, 'booking.summary.checkOut', 'Check-out')}:</strong> {formData.check_out_date?.toLocaleDateString()}</p>
                                         <p><strong>{getSafeTranslation(t, 'booking.guests', 'Ospiti')}:</strong> {t('booking.summary.guestsCount', '{{adults}} adulti, {{children}} bambini', { adults: formData.num_adults, children: formData.num_children })}</p>
-                                        <p><strong>{formData.payment_method === 'bank_transfer' 
-                                        ? getSafeTranslation(t, 'booking.summary.amountToPay', 'Importo da Pagare') 
-                                        : getSafeTranslation(t, 'booking.summary.totalPaid', 'Totale Pagato')
-                                        }:
-                                        </strong> €{(bookingResult.amountToPay || (formData.payment_type === 'deposit' ? bookingResult.booking?.deposit_amount : bookingResult.booking?.total_amount) || 0).toFixed(2)}
-                                        </p>
-                                        {formData.payment_method === 'bank_transfer' && (
-                                            <p className="pending-status">{getSafeTranslation(t, 'booking.summary.statusPending', 'Stato: In attesa di pagamento')}</p>
+                                        
+                                        {/* Servizi Extra */}
+                                        {selectedExtraServices.length > 0 && (
+                                            <div className="summary-extras">
+                                                <strong>{getSafeTranslation(t, 'booking.extraServices', 'Servizi Extra')}:</strong>
+                                                <ul>
+                                                    {selectedExtraServices.map((s: any) => (
+                                                        <li key={s.id}>
+                                                            {s.name} {s.included ? `(${getSafeTranslation(t, 'booking.included', 'Incluso')})` : `(€${s.price})`}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
                                         )}
+
+                                        {/* Parcheggio */}
+                                        {formData.parking_option !== 'none' && (
+                                            <p><strong>{getSafeTranslation(t, 'booking.parking', 'Parcheggio')}:</strong> {
+                                                formData.parking_option === 'private' 
+                                                    ? getSafeTranslation(t, 'booking.privateParking', 'Parcheggio privato') 
+                                                    : getSafeTranslation(t, 'booking.streetParking', 'Parcheggio su strada')
+                                            } {formData.parking_option === 'private' && (quote?.parkingCost || 0) > 0 ? `(€${(quote?.parkingCost || 0).toFixed(2)})` : ''}</p>
+                                        )}
+
+                                        {/* Pulizia */}
+                                        {quote && quote.cleaningFee > 0 && (
+                                            <p><strong>{getSafeTranslation(t, 'booking.cleaning', 'Pulizia finale')}:</strong> €{quote.cleaningFee.toFixed(2)}</p>
+                                        )}
+
+                                        {/* Tassa di soggiorno */}
+                                        {quote && quote.touristTax > 0 && (
+                                            <p><strong>{getSafeTranslation(t, 'booking.touristTax', 'Tassa di soggiorno')}:</strong> €{quote.touristTax.toFixed(2)}</p>
+                                        )}
+
+                                        <hr className="summary-divider" />
+
+                                        {/* Totale */}
+                                        <p><strong>{getSafeTranslation(t, 'booking.total', 'Totale')}:</strong> €{bookingResult.booking.total_amount.toFixed(2)}</p>
+
+                                        {/* Acconto e Saldo */}
+                                        {formData.payment_type === 'deposit' && (
+                                            <>
+                                                <p><strong>{getSafeTranslation(t, 'booking.deposit', 'Acconto (20%)')}:</strong> €{bookingResult.booking.deposit_amount.toFixed(2)}</p>
+                                                <p><strong>{getSafeTranslation(t, 'booking.remaining', 'Saldo al check-in')}:</strong> €{(bookingResult.booking.total_amount - bookingResult.booking.deposit_amount).toFixed(2)}</p>
+                                            </>
+                                        )}
+
+                                        <p><strong>{getSafeTranslation(t, 'booking.summary.status', 'Stato')}:</strong> {
+                                            formData.payment_method === 'bank_transfer' 
+                                            ? getSafeTranslation(t, 'booking.summary.statusPending', 'In attesa di pagamento') 
+                                            : getSafeTranslation(t, 'booking.summary.statusConfirmed', 'Confermata')
+                                        }</p>
                                     </div>
                                 )}
 
@@ -1128,8 +1184,17 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                                             <p><strong>{getSafeTranslation(t, 'booking.bank.beneficiary', 'Beneficiario')}:</strong> Guida Antonio</p>
                                             <p><strong>{getSafeTranslation(t, 'booking.bank.iban', 'IBAN')}:</strong> IT04 D360 8105 038 288844288937</p>
                                             <p><strong>{getSafeTranslation(t, 'booking.bank.reason', 'Causale')}:</strong> {getSafeTranslation(t, 'booking.bank.reason.booking', 'Prenotazione')} {bookingResult?.booking_id}</p>
-                                            <p><strong>{getSafeTranslation(t, 'booking.bank.amountToTransfer', 'Importo da versare')}:</strong> €{bookingResult?.amountToPay?.toFixed(2)}</p>
-                                            <p><strong>{getSafeTranslation(t, 'booking.bank.amountToTransfer', 'Importo da versare')}:</strong> €{(bookingResult?.amountToPay || (formData.payment_type === 'deposit' ? bookingResult?.booking?.deposit_amount : bookingResult?.booking?.total_amount) || 0).toFixed(2)}</p>
+                                            
+                                            <p className="amount-highlight">
+                                                <strong>{getSafeTranslation(t, 'booking.bank.amountToTransfer', 'Importo da versare')}:</strong> €{(bookingResult?.amountToPay || (formData.payment_type === 'deposit' ? bookingResult?.booking?.deposit_amount : bookingResult?.booking?.total_amount) || 0).toFixed(2)}
+                                                {formData.payment_type === 'deposit' && <span> ({getSafeTranslation(t, 'booking.deposit', 'Acconto')})</span>}
+                                            </p>
+
+                                            {formData.payment_type === 'deposit' && (
+                                                <p className="balance-note">
+                                                    {t('booking.bank.balanceNote', 'Il saldo di €{{amount}} dovrà essere versato al check-in.', { amount: (bookingResult.booking.total_amount - bookingResult.booking.deposit_amount).toFixed(2) })}
+                                                </p>
+                                            )}
                                         </div>
                                         <p className="bank-note">⚠️ {getSafeTranslation(t, 'booking.bank.note', 'Importante: Ti abbiamo inviato una email con tutti i dettagli. La prenotazione sarà confermata definitivamente dopo la ricezione e verifica del bonifico bancario. Ti contatteremo entro 24-48 ore dalla ricezione del pagamento.')}</p>
                                     </div>

@@ -1204,6 +1204,14 @@ export default async function handler(req, res) {
           // Normalizza e forza a numero - accetta sia interi che decimali
           const totalAmount = parseFloat(bookingData.totalPrice) || parseFloat(bookingData.total_amount) || 0;
           const notes = bookingData.specialRequests || bookingData.notes || '';
+          
+          // 🛎️ Gestione Servizi Extra per prenotazioni manuali
+          // Se presenti, li aggiungiamo alle note per persistenza
+          let finalNotes = notes;
+          if (bookingData.selected_services && Array.isArray(bookingData.selected_services) && bookingData.selected_services.length > 0) {
+             const servicesText = bookingData.selected_services.map(s => `${s.name} (€${s.price})`).join(', ');
+             finalNotes = (finalNotes ? finalNotes + '\n\n' : '') + `[SERVIZI EXTRA]: ${servicesText}`;
+          }
 
           // 🔧 Helper per estrarre costi (supporta flat o nested in booking_data)
           const getCost = (key) => parseFloat(bookingData[key]) || parseFloat(bookingData.booking_data?.[key]) || 0;
@@ -1295,6 +1303,10 @@ export default async function handler(req, res) {
           } else if (bookingData.first_name || bookingData.last_name) {
             firstName = bookingData.first_name || 'Nome';
             lastName = bookingData.last_name || 'Cognome';
+          } else if (bookingData.customer_name) { // 🔧 FIX: Supporto snake_case dal frontend admin
+            const nameParts = bookingData.customer_name.trim().split(' ');
+            firstName = nameParts[0] || 'Nome';
+            lastName = nameParts.slice(1).join(' ') || 'Cognome';
           }
           
           // 🔍 VALIDAZIONE DATI
@@ -1352,7 +1364,8 @@ export default async function handler(req, res) {
             requiredMinStay = parseInt(rules.min_stay_august) || 6;
           }
 
-          if (nights < requiredMinStay) {
+          // 🔧 FIX: Bypass min stay per prenotazioni manuali admin
+          if (bookingData.platform !== 'manual' && nights < requiredMinStay) {
             console.error(`❌ Tentativo di prenotazione bloccato: ${nights} notti richieste, minimo ${requiredMinStay}.`);
             return res.status(400).json({
               success: false,
@@ -1360,6 +1373,23 @@ export default async function handler(req, res) {
             });
           }
           
+          // 💰 Calcolo Acconto/Saldo per Admin
+          let depositAmount = Math.round(totalAmount * 0.2 * 100) / 100; // Default 20%
+          let paymentStatus = 'pending';
+
+          if (bookingData.platform === 'manual') {
+             if (bookingData.payment_type === 'full') {
+                depositAmount = totalAmount;
+                paymentStatus = 'paid_full'; // Considera pagato se inserito come saldo
+             } else if (bookingData.payment_type === 'deposit') {
+                // Se è acconto manuale, assumiamo che l'acconto sia stato pagato o sia da pagare
+                // Se admin inserisce, spesso è perché ha ricevuto i soldi o li sta registrando
+                paymentStatus = 'deposit_paid'; 
+             }
+             // Se specificato payment_status esplicito, usa quello
+             if (bookingData.payment_status) paymentStatus = bookingData.payment_status;
+          }
+
           const result = await pool.query(`
             INSERT INTO bookings (
               booking_id, check_in, check_out, guests, adults, children,
@@ -1379,10 +1409,10 @@ export default async function handler(req, res) {
             finalEmail,
             phone,
             totalAmount,
-            Math.round(totalAmount * 0.2 * 100) / 100, // 20% acconto arrotondato
-            notes,
+            depositAmount,
+            finalNotes,
             bookingStatus, // ⚡ Usa status dal payload invece di hardcoded 'pending'
-            'pending'
+            paymentStatus
           ]);
           
           // 📧 Invia email di conferma SOLO se status non è DRAFT
@@ -2046,7 +2076,7 @@ export default async function handler(req, res) {
           }
 
           // 🔧 Helper per estrarre costi dal body
-          const getCost = (key) => parseFloat(req.body[key]) || 0;
+          const getCost = (key) => parseFloat(req.body[key]) || parseFloat(req.body.booking_data?.[key]) || 0;
 
           // Prepara update query con dati payment opzionali
           const updateFields = ['status = $1', 'updated_at = NOW()'];
@@ -2118,7 +2148,7 @@ export default async function handler(req, res) {
                   paymentMethod: req.body.payment_method || req.body.paymentMethod,
                   notes: booking.notes, // 📝 Passa le note
                   // 🛎️ Se il client invia i servizi extra nel corpo della richiesta, includili nell'email
-                  extraServices: Array.isArray(req.body.extra_services) ? req.body.extra_services : (Array.isArray(req.body.extraServices) ? req.body.extraServices : []),
+                  extraServices: Array.isArray(req.body.extra_services) ? req.body.extra_services : (Array.isArray(req.body.extraServices) ? req.body.extraServices : (Array.isArray(req.body.booking_data?.extra_services) ? req.body.booking_data.extra_services : [])),
                   // 🔥 Passa il breakdown dei costi dal body della richiesta (il DB non ha questi campi)
                   accommodationCost: getCost('accommodationCost'),
                   cleaningFee: getCost('cleaningFee'),

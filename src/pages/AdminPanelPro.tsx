@@ -64,7 +64,9 @@ const AdminPanelPro = (): JSX.Element => {
     guests: 1,
     total_amount: 0,
     status: 'pending',
-    platform: 'direct'
+    platform: 'manual', // Default manual per admin
+    payment_method: 'bank_transfer',
+    payment_type: 'deposit'
   });
 
   // Stati per gestione calendario e pricing
@@ -3565,6 +3567,20 @@ const AdminPanelPro = (): JSX.Element => {
                         <option value="airbnb">📱 Airbnb</option>
                         <option value="booking">📅 Booking.com</option>
                         <option value="expedia">✈️ Expedia</option>
+                        <option value="manual">✍️ Manuale</option>
+                      </select>
+                      
+                      <label htmlFor="booking-payment-method">Metodo Pagamento:</label>
+                      <select id="booking-payment-method" className="admin-select" value={newBookingData.payment_method} onChange={(e) => setNewBookingData({...newBookingData, payment_method: e.target.value})}>
+                        <option value="bank_transfer">Bonifico</option>
+                        <option value="cash">Contanti</option>
+                        <option value="pos">POS</option>
+                      </select>
+
+                      <label htmlFor="booking-payment-type">Tipo Pagamento:</label>
+                      <select id="booking-payment-type" className="admin-select" value={newBookingData.payment_type} onChange={(e) => setNewBookingData({...newBookingData, payment_type: e.target.value})}>
+                        <option value="deposit">Acconto</option>
+                        <option value="full">Saldo</option>
                       </select>
                     </div>
                     
