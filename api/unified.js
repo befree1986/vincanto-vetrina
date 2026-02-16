@@ -1755,15 +1755,27 @@ export default async function handler(req, res) {
               const guestLanguage = detectLanguage(booking.email);
               const subject = guestLanguage === 'it' ? `Cancellazione Prenotazione ${booking.booking_id}` : `Booking Cancellation ${booking.booking_id}`;
               
-              // 🔧 REFACTOR: Usa il sistema di template per coerenza
-              const emailHtml = renderEmailTemplate('cancellation', {
-                language: guestLanguage,
-                bookingId: booking.booking_id,
-                reason: reason || 'Nessun motivo specificato',
-                firstName: booking.first_name,
-                logoUrl: 'https://www.vincantomaiori.it/logo.png',
-                siteUrl: 'https://www.vincantomaiori.it'
-              });
+              // 🔧 FIX: Usa HTML inline per garantire l'invio anche se il template manca
+              const reasonText = reason ? (guestLanguage === 'it' ? `<br><strong>Motivo:</strong> ${reason}` : `<br><strong>Reason:</strong> ${reason}`) : '';
+              const messageText = guestLanguage === 'it'
+                ? `Gentile ${booking.first_name || 'Ospite'},<br><br>La tua prenotazione <strong>${booking.booking_id}</strong> è stata cancellata.${reasonText}`
+                : `Dear ${booking.first_name || 'Guest'},<br><br>Your booking <strong>${booking.booking_id}</strong> has been cancelled.${reasonText}`;
+
+              const emailHtml = `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+                  <div style="text-align: center; margin-bottom: 20px;">
+                    <img src="https://www.vincantomaiori.it/logo.png" alt="Vincanto Maori" style="max-height: 80px;">
+                  </div>
+                  <h2 style="color: #d32f2f; text-align: center;">${subject}</h2>
+                  <div style="font-size: 16px; line-height: 1.6; color: #333;">
+                    ${messageText}
+                  </div>
+                  <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; font-size: 12px; color: #888;">
+                    <p>Vincanto Maori - Via Torre di Milo, 7 - Maiori (SA)</p>
+                    <p><a href="https://www.vincantomaiori.it" style="color: #2563eb; text-decoration: none;">www.vincantomaiori.it</a></p>
+                  </div>
+                </div>
+              `;
 
               await sendEmailWithAdminCopy({
                   to: booking.email,
