@@ -323,9 +323,9 @@
 /* Qui puoi incollare e modificare le classi che vuoi cambiare dal pannello Pro */
 
 /* Esempio: Cambia colore Header */
-/*
+
 .admin-panel-pro .admin-header {
-  background: #1e3a8a; 
+  background: #96a9de; 
   border-bottom: none;
 }
 .admin-panel-pro .admin-header h1 {
@@ -333,7 +333,7 @@
   -webkit-text-fill-color: white;
   color: white;
 }
-*/
+
 
 /* --- STILI PER FORM MANUALE (Sostituzione stili inline) --- */
 .admin-services-grid {
