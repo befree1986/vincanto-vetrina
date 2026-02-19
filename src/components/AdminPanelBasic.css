@@ -359,3 +359,8 @@
 .admin-btn-edit {
   background-color: #3b82f6;
 }
+
+.admin-btn-reminder {
+  background-color: #0ea5e9;
+  margin-left: 5px;
+}

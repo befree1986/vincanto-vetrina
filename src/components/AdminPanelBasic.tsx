@@ -165,6 +165,32 @@ const AdminPanelBasic = (): JSX.Element => {
     }
   };
 
+  // ✨ NUOVO: Invia Promemoria Pagamento
+  const handleSendReminder = async (booking: any) => {
+    let type = 'full';
+    if (booking.payment_method === 'deposit_paid' || booking.payment_status === 'deposit_paid') {
+      type = 'balance';
+    } else if (booking.deposit_amount && booking.deposit_amount < booking.total_amount) {
+      type = 'deposit';
+    }
+    
+    if (!confirm(`📧 Inviare email di promemoria pagamento (${type === 'balance' ? 'Saldo' : type === 'deposit' ? 'Acconto' : 'Totale'}) a ${booking.customer_name}?`)) {
+      return;
+    }
+
+    try {
+      setIsLoadingData(true);
+      const response = await fetch('/api/unified?action=send-payment-reminder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId: booking.id || booking.booking_id, paymentType: type })
+      });
+      const result = await response.json();
+      alert(result.success ? '✅ Email di promemoria inviata con successo!' : '❌ Errore: ' + result.error);
+    } catch (error) { alert('❌ Errore di comunicazione'); } 
+    finally { setIsLoadingData(false); }
+  };
+
   const handleCancelBookingAction = async (bookingId: string) => {
     const reason = prompt("Inserisci il motivo della cancellazione (es. Mancato pagamento, Richiesta cliente):");
     if (reason === null) return;
@@ -210,12 +236,23 @@ const AdminPanelBasic = (): JSX.Element => {
       const isEdit = !!manualBooking.id;
       const method = isEdit ? 'PUT' : 'POST';
       
+      // Calcola costi extra per il breakdown
+      const extraServicesCost = manualBooking.selected_services.reduce((sum, s) => sum + parseFloat(s.price), 0);
+      // Per le manuali, assumiamo che il resto sia soggiorno base (o 0 se non specificato)
+      const accommodationCost = Math.max(0, manualBooking.total_amount - extraServicesCost);
+
       // Prepara payload
       const payload = {
         ...manualBooking,
         customer_name: `${manualBooking.first_name} ${manualBooking.last_name}`, // Fallback
         // Se è modifica, assicurati di passare l'ID corretto
-        booking_id: isEdit ? manualBooking.id : undefined
+        booking_id: isEdit ? manualBooking.id : undefined,
+        // 🛎️ Invia breakdown costi esplicito per l'email
+        accommodationCost: accommodationCost,
+        extraServicesCost: extraServicesCost,
+        cleaningFee: 0, // Default 0 per manuali se non specificato
+        touristTax: 0,  // Default 0 per manuali se non specificato
+        extra_services: manualBooking.selected_services // Assicura formato array
       };
 
       const response = await fetch('/api/unified?action=booking', {
@@ -817,6 +854,13 @@ const AdminPanelBasic = (): JSX.Element => {
                                     title="Conferma Saldo"
                                   >
                                     ✅ Saldo
+                                  </button>
+                                  <button
+                                    className="admin-btn-small admin-btn-custom admin-btn-reminder"
+                                    onClick={() => handleSendReminder(booking)}
+                                    title="Invia Promemoria Pagamento"
+                                  >
+                                    📧 Sollecito
                                   </button>
                                 </>
                               )}

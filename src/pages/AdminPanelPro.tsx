@@ -1444,6 +1444,31 @@ const AdminPanelPro = (): JSX.Element => {
     }
   };
 
+  const handleSendReminder = async (booking: any) => {
+    let type = 'full';
+    if (booking.payment_status === 'deposit_paid') {
+      type = 'balance';
+    } else if (booking.deposit_amount && booking.deposit_amount < booking.total_amount) {
+      type = 'deposit';
+    }
+    
+    if (!confirm(`📧 Inviare email di promemoria pagamento (${type === 'balance' ? 'Saldo' : type === 'deposit' ? 'Acconto' : 'Totale'}) a ${booking.customer_name || 'Cliente'}?`)) {
+      return;
+    }
+
+    try {
+      setIsLoadingData(true);
+      const response = await fetch('/api/unified?action=send-payment-reminder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId: booking.id || booking.booking_id, paymentType: type })
+      });
+      const result = await response.json();
+      alert(result.success ? '✅ Email di promemoria inviata con successo!' : '❌ Errore: ' + result.error);
+    } catch (error) { alert('❌ Errore di comunicazione'); } 
+    finally { setIsLoadingData(false); }
+  };
+
   const handleCancelBookingAction = async (bookingId: string) => {
     const reason = prompt("Inserisci il motivo della cancellazione (es. Mancato pagamento, Richiesta cliente):");
     if (reason === null) return;
@@ -3684,6 +3709,13 @@ const AdminPanelPro = (): JSX.Element => {
                                       title="Conferma Saldo"
                                     >
                                       ✅ Saldo
+                                    </button>
+                                    <button
+                                      className="admin-btn-small"
+                                      onClick={() => handleSendReminder(booking)}
+                                      title="Invia Promemoria Pagamento"
+                                    >
+                                      📧 Sollecito
                                     </button>
                                   </>
                                 )}

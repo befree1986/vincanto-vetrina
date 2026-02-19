@@ -2403,3 +2403,10 @@
   margin-left: 5px;
   opacity: 0.8;
 }
+
+/* Stile per il pulsante di sollecito pagamento */
+.admin-btn-reminder {
+  background-color: #0ea5e9;
+  color: white;
+  margin-left: 4px;
+}

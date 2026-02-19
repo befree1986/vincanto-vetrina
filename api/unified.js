@@ -1193,14 +1193,17 @@ export default async function handler(req, res) {
           // DEBUG: Mostra tutti i dati ricevuti
           console.log('DEBUG bookingData:', bookingData);
           
+          // 🔧 NORMALIZZAZIONE CAMPI: Supporto per strutture piatte e annidate (booking_data)
+          const bData = bookingData.booking_data || {}; 
+
           // 🔧 NORMALIZZAZIONE CAMPI: supporta entrambi i formati (checkin/check_in, customerName/first_name, etc)
-          const checkin = bookingData.checkin || bookingData.check_in;
-          const checkout = bookingData.checkout || bookingData.check_out;
-          const guests = bookingData.guests || (bookingData.adults || 0) + (bookingData.children || 0) || 1;
-          const adults = bookingData.adults || bookingData.guests || 1;
-          const children = bookingData.children || 0;
-          const email = bookingData.customerEmail || bookingData.email || bookingData.customer_email; // 🔧 FIX: Supporto customer_email
-          const phone = bookingData.customerPhone || bookingData.phone;
+          const checkin = bookingData.checkin || bookingData.check_in || bData.checkin || bData.check_in || bData.check_in_date;
+          const checkout = bookingData.checkout || bookingData.check_out || bData.checkout || bData.check_out || bData.check_out_date;
+          const guests = bookingData.guests || bData.guests || (bookingData.adults || bData.adults || 0) + (bookingData.children || bData.children || 0) || 1;
+          const adults = bookingData.adults || bData.adults || bookingData.guests || bData.guests || 1;
+          const children = bookingData.children || bData.children || 0;
+          const email = bookingData.customerEmail || bookingData.email || bookingData.customer_email || bData.guest_email || bData.email;
+          const phone = bookingData.customerPhone || bookingData.phone || bData.guest_phone || bData.phone;
           // Normalizza e forza a numero - accetta sia interi che decimali
           const totalAmount = parseFloat(bookingData.totalPrice) || parseFloat(bookingData.total_amount) || 0;
           const notes = bookingData.specialRequests || bookingData.notes || '';
@@ -1215,6 +1218,20 @@ export default async function handler(req, res) {
 
           // 🔧 Helper per estrarre costi (supporta flat o nested in booking_data)
           const getCost = (key) => parseFloat(bookingData[key]) || parseFloat(bookingData.booking_data?.[key]) || 0;
+
+          // 🧮 CALCOLO INTELLIGENTE COSTI (Fallback)
+          // Se accommodationCost non è fornito (es. prenotazione manuale), calcolalo per differenza
+          let cleaningFee = getCost('cleaningFee');
+          let parkingCost = getCost('parkingCost');
+          let touristTax = getCost('touristTax');
+          let extraServicesCost = getCost('extraServicesCost');
+          let accommodationCost = getCost('accommodationCost');
+
+          if (accommodationCost <= 0 && totalAmount > 0) {
+            // Se manca il costo soggiorno, è il totale meno gli altri costi noti
+            accommodationCost = totalAmount - cleaningFee - parkingCost - touristTax - extraServicesCost;
+            if (accommodationCost < 0) accommodationCost = totalAmount; // Sicurezza
+          }
 
           // Log di debug per il totale
           console.log('DEBUG totalAmount calcolato:', totalAmount, 'tipo:', typeof totalAmount);
@@ -1296,13 +1313,13 @@ export default async function handler(req, res) {
           let firstName = 'Nome';
           let lastName = 'Cognome';
           
-          if (bookingData.customerName) {
-            const nameParts = bookingData.customerName.trim().split(' ');
+          if (bookingData.customerName || bData.guest_name) {
+            const nameParts = (bookingData.customerName || bData.guest_name).trim().split(' ');
             firstName = nameParts[0] || 'Nome';
-            lastName = nameParts.slice(1).join(' ') || 'Cognome';
-          } else if (bookingData.first_name || bookingData.last_name) {
-            firstName = bookingData.first_name || 'Nome';
-            lastName = bookingData.last_name || 'Cognome';
+            lastName = nameParts.slice(1).join(' ') || bData.guest_surname || 'Cognome';
+          } else if (bookingData.first_name || bookingData.last_name || bData.first_name || bData.last_name) {
+            firstName = bookingData.first_name || bData.first_name || 'Nome';
+            lastName = bookingData.last_name || bData.last_name || 'Cognome';
           } else if (bookingData.customer_name) { // 🔧 FIX: Supporto snake_case dal frontend admin
             const nameParts = bookingData.customer_name.trim().split(' ');
             firstName = nameParts[0] || 'Nome';
@@ -1437,11 +1454,11 @@ export default async function handler(req, res) {
                 // 🛎️ Includi eventuali servizi extra passati dal frontend
                 extraServices: Array.isArray(bookingData.extraServices) ? bookingData.extraServices : (Array.isArray(bookingData.extra_services) ? bookingData.extra_services : []),
                 // 🔥 Passa il breakdown dei costi al template email
-                accommodationCost: getCost('accommodationCost'),
-                cleaningFee: getCost('cleaningFee'),
-                parkingCost: getCost('parkingCost'),
-                touristTax: getCost('touristTax'),
-                extraServicesCost: getCost('extraServicesCost'),
+                accommodationCost: accommodationCost,
+                cleaningFee: cleaningFee,
+                parkingCost: parkingCost,
+                touristTax: touristTax,
+                extraServicesCost: extraServicesCost,
                 nights: parseInt(bookingData.nights || bookingData.booking_data?.nights) || 0,
                 logoUrl: 'https://www.vincantomaiori.it/logo.png',
                 siteUrl: 'https://www.vincantomaiori.it'
@@ -1459,11 +1476,11 @@ export default async function handler(req, res) {
                   paymentMethod: bookingData.paymentMethod || bookingData.payment_method,
                   extraServices: Array.isArray(bookingData.extraServices) ? bookingData.extraServices : (Array.isArray(bookingData.extra_services) ? bookingData.extra_services : []),
                   // Admin copy metadata
-                  accommodationCost: parseFloat(bookingData.accommodationCost) || 0,
-                  cleaningFee: parseFloat(bookingData.cleaningFee) || 0,
-                  parkingCost: parseFloat(bookingData.parkingCost) || 0,
-                  touristTax: parseFloat(bookingData.touristTax) || 0,
-                  extraServicesCost: parseFloat(bookingData.extraServicesCost) || 0,
+                  accommodationCost: accommodationCost,
+                  cleaningFee: cleaningFee,
+                  parkingCost: parkingCost,
+                  touristTax: touristTax,
+                  extraServicesCost: extraServicesCost,
                   nights: parseInt(bookingData.nights) || 0
                 }
               });
@@ -1806,6 +1823,81 @@ export default async function handler(req, res) {
     }
 
     // ========================================
+    // SEND PAYMENT REMINDER
+    // ========================================
+    if (action === 'send-payment-reminder') {
+      if (req.method === 'POST') {
+        try {
+          const { bookingId, paymentType } = req.body; // paymentType: 'deposit', 'balance', 'full'
+          
+          // Fetch booking
+          const bookingResult = await pool.query(
+            `SELECT * FROM bookings WHERE id = $1 OR booking_id = $2`,
+            [isNaN(Number(bookingId)) ? null : Number(bookingId), String(bookingId)]
+          );
+
+          if (bookingResult.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Prenotazione non trovata' });
+          }
+          const booking = bookingResult.rows[0];
+
+          if (!booking.email) {
+             return res.status(400).json({ success: false, error: 'Email cliente mancante' });
+          }
+
+          const guestLanguage = detectLanguage(booking.email);
+          let subject = '';
+          let messageBody = '';
+          let amount = 0;
+
+          if (paymentType === 'deposit') {
+             amount = parseFloat(booking.deposit_amount);
+             subject = guestLanguage === 'it' ? `Promemoria Acconto - Prenotazione ${booking.booking_id}` : `Deposit Reminder - Booking ${booking.booking_id}`;
+             messageBody = guestLanguage === 'it' 
+               ? `Gentile ${booking.first_name},<br><br>Ti ricordiamo che siamo in attesa del pagamento dell'acconto di <strong>€${amount.toFixed(2)}</strong> per confermare la tua prenotazione.`
+               : `Dear ${booking.first_name},<br><br>This is a reminder that we are awaiting the deposit payment of <strong>€${amount.toFixed(2)}</strong> to confirm your booking.`;
+          } else if (paymentType === 'balance') {
+             amount = parseFloat(booking.total_amount) - (parseFloat(booking.deposit_amount) || 0);
+             subject = guestLanguage === 'it' ? `Promemoria Saldo - Prenotazione ${booking.booking_id}` : `Balance Payment Reminder - Booking ${booking.booking_id}`;
+             messageBody = guestLanguage === 'it'
+               ? `Gentile ${booking.first_name},<br><br>Ti ricordiamo che il saldo di <strong>€${amount.toFixed(2)}</strong> per la tua prenotazione è in scadenza.`
+               : `Dear ${booking.first_name},<br><br>This is a reminder that the balance payment of <strong>€${amount.toFixed(2)}</strong> for your booking is due.`;
+          } else {
+             amount = parseFloat(booking.total_amount);
+             subject = guestLanguage === 'it' ? `Promemoria Pagamento - Prenotazione ${booking.booking_id}` : `Payment Reminder - Booking ${booking.booking_id}`;
+             messageBody = guestLanguage === 'it'
+               ? `Gentile ${booking.first_name},<br><br>Ti ricordiamo che siamo in attesa del pagamento totale di <strong>€${amount.toFixed(2)}</strong> per la tua prenotazione.`
+               : `Dear ${booking.first_name},<br><br>This is a reminder that we are awaiting the full payment of <strong>€${amount.toFixed(2)}</strong> for your booking.`;
+          }
+
+          const emailHtml = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+              <div style="text-align: center; margin-bottom: 20px;">
+                <img src="https://www.vincantomaiori.it/logo.png" alt="Vincanto Maori" style="max-height: 80px;">
+              </div>
+              <h2 style="color: #2563eb; text-align: center;">${subject}</h2>
+              <div style="font-size: 16px; line-height: 1.6; color: #333;">
+                ${messageBody}
+                <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-top: 20px;">
+                  <strong>${guestLanguage === 'it' ? 'Dati per il bonifico:' : 'Bank Transfer Details:'}</strong><br>
+                  Beneficiario: Guida Antonio<br>
+                  IBAN: IT04 D360 8105 038 288844288937<br>
+                  Causale: Prenotazione ${booking.booking_id}
+                </div>
+              </div>
+            </div>
+          `;
+
+          await sendEmailWithAdminCopy({ to: booking.email, subject, html: emailHtml, templateName: 'payment_reminder' });
+          return res.status(200).json({ success: true, message: 'Email di promemoria inviata' });
+        } catch (error) {
+          console.error('❌ Errore invio promemoria:', error);
+          return res.status(500).json({ success: false, error: error.message });
+        }
+      }
+    }
+
+    // ========================================
     // CLEAR TEST DATA SECTION
     // ========================================
     if (action === 'clear-test-bookings') {
@@ -2090,6 +2182,19 @@ export default async function handler(req, res) {
           // 🔧 Helper per estrarre costi dal body
           const getCost = (key) => parseFloat(req.body[key]) || parseFloat(req.body.booking_data?.[key]) || 0;
 
+          // 🧮 CALCOLO INTELLIGENTE COSTI (Fallback per update)
+          // Recupera il totale dal DB se non presente nel body, per calcoli coerenti
+          // (Qui assumiamo che i costi parziali siano passati nel body, altrimenti usiamo 0 o logica simile)
+          let cleaningFee = getCost('cleaningFee');
+          let parkingCost = getCost('parkingCost');
+          let touristTax = getCost('touristTax');
+          let extraServicesCost = getCost('extraServicesCost');
+          let accommodationCost = getCost('accommodationCost');
+
+          // Nota: In update-status spesso non abbiamo il totalAmount nel body, ma è nel DB.
+          // Se accommodationCost è 0, l'email mostrerà 0, ma è meglio che mostrare NaN.
+          // Se il frontend invia storedBreakdown, questi valori saranno > 0.
+
           // Prepara update query con dati payment opzionali
           const updateFields = ['status = $1', 'updated_at = NOW()'];
           const values = [status];
@@ -2162,11 +2267,11 @@ export default async function handler(req, res) {
                   // 🛎️ Se il client invia i servizi extra nel corpo della richiesta, includili nell'email
                   extraServices: Array.isArray(req.body.extra_services) ? req.body.extra_services : (Array.isArray(req.body.extraServices) ? req.body.extraServices : (Array.isArray(req.body.booking_data?.extra_services) ? req.body.booking_data.extra_services : [])),
                   // 🔥 Passa il breakdown dei costi dal body della richiesta (il DB non ha questi campi)
-                  accommodationCost: getCost('accommodationCost'),
-                  cleaningFee: getCost('cleaningFee'),
-                  parkingCost: getCost('parkingCost'),
-                  touristTax: getCost('touristTax'),
-                  extraServicesCost: getCost('extraServicesCost'),
+                  accommodationCost: accommodationCost,
+                  cleaningFee: cleaningFee,
+                  parkingCost: parkingCost,
+                  touristTax: touristTax,
+                  extraServicesCost: extraServicesCost,
                   nights: parseInt(req.body.nights) || 0,
                   logoUrl: 'https://www.vincantomaiori.it/logo.png',
                   siteUrl: 'https://www.vincantomaiori.it'
