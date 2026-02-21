@@ -30,7 +30,7 @@ class AdminApiService {
 
   constructor() {
     // 🎯 API UNIFICATA - CONFIGURAZIONE CONSOLIDATA
-    this.baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://vincanto-vetrina.vercel.app/api';
+    this.baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://vincantomaiori.it/api';
     console.log('🎯 AdminApiService PRODUZIONE API UNIFICATA:', this.baseUrl);
   }
 

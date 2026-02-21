@@ -84,7 +84,7 @@ node scripts/test-admin-apis.mjs
 ### Test Produzione
 ```bash
 # Imposta URL di produzione
-export VERCEL_URL=https://vincanto-vetrina.vercel.app
+export VERCEL_URL=https://vincantomaiori.it
 
 # Esegui test
 node scripts/test-admin-apis.mjs
@@ -150,12 +150,12 @@ SELECT * FROM analytics ORDER BY date DESC LIMIT 7;
 
 ### 1. Test SMTP
 ```bash
-curl -X GET "https://vincanto-vetrina.vercel.app/api/emails?action=test"
+curl -X GET "https://vincantomaiori.it/api/emails?action=test"
 ```
 
 ### 2. Test Stripe
 ```bash
-curl -X POST "https://vincanto-vetrina.vercel.app/api/payments?action=create-intent" \
+curl -X POST "https://vincantomaiori.it/api/payments?action=create-intent" \
   -H "Content-Type: application/json" \
   -d '{
     "amount": 10,
@@ -167,7 +167,7 @@ curl -X POST "https://vincanto-vetrina.vercel.app/api/payments?action=create-int
 
 ### 3. Test Analytics
 ```bash
-curl "https://vincanto-vetrina.vercel.app/api/analytics?action=get-summary&days=30"
+curl "https://vincantomaiori.it/api/analytics?action=get-summary&days=30"
 ```
 
 ## 🔐 Sicurezza

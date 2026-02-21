@@ -162,7 +162,7 @@ const AdminPanelPro = (): JSX.Element => {
       }
       const text = await res.text();
       log('✅ Holidu URL OK, bytes:', text.length);
-      alert('✅ URL iCal del sito valido e raggiungibile. Copialo su Holidu: https://vincanto-vetrina.vercel.app/api/unified?action=ical-export');
+      alert('✅ URL iCal del sito valido e raggiungibile. Copialo su Holidu: https://vincantomaiori.it/api/unified?action=ical-export');
     } catch (e) {
       devError('❌ Test URL Holidu fallito', e);
       alert('❌ Test URL Holidu fallito: controlla endpoint /api/unified?action=ical-export');
@@ -2245,7 +2245,7 @@ const AdminPanelPro = (): JSX.Element => {
 
     try {
       setLoading(true);
-      const response = await fetch(`${adminApiService?.baseUrl || 'https://vincanto-vetrina.vercel.app/api'}/unified?action=admin/change-password`, {
+      const response = await fetch(`${adminApiService?.baseUrl || 'https://vincantomaiori.it/api'}/unified?action=admin/change-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -2288,7 +2288,7 @@ const AdminPanelPro = (): JSX.Element => {
 
     try {
       setLoading(true);
-      const response = await fetch(`${adminApiService?.baseUrl || 'https://vincanto-vetrina.vercel.app/api'}/unified?action=admin/change-password-request`, {
+      const response = await fetch(`${adminApiService?.baseUrl || 'https://vincantomaiori.it/api'}/unified?action=admin/change-password-request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -2321,7 +2321,7 @@ const AdminPanelPro = (): JSX.Element => {
     if (!isSuperAdmin) return;
     try {
       setLoading(true);
-      const response = await fetch(`${adminApiService?.baseUrl || 'https://vincanto-vetrina.vercel.app/api'}/unified?action=admin/list`, {
+      const response = await fetch(`${adminApiService?.baseUrl || 'https://vincantomaiori.it/api'}/unified?action=admin/list`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -2371,7 +2371,7 @@ const AdminPanelPro = (): JSX.Element => {
 
     try {
       setLoading(true);
-      const response = await fetch(`${adminApiService?.baseUrl || 'https://vincanto-vetrina.vercel.app/api'}/unified?action=admin/create`, {
+      const response = await fetch(`${adminApiService?.baseUrl || 'https://vincantomaiori.it/api'}/unified?action=admin/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -2412,7 +2412,7 @@ const AdminPanelPro = (): JSX.Element => {
 
     try {
       setLoading(true);
-      const response = await fetch(`${adminApiService?.baseUrl || 'https://vincanto-vetrina.vercel.app/api'}/unified?action=admin/delete`, {
+      const response = await fetch(`${adminApiService?.baseUrl || 'https://vincantomaiori.it/api'}/unified?action=admin/delete`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

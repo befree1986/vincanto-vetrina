@@ -21,7 +21,7 @@ jobs:
           echo "🚀 Avvio sincronizzazione calendari $(date '+%Y-%m-%d %H:%M:%S UTC')"
           
           # Endpoint Vercel
-          SYNC_URL="https://vincanto-vetrina.vercel.app/api/calendar-real-sync"
+          SYNC_URL="https://vincantomaiori.it/api/calendar-real-sync"
           echo "📡 Chiamata a: $SYNC_URL"
           
           # Chiamata semplificata con verbose output

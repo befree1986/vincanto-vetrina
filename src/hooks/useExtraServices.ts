@@ -48,7 +48,7 @@ export const useExtraServices = (): ExtraServicesData => {
       
       // 🎯 USA API UNIFICATA PER CONSISTENZA
       const timestamp = new Date().getTime();
-      const apiUrl = import.meta.env.VITE_API_BASE_URL || 'https://vincanto-vetrina.vercel.app/api';
+      const apiUrl = import.meta.env.VITE_API_BASE_URL || 'https://vincantomaiori.it/api';
       const response = await fetch(`${apiUrl}/unified?action=extra-services&_t=${timestamp}`);
       
       if (response.ok) {

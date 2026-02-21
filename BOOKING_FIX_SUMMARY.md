@@ -164,7 +164,7 @@ SELECT * FROM blocked_dates WHERE reason = 'booking' ORDER BY created_at DESC;
 ```
 
 ### 4. Verifica Admin Panel
-1. Login: `https://vincanto-vetrina.vercel.app/admin`
+1. Login: `https://vincantomaiori.it/admin`
 2. Sezione "Prenotazioni Backend (Dati Reali)"
 3. Verifica colonne: ID, Cliente, Email, Date, Ospiti, **Totale**, **Stato**
 
@@ -202,13 +202,13 @@ fetch('/api/unified?action=booking')
 
 ```bash
 # 1. Verifica routing
-curl https://vincanto-vetrina.vercel.app/api/booking/confirm
+curl https://vincantomaiori.it/api/booking/confirm
 
 # 2. Verifica prenotazioni esistenti
-curl https://vincanto-vetrina.vercel.app/api/unified?action=booking
+curl https://vincantomaiori.it/api/unified?action=booking
 
 # 3. Verifica date bloccate
-curl https://vincanto-vetrina.vercel.app/api/unified?action=blocked-dates
+curl https://vincantomaiori.it/api/unified?action=blocked-dates
 ```
 
 ## ✅ Checklist Deploy

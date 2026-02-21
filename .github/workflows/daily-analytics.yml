@@ -13,13 +13,13 @@ jobs:
     steps:
       - name: Aggregate Today's Analytics
         run: |
-          curl -X POST "https://vincanto-vetrina.vercel.app/api/analytics?action=aggregate-today" \
+          curl -X POST "https://vincantomaiori.it/api/analytics?action=aggregate-today" \
             -H "Content-Type: application/json"
           
       - name: Aggregate Yesterday's Analytics (backup)
         run: |
           YESTERDAY=$(date -d "yesterday" +%Y-%m-%d)
-          curl -X POST "https://vincanto-vetrina.vercel.app/api/analytics?action=aggregate-date" \
+          curl -X POST "https://vincantomaiori.it/api/analytics?action=aggregate-date" \
             -H "Content-Type: application/json" \
             -d "{\"date\": \"$YESTERDAY\"}"
 

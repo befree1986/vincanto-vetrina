@@ -290,7 +290,7 @@ export default async function handler(req, res) {
     'https://www.vincantomaiori.it',
     'https://vincantomaiori.it',
     'https://account.vincantomaiori.it', // Subdominio admin (quando pronto)
-    'https://vincanto-vetrina.vercel.app', // Staging Vercel
+    'https://vincantomaiori.it', // Staging Vercel
     'http://localhost:3000', // Dev backend
     'http://localhost:5173', // Dev frontend Vite
     'http://127.0.0.1:3000',

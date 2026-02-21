@@ -248,7 +248,7 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
     useEffect(() => {
         const fetchPaymentMethods = async () => {
             try {
-                const apiUrl = import.meta.env.VITE_API_BASE_URL || 'https://vincanto-vetrina.vercel.app/api';
+                const apiUrl = import.meta.env.VITE_API_BASE_URL || 'https://vincantomaiori.it/api';
                 const response = await fetch(`${apiUrl}/unified?action=payment-methods`);
                 const data = await response.json();
                 if (data.success) {

@@ -147,7 +147,7 @@ To manually trigger:
 # Go to Actions → Daily Analytics Aggregation → Run workflow
 
 # Or via API
-curl -X POST "https://vincanto-vetrina.vercel.app/api/analytics?action=aggregate-today"
+curl -X POST "https://vincantomaiori.it/api/analytics?action=aggregate-today"
 ```
 
 ## 🎯 Testing Checklist
