@@ -1,6 +1,7 @@
 import inquirer from 'inquirer';
 import fs from 'fs';
 import path from 'path';
+import { execSync } from 'child_process';
 import { scanCssFiles } from '../utils/cssScanner';
 import { getClassUsageReport } from '../utils/classUsage';
 import { applyCorrections } from '../src/utils/correctionEngine';
@@ -224,6 +225,7 @@ async function main() {
         { name: '🛠️ Applica suggerimenti SEO automaticamente', value: 'seo-auto' },
         { name: '🔍 Verifica SEO con confronto web e applica', value: 'seo-verify' },
         { name: '💬 Prompt libero IA', value: 'free' },
+        { name: '🚀 Pubblica su Vercel', value: 'deploy' },
         { name: '❌ Esci', value: 'exit' },
       ]
     }
@@ -239,6 +241,14 @@ async function main() {
   if (task === 'publish') await runPublishTracker();
   if (task === 'seo-auto') await runSeoAutoApply();
   if (task === 'free') await runFreePromptCLI();
+  if (task === 'deploy') {
+    console.log('\n🚀 Avvio procedura di deploy su Vercel...');
+    try {
+      execSync('npx vercel --prod', { stdio: 'inherit' });
+    } catch (error) {
+      console.error('\n❌ Deploy interrotto o fallito.');
+    }
+  }
   if (task === 'seo') {
     const { filePath, keyword } = await inquirer.prompt([
       { type: 'input', name: 'filePath', message: '📄 File da analizzare:' },
