@@ -306,6 +306,12 @@ async function runGitManager() {
     }
   }
 
+  let currentRemoteUrl = 'Nessuno';
+  try {
+    currentRemoteUrl = execSync('git remote get-url origin', { stdio: 'pipe' }).toString().trim();
+  } catch {}
+  console.log(`\n🔗 Remote attuale: \x1b[36m${currentRemoteUrl}\x1b[0m`);
+
   const { action } = await inquirer.prompt([
     {
       type: 'list',
