@@ -70,7 +70,7 @@ module.exports = {
     production: {
       user: 'www-data',
       host: 'your-server-ip',
-      ref: 'origin/main',
+      ref: 'origin/master',
       repo: 'https://github.com/befree1986/vincanto-vetrina.git',
       path: '/var/www/vincanto',
       'pre-deploy-local': '',
