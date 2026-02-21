@@ -206,6 +206,46 @@ async function runPublishTracker() {
   console.log('\n📦 Changelog generato in:', fileName);
 }
 
+async function runReplaceDomains() {
+  console.log('\n🔍 Scansione file in /src per riferimenti a vercel.app...');
+  
+  function getAllFiles(dirPath: string, arrayOfFiles: string[] = []) {
+    const files = fs.readdirSync(dirPath);
+    files.forEach(function(file) {
+      if (fs.statSync(dirPath + "/" + file).isDirectory()) {
+        getAllFiles(dirPath + "/" + file, arrayOfFiles);
+      } else {
+        arrayOfFiles.push(path.join(dirPath, "/", file));
+      }
+    });
+    return arrayOfFiles;
+  }
+
+  const files = getAllFiles('./src');
+  let count = 0;
+
+  files.forEach(file => {
+    if (file.match(/\.(ts|tsx|js|json|md)$/)) {
+      const content = fs.readFileSync(file, 'utf-8');
+      // Regex per trovare varianti di vincanto...vercel.app e sostituirle
+      const regex = /https?:\/\/vincanto[-a-zA-Z0-9]*\.vercel\.app/g;
+      
+      if (regex.test(content)) {
+        const newContent = content.replace(regex, 'https://vincantomaiori.it');
+        fs.writeFileSync(file, newContent, 'utf-8');
+        console.log(`✅ Aggiornato: ${file}`);
+        count++;
+      }
+    }
+  });
+
+  if (count === 0) {
+    console.log('✨ Nessun riferimento a vercel.app trovato. I file sono già puliti.');
+  } else {
+    console.log(`\n🎉 Sostituiti ${count} riferimenti con vincantomaiori.it`);
+  }
+}
+
 async function main() {
   const { task } = await inquirer.prompt([
     {
@@ -225,6 +265,7 @@ async function main() {
         { name: '🛠️ Applica suggerimenti SEO automaticamente', value: 'seo-auto' },
         { name: '🔍 Verifica SEO con confronto web e applica', value: 'seo-verify' },
         { name: '💬 Prompt libero IA', value: 'free' },
+        { name: '🔄 Aggiorna domini (vincanto...vercel.app -> vincantomaiori.it)', value: 'replace-domains' },
         { name: '🚀 Pubblica su Vercel', value: 'deploy' },
         { name: '❌ Esci', value: 'exit' },
       ]
@@ -241,8 +282,34 @@ async function main() {
   if (task === 'publish') await runPublishTracker();
   if (task === 'seo-auto') await runSeoAutoApply();
   if (task === 'free') await runFreePromptCLI();
+  if (task === 'replace-domains') await runReplaceDomains();
   if (task === 'deploy') {
-    console.log('\n🚀 Avvio procedura di deploy su Vercel...');
+    const { mode } = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'mode',
+        message: '🚀 Opzioni di Pubblicazione Vercel:',
+        choices: [
+          { name: '⚡ Pubblica subito (sul progetto già collegato)', value: 'fast' },
+          { name: '🔗 Cambia progetto di destinazione (re-link) e pubblica', value: 'relink' },
+          { name: '❌ Annulla', value: 'exit' }
+        ]
+      }
+    ]);
+
+    if (mode === 'exit') return;
+
+    if (mode === 'relink') {
+      console.log('\n🔗 Avvio procedura di collegamento a un nuovo progetto...');
+      try {
+        execSync('npx vercel link', { stdio: 'inherit' });
+      } catch (error) {
+        console.error('\n❌ Collegamento interrotto.');
+        return;
+      }
+    }
+
+    console.log('\n🚀 Avvio deploy in produzione...');
     try {
       execSync('npx vercel --prod', { stdio: 'inherit' });
     } catch (error) {

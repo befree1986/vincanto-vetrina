@@ -407,6 +407,7 @@
   "bookingCalendar": {
     "error": {
       "checkoutAfterCheckin": "La date de départ doit être au moins un jour après la date d'arrivée.",
+      "syncError": "Il y a des problèmes de synchronisation de votre calendrier. Vérifiez l'URL et réessayez.",
       "minStay_one": "Le séjour minimum est de {{count}} nuit. Vous n'avez sélectionné que {{nights}} nuit.",
       "minStay_other": "Le séjour minimum est de {{count}} nuits. Vous n'avez sélectionné que {{nights}} nuits."
     },

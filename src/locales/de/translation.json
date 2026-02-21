@@ -403,6 +403,7 @@
   "bookingCalendar": {
     "error": {
       "checkoutAfterCheckin": "Check-out muss mindestens einen Tag nach dem Check-in erfolgen.",
+      "syncError": "Es gibt Probleme bei der Synchronisierung Ihres Kalenders. Überprüfen Sie die URL und versuchen Sie es erneut.",
       "minStay_one": "Der Mindestaufenthalt beträgt {{count}} Nacht. Sie haben nur {{nights}} Nacht ausgewählt.",
       "minStay_other": "Der Mindestaufenthalt beträgt {{count}} Nächte. Sie haben nur {{nights}} Nächte ausgewählt."
     },
