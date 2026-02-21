@@ -47,7 +47,7 @@
 .hero-content h2 {
   position: relative;
   z-index: 3;
-  color: #b7fa00;
+  color: #c9ff34;
   text-align: center;
   font-size: clamp(1.8rem, 4vw, 2.5rem); /* Corretto: MAX deve essere >= MIN. Adattato per coerenza. */
   font-weight: 400;
@@ -55,7 +55,7 @@
   /* Applichiamo un'ombra più definita e un contorno bianco */
   text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5); /* Ombra: offset-x, offset-y, blur-radius, color */
   -webkit-text-stroke-width: 1px; /* Spessore del contorno */
--webkit-text-stroke-color:rgba(194, 174, 174, 0.856);
+-webkit-text-stroke-color:rgba(255, 255, 255, 0.904);
   paint-order: stroke fill; /* Assicura che il riempimento sia sopra il contorno */
 }
 
