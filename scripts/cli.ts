@@ -207,25 +207,29 @@ async function runPublishTracker() {
 }
 
 async function runReplaceDomains() {
-  console.log('\n🔍 Scansione file in /src per riferimenti a vercel.app...');
+  console.log('\n🔍 Scansione INTERO PROGETTO per riferimenti a vercel.app...');
   
   function getAllFiles(dirPath: string, arrayOfFiles: string[] = []) {
     const files = fs.readdirSync(dirPath);
     files.forEach(function(file) {
-      if (fs.statSync(dirPath + "/" + file).isDirectory()) {
-        getAllFiles(dirPath + "/" + file, arrayOfFiles);
+      // Ignora cartelle di sistema, dipendenze e build
+      if (['node_modules', '.git', '.next', '.vercel', 'dist', 'coverage'].includes(file)) return;
+
+      if (fs.statSync(path.join(dirPath, file)).isDirectory()) {
+        getAllFiles(path.join(dirPath, file), arrayOfFiles);
       } else {
-        arrayOfFiles.push(path.join(dirPath, "/", file));
+        arrayOfFiles.push(path.join(dirPath, file));
       }
     });
     return arrayOfFiles;
   }
 
-  const files = getAllFiles('./src');
+  const files = getAllFiles('./');
   let count = 0;
 
   files.forEach(file => {
-    if (file.match(/\.(ts|tsx|js|json|md)$/)) {
+    // Include più estensioni (xml, txt, env, yml, ecc.) per una pulizia completa
+    if (file.match(/\.(ts|tsx|js|jsx|json|md|mdx|html|css|scss|xml|txt|yml|yaml)$/i) || path.basename(file).startsWith('.env')) {
       const content = fs.readFileSync(file, 'utf-8');
       // Regex per trovare varianti di vincanto...vercel.app e sostituirle
       const regex = /https?:\/\/vincanto[-a-zA-Z0-9]*\.vercel\.app/g;
