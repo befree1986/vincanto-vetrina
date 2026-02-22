@@ -163,6 +163,10 @@ const internalStyles = `
 .summary-divider { margin: 10px 0; border: 0; border-top: 1px solid #eee; }
 .amount-highlight { font-size: 1.1em; color: #2563eb; margin-top: 10px; }
 .balance-note { font-size: 0.9em; color: #666; }
+.privacy-checkbox-container { margin-top: 15px; display: flex; align-items: flex-start; gap: 10px; }
+.privacy-checkbox-container input[type="checkbox"] { width: auto; margin-top: 4px; }
+.privacy-checkbox-container label { font-size: 0.9em; font-weight: normal; }
+.privacy-checkbox-container label a { text-decoration: underline; }
 `;
 
 const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
@@ -178,6 +182,7 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
     const [currentStep, setCurrentStep] = useState<Step>('dates');
     const [error, setError] = useState<string | null>(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
+    const [privacyAccepted, setPrivacyAccepted] = useState(false);
     
     // 🛎️ Servizi extra - INIZIALIZZATI A ZERO
     const [extraServicesCost, setExtraServicesCost] = useState(0);
@@ -477,6 +482,10 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
             setError(t('booking.error.paymentMethodRequired', 'Seleziona un metodo di pagamento'));
             return;
         }
+        if (!privacyAccepted) {
+            setError(t('booking.error.privacyRequired', 'Devi accettare la privacy policy per procedere.'));
+            return;
+        }
         try {
             // ✅ Calcola totale completo (quote + servizi extra)
             const totalAmount = quote ? (quote.totalAmount + extraServicesCost) : 0;
@@ -710,6 +719,18 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                     <div className="input-group">
                         <label htmlFor="message">{getSafeTranslation(t, 'booking.specialRequests', 'Richieste Speciali')}</label>
                         <textarea id="message" rows={3} value={formData.guest_message} onChange={(e)=>setFormData({ guest_message: e.target.value })} />
+                    </div>
+                    
+                    <div className="input-group privacy-checkbox-container">
+                        <input
+                            type="checkbox"
+                            id="bookingPrivacyCheck"
+                            checked={privacyAccepted}
+                            onChange={(e) => setPrivacyAccepted(e.target.checked)}
+                        />
+                        <label htmlFor="bookingPrivacyCheck">
+                            {t('booking.privacyConsent', 'Ho letto e accetto la')} <a href="/privacy-policy" target="_blank" rel="noopener noreferrer">{t('booking.privacyPolicy', 'Privacy Policy')}</a> {t('booking.and', 'e')} <a href="/terms-conditions" target="_blank" rel="noopener noreferrer">{t('booking.termsConditions', 'Termini e Condizioni')}</a>.
+                        </label>
                     </div>
                 </div>
                 <div className="payment-options">

@@ -203,6 +203,27 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
     );
 };
 
+const internalStyles = `
+.privacy-checkbox-container {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 10px;
+}
+.privacy-checkbox-container input[type="checkbox"] {
+    width: auto;
+    margin-top: 4px;
+}
+.privacy-checkbox-container label {
+    font-size: 0.9em;
+    font-weight: normal;
+    display: inline;
+}
+.privacy-checkbox-container label a {
+    text-decoration: underline;
+}
+`;
+
 // 🎯 Componente principale ottimizzato
 const BookingSystemEnhanced: React.FC = () => {
     console.log('🔍 BookingSystemEnhanced: Componente inizializzato');
@@ -217,6 +238,7 @@ const BookingSystemEnhanced: React.FC = () => {
     // 🛎️ Stati per servizi extra
     const [selectedExtraServices, setSelectedExtraServices] = useState<any[]>([]);
     const [extraServicesCost, setExtraServicesCost] = useState(0);
+    const [privacyAccepted, setPrivacyAccepted] = useState(false);
 
     // 🔄 Calcolo del numero di notti
     const nights = useMemo(() => {
@@ -274,6 +296,7 @@ const BookingSystemEnhanced: React.FC = () => {
 
     return (
         <div className="booking-system-enhanced">
+            <style>{internalStyles}</style>
             {/* Indicatore di progresso */}
             <div className="booking-progress">
                 <div className="progress-steps">
@@ -640,6 +663,10 @@ const BookingSystemEnhanced: React.FC = () => {
                             className="personal-form"
                             onSubmit={e => {
                                 e.preventDefault();
+                                if (!privacyAccepted) {
+                                    // Il bottone è disabilitato, ma per sicurezza
+                                    return;
+                                }
                                 setCurrentStep(4);
                             }}
                         >
@@ -696,6 +723,17 @@ const BookingSystemEnhanced: React.FC = () => {
                                     placeholder="Richieste particolari, allergie, orari..."
                                 />
                             </div>
+                            <div className="form-group privacy-checkbox-container">
+                                <input
+                                    type="checkbox"
+                                    id="enhancedBookingPrivacyCheck"
+                                    checked={privacyAccepted}
+                                    onChange={(e) => setPrivacyAccepted(e.target.checked)}
+                                />
+                                <label htmlFor="enhancedBookingPrivacyCheck">
+                                    {t('booking.privacyConsent', 'Ho letto e accetto la')} <a href="/privacy-policy" target="_blank" rel="noopener noreferrer">{t('booking.privacyPolicy', 'Privacy Policy')}</a> {t('booking.and', 'e')} <a href="/terms-conditions" target="_blank" rel="noopener noreferrer">{t('booking.termsConditions', 'Termini e Condizioni')}</a>.
+                                </label>
+                            </div>
                             <div className="step-navigation">
                                 <button
                                     type="button"
@@ -712,7 +750,8 @@ const BookingSystemEnhanced: React.FC = () => {
                                         !booking.formData.guest_name ||
                                         !booking.formData.guest_surname ||
                                         !booking.formData.guest_email ||
-                                        !booking.formData.guest_phone
+                                        !booking.formData.guest_phone ||
+                                        !privacyAccepted
                                     }
                                 >
                                     {getSafeTranslation(t, 'booking.navigation.next', 'Continua')}
