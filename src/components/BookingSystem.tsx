@@ -600,7 +600,7 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                                 <p className="guest-desc">{getSafeTranslation(t, 'booking.age18Plus', 'Età 18+')}</p>
                             </div>
                             <select id="adults" value={formData.num_adults} onChange={(e)=>setFormData({ num_adults: parseInt(e.target.value) })} className="guest-select">
-                                {[1,2,3,4,5,6].map(n=> <option key={n} value={n}>{n}</option>)}
+                                {[1,2,3,4,5,6,7,8].map(n=> <option key={n} value={n}>{n}</option>)}
                             </select>
                         </div>
                         <div className="guest-card">
@@ -610,7 +610,7 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                                 <p className="guest-desc">{getSafeTranslation(t, 'booking.age0to17', 'Età 0-17')}</p>
                             </div>
                             <select id="children" value={formData.num_children} onChange={(e)=>setFormData({ num_children: parseInt(e.target.value) })} className="guest-select">
-                                {[0,1,2,3,4].map(n=> <option key={n} value={n}>{n}</option>)}
+                                {[0,1,2,3,4,5,6].map(n=> <option key={n} value={n}>{n}</option>)}
                             </select>
                         </div>
                     </div>
