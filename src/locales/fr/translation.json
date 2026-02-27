@@ -374,6 +374,7 @@
   "booking.error.paymentMethodRequired": "Veuillez sélectionner un mode de paiement",
   "booking.error.invalidPaymentMethod": "Mode de paiement non valide. Veuillez sélectionner Carte, PayPal ou Virement bancaire.",
   "booking.error.unexpected": "Erreur inattendue",
+  "booking.error.maxGuests": "Le nombre maximum d'invités est de 8",
   "booking.age18Plus": "Âge 18+",
   "booking.age0to17": "Âge 0-17",
   "booking.age": "Âge",

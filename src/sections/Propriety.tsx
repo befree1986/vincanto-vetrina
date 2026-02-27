@@ -78,10 +78,7 @@ const Propriety: React.FC = () => {
     // Fallback: se IntersectionObserver non è disponibile, mostra tutte le immagini su mobile
     if (!('IntersectionObserver' in window)) {
       images.forEach((img) => {
-        img.classList.add('visible');
-        if (window.innerWidth < 600) {
-          img.classList.add('mobile-reveal');
-        }
+        img.classList.add('visible'); // Solo visible, così la transizione parte
       });
       return;
     }

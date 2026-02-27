@@ -358,6 +358,7 @@
   "booking.error.paymentMethodRequired": "Bitte wählen Sie eine Zahlungsmethode",
   "booking.error.invalidPaymentMethod": "Ungültige Zahlungsmethode. Bitte wählen Sie Karte, PayPal oder Banküberweisung.",
   "booking.error.unexpected": "Unerwarteter Fehler",
+  "booking.error.maxGuests": "Die maximale Anzahl der Gäste beträgt 8",
   "booking.age18Plus": "Alter 18+",
   "booking.age0to17": "Alter 0-17",
   "booking.age": "Alter",

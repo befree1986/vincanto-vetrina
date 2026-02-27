@@ -460,6 +460,12 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
             firstErrorField?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             return;
         }
+
+        // Check max guests (Safety check on submit)
+        if (formData.num_adults + formData.num_children > 8) {
+            setError(t('booking.error.maxGuests', 'Il numero massimo di ospiti consentito è 8.'));
+            return;
+        }
         
         // ✅ VALIDAZIONE CAMPI ESSENZIALI
         if (!formData.guest_name?.trim()) {
@@ -599,7 +605,14 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                                 <label htmlFor="adults">{getSafeTranslation(t, 'booking.adults', 'Adulti')}</label>
                                 <p className="guest-desc">{getSafeTranslation(t, 'booking.age18Plus', 'Età 18+')}</p>
                             </div>
-                            <select id="adults" value={formData.num_adults} onChange={(e)=>setFormData({ num_adults: parseInt(e.target.value) })} className="guest-select">
+                            <select id="adults" value={formData.num_adults} onChange={(e)=>{
+                                const val = parseInt(e.target.value);
+                                if (val + formData.num_children > 8) {
+                                    alert(t('booking.error.maxGuests', 'Il numero massimo di ospiti consentito è 8.'));
+                                    return;
+                                }
+                                setFormData({ num_adults: val });
+                            }} className="guest-select">
                                 {[1,2,3,4,5,6,7,8].map(n=> <option key={n} value={n}>{n}</option>)}
                             </select>
                         </div>
@@ -609,7 +622,14 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                                 <label htmlFor="children">{getSafeTranslation(t, 'booking.children', 'Bambini')}</label>
                                 <p className="guest-desc">{getSafeTranslation(t, 'booking.age0to17', 'Età 0-17')}</p>
                             </div>
-                            <select id="children" value={formData.num_children} onChange={(e)=>setFormData({ num_children: parseInt(e.target.value) })} className="guest-select">
+                            <select id="children" value={formData.num_children} onChange={(e)=>{
+                                const val = parseInt(e.target.value);
+                                if (formData.num_adults + val > 8) {
+                                    alert(t('booking.error.maxGuests', 'Il numero massimo di ospiti consentito è 8.'));
+                                    return;
+                                }
+                                setFormData({ num_children: val });
+                            }} className="guest-select">
                                 {[0,1,2,3,4,5,6].map(n=> <option key={n} value={n}>{n}</option>)}
                             </select>
                         </div>

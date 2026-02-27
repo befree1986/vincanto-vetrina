@@ -70,7 +70,7 @@ const About: React.FC = () => {
               <img 
                 src={`/ingressoNotte/ingresso2.webp${assetVersion}`} 
                 alt="Vista panoramica su Maiori e la Costiera Amalfitana" 
-                className="img-fluid"
+                className="img-fluid visible mobile-reveal"
                 loading="lazy"
               />
             </div>

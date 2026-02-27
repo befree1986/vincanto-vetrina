@@ -403,6 +403,7 @@
   "booking.minStayInfo_other": "⚠️ Soggiorno minimo richiesto: <strong>{{count}} notti</strong>",
   "booking.error.missingFields": "Campi obbligatori mancanti",
   "booking.error.firstNameRequired": "Nome obbligatorio",
+  "booking.error.maxGuests": "Il numero massimo di ospiti consentito è 8.",
   "booking.error.lastNameRequired": "Cognome obbligatorio",
   "booking.error.emailRequired": "Email valida obbligatoria",
   "booking.error.phoneRequired": "Telefono valido obbligatorio (min 8 cifre)",

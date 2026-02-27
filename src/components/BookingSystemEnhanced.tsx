@@ -444,9 +444,13 @@ const BookingSystemEnhanced: React.FC = () => {
                                         />
                                         <button 
                                             type="button"
-                                            onClick={() => booking.setFormData({ 
-                                                num_adults: Math.min(8, booking.formData.num_adults + 1) 
-                                            })}
+                                            onClick={() => {
+                                                if (booking.formData.num_adults + booking.formData.num_children >= 8) {
+                                                    alert(t('booking.error.maxGuests', 'Il numero massimo di ospiti consentito è 8.'));
+                                                    return;
+                                                }
+                                                booking.setFormData({ num_adults: Math.min(8, booking.formData.num_adults + 1) });
+                                            }}
                                             disabled={booking.formData.num_adults >= 8}
                                             aria-label="Aumenta adulti"
                                         >
@@ -485,9 +489,13 @@ const BookingSystemEnhanced: React.FC = () => {
                                         />
                                         <button 
                                             type="button"
-                                            onClick={() => booking.setFormData({ 
-                                                num_children: Math.min(4, booking.formData.num_children + 1) 
-                                            })}
+                                            onClick={() => {
+                                                if (booking.formData.num_adults + booking.formData.num_children >= 8) {
+                                                    alert(t('booking.error.maxGuests', 'Il numero massimo di ospiti consentito è 8.'));
+                                                    return;
+                                                }
+                                                booking.setFormData({ num_children: Math.min(4, booking.formData.num_children + 1) });
+                                            }}
                                             disabled={booking.formData.num_children >= 4}
                                             aria-label="Aumenta bambini"
                                         >
