@@ -2,7 +2,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 400px; /* Altezza per desktop, più simile alla home */
+  min-height: 300px; /* Altezza per desktop, più simile alla home */
   color: var(--white);
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
   width: 100%; /* Assicura che prenda tutta la larghezza */
