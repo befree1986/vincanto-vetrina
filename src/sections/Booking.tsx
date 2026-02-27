@@ -50,7 +50,7 @@ const Booking: React.FC = () => {
         {/* Immagine Award prima del divider */}
         <div className="booking-image-container booking-award-container">
           <img 
-            src="/img/Digital-Award_TRA-2026.png" 
+            src="/Digital-Award_TRA-2026.png" 
             alt="Traveller Review Awards 2026" 
             className="img-fluid booking-award-image"
             loading="lazy"

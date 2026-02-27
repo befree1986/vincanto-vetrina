@@ -128,9 +128,12 @@ const Footer: React.FC = () => {
           </div>
 
           <div className="footer-verfied-logo">
-            <img src="verify-logo.webp" alt="Verified" className="footer-verfied-logo-img" />
-            <img src="footer-booking-award-logo.png" alt="Booking Award" className="footer-verfied-logo-img" />
+            <img src="/verify-logo.webp" alt="Verified" className="footer-verfied-logo-img" />
           </div>
+        </div>
+
+        <div className="footer-award-logo">
+          <img src="/Instagram-Stickers-White_TRA-2026.png" alt="Booking Award" className="footer-award-logo-img" />
         </div>
 
         <div className="footer-bottom">
