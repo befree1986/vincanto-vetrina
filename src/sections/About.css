@@ -1,11 +1,18 @@
+/* Assicuriamo che il contenitore Parallax abbia un'altezza esplicita */
+.about-section > div:first-child {
+  min-height: 400px;
+  position: relative;
+}
+
 .about-hero {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 300px; /* Altezza per desktop, più simile alla home */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
   color: var(--white);
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-  width: 100%; /* Assicura che prenda tutta la larghezza */
+  width: 100%;
 }
 
 .about-hero h2 {
@@ -96,7 +103,6 @@
   }
 
   .about-hero {
-    min-height: 45vh; /* Altezza reattiva per mobile, come nella home */
     padding: 0 1rem; /* Aggiunge un po' di spazio laterale */
   }
 
@@ -110,5 +116,6 @@
     background-attachment: scroll !important; /* Disabilita l'effetto parallasse */
     background-size: cover !important;
     background-position: center !important;
+    min-height: 45vh; /* Spostiamo l'altezza sul contenitore */
   }
 }
