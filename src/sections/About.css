@@ -2,9 +2,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 300px;
+  min-height: 400px; /* Altezza per desktop, più simile alla home */
   color: var(--white);
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  width: 100%; /* Assicura che prenda tutta la larghezza */
 }
 
 .about-hero h2 {
@@ -93,12 +94,21 @@
     min-height: 250px;
     margin-top: 2rem;
   }
-  .paralax-image {
-    width: 100%;
-    min-height: 250px;
+
+  .about-hero {
+    min-height: 45vh; /* Altezza reattiva per mobile, come nella home */
+    padding: 0 1rem; /* Aggiunge un po' di spazio laterale */
   }
-  .about-image {
-    width: 100%;
-    min-height: 250px;
+
+  /*
+   * Fallback per l'immagine hero "Chi Siamo" su mobile.
+   * Il componente ParallaxBackground (il primo div dentro .about-section) ha problemi su mobile.
+   * Questa regola applica un'immagine di sfondo statica per garantire la visibilità.
+   */
+  .about-section > div:first-child {
+    background-image: url("/lemon.webp") !important; /* Sovrascrive lo stile inline del componente */
+    background-attachment: scroll !important; /* Disabilita l'effetto parallasse */
+    background-size: cover !important;
+    background-position: center !important;
   }
 }
