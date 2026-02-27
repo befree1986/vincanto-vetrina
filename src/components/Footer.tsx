@@ -129,6 +129,7 @@ const Footer: React.FC = () => {
 
           <div className="footer-verfied-logo">
             <img src="verify-logo.webp" alt="Verified" className="footer-verfied-logo-img" />
+            <img src="footer-booking-award-logo.png" alt="Booking Award" className="footer-verfied-logo-img" />
           </div>
         </div>
 
