@@ -93,7 +93,10 @@
     min-height: 250px;
     margin-top: 2rem;
   }
-
+  .paralax-image {
+    width: 100%;
+    min-height: 250px;
+  }
   .about-image {
     width: 100%;
     min-height: 250px;
