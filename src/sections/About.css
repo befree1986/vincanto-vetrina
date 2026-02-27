@@ -67,8 +67,36 @@
   margin-right: 0;
 }
 
+.location-image-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.location-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 @media (max-width: 992px) {
   .location-info {
     grid-template-columns: 1fr;
+  }
+  
+  .location-image-container {
+    min-height: 250px;
+    margin-top: 2rem;
+  }
+
+  .about-hero {
+    background-image: url('/lemon.webp');
+    background-size: cover;
+    background-position: center;
   }
 }

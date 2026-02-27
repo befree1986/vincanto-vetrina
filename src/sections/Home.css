@@ -144,7 +144,7 @@
   padding: 2rem;
   margin-bottom: 2.5rem;
   border-radius: 8px;
-  box-shadow: var-(--shadow-md);
+  box-shadow: var(--shadow-md);
   text-align: center;
   transition: all 0.3s ease;
 }
@@ -277,6 +277,11 @@
   .welcome-text p {
     font-size: 1rem;
     text-align: center;
+  }
+
+  .welcome-image {
+    width: 100%;
+    min-height: 250px;
   }
 
   .welcome-image img {
