@@ -94,9 +94,8 @@
     margin-top: 2rem;
   }
 
-  .about-hero {
-    background-image: url('/lemon.webp');
-    background-size: cover;
-    background-position: center;
+  .about-image {
+    width: 100%;
+    min-height: 250px;
   }
 }
