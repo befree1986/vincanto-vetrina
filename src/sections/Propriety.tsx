@@ -75,6 +75,16 @@ const Propriety: React.FC = () => {
 
   useEffect(() => {
     const images = document.querySelectorAll('.gallery-img');
+    // Fallback: se IntersectionObserver non è disponibile, mostra tutte le immagini su mobile
+    if (!('IntersectionObserver' in window)) {
+      images.forEach((img) => {
+        img.classList.add('visible');
+        if (window.innerWidth < 600) {
+          img.classList.add('mobile-reveal');
+        }
+      });
+      return;
+    }
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
