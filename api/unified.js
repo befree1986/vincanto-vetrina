@@ -1351,15 +1351,18 @@ export default async function handler(req, res) {
           // ⚡ Estrai status dal payload (default 'pending' se non specificato)
           const bookingStatus = bookingData.status || 'pending';
 
-           // 🔒 VALIDAZIONE METODO DI PAGAMENTO (Blocco temporaneo metodi disabilitati)
-          // Controllo più aggressivo: blocca se contiene parole chiave vietate
+          /*
+           * 🔒 BLOCCO PAGAMENTI ONLINE (Temporaneamente disabilitato come nota)
+           * Questo blocco impediva l'uso di Stripe e PayPal.
+           * È stato commentato per riabilitare i pagamenti.
           const requestedMethod = (bookingData.paymentMethod || bookingData.payment_method || '').toLowerCase();
           if (requestedMethod.includes('paypal') || requestedMethod.includes('stripe') || requestedMethod.includes('card')) {
-             return res.status(400).json({ 
-               success: false, 
-               error: 'Questo metodo di pagamento è temporaneamente disabilitato. Si prega di scegliere Bonifico Bancario.' 
-             });
+            return res.status(400).json({ 
+              success: false, 
+              error: 'Questo metodo di pagamento è temporaneamente disabilitato. Si prega di scegliere Bonifico Bancario.' 
+            });
           }
+          */
           
           // 📅 VALIDAZIONE SOGGIORNO MINIMO (Server-Side Enforcement)
           // Recupera regole dal DB per assicurarsi che non vengano bypassate
