@@ -2049,7 +2049,8 @@ export default async function handler(req, res) {
             amount: Math.round(Number(safeAmount) * 100),
             currency,
             metadata: { bookingId, guestEmail },
-            automatic_payment_methods: { enabled: true } // ⚡ Abilita metodi di pagamento automatici
+            // automatic_payment_methods: { enabled: true } // ⚡ Disabilitato per evitare errori di configurazione dashboard
+            payment_method_types: ['card'] // ⚡ Forza carta di credito
           });
           return res.status(200).json({
             success: true,

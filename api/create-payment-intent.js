@@ -19,7 +19,8 @@ export default async function handler(req, res) {
                 customer_email,
                 customer_name
             },
-            automatic_payment_methods: { enabled: true }
+            // automatic_payment_methods: { enabled: true }
+            payment_method_types: ['card']
         });
         res.status(200).json({ clientSecret: paymentIntent.client_secret });
     } catch (error) {

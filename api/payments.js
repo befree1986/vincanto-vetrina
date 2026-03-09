@@ -40,7 +40,7 @@ async function createPaymentIntent(req, res) {
     currency: 'eur',
     receipt_email: customer_email,
     metadata: { booking_id, customer_email, customer_name },
-    automatic_payment_methods: { enabled: true }
+    payment_method_types: ['card']
   });
 
   // Log transaction in DB
