@@ -2324,7 +2324,7 @@ export default async function handler(req, res) {
             id: 'paypal',
             name: 'PayPal',
             type: 'redirect',
-            enabled: false, // DISATTIVATO
+            enabled: true,
             url: 'https://www.paypal.me/AntonioGuida320',
             description: 'Pagamento rapido e sicuro tramite PayPal',
             fees: 'Commissione PayPal: 3.4% + €0.35'
@@ -2333,7 +2333,7 @@ export default async function handler(req, res) {
             id: 'stripe_card',
             name: 'Carta di Credito/Debito',
             type: 'card',
-            enabled: false, // DISATTIVATO
+            enabled: true,
             supported_cards: ['visa', 'mastercard', 'amex'],
             description: 'Pagamento diretto con carta di credito o debito',
             fees: 'Commissione: 1.4% + €0.25'
