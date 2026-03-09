@@ -96,7 +96,7 @@
     "position.sar2": "60 min en voiture"
   },
 
-  "hero-subtitle": "Un coin de paradis parmi les citrons de la Côte Amalfitaine",
+  "hero-subtitle": "Votre Maison de Vacances à Maiori : Un coin de paradis parmi les citrons de la Côte Amalfitaine",
   "home.BookNow": "Réserver Maintenant",
   "home.position.textTitle": "Bienvenue à VINCANTO",
 
@@ -129,7 +129,7 @@
   "home.features.outdoor.title": "Espaces extérieurs exclusifs",
   "home.features.outdoor.list.0": "• Cuisine extérieure couverte pour déjeuners et dîners en plein air.",
   "home.features.outdoor.list.1": "• Four à bois traditionnel et barbecue",
-  "home.features.outdoor.list.2": "• Douche extérieure, parfaite pour se rafraîchir après une journée à la mer ou une randonnée",
+  "home.features.outdoor.list.2": "• Douche extérieure, parfaite pour se rafraîchir après une journée à la mer ou une randonnée", 
   "Posizione Unica": "Emplacement unique",
   "La struttura si trova in una zona collinare tranquilla, immersa nel verde. Accessibile tramite 200 gradini utilizzata dalle formichelle, trasporitatrice di limoni. Un’esperienza autentica e una vista indimenticabile, ideale per gli amanti della quiete.": "La propriété est située dans une zone vallonnée tranquille, entourée de verdure. Accessible par environ 200 marches, historiquement utilisées par les 'formichelle' (petites fourmis), les femmes qui transportaient les citrons. Une expérience authentique et une vue inoubliable, idéale pour les amateurs de tranquillité.",
   "Il Tuo angolo di Paradiso nel Limoneto": "Votre coin de Paradis dans la Citronneraie",
@@ -148,7 +148,7 @@
 
   "propriety.rates.title": "Nos Tarifs",
   "propriety.rates.table.personsHeader": "Nombre d'occupants",
-  "propriety.rates.table.pricePerNightHeader": "Prix par nuit",
+  "propriety.rates.table.pricePerNightHeader": "Prix par nuit par personne",
   "propriety.rates.table.persons1to2": "2",
   "propriety.rates.table.price1to2": "70 € par personne",
   "propriety.rates.table.persons3to4": "de 3 à 4",
@@ -237,14 +237,14 @@
   "contact.form.error.privacyRequired": "Vous devez accepter la politique de confidentialité pour continuer.",
 
   "seo": {
-    "home.title": "VINCANTO | Maiori - Côte Amalfitaine",
-    "home.description": "Vincanto est une propriété nichée dans les citronneraies de la Côte Amalfitaine à Maiori. Réservez votre séjour exclusif, confort et services premium. Idéal pour les familles et les groupes.",
+    "home.title": "VINCANTO | Location de Vacances à Maiori, Côte Amalfitaine",
+    "home.description": "Vincanto est votre location de vacances de luxe à Maiori, une maison exclusive nichée dans les citronneraies de la Côte Amalfitaine. Réservez un séjour de confort et de style, idéal pour les familles et les groupes jusqu'à 8 personnes. Découvrez nos services premium et notre emplacement unique près d'Amalfi.",
     "about.title": "VINCANTO | À Propos de Nous",
     "about.description": "Découvrez l'histoire de Vincanto, notre mission et les valeurs qui nous guident. Un lieu où luxe, confort et nature se rencontrent pour vous offrir un séjour régénérant.",
-    "propriety.title": "VINCANTO | La Propriété",
-    "propriety.description": "Explorez notre propriété, nos chambres, nos services et nos tarifs. Découvrez pourquoi Vincanto est le choix idéal pour votre séjour sur la Côte Amalfitaine.",
-    "contact.title": "VINCANTO | Contacts et Demandes",
-    "contact.description": "Contactez-nous pour des réservations, des questions ou des demandes spéciales. Nous sommes là pour vous aider à planifier votre séjour parfait à Vincanto."
+    "propriety.title": "VINCANTO | La Maison de Vacances : Chambres, Services & Tarifs",
+    "propriety.description": "Découvrez les détails de Vincanto : 3 chambres, 3 salles de bains, cuisine américaine et une terrasse avec cuisine extérieure et barbecue. Consultez les tarifs de votre maison de vacances de rêve sur la Côte Amalfitaine, parfaite pour un séjour inoubliable.",
+    "contact.title": "VINCANTO | Contacts et Réservations Maison de Vacances",
+    "contact.description": "Contactez-nous pour réserver votre maison de vacances à Maiori ou pour des demandes spéciales. Nous sommes là pour vous aider à planifier votre séjour parfait sur la Côte Amalfitaine."
   },
 
   "contacts": {

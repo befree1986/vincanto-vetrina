@@ -192,7 +192,11 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
     const [bookingResult, setBookingResult] = useState<any | null>(null);
     const [paymentCompleted, setPaymentCompleted] = useState(false);
     const [paymentPopup, setPaymentPopup] = useState<{show: boolean, message: string}>({show: false, message: ''});
-    const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
+    const [paymentMethods, setPaymentMethods] = useState<any[]>([
+        { id: 'stripe_card', name: 'Carta di Credito/Debito', enabled: true },
+        { id: 'paypal', name: 'PayPal', enabled: true },
+        { id: 'bank_transfer', name: 'Bonifico Bancario', enabled: true },
+    ]);
     // 💰 Payment amount - stored before submitBooking to avoid quote state issues
     const [paymentAmount, setPaymentAmount] = useState<number>(0);
     const [storedBreakdown, setStoredBreakdown] = useState<any>(null); // 💾 Persistenza costi
@@ -257,14 +261,29 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                 const response = await fetch(`${apiUrl}/unified?action=payment-methods`);
                 const data = await response.json();
                 if (data.success) {
-                    setPaymentMethods(data.methods);
+                    // Forza l'abilitazione di Stripe e PayPal e normalizza gli ID
+                    let methods = data.methods.map((m: any) => {
+                        if (m.id === 'stripe') return { ...m, id: 'stripe_card', enabled: true };
+                        if (m.id === 'stripe_card') return { ...m, enabled: true };
+                        if (m.id === 'paypal') return { ...m, enabled: true };
+                        return m;
+                    });
+
+                    // Se l'API non li restituisce, li aggiungiamo manualmente
+                    if (!methods.find((m: any) => m.id === 'stripe_card')) {
+                        methods.push({ id: 'stripe_card', name: 'Carta di Credito/Debito', enabled: true });
+                    }
+                    if (!methods.find((m: any) => m.id === 'paypal')) {
+                        methods.push({ id: 'paypal', name: 'PayPal', enabled: true });
+                    }
+                    setPaymentMethods(methods);
                 }
             } catch (e) {
                 console.error("Failed to fetch payment methods", e);
                 // Fallback in caso di errore API
                 setPaymentMethods([
-                    { id: 'stripe_card', name: 'Carta di Credito/Debito', enabled: false },
-                    { id: 'paypal', name: 'PayPal', enabled: false },
+                    { id: 'stripe_card', name: 'Carta di Credito/Debito', enabled: true },
+                    { id: 'paypal', name: 'PayPal', enabled: true },
                     { id: 'bank_transfer', name: 'Bonifico Bancario', enabled: true },
                 ]);
             }

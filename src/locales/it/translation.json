@@ -94,10 +94,10 @@
   "home.position.textTitle": "Benvenuti a VINCANTO",
   "home.position.text1": "una struttura ricettiva nata da una completa ristrutturazione e immerso nella quiete di un profumato limoneto. Qui lusso, comfort e natura si incontrano per offrirti un soggiorno rigenerante.",
   "Scopri di più": "Scopri di più",
-  "Punti Salienti della Proprietà": "Punti Salienti della Proprietà",
+  "Punti Salienti della Proprietà": "Punti Salienti della Casa Vacanze",
   "Perfetta per Ogni Ospite": "Perfetta per Ogni Ospite",
   
-  "home.position.DescP": "Il proprietario è sempre presente per garantire un'accoglienza calorosa e un supporto costante durante la vostra permanenza",
+  "home.position.DescP": "Il proprietario è sempre a disposizione per garantire un'accoglienza calorosa e un supporto costante durante la vostra vacanza.",
   "Trasporti e Accessibilità": "Trasporti e Accessibilità",
   "🚍 Bus di Linea Collegamenti SITA Sud verso i principali borghi della Costiera. Fermate facilmente raggiungibili dalla residenza.": "🚍 Bus di Linea Collegamenti SITA Sud verso i principali borghi della Costiera. Fermate facilmente raggiungibili dalla residenza.",
   "🚐 Navetta Comunale Servizio locale per spostarsi con semplicità tra centro, lungomare e porto.": "🚐 Navetta Comunale Servizio locale per spostarsi con semplicità tra centro, lungomare e porto.",
@@ -114,7 +114,7 @@
   "• Cucina esterna coperta per pranzi e cene all’aperto.": "• Cucina esterna coperta per pranzi e cene all’aperto.",
   "• Forno a legna tradizionale e barbecue": "• Forno a legna tradizionale e barbecue",
   "• Doccia esterna, perfetta per rinfrescarsi dopo una giornata di mare o escursioni": "• Doccia esterna, perfetta per rinfrescarsi dopo una giornata di mare o escursioni",
-  "Posizione Unica": "Posizione Unica",
+  "Posizione Unica": "Posizione Unica nel Limoneto",
   "La struttura si trova in una zona collinare tranquilla, immersa nel verde. Accessibile tramite 200 gradini utilizzata dalle formichelle, trasporitatrice di limoni. Un’esperienza autentica e una vista indimenticabile, ideale per gli amanti della quiete.": "La struttura si trova in una zona collinare tranquilla, immersa nel verde. Accessibile tramite 200 gradini utilizzata dalle formichelle, trasporitatrice di limoni. Un’esperienza autentica e una vista indimenticabile, ideale per gli amanti della quiete.",
   "Il Tuo angolo di Paradiso nel Limoneto": "Il Tuo angolo di Paradiso nel Limoneto",
 
@@ -132,7 +132,7 @@
 
   "propriety.rates.title": "Le Nostre Tariffe",
   "propriety.rates.table.personsHeader": "Numero di Ospiti",
-  "propriety.rates.table.pricePerNightHeader": "Pezzo a Notte",
+  "propriety.rates.table.pricePerNightHeader": "Prezzo a Notte per Persona",
   "propriety.rates.table.persons1to2": "2",
   "propriety.rates.table.price1to2": "€ 70 a persona",
   "propriety.rates.table.persons3to4": "da 3 a 4",
@@ -291,19 +291,18 @@
   "contact.form.error.invalidDate": "La data di partenza deve essere successiva a quella di arrivo.",
   "contact.form.dateHelp": "",
   "contact.form.privacyLabel": "Ho letto e accetto la <1>Privacy Policy</1>",
-  "contact.form.error.privacyRequired": "È necessario accettare la Privacy Policy per continuare.",
-
-  "hero-subtitle": "Un angolo di paradiso tra i limoni della Costiera Amalfitana",
+  "contact.form.error.privacyRequired": "È necessario accettare la Privacy Policy per continuare.", 
+  "hero-subtitle": "La tua casa vacanze a Maiori: un angolo di paradiso tra i limoni della Costiera Amalfitana",
 
   "seo": {
   "home.title": "VINCANTO | Maiori - Costiera Amalfitana",
-  "home.description": "Vincanto è una Struttura immersa nei limoneti della Costiera Amalfitana a Maiori. Prenota il tuo soggiorno esclusivo, comfort e servizi premium. Ideale per famiglie e gruppi. Contattaci per offerte personalizzate.",
+  "home.description": "Vincanto è la tua casa vacanze a Maiori, una struttura esclusiva immersa nei limoneti della Costiera Amalfitana. Prenota un soggiorno di lusso e comfort, ideale per famiglie e gruppi fino a 8 persone. Scopri i nostri servizi premium e la posizione unica vicino ad Amalfi.",
   "about.title": "VINCANTO | Chi Siamo",
   "about.description": "Scopri la storia di Vincanto, la nostra missione e i valori che ci guidano. Un luogo dove lusso, comfort e natura si incontrano per offrirti un soggiorno rigenerante.",
-  "propriety.title": "VINCANTO | La Proprietà",
-  "propriety.description": "Esplora la nostra struttura, le camere, i servizi e le tariffe. Scopri perché Vincanto è la scelta ideale per il tuo soggiorno in Costiera Amalfitana.",
-  "contact.title": "VINCANTO | Contatti e Richieste",
-  "contact.description": "Contattaci per prenotazioni, domande o richieste speciali. Siamo qui per aiutarti a pianificare il tuo soggiorno perfetto a Vincanto."
+  "propriety.title": "VINCANTO | La Casa Vacanze: Camere, Servizi e Tariffe",
+  "propriety.description": "Scopri i dettagli di Vincanto: 3 camere da letto, 3 bagni, cucina open space e una terrazza con cucina esterna e barbecue. Consulta le tariffe per la tua casa vacanze da sogno in Costiera Amalfitana, perfetta per un soggiorno indimenticabile.",
+  "contact.title": "VINCANTO | Contatti e Prenotazioni Casa Vacanze",
+  "contact.description": "Contattaci per prenotare la tua casa vacanze a Maiori o per richieste speciali. Siamo qui per aiutarti a pianificare il tuo soggiorno perfetto in Costiera Amalfitana."
 },
 
 "contacts":{
@@ -348,7 +347,7 @@
   "booking.bank.amountToTransfer": "Importo da versare",
   "booking.bank.note": "Importante: Ti abbiamo inviato una email con tutti i dettagli. La prenotazione sarà confermata definitivamente dopo la ricezione e verifica del bonifico bancario. Ti contatteremo entro 24-48 ore dalla ricezione del pagamento.",
   "booking.newBooking": "Nuova Prenotazione",
-  "booking.payment.paypal.title": "Pagamento con PayPal (Non disponibile)",
+  "booking.payment.paypal.title": "Pagamento con PayPal",
   "booking.payment.paypal.description": "Pagamento sicuro tramite PayPal. Accetta tutte le principali carte di credito e debito.",
   "booking.payment.amount": "Importo",
   "booking.payment.loading": "Caricamento PayPal...",
@@ -426,7 +425,7 @@
   "booking.deposit30": "Acconto 20%",
   "booking.fullPayment": "Saldo Completo",
   "booking.paymentMethod": "Metodo di Pagamento",
-  "booking.card": "Carta di Credito/Debito (Non disponibile)",
+  "booking.card": "Carta di Credito/Debito",
   "booking.cardSubtitle": "Visa, Mastercard, Amex",
   "booking.paypalSubtitle": "Pagamento sicuro",
   "booking.bankTransfer": "Bonifico Bancario",
