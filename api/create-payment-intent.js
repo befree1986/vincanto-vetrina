@@ -18,7 +18,8 @@ export default async function handler(req, res) {
                 booking_id,
                 customer_email,
                 customer_name
-            }
+            },
+            automatic_payment_methods: { enabled: true }
         });
         res.status(200).json({ clientSecret: paymentIntent.client_secret });
     } catch (error) {

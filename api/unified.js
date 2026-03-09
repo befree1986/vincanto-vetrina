@@ -2048,7 +2048,8 @@ export default async function handler(req, res) {
           const paymentIntent = await stripe.paymentIntents.create({
             amount: Math.round(Number(safeAmount) * 100),
             currency,
-            metadata: { bookingId, guestEmail }
+            metadata: { bookingId, guestEmail },
+            automatic_payment_methods: { enabled: true } // ⚡ Abilita metodi di pagamento automatici
           });
           return res.status(200).json({
             success: true,
