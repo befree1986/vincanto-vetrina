@@ -169,13 +169,15 @@ const internalStyles = `
 .privacy-checkbox-container label a { text-decoration: underline; }
 `;
 
+const IS_DEV = import.meta.env.DEV;
+
 const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
     const { t, i18n } = useTranslation();
     
     // 🔍 DEBUG: Log mount/unmount
     React.useEffect(() => {
-        console.log('✅ BookingSystem mounted');
-        return () => console.log('❌ BookingSystem unmounted');
+        if (IS_DEV) console.log('✅ BookingSystem mounted');
+        return () => { if (IS_DEV) console.log('❌ BookingSystem unmounted'); };
     }, []);
     
     // 📊 Stati base
@@ -245,7 +247,7 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
             return total + (service.price || 0);
         }, 0);
         
-        console.log('💰 BookingSystem extraCost:', { total: selectedExtraServices.length, paid: paidServices.length, cost: totalCost });
+        if (IS_DEV) console.log('💰 BookingSystem extraCost:', { total: selectedExtraServices.length, paid: paidServices.length, cost: totalCost });
         setExtraServicesCost(totalCost);
     }, [quote, selectedExtraServices]);
 
@@ -297,7 +299,7 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
             const total = (quote ? quote.totalAmount : 0) + (extraServicesCost || 0);
             if (!paymentAmount || Number(paymentAmount) <= 0) {
                 setPaymentAmount(total);
-                console.log('🛡️ Guard set paymentAmount:', total);
+                if (IS_DEV) console.log('🛡️ Guard set paymentAmount:', total);
             }
         }
     }, [currentStep, quote, extraServicesCost]);
@@ -306,7 +308,7 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
     
     // ⚡ FIX: Memoize onServicesChange to prevent infinite loop in ExtraServices
     const handleServicesChange = React.useCallback((services: any[], totalCost: number) => {
-        console.log('🛎️ Services changed:', services.length, 'Total:', totalCost);
+        if (IS_DEV) console.log('🛎️ Services changed:', services.length, 'Total:', totalCost);
         setSelectedExtraServices(services);
         setExtraServicesCost(totalCost);
     }, []); // Empty deps: la funzione è stabile
@@ -395,9 +397,9 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
         try {
             // Quando pagamento fallisce, cancella il booking draft
             if (bookingResult?.booking_id) {
-                console.log(`🚫 Cancellazione booking ${bookingResult.booking_id} per errore pagamento: ${errorMessage}`);
+                if (IS_DEV) console.log(`🚫 Cancellazione booking ${bookingResult.booking_id} per errore pagamento: ${errorMessage}`);
                 await cancelBooking(bookingResult.booking_id, reason || `${t('booking.error.paymentFailedReason')}: ${errorMessage}`);
-                console.log(`✅ Booking ${bookingResult.booking_id} cancellato con successo`);
+                if (IS_DEV) console.log(`✅ Booking ${bookingResult.booking_id} cancellato con successo`);
             }
         } catch (error: any) {
             console.error('Errore nella cancellazione del booking:', error);
@@ -527,31 +529,19 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
             
             setStoredBreakdown(breakdownData); // 💾 Salva breakdown per uso futuro (es. post-pagamento)
 
-            console.log('📧 Invio breakdown costi per email:', breakdownData);
+            if (IS_DEV) console.log('📧 Invio breakdown costi per email:', breakdownData);
 
             // 🔍 DEBUG: Verifica valori PRIMA di salvare paymentAmount
-            console.log('🔍 PRE-PAYMENT DEBUG [v2.0]:', {
+            if (IS_DEV) { console.log('🔍 PRE-PAYMENT DEBUG [v2.0]:', {
                 quote_exists: !!quote,
                 quote_totalAmount: quote?.totalAmount,
                 extraServicesCost,
                 calculated_totalAmount: totalAmount,
                 payment_method: formData.payment_method,
                 payment_type: formData.payment_type
-            });
-            
-            // 💰 STORE AMOUNT BEFORE submitBooking - quote might become undefined after
+            }); }// 💰 STORE AMOUNT BEFORE submitBooking - quote might become undefined after
             setPaymentAmount(totalAmount);
-            console.log('💰 Saved paymentAmount:', totalAmount);
-            
-            // 🛟 Popola window.debugPaymentData per fallback Stripe/PayPal
-            (window as any).debugPaymentData = {
-                quote,
-                extraServicesCost,
-                totalAmount,
-                timestamp: new Date().toISOString()
-            };
-            console.log('🛟 Populated debugPaymentData for fallback:', (window as any).debugPaymentData);
-            
+            if (IS_DEV) console.log('💰 Saved paymentAmount:', totalAmount);
             // Reset flag pagamento completato quando si richiede un nuovo pagamento
             setPaymentCompleted(false);
             
@@ -1041,15 +1031,12 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                                     // 💰 Use stored paymentAmount instead of recalculating
                                     const depositAmount = Math.round(paymentAmount * 0.20 * 100) / 100;
                                     const finalAmount = formData.payment_type === 'deposit' ? depositAmount : paymentAmount;
-                                    
-                                    console.log('💳 Stripe Amount Calculation:', {
+                    if (IS_DEV) { console.log('💳 Stripe Amount Calculation:', {
                                         storedPaymentAmount: paymentAmount,
                                         depositAmount,
                                         payment_type: formData.payment_type,
                                         finalAmount
-                                    });
-                                    
-                                    return (
+                                    }); }return (
                                         <StripePayment
                                             bookingId={bookingResult.booking_id || bookingResult.id?.toString() || ''}
                                             amount={finalAmount}
@@ -1073,15 +1060,12 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                                     // 💰 Use stored paymentAmount instead of recalculating
                                     const depositAmount = Math.round(paymentAmount * 0.20 * 100) / 100;
                                     const finalAmount = formData.payment_type === 'deposit' ? depositAmount : paymentAmount;
-                                    
-                                    console.log('🅿️ PayPal Amount Calculation:', {
+                    if (IS_DEV) { console.log('🅿️ PayPal Amount Calculation:', {
                                         storedPaymentAmount: paymentAmount,
                                         depositAmount,
                                         payment_type: formData.payment_type,
                                         finalAmount
-                                    });
-                                    
-                                    return (
+                                    }); }return (
                                         <PayPalPayment
                                             bookingId={bookingResult.booking_id || bookingResult.id?.toString() || ''}
                                             amount={finalAmount}
