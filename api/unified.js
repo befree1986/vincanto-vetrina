@@ -2080,10 +2080,26 @@ export default async function handler(req, res) {
       if (req.method === 'POST') {
         try {
           const { paymentIntentId, bookingId } = req.body;
-          
-          // Simula conferma pagamento Stripe
-          // In produzione: const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-          
+          const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+          // Recupera PaymentIntent reale
+          let paymentIntent;
+          try {
+            paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+          } catch (stripeError) {
+            return res.status(400).json({
+              success: false,
+              message: 'PaymentIntent non trovato',
+              error: stripeError.message
+            });
+          }
+          // Verifica stato
+          if (paymentIntent.status !== 'succeeded' && paymentIntent.status !== 'requires_capture') {
+            return res.status(400).json({
+              success: false,
+              message: `Pagamento non riuscito: ${paymentIntent.status}`,
+              status: paymentIntent.status
+            });
+          }
           // Aggiorna stato pagamento nel database
           await pool.query(`
             UPDATE bookings 
@@ -2092,13 +2108,12 @@ export default async function handler(req, res) {
                 updated_at = NOW()
             WHERE booking_id = $2
           `, [paymentIntentId, bookingId]);
-          
           return res.status(200).json({
             success: true,
             message: 'Pagamento confermato con successo',
             paymentIntentId: paymentIntentId,
             bookingId: bookingId,
-            status: 'succeeded'
+            status: paymentIntent.status
           });
         } catch (error) {
           console.error('❌ Errore conferma Stripe:', error);
@@ -2322,9 +2337,8 @@ export default async function handler(req, res) {
     }
 
     if (action === 'payment-methods') {
-      return res.status(200).json({
-        success: true,
-        methods: [
+      try {
+        const methods = [
           {
             id: 'paypal',
             name: 'PayPal',
@@ -2364,9 +2378,16 @@ export default async function handler(req, res) {
             },
             description: 'Bonifico tradizionale su conto corrente'
           }
-        ],
-        defaultMethod: 'bank_transfer'
-      });
+        ];
+        return res.status(200).json({
+          success: true,
+          methods: methods,
+          defaultMethod: 'bank_transfer'
+        });
+      } catch (error) {
+        console.error('❌ Errore nel caricare la configurazione dei metodi di pagamento:', error);
+        return res.status(500).json({ success: false, error: 'Impossibile caricare i metodi di pagamento.' });
+      }
     }
 
     // ========================================
@@ -3733,54 +3754,10 @@ END:VEVENT
     }
 
     // ========================================
-    // CONTACT FORM SECTION
-    // ========================================
-    if (action === 'contact') {
-      if (req.method === 'POST') {
-        try {
-          const { name, email, message, phone, guests, checkin, checkout, privacy_accepted } = req.body;
-          
-          // 🔒 GDPR Check: Verifica consenso privacy
-          // IMPORTANTE: Aggiornare il frontend per inviare { privacy_accepted: true }
-          if (privacy_accepted !== true && req.body.privacyConsent !== true) {
-            console.warn(`⚠️ GDPR Warning: Richiesta contatto da ${email} senza flag privacy esplicito.`);
-            return res.status(400).json({ success: false, error: 'È necessario accettare la Privacy Policy.' });
-          }
-
-          console.log('📧 Invio email contatto:', { name, email });
-
-          // Invia email all'admin
-          if (process.env.SMTP_HOST) {
-            const html = renderEmailTemplate('contact_notification', {
-              name, email, phone, message, guests, checkin, checkout,
-              logoUrl: 'https://www.vincantomaiori.it/logo.svg',
-              siteUrl: 'https://www.vincantomaiori.it'
-            });
-
-            await sendEmailWithAdminCopy({
-              to: process.env.SMTP_USER || 'info@vincantomaiori.it',
-              subject: `Nuova richiesta contatto da ${name}`,
-              html: html,
-              templateName: 'contact_notification'
-            });
-          }
-          
-          return res.status(200).json({ success: true, message: 'Messaggio inviato con successo' });
-        } catch (error) {
-          console.error('❌ Errore contact API:', error);
-          return res.status(500).json({ success: false, error: 'Errore invio messaggio' });
-        }
-      }
-    }
-
-    // ========================================
-    // PAYMENT MANAGEMENT (ADMIN)
+    // CAPTURE PAYMENT SECTION
     // ========================================
     if (action === 'capture-payment') {
-      if (req.method === 'POST') {
-        try {
-          const { payment_id, booking_id, paymentType } = req.body; // paymentType: 'deposit' o 'full'
-          // Supporta sia payment_id (spesso usato come ID prenotazione nel frontend admin) che booking_id
+      try {
           const targetId = payment_id || booking_id;
 
           if (!targetId) {
@@ -3876,7 +3853,6 @@ END:VEVENT
           return res.status(500).json({ success: false, error: error.message });
         }
       }
-    }
 
     if (action === 'get-payment-details') {
         try {
