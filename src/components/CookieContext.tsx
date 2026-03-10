@@ -4,6 +4,7 @@ type Preferences = {
   essential: boolean;
   analytics: boolean;
   marketing: boolean;
+  consentDate?: string;
 };
 
 type CookieContextType = {
@@ -37,16 +38,17 @@ export const CookieProvider = ({ children }: { children: ReactNode }) => {
 
   const setConsent = (accepted: boolean) => {
     const prefs = accepted
-      ? { essential: true, analytics: true, marketing: true }
-      : { essential: true, analytics: false, marketing: false };
+      ? { essential: true, analytics: true, marketing: true, consentDate: new Date().toISOString() }
+      : { essential: true, analytics: false, marketing: false, consentDate: new Date().toISOString() };
     setUserPreferences(prefs);
     localStorage.setItem('userPreferences', JSON.stringify(prefs));
     setShowBanner(false);
   };
 
   const savePreferences = (prefs: Preferences) => {
-    setUserPreferences(prefs);
-    localStorage.setItem('userPreferences', JSON.stringify(prefs));
+    const prefsWithDate = { ...prefs, consentDate: new Date().toISOString() };
+    setUserPreferences(prefsWithDate);
+    localStorage.setItem('userPreferences', JSON.stringify(prefsWithDate));
     setShowPreferences(false);
     setShowBanner(false);
   };

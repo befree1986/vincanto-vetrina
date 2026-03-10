@@ -1,4 +1,4 @@
-import { PolicySection, PolicyContent } from './privacyPolicy';
+import { PolicyContent } from './privacyPolicy';
 
 export const cookiePolicyContent: Record<string, PolicyContent> = {
 	it: {
@@ -58,7 +58,6 @@ export const cookiePolicyContent: Record<string, PolicyContent> = {
 					'Diritto di accesso: puoi visualizzare le tue preferenze cookie salvate',
 					'Diritto di modifica: puoi modificare le tue scelte in qualsiasi momento',
 					'Diritto di cancellazione: puoi revocare tutti i consensi e cancellare i cookie dal tuo browser',
-					'Diritto alla portabilità: puoi esportare le tue preferenze cookie per trasferirle',
 					'Diritto di opposizione: puoi opporti al trattamento per finalità di marketing diretto'
 				],
 				note: 'Per esercitare questi diritti, contattaci a info@vincantomaiori.it o utilizza le impostazioni cookie del sito.'			}
@@ -123,7 +122,6 @@ export const cookiePolicyContent: Record<string, PolicyContent> = {
 					'Right of access: you can view your saved cookie preferences',
 					'Right to modify: you can change your choices at any time',
 					'Right to deletion: you can revoke all consent and delete cookies from your browser',
-					'Right to portability: you can export your cookie preferences to transfer them',
 					'Right to object: you can object to processing for direct marketing purposes'
 				],
 				note: 'To exercise these rights, contact us at info@vincantomaiori.it or use the site cookie settings.'			}
@@ -188,7 +186,6 @@ export const cookiePolicyContent: Record<string, PolicyContent> = {
 					'Zugriffsrecht: Sie können Ihre gespeicherten Cookie-Präferenzen einsehen',
 					'Recht auf Änderung: Sie können Ihre Auswahl jederzeit ändern',
 					'Recht auf Löschung: Sie können alle Einwilligungen widerrufen und Cookies aus Ihrem Browser löschen',
-					'Recht auf Datenübertragbarkeit: Sie können Ihre Cookie-Präferenzen exportieren, um sie zu übertragen',
 					'Widerspruchsrecht: Sie können der Verarbeitung für Direktmarketingzwecke widersprechen'
 				],
 				note: 'Um diese Rechte auszuüben, kontaktieren Sie uns unter info@vincantomaiori.it oder nutzen Sie die Cookie-Einstellungen der Website.'
@@ -254,7 +251,6 @@ export const cookiePolicyContent: Record<string, PolicyContent> = {
 					'Droit d\'accès: vous pouvez visualiser vos préférences cookies sauvegardées',
 					'Droit de modification: vous pouvez changer vos choix à tout moment',
 					'Droit à l\'effacement: vous pouvez révoquer tous les consentements et supprimer les cookies de votre navigateur',
-					'Droit à la portabilité: vous pouvez exporter vos préférences cookies pour les transférer',
 					'Droit d\'opposition: vous pouvez vous opposer au traitement à des fins de marketing direct'
 				],
 				note: 'Pour exercer ces droits, contactez-nous à info@vincantomaiori.it ou utilisez les paramètres cookies du site.'

@@ -81,7 +81,7 @@ function App() {
           <Routes>
             <Route path="/admin/login" element={
               <TwoFactorLogin
-                onLoginSuccess={(token, role) => {
+                onLoginSuccess={(_token, role) => {
                   // Salva già nel componente; qui gestiamo solo redirect
                   if (role === 'superadmin') {
                     navigate('/admin');
@@ -160,7 +160,7 @@ function App() {
 
       {showBanner && (
         <CookieBanner
-          onClose={() => setShowBanner(false)}
+          onClose={() => setConsent && setConsent(false)}
           onAccept={() => setConsent && setConsent(true)}
           onCustomize={() => {
             setShowPreferences && setShowPreferences(true);
