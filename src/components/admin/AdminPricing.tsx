@@ -258,6 +258,19 @@ const AdminPricing: React.FC<AdminPricingProps> = ({
                 suffix="€/persona"
                 required
               />
+              <div style={{ marginTop: '10px' }}>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Immagine (URL)</label>
+                <input
+                  type="url"
+                  className="admin-input"
+                  placeholder="https://..."
+                  value={pricingConfig.imageGroup1to2 || ''}
+                  onChange={(e) => updatePricingField('imageGroup1to2', e.target.value as any)}
+                />
+                {pricingConfig.imageGroup1to2 && (
+                   <img src={pricingConfig.imageGroup1to2} alt="Group 1-2" style={{ marginTop: '5px', maxHeight: '100px', borderRadius: '5px' }} />
+                )}
+              </div>
             </div>
           </div>
           

@@ -3,6 +3,7 @@
 // @ts-nocheck  
 import React, { useState, useEffect } from 'react';
 import './AdminPanelPro.css';
+import AdminLayout from '../components/admin/AdminLayout';
 import '../styles/AdminSuperAdmin.css';
 import '../styles/AdminUXResponsive.css';
 import AdminApiService from '../services/adminApiService';
@@ -2532,160 +2533,21 @@ const AdminPanelPro = (): JSX.Element => {
   ];
 
   return (
-    <div className="admin-panel-pro admin-container">
-      {/* Header Responsive */}
-      <header className="admin-header">
-        <div className="admin-header-left">
-          <h1>🏢 Vincanto Admin</h1>
-          <span className="admin-version admin-badge admin-badge-info">v2.0 Pro</span>
-        </div>
-        
-        <div className="admin-header-actions">
-          <div className="admin-flex admin-items-center admin-gap-md">
-            {/* Indicatore Status */}
-            <div className={`admin-badge ${isLoadingData ? 'admin-badge-warning' : 'admin-badge-success'}`}>
-              {isLoadingData ? '⏳ Loading' : '✅ Online'}
-            </div>
-            
-            {/* User Info */}
-            <div className="admin-flex admin-items-center admin-gap-sm">
-              <span className="admin-text-muted admin-hidden-mobile">👨 Administrator</span>
-              <div className="admin-badge admin-badge-info" title="Modalit├á SuperAdmin Attiva">
-                ⏱️ SuperAdmin
-              </div>
-            </div>
-          </div>
-          
-          <div className="admin-flex admin-items-center admin-gap-sm">
-            <button 
-              className="admin-btn admin-btn-info admin-btn-sm"
-              onClick={() => window.location.href = '/admin/basic'}
-              title="Accedi al pannello Admin Basic"
-            >
-              <span className="admin-hidden-mobile">🎯 Pannello Admin</span>
-              <span className="admin-visible-mobile">🎯</span>
-            </button>
-            
-            <button 
-              className="admin-btn admin-btn-secondary"
-              onClick={() => {
-                localStorage.removeItem('vincanto_admin_session');
-                localStorage.removeItem('vincanto_admin_token');
-                localStorage.removeItem('vincanto_admin_role');
-                window.location.href = '/admin/login';
-              }}
-            >
-              <span className="admin-hidden-mobile">📥 Logout</span>
-              <span className="admin-visible-mobile">📥</span>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Navigazione Tab SuperAdmin Completa */}
-      <nav className="admin-nav">
-        <div className="admin-nav-container">
-          <button 
-            className={`admin-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
-            onClick={() => {
-              log('🎨 Click su tab dashboard');
-              setActiveTab('dashboard');
-            }}
-          >
-            📊 Dashboard
-          </button>
-          
-          <button 
-            className={`admin-nav-item ${activeTab === 'prezzi' ? 'active' : ''}`}
-            onClick={() => {
-              log('🎨 Click su tab prezzi');
-              setActiveTab('prezzi');
-            }}
-          >
-            💰 Prezzi
-          </button>
-          
-          <button 
-            className={`admin-nav-item ${activeTab === 'servizi-extra' ? 'active' : ''}`}
-            onClick={() => {
-              log('🎨 Click su tab servizi-extra');
-              setActiveTab('servizi-extra');
-            }}
-          >
-            📁 Servizi Extra
-          </button>
-          
-          <button 
-            className={`admin-nav-item ${activeTab === 'calendari' ? 'active' : ''}`}
-            onClick={() => {
-              log('🎨 Click su tab calendari');
-              setActiveTab('calendari');
-            }}
-          >
-            📅 Calendari
-          </button>
-          
-          <button 
-            className={`admin-nav-item ${activeTab === 'prenotazioni' ? 'active' : ''}`}
-            onClick={() => {
-              log('🎨 Click su tab prenotazioni');
-              setActiveTab('prenotazioni');
-            }}
-          >
-            📅 Prenotazioni
-          </button>
-          
-          <button 
-            className={`admin-nav-item ${activeTab === 'pagamenti' ? 'active' : ''}`}
-            onClick={() => {
-              log('🎨 Click su tab pagamenti');
-              setActiveTab('pagamenti');
-            }}
-          >
-            💳 Pagamenti
-          </button>
-          
-          <button 
-            className={`admin-nav-item ${activeTab === 'email' ? 'active' : ''}`}
-            onClick={() => setActiveTab('email')}
-          >
-            📧 Email
-          </button>
-          
-          <button 
-            className={`admin-nav-item ${activeTab === 'notifiche' ? 'active' : ''}`}
-            onClick={() => setActiveTab('notifiche')}
-          >
-            🔔 Notifiche
-          </button>
-          
-          <button 
-            className={`admin-nav-item ${activeTab === 'analytics' ? 'active' : ''}`}
-            onClick={() => setActiveTab('analytics')}
-          >
-            📊 Analytics
-          </button>
-
-          {isSuperAdmin && (
-            <button 
-              className={`admin-nav-item ${activeTab === 'admin-management' ? 'active' : ''}`}
-              onClick={() => setActiveTab('admin-management')}
-            >
-              👥´©Å Gestione Admin
-            </button>
-          )}
-          
-          <button 
-            className={`admin-nav-item ${activeTab === 'sistema' ? 'active' : ''}`}
-            onClick={() => setActiveTab('sistema')}
-          >
-            ⚙️ Sistema
-          </button>
-        </div>
-      </nav>
-
-      {/* Contenuto Principale Responsive */}
-      <main className="admin-main">
+    <AdminLayout 
+      activeTab={activeTab} 
+      setActiveTab={setActiveTab} 
+      onLogout={() => {
+        localStorage.removeItem('vincanto_admin_session');
+        localStorage.removeItem('vincanto_admin_token');
+        localStorage.removeItem('vincanto_admin_role');
+        window.location.href = '/admin/login';
+      }}
+      isSuperAdmin={isSuperAdmin()}
+      adminEmail={localStorage.getItem('vincanto_admin_email') || 'Admin'}
+    >
+      <div className="admin-panel-pro admin-container">
+        {/* Contenuto Principale Responsive */}
+        <div className="admin-main">
         {error && (
           <div className="admin-section admin-text-danger">
             <div className="admin-card">
@@ -5466,8 +5328,70 @@ const AdminPanelPro = (): JSX.Element => {
           </div>
         )}
 
+        
+        {/* Sezione Gestione Immagini */}
+        {activeTab === 'gallery' && (
+          <div className="admin-section admin-animate-fade-in">
+            <h2>🖼️ Gestione Immagini Sito</h2>
+            <div className="admin-notice">
+              <p>Inserisci gli URL delle immagini per aggiornare le gallerie del sito pubblico.</p>
+            </div>
+            
+            <div className="admin-pricing-section">
+              <h3>📸 Galleria Principale (Home Page)</h3>
+              <div className="admin-pricing-grid">
+                {[1, 2, 3, 4].map(num => (
+                  <div key={num} className="admin-stat-card">
+                    <h4>Immagine {num}</h4>
+                    <div className="pricing-controls" style={{marginTop: '15px'}}>
+                      <input 
+                        type="url" 
+                        className="admin-input" 
+                        placeholder="https://esempio.com/immagine.jpg"
+                        value={systemSettings.find(s => s.key === `gallery_image_${num}`)?.value || ''}
+                        onChange={(e) => {
+                          const updated = systemSettings.map(s => 
+                            s.key === `gallery_image_${num}` ? { ...s, value: e.target.value } : s
+                          );
+                          // Se non esiste, aggiungilo temporaneamente
+                          if (!updated.find(s => s.key === `gallery_image_${num}`)) {
+                            updated.push({ key: `gallery_image_${num}`, value: e.target.value, category: 'gallery' });
+                          }
+                          setSystemSettings(updated);
+                        }}
+                      />
+                      {systemSettings.find(s => s.key === `gallery_image_${num}`)?.value && (
+                        <div style={{marginTop: '10px', width: '100%', height: '120px', borderRadius: '10px', overflow: 'hidden', backgroundImage: `url(${systemSettings.find(s => s.key === \`gallery_image_${num}\`)?.value})`, backgroundSize: 'cover', backgroundPosition: 'center'}}></div>
+                      )}
+                      <button 
+                        className="admin-btn-primary admin-btn-small" 
+                        style={{marginTop: '15px', width: '100%'}}
+                        onClick={async () => {
+                          try {
+                            const val = systemSettings.find(s => s.key === `gallery_image_${num}`)?.value;
+                            if(val) {
+                              await updateSystemSettingValue(`gallery_image_${num}`, val);
+                              alert('✅ Immagine salvata!');
+                            }
+                          } catch(e) {
+                            alert('❌ Errore');
+                          }
+                        }}
+                      >
+                        💾 Salva URL
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Fine sezioni amministrative */}
-      </main>
+        </div>
+      </div>
+    </AdminLayout>
     </div>
   );
 };
