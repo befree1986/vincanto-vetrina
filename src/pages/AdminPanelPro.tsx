@@ -1,4 +1,4 @@
-﻿/* eslint-disable */
+/* eslint-disable */
 ﻿/* eslint-disable */
 // @ts-nocheck  
 import React, { useState, useEffect } from 'react';
@@ -5361,7 +5361,7 @@ const AdminPanelPro = (): JSX.Element => {
                         }}
                       />
                       {systemSettings.find(s => s.key === `gallery_image_${num}`)?.value && (
-                        <div style={{marginTop: '10px', width: '100%', height: '120px', borderRadius: '10px', overflow: 'hidden', backgroundImage: `url(${systemSettings.find(s => s.key === \`gallery_image_${num}\`)?.value})`, backgroundSize: 'cover', backgroundPosition: 'center'}}></div>
+                        <div style={{marginTop: '10px', width: '100%', height: '120px', borderRadius: '10px', overflow: 'hidden', backgroundImage: `url(${systemSettings.find(s => s.key === "gallery_image_" + num)?.value})`, backgroundSize: 'cover', backgroundPosition: 'center'}}></div>
                       )}
                       <button 
                         className="admin-btn-primary admin-btn-small" 
@@ -5392,7 +5392,6 @@ const AdminPanelPro = (): JSX.Element => {
         </div>
       </div>
     </AdminLayout>
-    </div>
   );
 };
 
