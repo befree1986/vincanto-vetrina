@@ -564,7 +564,7 @@ const AdminPanelBasic = (): JSX.Element => {
   devLog('🎯 Rendering basic admin panel...');
 
   return (
-    <div className="admin-panel-pro" style={{ width: '100%', maxWidth: '100%', margin: 0, minHeight: '100vh' }}>
+    <div className="admin-panel-pro admin-panel-fullheight">
       {/* Header */}
       <header className="admin-header">
         <div className="admin-header-left">
@@ -591,21 +591,21 @@ const AdminPanelBasic = (): JSX.Element => {
           <div className="admin-flex admin-items-center admin-gap-sm">
             {isSuperAdmin() && (
               <button 
-                className="admin-btn admin-btn-info admin-btn-sm"
+                className="admin-btn admin-btn-info admin-btn-sm admin-btn-superadmin-switch"
                 onClick={() => window.location.href = '/admin/pro'}
                 title="Passa al Pannello SuperAdmin"
-                style={{ marginRight: '10px', backgroundColor: '#3498db', color: 'white' }}
               >
                 <span className="admin-hidden-mobile">⚡ SuperAdmin</span>
                 <span className="admin-visible-mobile">⚡</span>
               </button>
             )}
             <button
-              className="admin-btn admin-btn-secondary"
+              className="admin-btn admin-btn-secondary admin-btn-logout"
               onClick={() => {
                 localStorage.removeItem('vincanto_admin_session');
                 localStorage.removeItem('vincanto_admin_token');
                 localStorage.removeItem('vincanto_admin_role');
+                localStorage.removeItem('vincanto_admin_email');
                 window.location.href = '/admin/login';
               }}
             >
@@ -644,9 +644,8 @@ const AdminPanelBasic = (): JSX.Element => {
         </button>
         {isSuperAdmin() && (
           <button
-            className="admin-nav-link"
+            className="admin-nav-link admin-nav-link-superadmin"
             onClick={() => window.location.href = '/admin/pro'}
-            style={{ marginTop: 'auto', borderTop: '1px solid rgba(255,255,255,0.1)', color: '#3498db' }}
           >
             ⚡ Pannello SuperAdmin
           </button>

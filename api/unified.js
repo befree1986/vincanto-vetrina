@@ -18,6 +18,21 @@ const pool = new Pool({
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
+// Session store per admin login 2FA
+const adminSessionStore = new Map();
+const ADMIN_SESSION_TTL_MS = 1000 * 60 * 60 * 8; // 8 ore
+
+const cleanExpiredAdminSessions = () => {
+  const now = Date.now();
+  for (const [token, session] of adminSessionStore.entries()) {
+    if (now - session.createdAt > ADMIN_SESSION_TTL_MS) {
+      adminSessionStore.delete(token);
+    }
+  }
+};
+
+setInterval(cleanExpiredAdminSessions, 1000 * 60 * 15);
+
 // Email transporter configuration
 let emailTransporter = null;
 if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
@@ -705,6 +720,12 @@ export default async function handler(req, res) {
 
       // Genera token di sessione (in produzione usare JWT con scadenza)
       const sessionToken = randomBytes(32).toString('hex');
+      adminSessionStore.set(sessionToken, {
+        userId: user.id,
+        role: user.role,
+        email: user.email,
+        createdAt: Date.now()
+      });
 
       return res.status(200).json({
         success: true,
@@ -1104,11 +1125,21 @@ export default async function handler(req, res) {
         });
       }
 
-      // Se token valido, ritorna il ruolo (il frontend deciderà se superadmin o admin)
+      const session = adminSessionStore.get(token);
+      if (!session) {
+        return res.status(401).json({
+          success: false,
+          role: 'guest',
+          authenticated: false,
+          error: 'Token admin non valido o scaduto'
+        });
+      }
+
       return res.status(200).json({
         success: true,
-        role: 'superadmin', // Da backend sempre superadmin, il frontend gestisce la logica
-        authenticated: true
+        role: session.role,
+        authenticated: true,
+        email: session.email
       });
     }
 

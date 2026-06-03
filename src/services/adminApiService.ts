@@ -30,8 +30,9 @@ class AdminApiService {
 
   constructor() {
     // 🎯 API UNIFICATA - CONFIGURAZIONE CONSOLIDATA
-    this.baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://vincantomaiori.it/api';
-    console.log('🎯 AdminApiService PRODUZIONE API UNIFICATA:', this.baseUrl);
+    // Usa sempre /api come fallback per funzionare correttamente sia in locale che in produzione.
+    this.baseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
+    console.log('🎯 AdminApiService baseUrl:', this.baseUrl);
   }
 
   // Forza la sincronizzazione reale dei calendari (chiama direttamente l'API serverless)

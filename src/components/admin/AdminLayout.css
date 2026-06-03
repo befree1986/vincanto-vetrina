@@ -179,6 +179,13 @@
 }
 
 /* Responsive adjustments */
+
+.admin-btn-switch-basic {
+  background-color: #f39c12;
+  color: white;
+  border: none;
+}
+
 @media (max-width: 768px) {
   .admin-layout {
     grid-template-columns: 1fr;

@@ -50,10 +50,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
           <div className="admin-flex admin-items-center admin-gap-md">
             {isSuperAdmin && (
               <button
-                className="admin-btn admin-btn-info admin-btn-sm"
+                className="admin-btn admin-btn-info admin-btn-sm admin-btn-switch-basic"
                 onClick={() => window.location.href = '/admin'}
                 title="Passa alla Vista Admin Base"
-                style={{ backgroundColor: '#f39c12', color: 'white', border: 'none' }}
               >
                 <span className="admin-hidden-mobile">🔄 Vista Base</span>
                 <span className="admin-visible-mobile">🔄</span>

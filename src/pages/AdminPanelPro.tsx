@@ -2540,12 +2540,13 @@ const AdminPanelPro = (): JSX.Element => {
         localStorage.removeItem('vincanto_admin_session');
         localStorage.removeItem('vincanto_admin_token');
         localStorage.removeItem('vincanto_admin_role');
+        localStorage.removeItem('vincanto_admin_email');
         window.location.href = '/admin/login';
       }}
       isSuperAdmin={isSuperAdmin()}
       adminEmail={localStorage.getItem('vincanto_admin_email') || role || 'Admin'}
     >
-      <div className="admin-panel-pro" style={{ width: '100%', maxWidth: '100%', margin: 0 }}>
+      <div className="admin-panel-pro">
         {/* Contenuto Principale Responsive */}
         <div className="admin-main">
           {error && (
@@ -4465,11 +4466,11 @@ const AdminPanelPro = (): JSX.Element => {
                     .map(setting => (
                       <div key={setting.key} className="admin-stat-card">
                         <h4>{setting.label || setting.key}</h4>
-                        <div className="pricing-controls" style={{ marginTop: '15px' }}>
+                        <div className="pricing-controls">
                           {setting.type === 'textarea' ? (
                             <textarea
-                              className="admin-input"
-                              style={{ minHeight: '100px', width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ddd' }}
+                              className="admin-input admin-textarea"
+                              aria-label={setting.label || setting.key}
                               value={setting.value}
                               onChange={(e) => {
                                 const currentSettings = Array.isArray(systemSettings) ? systemSettings : [];
@@ -4483,7 +4484,7 @@ const AdminPanelPro = (): JSX.Element => {
                             <input
                               type="text"
                               className="admin-input"
-                              style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ddd' }}
+                              aria-label={setting.label || setting.key}
                               value={setting.value}
                               onChange={(e) => {
                                 const currentSettings = Array.isArray(systemSettings) ? systemSettings : [];
@@ -4495,8 +4496,7 @@ const AdminPanelPro = (): JSX.Element => {
                             />
                           )}
                           <button
-                            className="admin-btn-primary admin-btn-small"
-                            style={{ marginTop: '15px', width: '100%' }}
+                            className="admin-btn-primary admin-btn-small admin-btn-fullwidth"
                             onClick={async () => {
                               try {
                                 await updateSystemSettingValue(setting.key, setting.value);
@@ -4526,12 +4526,15 @@ const AdminPanelPro = (): JSX.Element => {
                     .map(setting => (
                       <div key={setting.key} className="admin-stat-card">
                         <h4>{setting.label || setting.key}</h4>
-                        <div className="pricing-controls" style={{ marginTop: '15px' }}>
+                        <div className="pricing-controls">
                           <div className="admin-flex admin-items-center admin-gap-sm">
-                            <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>€</span>
+                            <span className="admin-price-symbol">€</span>
                             <input
                               type="text"
                               className="admin-input"
+                              aria-label={setting.label || setting.key}
+                              title={setting.label || setting.key}
+                              placeholder={setting.label || setting.key}
                               value={setting.value}
                               onChange={(e) => {
                                 const currentSettings = Array.isArray(systemSettings) ? systemSettings : [];
@@ -4543,8 +4546,7 @@ const AdminPanelPro = (): JSX.Element => {
                             />
                           </div>
                           <button
-                            className="admin-btn-primary admin-btn-small"
-                            style={{ marginTop: '15px', width: '100%' }}
+                            className="admin-btn-primary admin-btn-small admin-btn-fullwidth"
                             onClick={async () => {
                               try {
                                 await updateSystemSettingValue(setting.key, setting.value);
@@ -5486,7 +5488,7 @@ const AdminPanelPro = (): JSX.Element => {
                   {[1, 2, 3, 4].map(num => (
                     <div key={num} className="admin-stat-card">
                       <h4>Immagine {num}</h4>
-                      <div className="pricing-controls" style={{ marginTop: '15px' }}>
+                      <div className="pricing-controls">
                         <input
                           type="url"
                           className="admin-input"
@@ -5507,12 +5509,15 @@ const AdminPanelPro = (): JSX.Element => {
                         {(() => {
                           const imgUrl = (Array.isArray(systemSettings) ? systemSettings : []).find(s => s.key === `gallery_image_${num}`)?.value;
                           return imgUrl ? (
-                            <div style={{ marginTop: '10px', width: '100%', height: '120px', borderRadius: '10px', overflow: 'hidden', backgroundImage: `url(${imgUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }}></div>
+                            <img
+                              className="admin-gallery-image-preview"
+                              src={imgUrl}
+                              alt={`Anteprima immagine ${num}`}
+                            />
                           ) : null;
                         })()}
                         <button
-                          className="admin-btn-primary admin-btn-small"
-                          style={{ marginTop: '15px', width: '100%' }}
+                          className="admin-btn-primary admin-btn-small admin-btn-fullwidth"
                           onClick={async () => {
                             try {
                               const val = (Array.isArray(systemSettings) ? systemSettings : []).find(s => s.key === `gallery_image_${num}`)?.value;
