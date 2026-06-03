@@ -2475,21 +2475,21 @@ const AdminPanelPro = (): JSX.Element => {
   // }, [isAuthenticated]);
 
   // === RENDER LOGIN ===
-  // === RENDER SUPERADMIN GUARD ===
-  if (!roleLoading && !isSuperAdmin()) {
+  // === RENDER ADMIN GUARD (Permette accesso sia a Admin che SuperAdmin) ===
+  if (!roleLoading && !isAdmin()) {
     return (
       <div className="admin-access-denied-container">
         <div className="admin-access-denied-card">
           <h1 className="admin-access-denied-icon">🔐</h1>
           <h2 className="admin-access-denied-title">Accesso Negato</h2>
           <p className="admin-access-denied-text">
-            Questo pannello ├¿ riservato ai <strong>SuperAdmin</strong>.
+            Questo pannello richiede i diritti di <strong>amministratore</strong>.
           </p>
           <p className="admin-access-denied-role">
             Ruolo attuale: <strong>{role || 'Non disponibile'}</strong>
           </p>
           <p className="admin-access-denied-hint">
-            Contatta l'amministratore del sistema per ottenere i diritti necessari.
+            Contatta il SuperAdmin per ottenere i diritti necessari.
           </p>
         </div>
       </div>
@@ -2545,7 +2545,7 @@ const AdminPanelPro = (): JSX.Element => {
       isSuperAdmin={isSuperAdmin()}
       adminEmail={localStorage.getItem('vincanto_admin_email') || role || 'Admin'}
     >
-      <div className="admin-panel-pro admin-container">
+      <div className="admin-panel-pro">
         {/* Contenuto Principale Responsive */}
         <div className="admin-main">
           {error && (
@@ -4460,7 +4460,7 @@ const AdminPanelPro = (): JSX.Element => {
               <div className="admin-pricing-section">
                 <h3>🏠 Testi Principali e Hero</h3>
                 <div className="admin-pricing-grid">
-                  {systemSettings
+                  {(Array.isArray(systemSettings) ? systemSettings : [])
                     .filter(s => ['home', 'about', 'general'].includes(s.category))
                     .map(setting => (
                       <div key={setting.key} className="admin-stat-card">
@@ -4519,7 +4519,7 @@ const AdminPanelPro = (): JSX.Element => {
                   Per cambiare il costo REALE calcolato dal sistema di prenotazione, usa la tab <strong>"Prezzi"</strong>.
                 </div>
                 <div className="admin-pricing-grid">
-                  {systemSettings
+                  {(Array.isArray(systemSettings) ? systemSettings : [])
                     .filter(s => s.category === 'pricing_display')
                     .map(setting => (
                       <div key={setting.key} className="admin-stat-card">
@@ -4842,7 +4842,7 @@ const AdminPanelPro = (): JSX.Element => {
                   <div className="admin-pricing-card">
                     <h4>📊 Statistiche Sistema</h4>
                     <div className="pricing-controls">
-                      {systemSettings.length > 0 ? (
+                      {Array.isArray(systemSettings) && systemSettings.length > 0 ? (
                         systemSettings.map((setting) => (
                           <div key={setting.id || setting.key} className="setting-row">
                             <label>{setting.label || setting.key}:</label>

@@ -18,12 +18,11 @@ import AdminApiService from '../services/adminApiService';
  */
 const AdminPanelBasic = (): JSX.Element => {
   devLog('🚀 AdminPanelBasic component rendering...');
-  
-  const { role, isLoading: roleLoading, isAdmin } = useAdminRole();
-  
+
+  const { role, isLoading: roleLoading, isAdmin, isSuperAdmin } = useAdminRole();
   // Tab navigation
   const [activeTab, setActiveTab] = useState('dashboard');
-  
+
   // Data states
   const [dashboardStats, setDashboardStats] = useState<any>({});
   const [realBookings, setRealBookings] = useState<any[]>([]);
@@ -36,7 +35,7 @@ const AdminPanelBasic = (): JSX.Element => {
   const [paymentTransactions, setPaymentTransactions] = useState<any[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [isLoadingCalendar, setIsLoadingCalendar] = useState(false);
-  
+
   // Stati per Calendario Visuale
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
@@ -72,7 +71,7 @@ const AdminPanelBasic = (): JSX.Element => {
       return null;
     }
   });
-  
+
   // Load real API data
   const loadRealApiData = async () => {
     if (!adminApiService) {
@@ -83,7 +82,7 @@ const AdminPanelBasic = (): JSX.Element => {
     setIsLoadingData(true);
     try {
       log('📄 Caricamento dati API...');
-      
+
       const [stats, bookings, calendarBookings, settings, analyticsData, notifs, transactions, blocks, services] = await Promise.allSettled([
         adminApiService.getDashboardStats(),
         adminApiService.getBookings(),
@@ -132,9 +131,9 @@ const AdminPanelBasic = (): JSX.Element => {
           paymentType: paymentType
         })
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         alert('✅ Pagamento confermato con successo!');
         await loadRealApiData();
@@ -173,7 +172,7 @@ const AdminPanelBasic = (): JSX.Element => {
     } else if (booking.deposit_amount && booking.deposit_amount < booking.total_amount) {
       type = 'deposit';
     }
-    
+
     if (!confirm(`📧 Inviare email di promemoria pagamento (${type === 'balance' ? 'Saldo' : type === 'deposit' ? 'Acconto' : 'Totale'}) a ${booking.customer_name}?`)) {
       return;
     }
@@ -187,7 +186,7 @@ const AdminPanelBasic = (): JSX.Element => {
       });
       const result = await response.json();
       alert(result.success ? '✅ Email di promemoria inviata con successo!' : '❌ Errore: ' + result.error);
-    } catch (error) { alert('❌ Errore di comunicazione'); } 
+    } catch (error) { alert('❌ Errore di comunicazione'); }
     finally { setIsLoadingData(false); }
   };
 
@@ -205,9 +204,9 @@ const AdminPanelBasic = (): JSX.Element => {
           reason: reason
         })
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         alert('✅ Prenotazione annullata e date liberate dal calendario!');
         await loadRealApiData();
@@ -231,11 +230,11 @@ const AdminPanelBasic = (): JSX.Element => {
     }
     try {
       setIsLoadingData(true);
-      
+
       // Determina se è creazione o modifica
       const isEdit = !!manualBooking.id;
       const method = isEdit ? 'PUT' : 'POST';
-      
+
       // Calcola costi extra per il breakdown
       const extraServicesCost = manualBooking.selected_services.reduce((sum, s) => sum + parseFloat(s.price), 0);
       // Per le manuali, assumiamo che il resto sia soggiorno base (o 0 se non specificato)
@@ -324,15 +323,15 @@ const AdminPanelBasic = (): JSX.Element => {
 
   const toggleService = (service: any) => {
     const isSelected = manualBooking.selected_services.find(s => s.id === service.id);
-    let newServices = isSelected 
+    let newServices = isSelected
       ? manualBooking.selected_services.filter(s => s.id !== service.id)
       : [...manualBooking.selected_services, service];
-    
+
     // Aggiorna totale (opzionale, ma utile)
     const servicesTotal = newServices.reduce((sum, s) => sum + parseFloat(s.price), 0);
     // Nota: qui non sommiamo al totale base perché l'utente può volerlo modificare manualmente
     // Ma potremmo suggerire un aggiornamento
-    
+
     setManualBooking({ ...manualBooking, selected_services: newServices });
   };
 
@@ -344,10 +343,10 @@ const AdminPanelBasic = (): JSX.Element => {
     }
     try {
       setIsLoadingData(true);
-      
+
       // Determina se è una creazione (POST) o modifica (PUT)
       const method = editingBlockId ? 'PUT' : 'POST';
-      const body = editingBlockId 
+      const body = editingBlockId
         ? { ...blockDate, id: editingBlockId }
         : blockDate;
 
@@ -376,7 +375,7 @@ const AdminPanelBasic = (): JSX.Element => {
   // 🔧 FIX: Funzione diretta per eliminare date bloccate
   const handleDeleteBlockedDate = async (id: string) => {
     if (!confirm('⚠️ Rimuovere il blocco per queste date?')) return;
-    
+
     try {
       setIsLoadingData(true);
       const response = await fetch('/api/unified?action=blocked-dates', {
@@ -471,7 +470,7 @@ const AdminPanelBasic = (): JSX.Element => {
           {daysArray.map(day => {
             const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
             const dateStr = date.toISOString().split('T')[0];
-            
+
             // Trova eventi per questo giorno
             const dayEvents = allEvents.filter(ev => {
               const start = ev.start;
@@ -486,7 +485,7 @@ const AdminPanelBasic = (): JSX.Element => {
                 {dayEvents.map((ev, idx) => {
                   const isStart = ev.start.getTime() === date.getTime();
                   const isEnd = ev.end.getTime() === date.getTime();
-                  
+
                   let eventClass = 'calendar-event';
                   if (ev.type === 'booking') eventClass += ' event-booking';
                   if (ev.type === 'external') eventClass += ' event-external';
@@ -496,7 +495,7 @@ const AdminPanelBasic = (): JSX.Element => {
 
                   // Non mostrare se è solo checkout e non checkin (per evitare confusione visiva, o gestiscilo come preferisci)
                   // Qui mostriamo tutto per chiarezza "Occupato"
-                  
+
                   return (
                     <div key={idx} className={eventClass} title={`${ev.customer_name} (${getPlatformLabel(ev.platform)})`}>
                       <div className="event-info">
@@ -563,23 +562,23 @@ const AdminPanelBasic = (): JSX.Element => {
 
   // === RENDER MAIN PANEL ===
   devLog('🎯 Rendering basic admin panel...');
-  
+
   return (
-    <div className="admin-panel-pro admin-container">
+    <div className="admin-panel-pro">
       {/* Header */}
       <header className="admin-header">
         <div className="admin-header-left">
           <h1>⚙️ Pannello Amministratore</h1>
           <span className="admin-version admin-badge admin-badge-info">v2.0</span>
         </div>
-        
+
         <div className="admin-header-actions">
           <div className="admin-flex admin-items-center admin-gap-md">
             {/* Indicatore Status */}
             <div className="admin-badge admin-badge-success">
               ✅ Online
             </div>
-            
+
             {/* User Info */}
             <div className="admin-flex admin-items-center admin-gap-sm">
               <span className="admin-text-muted admin-hidden-mobile">👤 Amministratore</span>
@@ -588,22 +587,12 @@ const AdminPanelBasic = (): JSX.Element => {
               </div>
             </div>
           </div>
-          
+
           <div className="admin-flex admin-items-center admin-gap-sm">
-            {role === 'superadmin' && (
-              <button 
-                className="admin-btn admin-btn-info admin-btn-sm"
-                onClick={() => window.location.href = '/admin'}
-                title="Torna al pannello SuperAdmin"
-              >
-                <span className="admin-hidden-mobile">⚡ SuperAdmin</span>
-                <span className="admin-visible-mobile">⚡</span>
-              </button>
-            )}
-            
-            <button 
+            <button
               className="admin-btn admin-btn-secondary"
               onClick={() => {
+                localStorage.removeItem('vincanto_admin_session');
                 localStorage.removeItem('vincanto_admin_token');
                 localStorage.removeItem('vincanto_admin_role');
                 window.location.href = '/admin/login';
@@ -618,30 +607,39 @@ const AdminPanelBasic = (): JSX.Element => {
 
       {/* Navigation Tabs */}
       <nav className="admin-nav">
-        <button 
+        <button
           className={`admin-nav-link ${activeTab === 'dashboard' ? 'active' : ''}`}
           onClick={() => setActiveTab('dashboard')}
         >
           📊 Dashboard
         </button>
-        <button 
+        <button
           className={`admin-nav-link ${activeTab === 'prenotazioni' ? 'active' : ''}`}
           onClick={() => setActiveTab('prenotazioni')}
         >
           📅 Prenotazioni
         </button>
-        <button 
+        <button
           className={`admin-nav-link ${activeTab === 'calendari' ? 'active' : ''}`}
           onClick={() => setActiveTab('calendari')}
         >
           📆 Calendari
         </button>
-        <button 
+        <button
           className={`admin-nav-link ${activeTab === 'servizi' ? 'active' : ''}`}
           onClick={() => setActiveTab('servizi')}
         >
           🛎️ Servizi Extra
         </button>
+        {isSuperAdmin() && (
+          <button
+            className="admin-nav-link"
+            onClick={() => window.location.href = '/admin/pro'}
+            style={{ marginTop: 'auto', borderTop: '1px solid rgba(255,255,255,0.1)', color: '#3498db', fontWeight: 'bold' }}
+          >
+            ⚡ Pannello SuperAdmin
+          </button>
+        )}
       </nav>
 
       {/* Main Content */}
@@ -663,7 +661,7 @@ const AdminPanelBasic = (): JSX.Element => {
               loadCalendarData={loadCalendarData}
               setActiveTab={setActiveTab}
             />
-            
+
             {/* Calendario aggiunto anche nella Dashboard */}
             <div className="admin-pricing-section admin-mt-20">
               <h3>📅 Calendario Occupazioni</h3>
@@ -679,7 +677,7 @@ const AdminPanelBasic = (): JSX.Element => {
         {activeTab === 'prenotazioni' && (
           <div className="admin-prenotazioni">
             <h2>📅 Gestione Prenotazioni {isLoadingData && '(Caricamento...)'}</h2>
-            
+
             {/* SEZIONE AZIONI RAPIDE: NUOVA PRENOTAZIONE E BLOCCO DATE */}
             <div className="admin-forms-container">
               {/* Card Nuova Prenotazione */}
@@ -694,26 +692,26 @@ const AdminPanelBasic = (): JSX.Element => {
                 {showManualForm && (
                   <form onSubmit={handleCreateManualBooking}>
                     <div className="form-group admin-grid-2-col">
-                      <div><label htmlFor="manual_first_name">Nome:</label><input id="manual_first_name" type="text" className="admin-input" value={manualBooking.first_name} onChange={e => setManualBooking({...manualBooking, first_name: e.target.value})} required /></div>
-                      <div><label htmlFor="manual_last_name">Cognome:</label><input id="manual_last_name" type="text" className="admin-input" value={manualBooking.last_name} onChange={e => setManualBooking({...manualBooking, last_name: e.target.value})} required /></div>
+                      <div><label htmlFor="manual_first_name">Nome:</label><input id="manual_first_name" type="text" className="admin-input" value={manualBooking.first_name} onChange={e => setManualBooking({ ...manualBooking, first_name: e.target.value })} required /></div>
+                      <div><label htmlFor="manual_last_name">Cognome:</label><input id="manual_last_name" type="text" className="admin-input" value={manualBooking.last_name} onChange={e => setManualBooking({ ...manualBooking, last_name: e.target.value })} required /></div>
                     </div>
                     <div className="form-group admin-grid-2-col">
-                      <div><label htmlFor="manual_email">Email:</label><input id="manual_email" type="email" className="admin-input" value={manualBooking.customer_email} onChange={e => setManualBooking({...manualBooking, customer_email: e.target.value})} /></div>
-                      <div><label htmlFor="manual_phone">Telefono:</label><input id="manual_phone" type="text" className="admin-input" value={manualBooking.phone} onChange={e => setManualBooking({...manualBooking, phone: e.target.value})} /></div>
+                      <div><label htmlFor="manual_email">Email:</label><input id="manual_email" type="email" className="admin-input" value={manualBooking.customer_email} onChange={e => setManualBooking({ ...manualBooking, customer_email: e.target.value })} /></div>
+                      <div><label htmlFor="manual_phone">Telefono:</label><input id="manual_phone" type="text" className="admin-input" value={manualBooking.phone} onChange={e => setManualBooking({ ...manualBooking, phone: e.target.value })} /></div>
                     </div>
                     <div className="form-group admin-grid-2-col">
-                      <div><label htmlFor="manual_check_in">Check-in:</label><input id="manual_check_in" type="date" className="admin-input" value={manualBooking.check_in} onChange={e => setManualBooking({...manualBooking, check_in: e.target.value})} required /></div>
-                      <div><label htmlFor="manual_check_out">Check-out:</label><input id="manual_check_out" type="date" className="admin-input" value={manualBooking.check_out} onChange={e => setManualBooking({...manualBooking, check_out: e.target.value})} required /></div>
+                      <div><label htmlFor="manual_check_in">Check-in:</label><input id="manual_check_in" type="date" className="admin-input" value={manualBooking.check_in} onChange={e => setManualBooking({ ...manualBooking, check_in: e.target.value })} required /></div>
+                      <div><label htmlFor="manual_check_out">Check-out:</label><input id="manual_check_out" type="date" className="admin-input" value={manualBooking.check_out} onChange={e => setManualBooking({ ...manualBooking, check_out: e.target.value })} required /></div>
                     </div>
-                    
+
                     {/* Servizi Extra */}
                     <div className="form-group">
                       <label>Servizi Extra:</label>
                       <div className="admin-services-grid">
                         {extraServices.map(service => (
                           <label key={service.id} className="admin-service-label">
-                            <input 
-                              type="checkbox" 
+                            <input
+                              type="checkbox"
                               checked={!!manualBooking.selected_services.find(s => s.id === service.id)}
                               onChange={() => toggleService(service)}
                               className="admin-service-checkbox"
@@ -725,14 +723,14 @@ const AdminPanelBasic = (): JSX.Element => {
                     </div>
 
                     <div className="form-group admin-grid-2-col">
-                      <div><label htmlFor="manual_guests">Ospiti:</label><input id="manual_guests" type="number" className="admin-input" value={manualBooking.guests} onChange={e => setManualBooking({...manualBooking, guests: parseInt(e.target.value)})} min="1" /></div>
-                      <div><label htmlFor="manual_total_amount">Totale (€):</label><input id="manual_total_amount" type="number" className="admin-input" value={manualBooking.total_amount} onChange={e => setManualBooking({...manualBooking, total_amount: parseFloat(e.target.value)})} /></div>
+                      <div><label htmlFor="manual_guests">Ospiti:</label><input id="manual_guests" type="number" className="admin-input" value={manualBooking.guests} onChange={e => setManualBooking({ ...manualBooking, guests: parseInt(e.target.value) })} min="1" /></div>
+                      <div><label htmlFor="manual_total_amount">Totale (€):</label><input id="manual_total_amount" type="number" className="admin-input" value={manualBooking.total_amount} onChange={e => setManualBooking({ ...manualBooking, total_amount: parseFloat(e.target.value) })} /></div>
                     </div>
-                    
+
                     <div className="form-group admin-grid-2-col">
                       <div>
                         <label htmlFor="manual_payment_method">Metodo Pagamento:</label>
-                        <select id="manual_payment_method" className="admin-input" value={manualBooking.payment_method} onChange={e => setManualBooking({...manualBooking, payment_method: e.target.value})}>
+                        <select id="manual_payment_method" className="admin-input" value={manualBooking.payment_method} onChange={e => setManualBooking({ ...manualBooking, payment_method: e.target.value })}>
                           <option value="bank_transfer">Bonifico</option>
                           <option value="cash">Contanti</option>
                           <option value="pos">POS / Carta</option>
@@ -740,7 +738,7 @@ const AdminPanelBasic = (): JSX.Element => {
                       </div>
                       <div>
                         <label htmlFor="manual_payment_type">Tipo Pagamento:</label>
-                        <select id="manual_payment_type" className="admin-input" value={manualBooking.payment_type} onChange={e => setManualBooking({...manualBooking, payment_type: e.target.value})}>
+                        <select id="manual_payment_type" className="admin-input" value={manualBooking.payment_type} onChange={e => setManualBooking({ ...manualBooking, payment_type: e.target.value })}>
                           <option value="deposit">Acconto (20%)</option>
                           <option value="full">Saldo Completo</option>
                         </select>
@@ -758,18 +756,18 @@ const AdminPanelBasic = (): JSX.Element => {
                   <h3>{editingBlockId ? '✏️ Modifica Blocco' : '🚫 Blocca/Chiudi Date'}</h3>
                   <button className="admin-btn-small" onClick={() => {
                     setShowBlockForm(!showBlockForm);
-                    if(showBlockForm) { setEditingBlockId(null); setBlockDate({ start_date: '', end_date: '', reason: 'maintenance' }); }
+                    if (showBlockForm) { setEditingBlockId(null); setBlockDate({ start_date: '', end_date: '', reason: 'maintenance' }); }
                   }}>{showBlockForm ? 'Chiudi' : 'Apri'}</button>
                 </div>
                 {showBlockForm && (
                   <form onSubmit={handleBlockDates}>
                     <div className="form-group admin-grid-2-col">
-                      <div><label htmlFor="block_start_date">Dal:</label><input id="block_start_date" type="date" className="admin-input" value={blockDate.start_date} onChange={e => setBlockDate({...blockDate, start_date: e.target.value})} required /></div>
-                      <div><label htmlFor="block_end_date">Al:</label><input id="block_end_date" type="date" className="admin-input" value={blockDate.end_date} onChange={e => setBlockDate({...blockDate, end_date: e.target.value})} required /></div>
+                      <div><label htmlFor="block_start_date">Dal:</label><input id="block_start_date" type="date" className="admin-input" value={blockDate.start_date} onChange={e => setBlockDate({ ...blockDate, start_date: e.target.value })} required /></div>
+                      <div><label htmlFor="block_end_date">Al:</label><input id="block_end_date" type="date" className="admin-input" value={blockDate.end_date} onChange={e => setBlockDate({ ...blockDate, end_date: e.target.value })} required /></div>
                     </div>
                     <div className="form-group">
                       <label htmlFor="block_reason">Motivo:</label>
-                      <select id="block_reason" className="admin-input" value={blockDate.reason} onChange={e => setBlockDate({...blockDate, reason: e.target.value})}>
+                      <select id="block_reason" className="admin-input" value={blockDate.reason} onChange={e => setBlockDate({ ...blockDate, reason: e.target.value })}>
                         <option value="maintenance">Manutenzione</option>
                         <option value="closed">Chiusura Stagionale</option>
                         <option value="private">Uso Privato</option>
@@ -785,8 +783,8 @@ const AdminPanelBasic = (): JSX.Element => {
             <div className="admin-pricing-section">
               <div className="admin-flex-between margin-bottom">
                 <h3>📥 Prenotazioni Attive</h3>
-                <button 
-                  className="admin-btn-secondary" 
+                <button
+                  className="admin-btn-secondary"
                   onClick={loadRealApiData}
                 >
                   🔄 Ricarica Dati
@@ -799,6 +797,7 @@ const AdminPanelBasic = (): JSX.Element => {
                       <tr>
                         <th>ID</th>
                         <th>Cliente</th>
+                        <th>Email</th>
                         <th>Check-in</th>
                         <th>Check-out</th>
                         <th>Ospiti</th>
@@ -909,10 +908,10 @@ const AdminPanelBasic = (): JSX.Element => {
         {activeTab === 'calendari' && (
           <div className="admin-calendari">
             <h2>📋 Gestione Calendari {isLoadingCalendar && '(Caricamento...)'}</h2>
-            
+
             <div className="admin-pricing-actions margin-bottom">
-              <button 
-                className="admin-btn-primary" 
+              <button
+                className="admin-btn-primary"
                 onClick={loadCalendarData}
               >
                 🔄 Ricarica Calendari
@@ -920,7 +919,7 @@ const AdminPanelBasic = (): JSX.Element => {
             </div>
 
             <div className="admin-pricing-section">
-              <h3> Calendario Occupazioni</h3>
+              <h3>📅 Calendario Occupazioni</h3>
               <p className="admin-section-description">
                 Visualizza tutte le occupazioni: prenotazioni dal sito (blu), calendari esterni (viola) e date chiuse manualmente (rosso).
               </p>
@@ -936,7 +935,7 @@ const AdminPanelBasic = (): JSX.Element => {
             <p className="admin-section-description">
               Modifica e configura i servizi aggiuntivi disponibili per gli ospiti.
             </p>
-            
+
             <ExtraServicesAdmin />
           </div>
         )}

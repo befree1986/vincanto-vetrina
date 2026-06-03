@@ -36,6 +36,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
     { id: 'contenuti', label: '📝 Contenuti Sito', requiresSuperAdmin: false },
     { id: 'admin-management', label: '👥 Gestione Admin', requiresSuperAdmin: true },
     { id: 'sistema', label: '⚙️ Sistema', requiresSuperAdmin: true },
+    { id: 'switch-basic', label: '🔄 Vista Admin Base', requiresSuperAdmin: true },
   ];
 
   return (
@@ -70,7 +71,13 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
             <button
               key={tab.id}
               className={tabClassName}
-              onClick={() => !isDisabled && setActiveTab(tab.id)}
+              onClick={() => {
+                if (tab.id === 'switch-basic') {
+                  window.location.href = '/admin';
+                  return;
+                }
+                !isDisabled && setActiveTab(tab.id);
+              }}
               title={isDisabled ? 'Accesso riservato al SuperAdmin' : tab.label}
               disabled={isDisabled}
             >
