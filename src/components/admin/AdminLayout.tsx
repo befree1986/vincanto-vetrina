@@ -48,6 +48,17 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
         </div>
         <div className="admin-header-actions">
           <div className="admin-flex admin-items-center admin-gap-md">
+            {isSuperAdmin && (
+              <button
+                className="admin-btn admin-btn-info admin-btn-sm"
+                onClick={() => window.location.href = '/admin'}
+                title="Passa alla Vista Admin Base"
+                style={{ backgroundColor: '#f39c12', color: 'white', border: 'none' }}
+              >
+                <span className="admin-hidden-mobile">🔄 Vista Base</span>
+                <span className="admin-visible-mobile">🔄</span>
+              </button>
+            )}
             <div className="admin-badge admin-badge-success">✅ Online</div>
             <div className="admin-flex admin-items-center admin-gap-sm">
               <span className="admin-text-muted admin-hidden-mobile">👤 {adminEmail}</span>

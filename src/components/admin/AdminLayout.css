@@ -1,5 +1,13 @@
 /* AdminLayout.css */
 
+.admin-layout, .admin-panel-pro {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  margin-left: calc(-50vw + 50%) !important;
+  margin-right: calc(-50vw + 50%) !important;
+  position: relative;
+}
+
 .admin-layout {
   display: grid;
   grid-template-columns: 220px 1fr;

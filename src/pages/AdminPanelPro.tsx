@@ -4858,7 +4858,8 @@ const AdminPanelPro = (): JSX.Element => {
                                 className="admin-input"
                                 onChange={async (e) => {
                                   // Aggiorna immediatamente il valore locale
-                                  const updatedSettings = systemSettings.map(s =>
+                                  const currentSettings = Array.isArray(systemSettings) ? systemSettings : [];
+                                  const updatedSettings = currentSettings.map(s =>
                                     s.key === setting.key ? { ...s, value: e.target.value } : s
                                   );
                                   setSystemSettings(updatedSettings);
@@ -4943,7 +4944,7 @@ const AdminPanelPro = (): JSX.Element => {
                         onClick={async () => {
                           try {
                             // Salva tutte le impostazioni in batch
-                            const savePromises = systemSettings.map(setting =>
+                            const savePromises = (Array.isArray(systemSettings) ? systemSettings : []).map(setting =>
                               updateSystemSettingValue(setting.key, setting.value)
                             );
                             await Promise.all(savePromises);
