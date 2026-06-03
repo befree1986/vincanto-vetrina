@@ -564,7 +564,7 @@ const AdminPanelBasic = (): JSX.Element => {
   devLog('🎯 Rendering basic admin panel...');
 
   return (
-    <div className="admin-panel-pro" style={{ maxWidth: '100%', width: '100%', margin: 0 }}>
+    <div className="admin-panel-pro" style={{ width: '100vw', maxWidth: '100%', margin: 0, minHeight: '100vh' }}>
       {/* Header */}
       <header className="admin-header">
         <div className="admin-header-left">
@@ -635,7 +635,7 @@ const AdminPanelBasic = (): JSX.Element => {
           <button
             className="admin-nav-link"
             onClick={() => window.location.href = '/admin/pro'}
-            style={{ marginTop: 'auto', borderTop: '1px solid rgba(255,255,255,0.1)', color: '#3498db', fontWeight: 'bold' }}
+            style={{ marginTop: 'auto', borderTop: '1px solid rgba(255,255,255,0.1)', color: '#3498db' }}
           >
             ⚡ Pannello SuperAdmin
           </button>
@@ -919,7 +919,7 @@ const AdminPanelBasic = (): JSX.Element => {
             </div>
 
             <div className="admin-pricing-section">
-              <h3>📅 Calendario Occupazioni</h3>
+              <h3> Calendario Occupazioni</h3>
               <p className="admin-section-description">
                 Visualizza tutte le occupazioni: prenotazioni dal sito (blu), calendari esterni (viola) e date chiuse manualmente (rosso).
               </p>
