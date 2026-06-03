@@ -2475,21 +2475,21 @@ const AdminPanelPro = (): JSX.Element => {
   // }, [isAuthenticated]);
 
   // === RENDER LOGIN ===
-  // === RENDER ADMIN GUARD (Permette accesso sia a Admin che SuperAdmin) ===
-  if (!roleLoading && !isAdmin()) {
+  // === RENDER SUPERADMIN GUARD ===
+  if (!roleLoading && !isSuperAdmin()) {
     return (
       <div className="admin-access-denied-container">
         <div className="admin-access-denied-card">
           <h1 className="admin-access-denied-icon">🔐</h1>
           <h2 className="admin-access-denied-title">Accesso Negato</h2>
           <p className="admin-access-denied-text">
-            Questo pannello richiede i diritti di <strong>amministratore</strong>.
+            Questo pannello ├¿ riservato ai <strong>SuperAdmin</strong>.
           </p>
           <p className="admin-access-denied-role">
             Ruolo attuale: <strong>{role || 'Non disponibile'}</strong>
           </p>
           <p className="admin-access-denied-hint">
-            Contatta il SuperAdmin per ottenere i diritti necessari.
+            Contatta l'amministratore del sistema per ottenere i diritti necessari.
           </p>
         </div>
       </div>
@@ -2545,7 +2545,7 @@ const AdminPanelPro = (): JSX.Element => {
       isSuperAdmin={isSuperAdmin()}
       adminEmail={localStorage.getItem('vincanto_admin_email') || role || 'Admin'}
     >
-      <div className="admin-panel-pro">
+      <div className="admin-panel-pro" style={{ width: '100%', maxWidth: '100%', margin: 0 }}>
         {/* Contenuto Principale Responsive */}
         <div className="admin-main">
           {error && (
@@ -4472,7 +4472,8 @@ const AdminPanelPro = (): JSX.Element => {
                               style={{ minHeight: '100px', width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ddd' }}
                               value={setting.value}
                               onChange={(e) => {
-                                const updated = systemSettings.map(s =>
+                                const currentSettings = Array.isArray(systemSettings) ? systemSettings : [];
+                                const updated = currentSettings.map(s =>
                                   s.key === setting.key ? { ...s, value: e.target.value } : s
                                 );
                                 setSystemSettings(updated);
@@ -4485,7 +4486,8 @@ const AdminPanelPro = (): JSX.Element => {
                               style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ddd' }}
                               value={setting.value}
                               onChange={(e) => {
-                                const updated = systemSettings.map(s =>
+                                const currentSettings = Array.isArray(systemSettings) ? systemSettings : [];
+                                const updated = currentSettings.map(s =>
                                   s.key === setting.key ? { ...s, value: e.target.value } : s
                                 );
                                 setSystemSettings(updated);
@@ -4532,7 +4534,8 @@ const AdminPanelPro = (): JSX.Element => {
                               className="admin-input"
                               value={setting.value}
                               onChange={(e) => {
-                                const updated = systemSettings.map(s =>
+                                const currentSettings = Array.isArray(systemSettings) ? systemSettings : [];
+                                const updated = currentSettings.map(s =>
                                   s.key === setting.key ? { ...s, value: e.target.value } : s
                                 );
                                 setSystemSettings(updated);
@@ -4842,7 +4845,7 @@ const AdminPanelPro = (): JSX.Element => {
                   <div className="admin-pricing-card">
                     <h4>📊 Statistiche Sistema</h4>
                     <div className="pricing-controls">
-                      {Array.isArray(systemSettings) && systemSettings.length > 0 ? (
+                      {systemSettings.length > 0 ? (
                         systemSettings.map((setting) => (
                           <div key={setting.id || setting.key} className="setting-row">
                             <label>{setting.label || setting.key}:</label>
@@ -5487,9 +5490,10 @@ const AdminPanelPro = (): JSX.Element => {
                           type="url"
                           className="admin-input"
                           placeholder="https://esempio.com/immagine.jpg"
-                          value={systemSettings.find(s => s.key === `gallery_image_${num}`)?.value || ''}
+                          value={(Array.isArray(systemSettings) ? systemSettings : []).find(s => s.key === `gallery_image_${num}`)?.value || ''}
                           onChange={(e) => {
-                            const updated = systemSettings.map(s =>
+                            const currentSettings = Array.isArray(systemSettings) ? systemSettings : [];
+                            const updated = currentSettings.map(s =>
                               s.key === `gallery_image_${num}` ? { ...s, value: e.target.value } : s
                             );
                             // Se non esiste, aggiungilo temporaneamente
@@ -5499,15 +5503,18 @@ const AdminPanelPro = (): JSX.Element => {
                             setSystemSettings(updated);
                           }}
                         />
-                        {systemSettings.find(s => s.key === `gallery_image_${num}`)?.value && (
-                          <div style={{ marginTop: '10px', width: '100%', height: '120px', borderRadius: '10px', overflow: 'hidden', backgroundImage: `url(${systemSettings.find(s => s.key === "gallery_image_" + num)?.value})`, backgroundSize: 'cover', backgroundPosition: 'center' }}></div>
-                        )}
+                        {(() => {
+                          const imgUrl = (Array.isArray(systemSettings) ? systemSettings : []).find(s => s.key === `gallery_image_${num}`)?.value;
+                          return imgUrl ? (
+                            <div style={{ marginTop: '10px', width: '100%', height: '120px', borderRadius: '10px', overflow: 'hidden', backgroundImage: `url(${imgUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }}></div>
+                          ) : null;
+                        })()}
                         <button
                           className="admin-btn-primary admin-btn-small"
                           style={{ marginTop: '15px', width: '100%' }}
                           onClick={async () => {
                             try {
-                              const val = systemSettings.find(s => s.key === `gallery_image_${num}`)?.value;
+                              const val = (Array.isArray(systemSettings) ? systemSettings : []).find(s => s.key === `gallery_image_${num}`)?.value;
                               if (val) {
                                 await updateSystemSettingValue(`gallery_image_${num}`, val);
                                 alert('✅ Immagine salvata!');
