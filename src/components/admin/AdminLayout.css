@@ -101,6 +101,13 @@
   padding: 30px;
   overflow-y: auto;
   /* Permette lo scroll del contenuto */
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-content>* {
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
 /* Stili per i badge di ruolo */

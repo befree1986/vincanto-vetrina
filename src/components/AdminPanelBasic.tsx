@@ -564,7 +564,7 @@ const AdminPanelBasic = (): JSX.Element => {
   devLog('🎯 Rendering basic admin panel...');
 
   return (
-    <div className="admin-panel-pro">
+    <div className="admin-panel-pro" style={{ maxWidth: '100%', width: '100%', margin: 0 }}>
       {/* Header */}
       <header className="admin-header">
         <div className="admin-header-left">
