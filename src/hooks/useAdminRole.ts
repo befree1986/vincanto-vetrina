@@ -16,6 +16,7 @@ export const useAdminRole = (): AdminRoleState & {
   isSuperAdmin: () => boolean;
   isAdmin: () => boolean;
   hasAccess: (requiredRole: AdminRole) => boolean;
+  error: string | null;
 } => {
   const [state, setState] = useState<AdminRoleState>({
     role: null,
@@ -64,8 +65,9 @@ export const useAdminRole = (): AdminRoleState & {
         localStorage.removeItem('vincanto_admin_email');
         setState({ role: 'guest', isLoading: false, error: 'Impossibile verificare il ruolo' });
       } catch (err) {
+        const message = err instanceof Error ? err.message : 'Errore imprevisto durante la verifica del ruolo';
         console.warn('API role check failed, defaulting to guest', err);
-        setState({ role: 'guest', isLoading: false, error: null });
+        setState({ role: 'guest', isLoading: false, error: message });
       }
     };
 
