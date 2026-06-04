@@ -991,7 +991,7 @@ const AdminPanelBasic = (): JSX.Element => {
                     <h4>Immagine {num}</h4>
                     <div className="pricing-controls">
                       {(() => {
-                        const imgUrl = (Array.isArray(systemSettings) ? systemSettings : []).find(s => s.key === `gallery_image_${num}`)?.value;
+                        const imgUrl = (Array.isArray(systemSettings) ? systemSettings : []).find(s => s.key === `gallery_image_${num}`)?.value; // Safe
                         return imgUrl ? (
                           <img
                             src={imgUrl}
@@ -1007,7 +1007,7 @@ const AdminPanelBasic = (): JSX.Element => {
 
                       <label className="admin-btn admin-btn-secondary admin-btn-small admin-btn-fullwidth admin-image-upload-label">
                         📁 {systemSettings.find(s => s.key === `gallery_image_${num}`)?.value ? 'Cambia Immagine' : 'Seleziona File'}
-                        <input
+                        <input // Safe
                           type="file"
                           accept="image/*"
                           className="admin-hidden-file-input"
@@ -1021,7 +1021,7 @@ const AdminPanelBasic = (): JSX.Element => {
                       <button
                         className="admin-btn-primary admin-btn-small admin-btn-fullwidth admin-mt-sm"
                         onClick={async () => {
-                          try {
+                          try { // Safe
                             const val = (Array.isArray(systemSettings) ? systemSettings : []).find(s => s.key === `gallery_image_${num}`)?.value;
                             if (val && val.startsWith('data:')) {
                               await updateSystemSettingValue(`gallery_image_${num}`, val);
@@ -1132,24 +1132,24 @@ const AdminPanelBasic = (): JSX.Element => {
                     <div className="preview-scroll-area">
                       <div className="preview-site-header">
                         <h1 className="preview-title">
-                          {(systemSettings.find(s => s.key === 'home_hero_title')?.value) || 'Vincanto Maori'}
+                          {(Array.isArray(systemSettings) ? systemSettings : []).find(s => s.key === 'home_hero_title')?.value || 'Vincanto Maori'}
                         </h1>
                         <p className="preview-subtitle">
-                          {(systemSettings.find(s => s.key === 'home_hero_subtitle')?.value) || 'Sottotitolo Hero'}
+                          {(Array.isArray(systemSettings) ? systemSettings : []).find(s => s.key === 'home_hero_subtitle')?.value || 'Sottotitolo Hero'}
                         </p>
                       </div>
 
                       <div className="preview-section">
                         <h2 className="preview-section-title">La nostra storia</h2>
                         <div className="preview-section-content">
-                          {(systemSettings.find(s => s.key === 'about_description_main')?.value) || 'Descrizione chi siamo...'}
+                          {(Array.isArray(systemSettings) ? systemSettings : []).find(s => s.key === 'about_description_main')?.value || 'Descrizione chi siamo...'}
                         </div>
                       </div>
 
                       <div className="preview-cta">
                         <p className="preview-cta-text">Soggiorno a partire da</p>
                         <h3 className="preview-cta-price">
-                          € {(systemSettings.find(s => s.key === 'display_price_base')?.value) || '70'}
+                          € {(Array.isArray(systemSettings) ? systemSettings : []).find(s => s.key === 'display_price_base')?.value || '70'}
                         </h3>
                         <button className="preview-cta-button">
                           Verifica Disponibilità

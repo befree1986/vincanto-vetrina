@@ -5334,7 +5334,7 @@ const AdminPanelPro = (): JSX.Element => {
                         type="url"
                         className="admin-input"
                         placeholder="https://esempio.com/immagine.jpg"
-                        value={systemSettings.find(s => s.key === `gallery_image_${num}`)?.value || ''}
+                        value={(Array.isArray(systemSettings) ? systemSettings : []).find(s => s.key === `gallery_image_${num}`)?.value || ''}
                         onChange={(e) => {
                           const updated = systemSettings.map(s => s.key === `gallery_image_${num}` ? { ...s, value: e.target.value } : s);
                           if (!updated.find(s => s.key === `gallery_image_${num}`)) {
@@ -5344,7 +5344,7 @@ const AdminPanelPro = (): JSX.Element => {
                         }}
                       />
                       {(() => {
-                        const imgUrl = systemSettings.find(s => s.key === `gallery_image_${num}`)?.value;
+                        const imgUrl = (Array.isArray(systemSettings) ? systemSettings : []).find(s => s.key === `gallery_image_${num}`)?.value;
                         return imgUrl ? <img className="admin-gallery-image-preview admin-gallery-image-preview-styles" src={imgUrl} alt={`Anteprima immagine ${num}`} /> : null;
                       })()}
                       <button className="admin-btn-primary admin-btn-small admin-btn-fullwidth" onClick={() => updateSystemSettingValue(`gallery_image_${num}`, systemSettings.find(s => s.key === `gallery_image_${num}`)?.value).then(() => alert('Salvato!'))}>
@@ -5388,7 +5388,7 @@ const AdminPanelPro = (): JSX.Element => {
                               <textarea
                                 id={`setting-${setting.key}`}
                                 className="admin-input admin-textarea"
-                                value={setting.value || ''}
+                                value={setting.value || ''} // setting.value is safe here
                                 onChange={(e) =>
                                   setSystemSettings(
                                     systemSettings.map((s) =>
@@ -5411,7 +5411,7 @@ const AdminPanelPro = (): JSX.Element => {
                                 id={`setting-${setting.key}`}
                                 type="text"
                                 className="admin-input"
-                                value={setting.value || ''}
+                                value={setting.value || ''} // setting.value is safe here
                                 onChange={(e) =>
                                   setSystemSettings(
                                     systemSettings.map((s) =>
@@ -5449,23 +5449,23 @@ const AdminPanelPro = (): JSX.Element => {
                     <div className="preview-body">
                       <div className="preview-hero-section">
                         <h1 className="preview-hero-title">
-                          {systemSettings.find(s => s.key === 'home_hero_title')?.value || 'Vincanto Maori'}
+                          {(Array.isArray(systemSettings) ? systemSettings : []).find(s => s.key === 'home_hero_title')?.value || 'Vincanto Maori'}
                         </h1>
                         <p className="preview-hero-subtitle">
-                          {systemSettings.find(s => s.key === 'home_hero_subtitle')?.value || 'Sottotitolo Hero'}
+                          {(Array.isArray(systemSettings) ? systemSettings : []).find(s => s.key === 'home_hero_subtitle')?.value || 'Sottotitolo Hero'}
                         </p>
                       </div>
                       <div className="preview-about-section">
                         <h2 className="preview-about-title">Chi Siamo</h2>
                         <p className="preview-about-content">
-                          {systemSettings.find(s => s.key === 'about_description_main')?.value || 'La nostra storia...'}
+                          {(Array.isArray(systemSettings) ? systemSettings : []).find(s => s.key === 'about_description_main')?.value || 'La nostra storia...'}
                         </p>
                       </div>
                       <div className="preview-pricing-grid">
                         <div className="preview-pricing-card preview-pricing-card-primary">
                           <span className="preview-pricing-label">Soggiorno da</span>
                           <div className="preview-pricing-value">
-                            € {systemSettings.find(s => s.key === 'display_price_base')?.value || '70'}
+                            € {(Array.isArray(systemSettings) ? systemSettings : []).find(s => s.key === 'display_price_base')?.value || '70'}
                           </div>
                         </div>
                       </div>
