@@ -5,6 +5,7 @@ import '../pages/AdminPanelPro.css';
 import '../styles/AdminSuperAdmin.css';
 import './AdminPanelBasic.css';
 import ExtraServicesAdmin from './admin/ExtraServicesAdmin';
+import AdminLayout from './admin/AdminLayout';
 import AdminDashboard from './admin/AdminDashboard';
 import { useAdminRole } from '../hooks/useAdminRole';
 import { devLog, devError } from '../utils/debug';
@@ -22,6 +23,13 @@ const AdminPanelBasic = (): JSX.Element => {
   const { role, isLoading: roleLoading, isAdmin, isSuperAdmin } = useAdminRole();
   // Tab navigation
   const [activeTab, setActiveTab] = useState('dashboard');
+
+  const basicTabs = [
+    { id: 'dashboard', label: '📊 Dashboard', requiresSuperAdmin: false },
+    { id: 'prenotazioni', label: '📅 Prenotazioni', requiresSuperAdmin: false },
+    { id: 'calendari', label: '📆 Calendari', requiresSuperAdmin: false },
+    { id: 'servizi', label: '🛎️ Servizi Extra', requiresSuperAdmin: false },
+  ];
 
   // Data states
   const [dashboardStats, setDashboardStats] = useState<any>({});
@@ -564,96 +572,23 @@ const AdminPanelBasic = (): JSX.Element => {
   devLog('🎯 Rendering basic admin panel...');
 
   return (
-    <div className="admin-panel-pro admin-panel-fullheight">
-      {/* Header */}
-      <header className="admin-header">
-        <div className="admin-header-left">
-          <h1>⚙️ Pannello Amministratore</h1>
-          <span className="admin-version admin-badge admin-badge-info">v2.0</span>
-        </div>
-
-        <div className="admin-header-actions">
-          <div className="admin-flex admin-items-center admin-gap-md">
-            {/* Indicatore Status */}
-            <div className="admin-badge admin-badge-success">
-              ✅ Online
-            </div>
-
-            {/* User Info */}
-            <div className="admin-flex admin-items-center admin-gap-sm">
-              <span className="admin-text-muted admin-hidden-mobile">👤 Amministratore</span>
-              <div className="admin-badge admin-badge-warning" title="Modalità Admin">
-                ⚡ Admin
-              </div>
-            </div>
-          </div>
-
-          <div className="admin-flex admin-items-center admin-gap-sm">
-            {isSuperAdmin() && (
-              <button 
-                className="admin-btn admin-btn-info admin-btn-sm admin-btn-superadmin-switch"
-                onClick={() => window.location.href = '/admin/pro'}
-                title="Passa al Pannello SuperAdmin"
-              >
-                <span className="admin-hidden-mobile">⚡ SuperAdmin</span>
-                <span className="admin-visible-mobile">⚡</span>
-              </button>
-            )}
-            <button
-              className="admin-btn admin-btn-secondary admin-btn-logout"
-              onClick={() => {
-                localStorage.removeItem('vincanto_admin_session');
-                localStorage.removeItem('vincanto_admin_token');
-                localStorage.removeItem('vincanto_admin_role');
-                localStorage.removeItem('vincanto_admin_email');
-                window.location.href = '/admin/login';
-              }}
-            >
-              <span className="admin-hidden-mobile">🚪 Logout</span>
-              <span className="admin-visible-mobile">🚪</span>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Navigation Tabs */}
-      <nav className="admin-nav">
-        <button
-          className={`admin-nav-link ${activeTab === 'dashboard' ? 'active' : ''}`}
-          onClick={() => setActiveTab('dashboard')}
-        >
-          📊 Dashboard
-        </button>
-        <button
-          className={`admin-nav-link ${activeTab === 'prenotazioni' ? 'active' : ''}`}
-          onClick={() => setActiveTab('prenotazioni')}
-        >
-          📅 Prenotazioni
-        </button>
-        <button
-          className={`admin-nav-link ${activeTab === 'calendari' ? 'active' : ''}`}
-          onClick={() => setActiveTab('calendari')}
-        >
-          📆 Calendari
-        </button>
-        <button
-          className={`admin-nav-link ${activeTab === 'servizi' ? 'active' : ''}`}
-          onClick={() => setActiveTab('servizi')}
-        >
-          🛎️ Servizi Extra
-        </button>
-        {isSuperAdmin() && (
-          <button
-            className="admin-nav-link admin-nav-link-superadmin"
-            onClick={() => window.location.href = '/admin/pro'}
-          >
-            ⚡ Pannello SuperAdmin
-          </button>
-        )}
-      </nav>
-
-      {/* Main Content */}
-      <main className="admin-main">
+    <AdminLayout
+      activeTab={activeTab}
+      setActiveTab={setActiveTab}
+      onLogout={() => {
+        localStorage.removeItem('vincanto_admin_session');
+        localStorage.removeItem('vincanto_admin_token');
+        localStorage.removeItem('vincanto_admin_role');
+        localStorage.removeItem('vincanto_admin_email');
+        window.location.href = '/admin/login';
+      }}
+      isSuperAdmin={isSuperAdmin()}
+      role={role}
+      adminEmail={localStorage.getItem('vincanto_admin_email') || role || 'Admin'}
+      tabs={basicTabs}
+    >
+      <div className="admin-panel-pro admin-panel-fullheight">
+        <main className="admin-main">
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
           <div className="admin-dashboard-wrapper">
@@ -951,6 +886,7 @@ const AdminPanelBasic = (): JSX.Element => {
         )}
       </main>
     </div>
+  </AdminLayout>
   );
 };
 

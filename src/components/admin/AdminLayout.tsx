@@ -1,7 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useAdminRole } from '../../hooks/useAdminRole';
 import './AdminLayout.css'; // Importa il CSS per AdminLayout
+
+interface AdminTab {
+  id: string;
+  label: string;
+  requiresSuperAdmin: boolean;
+}
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -10,6 +15,8 @@ interface AdminLayoutProps {
   onLogout: () => void;
   isSuperAdmin: boolean;
   adminEmail: string;
+  role?: string;
+  tabs?: AdminTab[];
 }
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({
@@ -19,10 +26,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
   onLogout,
   isSuperAdmin,
   adminEmail,
+  role,
+  tabs,
 }) => {
-  const { role } = useAdminRole();
+  const currentRole = role || (isSuperAdmin ? 'superadmin' : 'admin');
 
-  const tabs = [
+  const defaultTabs: AdminTab[] = [
     { id: 'dashboard', label: '📊 Dashboard', requiresSuperAdmin: false },
     { id: 'prenotazioni', label: '📅 Prenotazioni', requiresSuperAdmin: false },
     { id: 'calendari', label: '📆 Calendari', requiresSuperAdmin: false },
@@ -38,6 +47,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
     { id: 'sistema', label: '⚙️ Sistema', requiresSuperAdmin: true },
     { id: 'switch-basic', label: '🔄 Vista Admin Base', requiresSuperAdmin: true },
   ];
+
+  const sidebarTabs = tabs && tabs.length > 0 ? tabs : defaultTabs;
 
   return (
     <div className="admin-layout">
@@ -61,7 +72,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
             <div className="admin-badge admin-badge-success">✅ Online</div>
             <div className="admin-flex admin-items-center admin-gap-sm">
               <span className="admin-text-muted admin-hidden-mobile">👤 {adminEmail}</span>
-              <div className={`admin-badge ${isSuperAdmin ? 'admin-badge-superadmin' : 'admin-badge-admin'}`} title={`Ruolo: ${role}`}>
+              <div className={`admin-badge ${isSuperAdmin ? 'admin-badge-superadmin' : 'admin-badge-admin'}`} title={`Ruolo: ${currentRole}`}>
                 {isSuperAdmin ? '⚡ SuperAdmin' : '✨ Admin'}
               </div>
             </div>
@@ -74,7 +85,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
       </header>
 
       <nav className="admin-sidebar">
-        {tabs.map((tab) => {
+        {sidebarTabs.map((tab) => {
           const isDisabled = tab.requiresSuperAdmin && !isSuperAdmin;
           const tabClassName = `admin-nav-link ${activeTab === tab.id ? 'active' : ''} ${isDisabled ? 'disabled' : ''}`;
           return (

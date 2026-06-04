@@ -15,12 +15,15 @@
   /* Sfondo leggero */
   font-family: 'Inter', sans-serif;
   overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .admin-layout .admin-panel-pro {
   width: 100% !important;
   max-width: 100% !important;
+  min-width: 0 !important;
   margin: 0 !important;
+  box-sizing: border-box;
 }
 
 .admin-header {
@@ -116,6 +119,7 @@
   flex-direction: column;
   width: 100%;
   min-width: 0;
+  box-sizing: border-box;
 }
 
 .admin-content>* {
