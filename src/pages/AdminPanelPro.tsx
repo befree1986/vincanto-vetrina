@@ -1279,19 +1279,6 @@ const AdminPanelPro = (): JSX.Element => {
     }
   };
 
-  // Gestione Sistema Settings
-  const updateSystemSettingValue = async (key: string, value: any) => {
-    if (!adminApiService) return;
-    try {
-      const result = await adminApiService.updateSystemSetting(key, value);
-      log('✅ Impostazione aggiornata:', { key, value });
-      return result;
-    } catch (error) {
-      console.error('❌ Errore aggiornamento impostazione:', error);
-      throw error;
-    }
-  };
-
   // === GESTIONE FORM PRENOTAZIONI ===
 
   const handleCreateBooking = async (e: React.FormEvent) => {

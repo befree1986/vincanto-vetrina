@@ -1019,7 +1019,6 @@ const AdminPanelBasic = (): JSX.Element => {
                       </label>
 
                       <button
-                        className="admin-btn-primary admin-btn-small admin-btn-fullwidth"
                         className="admin-btn-primary admin-btn-small admin-btn-fullwidth admin-mt-sm"
                         onClick={async () => {
                           try {
