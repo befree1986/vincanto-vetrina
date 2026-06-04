@@ -1,13 +1,12 @@
 /* AdminLayout.css */
 
 .admin-layout {
-  width: 100vw !important;
-  max-width: 100vw !important;
-  margin-left: calc(-50vw + 50%) !important;
-  margin-right: calc(-50vw + 50%) !important;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   position: relative;
   display: grid;
-  grid-template-columns: 220px 1fr;
+  grid-template-columns: 240px minmax(0, 1fr);
   /* Sidebar fisso, contenuto flessibile */
   grid-template-rows: auto 1fr;
   /* Header fisso, contenuto flessibile */
@@ -19,7 +18,7 @@
 }
 
 .admin-layout .admin-panel-pro {
-  width: auto !important;
+  width: 100% !important;
   max-width: 100% !important;
   margin: 0 !important;
 }
@@ -116,6 +115,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
+  min-width: 0;
 }
 
 .admin-content>* {
