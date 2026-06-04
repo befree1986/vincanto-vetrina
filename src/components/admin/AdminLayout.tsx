@@ -52,7 +52,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
   
   // Filtra e ordina i tab: sposta il tab di switch in fondo se l'utente ha i permessi
   const filteredTabs = sidebarTabs.filter(tab => {
-    if (tab.id.startsWith('switch-') && tab.requiresSuperAdmin && !isSuperAdmin) return false;
+    // Nascondi i tab di switch se l'utente non è SuperAdmin e il tab lo richiede
+    if (tab.id.includes('switch') && !isSuperAdmin && (tab.requiresSuperAdmin !== false)) {
+        return false;
+    }
     return true;
   });
   

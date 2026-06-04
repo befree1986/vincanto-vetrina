@@ -73,6 +73,8 @@ const AdminPanelPro = (): JSX.Element => {
   const [realBookings, setRealBookings] = useState<any[]>([]);
   const [systemSettings, setSystemSettings] = useState<any[]>([]);
   const [analytics, setAnalytics] = useState<any[]>([]);
+  const [showPreview, setShowPreview] = useState(true);
+  const [extraServices, setExtraServices] = useState<any[]>([]); // Aggiunto per coerenza con AdminPanelBasic
   const [notifications, setNotifications] = useState<any[]>([]);
 
   // Stati per gestione form e loading
@@ -295,6 +297,7 @@ const AdminPanelPro = (): JSX.Element => {
   // Effetto per gestire lo switch al pannello Admin Standard
   useEffect(() => {
     if (activeTab === 'switch-basic') {
+      // IMPORTANTE: Reset tab prima della navigazione
       setActiveTab('dashboard');
       navigate('/admin');
     }
@@ -305,159 +308,9 @@ const AdminPanelPro = (): JSX.Element => {
     const chartBars = document.querySelectorAll('.chart-bar.dynamic[data-height]');
     chartBars.forEach((bar: any) => {
       const height = bar.getAttribute('data-height');
-      if (height) {
-        bar.style.height = `${height}px`;
-      }
+      if (height) bar.style.height = `${height}px`;
     });
   }, [analytics]);
-
-  const handleForceRealCalendarSync = async () => {
-    if (!adminApiService) return;
-    setIsLoadingCalendars(true);
-    try {
-      await adminApiService.forceRealCalendarSync();
-      await loadCalendarConfigs();
-      alert('✅ Sincronizzazione completata!');
-    } catch (error) {
-      alert('❌ Errore durante la sincronizzazione');
-      console.error(error);
-    } finally {
-      setIsLoadingCalendars(false);
-    }
-  };
-
-  // === AUTENTICAZIONE ===
-  const handleLogin = async () => {
-    devLog('🔐 Tentativo di login...');
-
-    if (!adminApiService) {
-      setError('Servizio API non disponibile');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const result = await adminApiService.login(password);
-
-      if (result.success) {
-        devLog('✅ Login API riuscito, imposto autenticazione...');
-        localStorage.setItem('vincanto_admin_session', 'authenticated');
-        setIsAuthenticated(true);
-        setError('');
-        devLog('🎨 Stato autenticazione impostato e salvato');
-        // Carica tutti i dati reali dal backend
-        loadRealApiData();
-      } else {
-        devLog('❌ Login API fallito:', result.error);
-        setError(result.error || 'Login fallito');
-      }
-    } catch (error) {
-      devLog('❌ Errore durante il login:', error);
-      setError('Errore di connessione al server');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Logout gestito direttamente nel bottone
-
-
-
-  // === PRICING FUNCTIONS ===
-  const loadPricingConfig = async () => {
-    try {
-      if (!adminApiService) return;
-      log('💰 Caricamento configurazione prezzi per gruppi...');
-      const result = await adminApiService.getPricingConfig();
-
-      if (result && (result.priceGroup1to2 !== undefined || result.success)) {
-        // Nuova API unificata: dati direttamente disponibili
-        const config = result.priceGroup1to2 ? result : result.pricing || {};
-        setPricingConfig({
-          // Mappato direttamente dai nuovi campi API unificata
-          priceGroup1to2: parseFloat(config.priceGroup1to2) || 75,
-          priceGroup3to4: parseFloat(config.priceGroup3to4) || 95,
-          priceGroup5to6: parseFloat(config.priceGroup5to6) || 115,
-          priceGroup7to8: parseFloat(config.priceGroup7to8) || 135,
-
-          // Costi e configurazioni
-          cleaningFee: parseFloat(config.cleaningFee) || 50,
-          parkingFee: parseFloat(config.parkingFee) || 20,
-          touristTaxAdult: parseFloat(config.touristTaxAdult) || 2.00,
-          touristTaxChild: parseFloat(config.touristTaxChild) || 0,
-
-          // Sconti e maggiorazioni
-          weekendSurcharge: parseFloat(config.weekendSurcharge) || 0,
-          weeklyDiscount: parseFloat(config.weeklyDiscount) || 10,
-          monthlyDiscount: parseFloat(config.monthlyDiscount) || 15,
-
-          // Limiti
-          minStay: parseInt(config.minStay) || 2,
-          maxStay: parseInt(config.maxStay) || 14,
-          maxGuests: parseInt(config.maxGuests) || 8,
-
-          // Sconti avanzati
-          advanceBookingDiscount: config.advanceBookingDiscount || 0,
-          lastMinuteDiscount: config.lastMinuteDiscount || 0
-        });
-        log('✅ Configurazione prezzi per gruppi caricata:', config);
-      } else {
-        log('⚠️ Nessuna configurazione trovata, uso valori predefiniti per gruppi');
-      }
-    } catch (error) {
-      console.error('❌ Errore caricamento prezzi:', error);
-    }
-  };
-
-  const savePricingConfig = async () => {
-    try {
-      if (!adminApiService) {
-        alert('❌ Servizio API non disponibile');
-        return;
-      }
-
-      setIsUpdatingPricing(true);
-      log('✨ ADMIN SAVE - Dati da salvare:', JSON.stringify(pricingConfig, null, 2));
-      log('📤 URL API Unificata chiamata:', `${window.location.origin}/api/unified?action=pricing-config`);
-
-      const result = await adminApiService.updatePricingConfig(pricingConfig);
-
-      log('🎨 RISPOSTA API UNIFICATA:', JSON.stringify(result, null, 2));
-
-      if (result.success) {
-        alert('✅ Configurazione prezzi salvata con successo!');
-        log('✅ Prezzi salvati nel database:', result.saved_data || result.data);
-
-        // ✨ FORZA RICARICAMENTO IMMEDIATO DEI PREZZI
-        log('🔄 FORCE RELOAD: Ricarico configurazione prezzi...');
-        await loadPricingConfig();
-
-        // 🧪 TEST IMMEDIATO: Verifica che i prezzi siano salvati con API unificata
-        log('🧪 TEST: Verifica prezzi dal database...');
-        setTimeout(async () => {
-          try {
-            const testResponse = await fetch(`/api/unified?action=pricing-config?t=${Date.now()}`, {
-              cache: 'no-cache',
-              headers: { 'Cache-Control': 'no-cache' }
-            });
-            const testData = await testResponse.json();
-            log('🧪 TEST PREZZI POST-SALVATAGGIO (NO CACHE):', testData);
-          } catch (testError) {
-            console.error('❌ Errore test post-salvataggio:', testError);
-          }
-        }, 1000);
-
-      } else {
-        alert('❌ Errore nel salvataggio: ' + (result.message || 'Errore sconosciuto'));
-        console.error('❌ Dettagli errore:', result);
-      }
-    } catch (error) {
-      console.error('❌ Errore salvataggio prezzi:', error);
-      alert('❌ Errore nel salvataggio della configurazione prezzi');
-    } finally {
-      setIsUpdatingPricing(false);
-    }
-  };
 
   const updatePricingField = (field: string, value: number) => {
     devLog('💰 Aggiornamento campo prezzo:', { field, value, currentConfig: pricingConfig });
@@ -1175,6 +1028,78 @@ const AdminPanelPro = (): JSX.Element => {
       case 'medium': return 'warning';
       case 'low': return 'success';
       default: return '';
+    }
+  };
+
+  // Funzione per aggiornare le impostazioni di sistema (Testi e Immagini)
+  const updateSystemSettingValue = async (key: string, value: any) => {
+    if (!adminApiService) return;
+    try {
+      const result = await adminApiService.updateSystemSetting(key, value);
+      log('✅ Impostazione aggiornata:', { key, value });
+      return result;
+    } catch (error) {
+      console.error('❌ Errore aggiornamento impostazione:', error);
+      throw error;
+    }
+  };
+
+  // Funzione per gestire l'upload e la compressione dell'immagine
+  const handleImageUpload = async (file: File, key: string) => {
+    if (!file) return;
+    
+    if (!file.type.startsWith('image/')) {
+      alert('Per favore seleziona un file immagine valido.');
+      return;
+    }
+
+    try {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          const MAX_SIZE = 1200;
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height *= MAX_SIZE / width;
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width *= MAX_SIZE / height;
+              height = MAX_SIZE;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          const dataUrl = canvas.toDataURL('image/webp', 0.7);
+          
+          setSystemSettings(prev => {
+            const current = Array.isArray(prev) ? prev : [];
+            const index = current.findIndex(s => s.key === key);
+            const updated = [...current];
+            if (index > -1) {
+              updated[index] = { ...updated[index], value: dataUrl };
+            } else {
+              updated.push({ key, value: dataUrl, category: 'gallery' });
+            }
+            return updated;
+          });
+        };
+        img.src = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Errore elaborazione immagine:', error);
+      alert('Errore durante il caricamento dell\'immagine.');
     }
   };
 
@@ -2823,6 +2748,8 @@ const AdminPanelPro = (): JSX.Element => {
                         <label htmlFor="cal-frequency">Sincronizzazione (minuti):</label>
                         <select
                           id="cal-frequency"
+                          title="Frequenza di sincronizzazione"
+                          aria-label="Frequenza di sincronizzazione"
                           value={newCalendarData.sync_frequency}
                           onChange={(e) => setNewCalendarData({ ...newCalendarData, sync_frequency: parseInt(e.target.value) })}
                           className="admin-select"
@@ -2836,10 +2763,13 @@ const AdminPanelPro = (): JSX.Element => {
                           <option value="1440">24 ore</option>
                         </select>
 
-                        <label>
+                        <label htmlFor="cal-active">
                           <input
+                            id="cal-active"
                             type="checkbox"
                             checked={newCalendarData.is_active}
+                            title="Attiva calendario dalla creazione"
+                            aria-label="Attiva calendario dalla creazione"
                             onChange={(e) => setNewCalendarData({ ...newCalendarData, is_active: e.target.checked })}
                           />
                           Attivo dalla creazione
@@ -3172,7 +3102,7 @@ const AdminPanelPro = (): JSX.Element => {
                     <h4>Impostazioni Globali</h4>
                     <div className="pricing-controls">
                       <label>Frequenza Sincronizzazione Automatica:</label>
-                      <select className="admin-select" aria-label="Frequenza sincronizzazione">
+                      <select className="admin-select" aria-label="Frequenza sincronizzazione" title="Frequenza sincronizzazione">
                         <option>Ogni ora</option>
                         <option>Ogni 2 ore</option>
                         <option>Ogni 6 ore</option>
@@ -3180,14 +3110,14 @@ const AdminPanelPro = (): JSX.Element => {
                       </select>
 
                       <label>Notifiche Email per Errori:</label>
-                      <select className="admin-select" aria-label="Notifiche errori">
+                      <select className="admin-select" aria-label="Notifiche errori" title="Notifiche errori">
                         <option>Abilitate</option>
                         <option>Solo errori critici</option>
                         <option>Disabilitate</option>
                       </select>
 
                       <label>Fuso Orario:</label>
-                      <select className="admin-select" aria-label="Fuso orario">
+                      <select className="admin-select" aria-label="Fuso orario" title="Fuso orario">
                         <option>Europe/Rome (GMT+1)</option>
                         <option>Europe/London (GMT+0)</option>
                         <option>America/New_York (GMT-5)</option>
@@ -3202,7 +3132,7 @@ const AdminPanelPro = (): JSX.Element => {
                       <div className="sync-indicator success">✅ API Key valida e attiva</div>
 
                       <label>Calendario ID:</label>
-                      <input type="text" defaultValue="vincanto.master@gmail.com" className="admin-input" aria-label="Google Calendar ID" readOnly />
+                      <input type="text" defaultValue="vincanto.master@gmail.com" className="admin-input" aria-label="Google Calendar ID" title="Google Calendar ID" placeholder="ID Calendario" readOnly />
 
                       <label>Ultima Verifica API:</label>
                       <span className="pricing-note">27/10/2025 - 15:45 ✅</span>
@@ -3275,7 +3205,7 @@ const AdminPanelPro = (): JSX.Element => {
                     <h4>Filtri Avanzati</h4>
                     <div className="pricing-controls">
                       <label>Stato Prenotazione:</label>
-                      <select className="admin-select" aria-label="Filtro stato prenotazioni">
+                      <select className="admin-select" aria-label="Filtro stato prenotazioni" title="Filtra per stato prenotazione">
                         <option>Tutte le prenotazioni</option>
                         <option>✅ Confermate</option>
                         <option>⏳ In Attesa</option>
@@ -3287,8 +3217,8 @@ const AdminPanelPro = (): JSX.Element => {
                       </select>
 
                       <label>Periodo:</label>
-                      <input type="date" className="admin-input-small" aria-label="Data inizio filtro" />
-                      <input type="date" className="admin-input-small" aria-label="Data fine filtro" />
+                      <input type="date" className="admin-input-small" aria-label="Data inizio filtro" title="Data inizio" placeholder="Data inizio" />
+                      <input type="date" className="admin-input-small" aria-label="Data fine filtro" title="Data fine" placeholder="Data fine" />
 
                       <label>Piattaforma:</label>
                       <select
@@ -3946,6 +3876,8 @@ const AdminPanelPro = (): JSX.Element => {
                       <label>
                         <input
                           type="checkbox"
+                          title="Abilita Stripe"
+                          aria-label="Abilita Stripe"
                           checked={paymentSettings.stripeEnabled}
                           onChange={(e) => setPaymentSettings({
                             ...paymentSettings,
@@ -3975,6 +3907,8 @@ const AdminPanelPro = (): JSX.Element => {
                       <label>
                         <input
                           type="checkbox"
+                          title="Abilita Bonifico"
+                          aria-label="Abilita Bonifico"
                           checked={paymentSettings.bankTransferEnabled}
                           onChange={(e) => setPaymentSettings({
                             ...paymentSettings,
@@ -4481,121 +4415,6 @@ const AdminPanelPro = (): JSX.Element => {
             </div>
           )}
 
-          {/* Sezione Contenuti Sito (CMS) */}
-          {activeTab === 'contenuti' && (
-            <div className="admin-section admin-animate-fade-in">
-              <h2>📝 Gestione Contenuti Frontend</h2>
-              <p className="admin-section-description">
-                Modifica i testi, i prezzi esposti e le descrizioni visualizzate sul sito pubblico senza toccare il codice.
-              </p>
-
-              <div className="admin-pricing-section">
-                <h3>🏠 Testi Principali e Hero</h3>
-                <div className="admin-pricing-grid">
-                  {(Array.isArray(systemSettings) ? systemSettings : [])
-                    .filter(s => ['home', 'about', 'general'].includes(s.category))
-                    .map(setting => (
-                      <div key={setting.key} className="admin-stat-card">
-                        <h4>{setting.label || setting.key}</h4>
-                        <div className="pricing-controls">
-                          {setting.type === 'textarea' ? (
-                            <textarea
-                              className="admin-input admin-textarea"
-                              aria-label={setting.label || setting.key}
-                              value={setting.value}
-                              onChange={(e) => {
-                                const currentSettings = Array.isArray(systemSettings) ? systemSettings : [];
-                                const updated = currentSettings.map(s =>
-                                  s.key === setting.key ? { ...s, value: e.target.value } : s
-                                );
-                                setSystemSettings(updated);
-                              }}
-                            />
-                          ) : (
-                            <input
-                              type="text"
-                              className="admin-input"
-                              aria-label={setting.label || setting.key}
-                              value={setting.value}
-                              onChange={(e) => {
-                                const currentSettings = Array.isArray(systemSettings) ? systemSettings : [];
-                                const updated = currentSettings.map(s =>
-                                  s.key === setting.key ? { ...s, value: e.target.value } : s
-                                );
-                                setSystemSettings(updated);
-                              }}
-                            />
-                          )}
-                          <button
-                            className="admin-btn-primary admin-btn-small admin-btn-fullwidth"
-                            onClick={async () => {
-                              try {
-                                await updateSystemSettingValue(setting.key, setting.value);
-                                alert('✅ Contenuto salvato!');
-                              } catch (e) {
-                                alert('❌ Errore durante il salvataggio');
-                              }
-                            }}
-                          >
-                            💾 Salva Testo
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </div>
-
-              <div className="admin-pricing-section">
-                <h3>💵 Tariffe Esposte (Visualizzazione)</h3>
-                <div className="admin-notice">
-                  <strong>💡 Nota Bene:</strong> Questi valori cambiano solo il TESTO mostrato sul sito (es. nella tabella prezzi).
-                  Per cambiare il costo REALE calcolato dal sistema di prenotazione, usa la tab <strong>"Prezzi"</strong>.
-                </div>
-                <div className="admin-pricing-grid">
-                  {(Array.isArray(systemSettings) ? systemSettings : [])
-                    .filter(s => s.category === 'pricing_display')
-                    .map(setting => (
-                      <div key={setting.key} className="admin-stat-card">
-                        <h4>{setting.label || setting.key}</h4>
-                        <div className="pricing-controls">
-                          <div className="admin-flex admin-items-center admin-gap-sm">
-                            <span className="admin-price-symbol">€</span>
-                            <input
-                              type="text"
-                              className="admin-input"
-                              aria-label={setting.label || setting.key}
-                              title={setting.label || setting.key}
-                              placeholder={setting.label || setting.key}
-                              value={setting.value}
-                              onChange={(e) => {
-                                const currentSettings = Array.isArray(systemSettings) ? systemSettings : [];
-                                const updated = currentSettings.map(s =>
-                                  s.key === setting.key ? { ...s, value: e.target.value } : s
-                                );
-                                setSystemSettings(updated);
-                              }}
-                            />
-                          </div>
-                          <button
-                            className="admin-btn-primary admin-btn-small admin-btn-fullwidth"
-                            onClick={async () => {
-                              try {
-                                await updateSystemSettingValue(setting.key, setting.value);
-                                alert('✅ Prezzo esposto aggiornato!');
-                              } catch (e) {
-                                alert('❌ Errore');
-                              }
-                            }}
-                          >
-                            💾 Aggiorna Prezzo Esposto
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* GESTIONE ADMIN - SOLO SUPERADMIN */}
           {activeTab === 'admin-management' && isSuperAdmin() && (
@@ -4729,6 +4548,7 @@ const AdminPanelPro = (): JSX.Element => {
                           className="admin-select"
                           value={newAdminForm.role}
                           onChange={(e) => setNewAdminForm({ ...newAdminForm, role: e.target.value })}
+                          title="Seleziona ruolo admin"
                           aria-label="Seleziona ruolo admin"
                         >
                           <option value="admin">Admin</option>
@@ -4851,21 +4671,6 @@ const AdminPanelPro = (): JSX.Element => {
           {activeTab === 'sistema' && isSuperAdmin() && (
             <div className="admin-sistema">
               <h2>⚙️ Configurazione Sistema e Database</h2>
-              {/* Messaggio di accesso negato per non-SuperAdmin nella sezione Sistema */}
-              {activeTab === 'sistema' && !isSuperAdmin() && (
-                <div className="admin-access-denied-section">
-                  <div className="admin-access-denied-card">
-                    <h1 className="admin-access-denied-icon">🚫</h1>
-                    <h2 className="admin-access-denied-title">Accesso Negato</h2>
-                    <p className="admin-access-denied-text">
-                      Questa sezione è riservata ai <strong>SuperAdmin</strong>.
-                    </p>
-                    <p className="admin-access-denied-hint">
-                      Contatta il SuperAdmin per ottenere i diritti necessari.
-                    </p>
-                  </div>
-                </div>
-              )}
               <div className="admin-notice">
                 <strong>💡 Nota:</strong> Per modificare prezzi, tariffe e configurazioni di prenotazione, utilizza la tab <strong>"­💵 Prezzi"</strong>.
                 Questa sezione ├¿ dedicata solo alle impostazioni tecniche del sistema.
@@ -4905,6 +4710,7 @@ const AdminPanelPro = (): JSX.Element => {
                                   }
                                 }}
                                 aria-label={setting.label || setting.key}
+                                title={setting.label || setting.key}
                                 placeholder={`Inserisci ${setting.label || setting.key}`}
                               />
                               <button
@@ -5016,16 +4822,16 @@ const AdminPanelPro = (): JSX.Element => {
                     <h4>Dati Principali</h4>
                     <div className="pricing-controls">
                       <label>Nome Struttura:</label>
-                      <input type="text" defaultValue="Vincanto Maori" className="admin-input" aria-label="Nome struttura" />
+                      <input type="text" defaultValue="Vincanto Maori" className="admin-input" aria-label="Nome struttura" title="Nome struttura" placeholder="Nome struttura" />
 
                       <label>Indirizzo Completo:</label>
-                      <input type="text" defaultValue="Via dei Maori 25, 00185 Roma RM" className="admin-input" aria-label="Indirizzo" />
+                      <input type="text" defaultValue="Via dei Maori 25, 00185 Roma RM" className="admin-input" aria-label="Indirizzo" title="Indirizzo" placeholder="Indirizzo" />
 
                       <label>Codice CIR/CIN:</label>
-                      <input type="text" defaultValue="15146004C217" className="admin-input" aria-label="Codice identificativo" />
+                      <input type="text" defaultValue="15146004C217" className="admin-input" aria-label="Codice identificativo" title="Codice CIR/CIN" placeholder="Codice CIR/CIN" />
 
                       <label>Capacit├á Massima:</label>
-                      <input type="number" defaultValue="6" className="admin-input-small" aria-label="Capacit├á ospiti" />
+                      <input type="number" defaultValue="6" className="admin-input-small" aria-label="Capacit├á ospiti" title="Capacità ospiti" placeholder="Numero ospiti" />
                     </div>
                   </div>
 
@@ -5033,16 +4839,16 @@ const AdminPanelPro = (): JSX.Element => {
                     <h4>Contatti e Legal</h4>
                     <div className="pricing-controls">
                       <label>Telefono Principale:</label>
-                      <input type="tel" defaultValue="+39 06 1234567" className="admin-input" aria-label="Telefono" />
+                      <input type="tel" defaultValue="+39 06 1234567" className="admin-input" aria-label="Telefono" title="Telefono" placeholder="Telefono" />
 
                       <label>Email Gestione:</label>
-                      <input type="email" defaultValue="info@vincantomaori.it" className="admin-input" aria-label="Email gestione" />
+                      <input type="email" defaultValue="info@vincantomaori.it" className="admin-input" aria-label="Email gestione" title="Email gestione" placeholder="Email gestione" />
 
                       <label>Partita IVA:</label>
-                      <input type="text" defaultValue="12345678901" className="admin-input" aria-label="Partita IVA" />
+                      <input type="text" defaultValue="12345678901" className="admin-input" aria-label="Partita IVA" title="Partita IVA" placeholder="Partita IVA" />
 
                       <label>Codice Fiscale:</label>
-                      <input type="text" defaultValue="RSSMRA80A01H501X" className="admin-input" aria-label="Codice fiscale" />
+                      <input type="text" defaultValue="RSSMRA80A01H501X" className="admin-input" aria-label="Codice fiscale" title="Codice fiscale" placeholder="Codice fiscale" />
                     </div>
                   </div>
                 </div>
@@ -5059,7 +4865,7 @@ const AdminPanelPro = (): JSX.Element => {
                       <p className="admin-info-text">Configurabile in <a href="/admin/security" className="admin-link">Gestione Sicurezza</a></p>
 
                       <label>Timeout Sessione (minuti):</label>
-                      <input type="number" defaultValue="120" className="admin-input-small" aria-label="Timeout sessione" />
+                      <input type="number" defaultValue="120" className="admin-input-small" aria-label="Timeout sessione" title="Timeout sessione" placeholder="Minuti" />
                     </div>
                   </div>
 
@@ -5067,14 +4873,14 @@ const AdminPanelPro = (): JSX.Element => {
                     <h4>Backup e Sicurezza</h4>
                     <div className="pricing-controls">
                       <label>Backup Automatici:</label>
-                      <select className="admin-select" aria-label="Frequenza backup">
+                      <select className="admin-select" aria-label="Frequenza backup" title="Frequenza backup">
                         <option>Giornaliero</option>
                         <option>Ogni 12 ore</option>
                         <option>Settimanale</option>
                       </select>
 
                       <label>Conservazione Backup:</label>
-                      <input type="number" defaultValue="30" className="admin-input-small" aria-label="Giorni conservazione" />
+                      <input type="number" defaultValue="30" className="admin-input-small" aria-label="Giorni conservazione" title="Giorni conservazione" placeholder="Giorni" />
 
                       <div className="sync-indicator success">✅ Ultimo backup: Oggi 03:00</div>
 
@@ -5271,6 +5077,8 @@ const AdminPanelPro = (): JSX.Element => {
                       <label className="checkbox-label">
                         <input
                           type="checkbox"
+                          title="Notifiche Email"
+                          aria-label="Notifiche Email"
                           checked={notificationSettings.emailNotifications}
                           onChange={(e) => setNotificationSettings({ ...notificationSettings, emailNotifications: e.target.checked })}
                         />
@@ -5280,6 +5088,8 @@ const AdminPanelPro = (): JSX.Element => {
                       <label className="checkbox-label">
                         <input
                           type="checkbox"
+                          title="Notifiche SMS"
+                          aria-label="Notifiche SMS"
                           checked={notificationSettings.smsNotifications}
                           onChange={(e) => setNotificationSettings({ ...notificationSettings, smsNotifications: e.target.checked })}
                         />
@@ -5289,6 +5099,8 @@ const AdminPanelPro = (): JSX.Element => {
                       <label className="checkbox-label">
                         <input
                           type="checkbox"
+                          title="Notifiche Push"
+                          aria-label="Notifiche Push"
                           checked={notificationSettings.pushNotifications}
                           onChange={(e) => setNotificationSettings({ ...notificationSettings, pushNotifications: e.target.checked })}
                         />
@@ -5298,6 +5110,8 @@ const AdminPanelPro = (): JSX.Element => {
                       <label className="checkbox-label">
                         <input
                           type="checkbox"
+                          title="Suoni Notifica"
+                          aria-label="Suoni Notifica"
                           checked={notificationSettings.soundEnabled}
                           onChange={(e) => setNotificationSettings({ ...notificationSettings, soundEnabled: e.target.checked })}
                         />
@@ -5312,6 +5126,8 @@ const AdminPanelPro = (): JSX.Element => {
                       <label className="checkbox-label">
                         <input
                           type="checkbox"
+                          title="Alert Prenotazioni"
+                          aria-label="Alert Prenotazioni"
                           checked={notificationSettings.bookingAlerts}
                           onChange={(e) => setNotificationSettings({ ...notificationSettings, bookingAlerts: e.target.checked })}
                         />
@@ -5321,6 +5137,8 @@ const AdminPanelPro = (): JSX.Element => {
                       <label className="checkbox-label">
                         <input
                           type="checkbox"
+                          title="Alert Pagamenti"
+                          aria-label="Alert Pagamenti"
                           checked={notificationSettings.paymentAlerts}
                           onChange={(e) => setNotificationSettings({ ...notificationSettings, paymentAlerts: e.target.checked })}
                         />
@@ -5330,6 +5148,8 @@ const AdminPanelPro = (): JSX.Element => {
                       <label className="checkbox-label">
                         <input
                           type="checkbox"
+                          title="Alert Sistema"
+                          aria-label="Alert Sistema"
                           checked={notificationSettings.systemAlerts}
                           onChange={(e) => setNotificationSettings({ ...notificationSettings, systemAlerts: e.target.checked })}
                         />
@@ -5339,6 +5159,8 @@ const AdminPanelPro = (): JSX.Element => {
                       <label className="checkbox-label">
                         <input
                           type="checkbox"
+                          title="Alert Recensioni"
+                          aria-label="Alert Recensioni"
                           checked={notificationSettings.reviewAlerts}
                           onChange={(e) => setNotificationSettings({ ...notificationSettings, reviewAlerts: e.target.checked })}
                         />
@@ -5351,6 +5173,8 @@ const AdminPanelPro = (): JSX.Element => {
                         value={notificationSettings.notificationEmail}
                         onChange={(e) => setNotificationSettings({ ...notificationSettings, notificationEmail: e.target.value })}
                         className="admin-input"
+                        title="Email admin per notifiche"
+                        placeholder="admin@esempio.it"
                         aria-label="Email admin"
                       />
                     </div>
@@ -5505,71 +5329,167 @@ const AdminPanelPro = (): JSX.Element => {
           )}
 
 
-          {/* Sezione Gestione Immagini */}
-          {activeTab === 'gallery' && (
-            <div className="admin-section admin-animate-fade-in">
-              <h2>🖼️ Gestione Immagini Sito</h2>
-              <div className="admin-notice">
-                <p>Inserisci gli URL delle immagini per aggiornare le gallerie del sito pubblico.</p>
-              </div>
-
-              <div className="admin-pricing-section">
-                <h3>📸 Galleria Principale (Home Page)</h3>
-                <div className="admin-pricing-grid">
-                  {[1, 2, 3, 4].map(num => (
-                    <div key={num} className="admin-stat-card">
-                      <h4>Immagine {num}</h4>
-                      <div className="pricing-controls">
-                        <input
-                          type="url"
-                          className="admin-input"
-                          placeholder="https://esempio.com/immagine.jpg"
-                          value={(Array.isArray(systemSettings) ? systemSettings : []).find(s => s.key === `gallery_image_${num}`)?.value || ''}
-                          onChange={(e) => {
-                            const currentSettings = Array.isArray(systemSettings) ? systemSettings : [];
-                            const updated = currentSettings.map(s =>
-                              s.key === `gallery_image_${num}` ? { ...s, value: e.target.value } : s
-                            );
-                            // Se non esiste, aggiungilo temporaneamente
-                            if (!updated.find(s => s.key === `gallery_image_${num}`)) {
-                              updated.push({ key: `gallery_image_${num}`, value: e.target.value, category: 'gallery' });
-                            }
-                            setSystemSettings(updated);
-                          }}
-                        />
-                        {(() => {
-                          const imgUrl = (Array.isArray(systemSettings) ? systemSettings : []).find(s => s.key === `gallery_image_${num}`)?.value;
-                          return imgUrl ? (
-                            <img
-                              className="admin-gallery-image-preview"
-                              src={imgUrl}
-                              alt={`Anteprima immagine ${num}`}
-                            />
-                          ) : null;
-                        })()}
-                        <button
-                          className="admin-btn-primary admin-btn-small admin-btn-fullwidth"
-                          onClick={async () => {
-                            try {
-                              const val = (Array.isArray(systemSettings) ? systemSettings : []).find(s => s.key === `gallery_image_${num}`)?.value;
-                              if (val) {
-                                await updateSystemSettingValue(`gallery_image_${num}`, val);
-                                alert('✅ Immagine salvata!');
-                              }
-                            } catch (e) {
-                              alert('❌ Errore');
-                            }
-                          }}
-                        >
-                          💾 Salva URL
-                        </button>
-                      </div>
+        {/* Sezione Gestione Immagini */}
+        {activeTab === 'gallery' && (
+          <div className="admin-section admin-animate-fade-in">
+            <h2>🖼️ Gestione Immagini Sito</h2>
+            <div className="admin-notice">
+              <p>Inserisci gli URL delle immagini per aggiornare le gallerie del sito pubblico.</p>
+            </div>
+            <div className="admin-pricing-section">
+              <h3>📸 Galleria Principale (Home Page)</h3>
+              <div className="admin-pricing-grid">
+                {[1, 2, 3, 4].map(num => (
+                  <div key={num} className="admin-stat-card">
+                    <h4>Immagine {num}</h4>
+                    <div className="pricing-controls">
+                      <input
+                        type="url"
+                        className="admin-input"
+                        placeholder="https://esempio.com/immagine.jpg"
+                        value={systemSettings.find(s => s.key === `gallery_image_${num}`)?.value || ''}
+                        onChange={(e) => {
+                          const updated = systemSettings.map(s => s.key === `gallery_image_${num}` ? { ...s, value: e.target.value } : s);
+                          if (!updated.find(s => s.key === `gallery_image_${num}`)) {
+                            updated.push({ key: `gallery_image_${num}`, value: e.target.value, category: 'gallery' });
+                          }
+                          setSystemSettings(updated);
+                        }}
+                      />
+                      {(() => {
+                        const imgUrl = systemSettings.find(s => s.key === `gallery_image_${num}`)?.value;
+                        return imgUrl ? <img className="admin-gallery-image-preview admin-gallery-image-preview-styles" src={imgUrl} alt={`Anteprima immagine ${num}`} /> : null;
+                      })()}
+                      <button className="admin-btn-primary admin-btn-small admin-btn-fullwidth" onClick={() => updateSystemSettingValue(`gallery_image_${num}`, systemSettings.find(s => s.key === `gallery_image_${num}`)?.value).then(() => alert('Salvato!'))}>
+                        💾 Salva URL
+                      </button>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
             </div>
-          )}
+          </div>
+        )}
+
+        {/* Sezione Contenuti Sito (CMS) con Live Preview */}
+        {activeTab === 'contenuti' && (
+          <div className="admin-section admin-animate-fade-in">
+            <div className="admin-flex admin-justify-between admin-items-center admin-mb-lg">
+              <div>
+                <h2>📝 Gestione Contenuti Frontend</h2>
+                <p className="admin-section-description">Personalizza i testi del sito con anteprima istantanea.</p>
+              </div>
+              <button className="admin-btn admin-btn-secondary" onClick={() => setShowPreview(!showPreview)}>
+                {showPreview ? '👁️ Nascondi Anteprima' : '👁️ Mostra Anteprima'}
+              </button>
+            </div>
+
+            <div className={`admin-content-layout ${showPreview ? 'admin-content-layout-preview' : ''}`}>
+              <div className="admin-editor-column">
+                <div className="admin-pricing-section">
+                  <h3>🏠 Testi Principali e Hero</h3>
+                  <div className="admin-pricing-grid admin-pricing-grid-single">
+                    {systemSettings.filter(s => ['home', 'about', 'general'].includes(s.category)).map(setting => (
+                      <div key={setting.key} className="admin-stat-card">
+                        <h4>{setting.label || setting.key}</h4>
+                        <div className="pricing-controls">
+                          {setting.type === 'textarea' || setting.value?.length > 50 ? (
+                            <>
+                              <label htmlFor={`setting-${setting.key}`} className="sr-only">
+                                {setting.label || setting.key}
+                              </label>
+                              <textarea
+                                id={`setting-${setting.key}`}
+                                className="admin-input admin-textarea"
+                                value={setting.value || ''}
+                                onChange={(e) =>
+                                  setSystemSettings(
+                                    systemSettings.map((s) =>
+                                      s.key === setting.key ? { ...s, value: e.target.value } : s
+                                    )
+                                  )
+                                }
+                                rows={4}
+                                title={setting.label || setting.key}
+                                placeholder={`Inserisci ${setting.label || setting.key}`}
+                                aria-label={setting.label || setting.key}
+                              />
+                            </>
+                          ) : (
+                            <>
+                              <label htmlFor={`setting-${setting.key}`} className="sr-only">
+                                {setting.label || setting.key}
+                              </label>
+                              <input
+                                id={`setting-${setting.key}`}
+                                type="text"
+                                className="admin-input"
+                                value={setting.value || ''}
+                                onChange={(e) =>
+                                  setSystemSettings(
+                                    systemSettings.map((s) =>
+                                      s.key === setting.key ? { ...s, value: e.target.value } : s
+                                    )
+                                  )
+                                }
+                                title={setting.label || setting.key}
+                                placeholder={`Inserisci ${setting.label || setting.key}`}
+                                aria-label={setting.label || setting.key}
+                              />
+                            </>
+                          )}
+                          <button className="admin-btn-primary admin-btn-small admin-btn-fullwidth" onClick={() => updateSystemSettingValue(setting.key, setting.value).then(() => alert('Salvato!'))}>
+                            💾 Salva Testo
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {showPreview && (
+                <div className="admin-preview-column">
+                  <div className="preview-window">
+                    <div className="preview-nav">
+                      <div className="preview-dots-container">
+                        <div className="preview-dot preview-dot-red"></div>
+                        <div className="preview-dot preview-dot-yellow"></div>
+                        <div className="preview-dot preview-dot-green"></div>
+                      </div>
+                      <div className="preview-label">FRONTEND LIVE PREVIEW</div>
+                    </div>
+                    <div className="preview-body">
+                      <div className="preview-hero-section">
+                        <h1 className="preview-hero-title">
+                          {systemSettings.find(s => s.key === 'home_hero_title')?.value || 'Vincanto Maori'}
+                        </h1>
+                        <p className="preview-hero-subtitle">
+                          {systemSettings.find(s => s.key === 'home_hero_subtitle')?.value || 'Sottotitolo Hero'}
+                        </p>
+                      </div>
+                      <div className="preview-about-section">
+                        <h2 className="preview-about-title">Chi Siamo</h2>
+                        <p className="preview-about-content">
+                          {systemSettings.find(s => s.key === 'about_description_main')?.value || 'La nostra storia...'}
+                        </p>
+                      </div>
+                      <div className="preview-pricing-grid">
+                        <div className="preview-pricing-card preview-pricing-card-primary">
+                          <span className="preview-pricing-label">Soggiorno da</span>
+                          <div className="preview-pricing-value">
+                            € {systemSettings.find(s => s.key === 'display_price_base')?.value || '70'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="preview-caption">L'anteprima si aggiorna mentre scrivi.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
           {/* Fine sezioni amministrative */}
         </div>

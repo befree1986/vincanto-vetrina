@@ -26,6 +26,7 @@ const AdminPanelBasic = (): JSX.Element => {
   const navigate = useNavigate();
   // Tab navigation
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [showPreview, setShowPreview] = useState(true);
 
   const basicTabs = [
     { id: 'dashboard', label: '📊 Dashboard', requiresSuperAdmin: false },
@@ -96,6 +97,67 @@ const AdminPanelBasic = (): JSX.Element => {
     } catch (error) {
       console.error('❌ Errore aggiornamento impostazione:', error);
       throw error;
+    }
+  };
+
+  // Funzione per gestire l'upload, ridimensionamento e compressione
+  const handleImageUpload = async (file: File, key: string) => {
+    if (!file) return;
+    
+    if (!file.type.startsWith('image/')) {
+      alert('Per favore seleziona un file immagine valido.');
+      return;
+    }
+
+    try {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          // Ridimensionamento: max 1200px lato lungo
+          const MAX_SIZE = 1200;
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height *= MAX_SIZE / width;
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width *= MAX_SIZE / height;
+              height = MAX_SIZE;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          // Conversione in WebP (qualità 0.7)
+          const dataUrl = canvas.toDataURL('image/webp', 0.7);
+          
+          setSystemSettings(prev => {
+            const current = Array.isArray(prev) ? prev : [];
+            const index = current.findIndex(s => s.key === key);
+            const updated = [...current];
+            if (index > -1) {
+              updated[index] = { ...updated[index], value: dataUrl };
+            } else {
+              updated.push({ key, value: dataUrl, category: 'gallery' });
+            }
+            return updated;
+          });
+        };
+        img.src = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Errore elaborazione immagine:', error);
+      alert('Errore durante l\'elaborazione dell\'immagine.');
     }
   };
 
@@ -567,6 +629,7 @@ const AdminPanelBasic = (): JSX.Element => {
   // Effetto per gestire lo switch al pannello SuperAdmin
   useEffect(() => {
     if (activeTab === 'switch-superadmin') {
+      // IMPORTANTE: Reset tab prima della navigazione
       setActiveTab('dashboard'); // Reset tab per evitare loop
       navigate('/admin/pro');
     }
@@ -927,48 +990,54 @@ const AdminPanelBasic = (): JSX.Element => {
                   <div key={num} className="admin-stat-card">
                     <h4>Immagine {num}</h4>
                     <div className="pricing-controls">
-                      <input
-                        type="url"
-                        className="admin-input"
-                        placeholder="https://esempio.com/immagine.jpg"
-                        value={(Array.isArray(systemSettings) ? systemSettings : []).find(s => s.key === `gallery_image_${num}`)?.value || ''}
-                        onChange={(e) => {
-                          const currentSettings = Array.isArray(systemSettings) ? systemSettings : [];
-                          const updated = currentSettings.map(s =>
-                            s.key === `gallery_image_${num}` ? { ...s, value: e.target.value } : s
-                          );
-                          if (!updated.find(s => s.key === `gallery_image_${num}`)) {
-                            updated.push({ key: `gallery_image_${num}`, value: e.target.value, category: 'gallery' });
-                          }
-                          setSystemSettings(updated);
-                        }}
-                      />
                       {(() => {
                         const imgUrl = (Array.isArray(systemSettings) ? systemSettings : []).find(s => s.key === `gallery_image_${num}`)?.value;
                         return imgUrl ? (
                           <img
-                            className="admin-gallery-image-preview"
                             src={imgUrl}
                             alt={`Anteprima immagine ${num}`}
-                            style={{ marginTop: '10px', maxHeight: '100px', borderRadius: '5px', objectFit: 'cover', width: '100%' }}
+                            className="admin-gallery-image-preview admin-gallery-image-preview-styles"
                           />
-                        ) : null;
+                        ) : (
+                          <div className="admin-text-muted admin-py-lg admin-text-center admin-no-image-placeholder">
+                            Nessuna immagine
+                          </div>
+                        );
                       })()}
+
+                      <label className="admin-btn admin-btn-secondary admin-btn-small admin-btn-fullwidth admin-image-upload-label">
+                        📁 {systemSettings.find(s => s.key === `gallery_image_${num}`)?.value ? 'Cambia Immagine' : 'Seleziona File'}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="admin-hidden-file-input"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleImageUpload(file, `gallery_image_${num}`);
+                          }}
+                        />
+                      </label>
+
                       <button
                         className="admin-btn-primary admin-btn-small admin-btn-fullwidth"
+                        className="admin-btn-primary admin-btn-small admin-btn-fullwidth admin-mt-sm"
                         onClick={async () => {
                           try {
                             const val = (Array.isArray(systemSettings) ? systemSettings : []).find(s => s.key === `gallery_image_${num}`)?.value;
-                            if (val) {
+                            if (val && val.startsWith('data:')) {
                               await updateSystemSettingValue(`gallery_image_${num}`, val);
-                              alert('✅ Immagine salvata!');
+                              alert('✅ Immagine caricata e salvata con successo!');
+                            } else if (val) {
+                              alert('ℹ️ L\'immagine è già aggiornata.');
+                            } else {
+                              alert('⚠️ Seleziona prima un file.');
                             }
                           } catch (e) {
-                            alert('❌ Errore');
+                            alert('❌ Errore durante il salvataggio');
                           }
                         }}
                       >
-                        💾 Salva URL
+                        💾 Conferma e Salva
                       </button>
                     </div>
                   </div>
@@ -981,15 +1050,22 @@ const AdminPanelBasic = (): JSX.Element => {
         {/* Gestione Contenuti Tab */}
         {activeTab === 'contenuti' && (
           <div className="admin-section admin-animate-fade-in">
-            <h2>📝 Gestione Contenuti Frontend</h2>
-            <p className="admin-section-description">
-              Modifica i testi, i prezzi esposti e le descrizioni visualizzate sul sito pubblico senza toccare il codice.
-            </p>
+            <div className="admin-flex-between admin-mb-lg">
+              <div>
+                <h2>📝 Gestione Contenuti Frontend</h2>
+                <p className="admin-section-description">Modifica i testi e visualizza l'anteprima in tempo reale.</p>
+              </div>
+              <button className="admin-btn admin-btn-secondary" onClick={() => setShowPreview(!showPreview)}>
+                {showPreview ? '👁️ Nascondi Anteprima' : '👁️ Mostra Anteprima'}
+              </button>
+            </div>
 
-            <div className="admin-pricing-section">
-              <h3>🏠 Testi Principali e Hero</h3>
-              <div className="admin-pricing-grid">
-                {(Array.isArray(systemSettings) ? systemSettings : [])
+            <div className={`admin-content-layout ${showPreview ? 'admin-content-layout-preview' : ''}`}>
+              <div className="admin-editor-side">
+                <div className="admin-pricing-section">
+                  <h3>🏠 Testi Principali e Hero</h3>
+                  <div className="admin-pricing-grid admin-pricing-grid-single">
+                    {(Array.isArray(systemSettings) ? systemSettings : [])
                   .filter(s => ['home', 'about', 'general'].includes(s.category))
                   .map(setting => (
                     <div key={setting.key} className="admin-stat-card">
@@ -1013,6 +1089,7 @@ const AdminPanelBasic = (): JSX.Element => {
                           <input
                             type="text"
                             className="admin-input"
+                            title={setting.label || setting.key}
                             aria-label={setting.label || setting.key}
                             value={setting.value}
                             onChange={(e) => {
@@ -1022,6 +1099,7 @@ const AdminPanelBasic = (): JSX.Element => {
                               );
                               setSystemSettings(updated);
                             }}
+                            placeholder={`Modifica ${setting.label || setting.key}`}
                           />
                         )}
                         <button
@@ -1041,6 +1119,48 @@ const AdminPanelBasic = (): JSX.Element => {
                     </div>
                   ))}
               </div>
+                </div>
+              </div>
+
+              {showPreview && (
+                <div className="admin-preview-side">
+                  <div className="preview-container">
+                    <div className="preview-top-bar">
+                      <div className="preview-dot preview-dot-red"></div>
+                      <div className="preview-dot preview-dot-yellow"></div>
+                      <div className="preview-dot preview-dot-green"></div>
+                    </div>
+                    <div className="preview-scroll-area">
+                      <div className="preview-site-header">
+                        <h1 className="preview-title">
+                          {(systemSettings.find(s => s.key === 'home_hero_title')?.value) || 'Vincanto Maori'}
+                        </h1>
+                        <p className="preview-subtitle">
+                          {(systemSettings.find(s => s.key === 'home_hero_subtitle')?.value) || 'Sottotitolo Hero'}
+                        </p>
+                      </div>
+
+                      <div className="preview-section">
+                        <h2 className="preview-section-title">La nostra storia</h2>
+                        <div className="preview-section-content">
+                          {(systemSettings.find(s => s.key === 'about_description_main')?.value) || 'Descrizione chi siamo...'}
+                        </div>
+                      </div>
+
+                      <div className="preview-cta">
+                        <p className="preview-cta-text">Soggiorno a partire da</p>
+                        <h3 className="preview-cta-price">
+                          € {(systemSettings.find(s => s.key === 'display_price_base')?.value) || '70'}
+                        </h3>
+                        <button className="preview-cta-button">
+                          Verifica Disponibilità
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="preview-caption">L'anteprima riflette le modifiche non salvate</p>
+                </div>
+              )}
             </div>
           </div>
         )}
