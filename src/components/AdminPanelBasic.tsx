@@ -586,7 +586,7 @@ const AdminPanelBasic = (): JSX.Element => {
       adminEmail={localStorage.getItem('vincanto_admin_email') || role || 'Admin'}
       tabs={basicTabs}
     >
-      <div className="admin-panel-pro admin-panel-fullheight">
+      <div className="admin-panel-basic admin-panel-fullheight">
         <main className="admin-main">
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (

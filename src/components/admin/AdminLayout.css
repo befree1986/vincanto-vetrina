@@ -40,8 +40,31 @@
 
 .admin-layout .admin-content > .admin-panel-pro > .admin-main,
 .admin-layout .admin-content > .admin-panel-basic > .admin-main {
-  width: 100%;
-  min-width: 0;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.admin-layout .admin-panel-basic {
+  display: block;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box;
+}
+
+.admin-layout .admin-panel-pro {
+  display: block;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
   box-sizing: border-box;
 }
 
@@ -131,6 +154,29 @@
   /* Grigio per disabilitato */
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+/* Stile speciale per il pulsante switch nel menu */
+.admin-nav-link[title*="Vista"] {
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  color: #ffffff;
+  font-weight: 600;
+  margin-left: 15px;
+  margin-right: 15px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+}
+
+.admin-nav-link[title*="Vista"]:hover {
+  background: linear-gradient(135deg, #e67e22, #d35400);
+  box-shadow: 0 4px 12px rgba(230, 126, 34, 0.4);
+}
+
+.admin-nav-link[title*="Vista"].active {
+  background: linear-gradient(135deg, #d35400, #ba4a00);
+  box-shadow: 0 4px 12px rgba(211, 84, 0, 0.5);
 }
 
 .admin-content {

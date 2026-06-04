@@ -49,6 +49,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
   ];
 
   const sidebarTabs = tabs && tabs.length > 0 ? tabs : defaultTabs;
+  
+  // Ordina i tab: normali all'inizio, switch alla fine se SuperAdmin
+  const orderedTabs = isSuperAdmin 
+    ? [...sidebarTabs.filter(t => t.id !== 'switch-basic'), sidebarTabs.find(t => t.id === 'switch-basic')!]
+    : sidebarTabs.filter(t => t.id !== 'switch-basic');
 
   return (
     <div className="admin-layout">
@@ -59,16 +64,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
         </div>
         <div className="admin-header-actions">
           <div className="admin-flex admin-items-center admin-gap-md">
-            {isSuperAdmin && (
-              <button
-                className="admin-btn admin-btn-info admin-btn-sm admin-btn-switch-basic"
-                onClick={() => window.location.href = '/admin'}
-                title="Passa alla Vista Admin Base"
-              >
-                <span className="admin-hidden-mobile">🔄 Vista Base</span>
-                <span className="admin-visible-mobile">🔄</span>
-              </button>
-            )}
             <div className="admin-badge admin-badge-success">✅ Online</div>
             <div className="admin-flex admin-items-center admin-gap-sm">
               <span className="admin-text-muted admin-hidden-mobile">👤 {adminEmail}</span>
@@ -85,7 +80,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
       </header>
 
       <nav className="admin-sidebar">
-        {sidebarTabs.map((tab) => {
+        {orderedTabs.map((tab) => {
           const isDisabled = tab.requiresSuperAdmin && !isSuperAdmin;
           const tabClassName = `admin-nav-link ${activeTab === tab.id ? 'active' : ''} ${isDisabled ? 'disabled' : ''}`;
           return (
