@@ -1,8 +1,7 @@
 /* eslint-disable */
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
-import '../pages/AdminPanelPro.css';
-import '../styles/AdminSuperAdmin.css';
+import '../styles/AdminUXResponsive.css';
 import './AdminPanelBasic.css';
 import ExtraServicesAdmin from './admin/ExtraServicesAdmin';
 import AdminLayout from './admin/AdminLayout';
