@@ -2,6 +2,7 @@
 /* eslint-disable */
 // @ts-nocheck  
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './AdminPanelPro.css';
 import AdminLayout from '../components/admin/AdminLayout';
 import '../styles/AdminSuperAdmin.css';
@@ -9,6 +10,8 @@ import '../styles/AdminUXResponsive.css';
 import AdminApiService from '../services/adminApiService';
 import AdminPricing from '../components/admin/AdminPricing';
 import ExtraServicesAdmin from '../components/admin/ExtraServicesAdmin';
+import GalleryManager from '../components/admin/GalleryManager';
+import ContentManager from '../components/admin/ContentManager';
 import { ExtraService } from '../hooks/useExtraServices';
 import { useAdminRole } from '../hooks/useAdminRole';
 import { devLog, devError, debugLog } from '../utils/debug';
@@ -19,9 +22,28 @@ const AdminPanelPro = (): JSX.Element => {
 
   // Verifica ruolo Admin/SuperAdmin
   const { role, isLoading: roleLoading, isSuperAdmin, isAdmin } = useAdminRole();
+  const navigate = useNavigate();
 
   // Stati principali
   const [activeTab, setActiveTab] = useState('dashboard');
+
+  // Configurazione tab per la vista SuperAdmin
+  const proTabs = [
+    { id: 'dashboard', label: '📊 Dashboard' },
+    { id: 'prenotazioni', label: '📅 Prenotazioni' },
+    { id: 'calendari', label: '📆 Calendari' },
+    { id: 'prezzi', label: '💰 Prezzi' },
+    { id: 'servizi-extra', label: '🛎️ Servizi' },
+    { id: 'gallery', label: '🖼️ Gallery' },
+    { id: 'contenuti', label: '📝 Contenuti' },
+    { id: 'pagamenti', label: '💳 Pagamenti' },
+    { id: 'email', label: '📧 Email' },
+    { id: 'notifiche', label: '🔔 Notifiche' },
+    { id: 'analytics', label: '📈 Analytics' },
+    { id: 'admin-management', label: '👥 Admin' },
+    { id: 'sistema', label: '⚙️ Sistema' },
+    { id: 'switch-basic', label: '📉 Vista Admin' },
+  ];
 
   // Stati per prenotazioni e pagamenti (solo backend reale)
   const [recentBookings, setRecentBookings] = useState<any[]>([]);
@@ -269,6 +291,14 @@ const AdminPanelPro = (): JSX.Element => {
       loadRealApiData();
     }
   }, [roleLoading, role]);
+
+  // Effetto per gestire lo switch al pannello Admin Standard
+  useEffect(() => {
+    if (activeTab === 'switch-basic') {
+      setActiveTab('dashboard');
+      navigate('/admin');
+    }
+  }, [activeTab, navigate]);
 
   // Aggiorna dinamicamente l'altezza delle chart-bar
   useEffect(() => {
@@ -2545,6 +2575,7 @@ const AdminPanelPro = (): JSX.Element => {
       }}
       isSuperAdmin={isSuperAdmin()}
       adminEmail={localStorage.getItem('vincanto_admin_email') || role || 'Admin'}
+      tabs={proTabs}
     >
       <div className="admin-panel-pro">
         {/* Contenuto Principale Responsive */}

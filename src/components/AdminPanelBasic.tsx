@@ -1,11 +1,14 @@
 /* eslint-disable */
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../styles/AdminUXResponsive.css';
 import './AdminPanelBasic.css';
 import ExtraServicesAdmin from './admin/ExtraServicesAdmin';
 import AdminLayout from './admin/AdminLayout';
 import AdminDashboard from './admin/AdminDashboard';
+import GalleryManager from './admin/GalleryManager';
+import ContentManager from './admin/ContentManager';
 import { useAdminRole } from '../hooks/useAdminRole';
 import { devLog, devError } from '../utils/debug';
 import { log } from '../utils/logger';
@@ -20,6 +23,7 @@ const AdminPanelBasic = (): JSX.Element => {
   devLog('🚀 AdminPanelBasic component rendering...');
 
   const { role, isLoading: roleLoading, isAdmin, isSuperAdmin } = useAdminRole();
+  const navigate = useNavigate();
   // Tab navigation
   const [activeTab, setActiveTab] = useState('dashboard');
 
@@ -28,6 +32,9 @@ const AdminPanelBasic = (): JSX.Element => {
     { id: 'prenotazioni', label: '📅 Prenotazioni', requiresSuperAdmin: false },
     { id: 'calendari', label: '📆 Calendari', requiresSuperAdmin: false },
     { id: 'servizi', label: '🛎️ Servizi Extra', requiresSuperAdmin: false },
+    { id: 'gallery', label: '🖼️ Gestione Immagini', requiresSuperAdmin: false },
+    { id: 'contenuti', label: '📝 Contenuti Sito', requiresSuperAdmin: false },
+    { id: 'switch-superadmin', label: '⚡ Vista SuperAdmin', requiresSuperAdmin: true },
   ];
 
   // Data states
@@ -78,6 +85,19 @@ const AdminPanelBasic = (): JSX.Element => {
       return null;
     }
   });
+
+  // Funzione per aggiornare le impostazioni di sistema (Testi e Immagini)
+  const updateSystemSettingValue = async (key: string, value: any) => {
+    if (!adminApiService) return;
+    try {
+      const result = await adminApiService.updateSystemSetting(key, value);
+      log('✅ Impostazione aggiornata:', { key, value });
+      return result;
+    } catch (error) {
+      console.error('❌ Errore aggiornamento impostazione:', error);
+      throw error;
+    }
+  };
 
   // Load real API data
   const loadRealApiData = async () => {
@@ -544,6 +564,14 @@ const AdminPanelBasic = (): JSX.Element => {
     }
   }, [roleLoading]);
 
+  // Effetto per gestire lo switch al pannello SuperAdmin
+  useEffect(() => {
+    if (activeTab === 'switch-superadmin') {
+      setActiveTab('dashboard'); // Reset tab per evitare loop
+      navigate('/admin/pro');
+    }
+  }, [activeTab, navigate]);
+
   // === RENDER ADMIN ROLE GUARD ===
   if (!roleLoading && !isAdmin()) {
     return (
@@ -881,6 +909,139 @@ const AdminPanelBasic = (): JSX.Element => {
             </p>
 
             <ExtraServicesAdmin />
+          </div>
+        )}
+
+        {/* Gestione Immagini Tab */}
+        {activeTab === 'gallery' && (
+          <div className="admin-section admin-animate-fade-in">
+            <h2>🖼️ Gestione Immagini Sito</h2>
+            <div className="admin-notice">
+              <p>Inserisci gli URL delle immagini per aggiornare le gallerie del sito pubblico.</p>
+            </div>
+
+            <div className="admin-pricing-section">
+              <h3>📸 Galleria Principale (Home Page)</h3>
+              <div className="admin-pricing-grid">
+                {[1, 2, 3, 4].map(num => (
+                  <div key={num} className="admin-stat-card">
+                    <h4>Immagine {num}</h4>
+                    <div className="pricing-controls">
+                      <input
+                        type="url"
+                        className="admin-input"
+                        placeholder="https://esempio.com/immagine.jpg"
+                        value={(Array.isArray(systemSettings) ? systemSettings : []).find(s => s.key === `gallery_image_${num}`)?.value || ''}
+                        onChange={(e) => {
+                          const currentSettings = Array.isArray(systemSettings) ? systemSettings : [];
+                          const updated = currentSettings.map(s =>
+                            s.key === `gallery_image_${num}` ? { ...s, value: e.target.value } : s
+                          );
+                          if (!updated.find(s => s.key === `gallery_image_${num}`)) {
+                            updated.push({ key: `gallery_image_${num}`, value: e.target.value, category: 'gallery' });
+                          }
+                          setSystemSettings(updated);
+                        }}
+                      />
+                      {(() => {
+                        const imgUrl = (Array.isArray(systemSettings) ? systemSettings : []).find(s => s.key === `gallery_image_${num}`)?.value;
+                        return imgUrl ? (
+                          <img
+                            className="admin-gallery-image-preview"
+                            src={imgUrl}
+                            alt={`Anteprima immagine ${num}`}
+                            style={{ marginTop: '10px', maxHeight: '100px', borderRadius: '5px', objectFit: 'cover', width: '100%' }}
+                          />
+                        ) : null;
+                      })()}
+                      <button
+                        className="admin-btn-primary admin-btn-small admin-btn-fullwidth"
+                        onClick={async () => {
+                          try {
+                            const val = (Array.isArray(systemSettings) ? systemSettings : []).find(s => s.key === `gallery_image_${num}`)?.value;
+                            if (val) {
+                              await updateSystemSettingValue(`gallery_image_${num}`, val);
+                              alert('✅ Immagine salvata!');
+                            }
+                          } catch (e) {
+                            alert('❌ Errore');
+                          }
+                        }}
+                      >
+                        💾 Salva URL
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Gestione Contenuti Tab */}
+        {activeTab === 'contenuti' && (
+          <div className="admin-section admin-animate-fade-in">
+            <h2>📝 Gestione Contenuti Frontend</h2>
+            <p className="admin-section-description">
+              Modifica i testi, i prezzi esposti e le descrizioni visualizzate sul sito pubblico senza toccare il codice.
+            </p>
+
+            <div className="admin-pricing-section">
+              <h3>🏠 Testi Principali e Hero</h3>
+              <div className="admin-pricing-grid">
+                {(Array.isArray(systemSettings) ? systemSettings : [])
+                  .filter(s => ['home', 'about', 'general'].includes(s.category))
+                  .map(setting => (
+                    <div key={setting.key} className="admin-stat-card">
+                      <h4>{setting.label || setting.key}</h4>
+                      <div className="pricing-controls">
+                        {setting.type === 'textarea' ? (
+                          <textarea
+                            className="admin-input admin-textarea"
+                            aria-label={setting.label || setting.key}
+                            value={setting.value}
+                            onChange={(e) => {
+                              const currentSettings = Array.isArray(systemSettings) ? systemSettings : [];
+                              const updated = currentSettings.map(s =>
+                                s.key === setting.key ? { ...s, value: e.target.value } : s
+                              );
+                              setSystemSettings(updated);
+                            }}
+                            rows={4}
+                          />
+                        ) : (
+                          <input
+                            type="text"
+                            className="admin-input"
+                            aria-label={setting.label || setting.key}
+                            value={setting.value}
+                            onChange={(e) => {
+                              const currentSettings = Array.isArray(systemSettings) ? systemSettings : [];
+                              const updated = currentSettings.map(s =>
+                                s.key === setting.key ? { ...s, value: e.target.value } : s
+                              );
+                              setSystemSettings(updated);
+                            }}
+                          />
+                        )}
+                        <button
+                          className="admin-btn-primary admin-btn-small admin-btn-fullwidth"
+                          onClick={async () => {
+                            try {
+                              await updateSystemSettingValue(setting.key, setting.value);
+                              alert('✅ Contenuto salvato!');
+                            } catch (e) {
+                              alert('❌ Errore durante il salvataggio');
+                            }
+                          }}
+                        >
+                          💾 Salva Testo
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
           </div>
         )}
       </main>

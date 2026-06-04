@@ -50,10 +50,15 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
 
   const sidebarTabs = tabs && tabs.length > 0 ? tabs : defaultTabs;
   
-  // Ordina i tab: normali all'inizio, switch alla fine se SuperAdmin
-  const orderedTabs = isSuperAdmin 
-    ? [...sidebarTabs.filter(t => t.id !== 'switch-basic'), sidebarTabs.find(t => t.id === 'switch-basic')!]
-    : sidebarTabs.filter(t => t.id !== 'switch-basic');
+  // Filtra e ordina i tab: sposta il tab di switch in fondo se l'utente ha i permessi
+  const filteredTabs = sidebarTabs.filter(tab => {
+    if (tab.id.startsWith('switch-') && tab.requiresSuperAdmin && !isSuperAdmin) return false;
+    return true;
+  });
+  
+  const nonSwitchTabs = filteredTabs.filter(t => !t.id.startsWith('switch-'));
+  const switchTab = filteredTabs.find(t => t.id.startsWith('switch-'));
+  const orderedTabs = switchTab ? [...nonSwitchTabs, switchTab] : nonSwitchTabs;
 
   return (
     <div className="admin-layout">
@@ -87,13 +92,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
             <button
               key={tab.id}
               className={tabClassName}
-              onClick={() => {
-                if (tab.id === 'switch-basic') {
-                  window.location.href = '/admin';
-                  return;
-                }
-                !isDisabled && setActiveTab(tab.id);
-              }}
+              onClick={() => !isDisabled && setActiveTab(tab.id)}
               title={isDisabled ? 'Accesso riservato al SuperAdmin' : tab.label}
               disabled={isDisabled}
             >
