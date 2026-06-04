@@ -73,9 +73,20 @@
   flex-shrink: 0;
 }
 
-.admin-header {
+.admin-layout > .admin-header {
   grid-column: 1 / -1;
   /* Occupa tutta la larghezza */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 25px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  z-index: 1000;
+}
+
+.admin-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
