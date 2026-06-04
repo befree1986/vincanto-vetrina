@@ -1103,6 +1103,94 @@ const AdminPanelPro = (): JSX.Element => {
     }
   };
 
+  // === FUNZIONI CALENDARIO REALE ===
+  const handleForceRealCalendarSync = async () => {
+    if (!adminApiService) return;
+    setIsLoadingCalendars(true);
+    try {
+      await adminApiService.forceRealCalendarSync();
+      await loadCalendarConfigs();
+      alert('✅ Sincronizzazione completata!');
+    } catch (error) {
+      alert('❌ Errore durante il sincronizzazione');
+      console.error(error);
+    } finally {
+      setIsLoadingCalendars(false);
+    }
+  };
+
+  // === PRICING FUNCTIONS ===
+  const loadPricingConfig = async () => {
+    try {
+      if (!adminApiService) return;
+      log('💰 Caricamento configurazione prezzi per gruppi...');
+      const result = await adminApiService.getPricingConfig();
+
+      if (result && (result.priceGroup1to2 !== undefined || result.success)) {
+        // Nuova API unificata: dati direttamente disponibili
+        const config = result.priceGroup1to2 ? result : result.pricing || {};
+        setPricingConfig({
+          // Mappato direttamente dai nuovi campi API unificata
+          priceGroup1to2: parseFloat(config.priceGroup1to2) || 75,
+          priceGroup3to4: parseFloat(config.priceGroup3to4) || 95,
+          priceGroup5to6: parseFloat(config.priceGroup5to6) || 115,
+          priceGroup7to8: parseFloat(config.priceGroup7to8) || 135,
+
+          // Costi e configurazioni
+          cleaningFee: parseFloat(config.cleaningFee) || 50,
+          parkingFee: parseFloat(config.parkingFee) || 20,
+          touristTaxAdult: parseFloat(config.touristTaxAdult) || 2.00,
+          touristTaxChild: parseFloat(config.touristTaxChild) || 0,
+
+          // Sconti e maggiorazioni
+          weekendSurcharge: parseFloat(config.weekendSurcharge) || 0,
+          weeklyDiscount: parseFloat(config.weeklyDiscount) || 10,
+          monthlyDiscount: parseFloat(config.monthlyDiscount) || 15,
+
+          // Limiti
+          minStay: parseInt(config.minStay) || 2,
+          maxStay: parseInt(config.maxStay) || 14,
+          maxGuests: parseInt(config.maxGuests) || 8,
+
+          // Sconti avanzati
+          advanceBookingDiscount: config.advanceBookingDiscount || 0,
+          lastMinuteDiscount: config.lastMinuteDiscount || 0
+        });
+        log('✅ Configurazione prezzi per gruppi caricata:', config);
+      } else {
+        log('⚠️ Nessuna configurazione trovata, uso valori predefiniti per gruppi');
+      }
+    } catch (error) {
+      console.error('❌ Errore caricamento prezzi:', error);
+    }
+  };
+
+  const savePricingConfig = async () => {
+    try {
+      if (!adminApiService) {
+        alert('❌ Servizio API non disponibile');
+        return;
+      }
+
+      setIsUpdatingPricing(true);
+      log('✨ ADMIN SAVE - Dati da salvare:', JSON.stringify(pricingConfig, null, 2));
+
+      const result = await adminApiService.updatePricingConfig(pricingConfig);
+
+      if (result.success) {
+        alert('✅ Configurazione prezzi salvata con successo!');
+        await loadPricingConfig();
+      } else {
+        alert('❌ Errore nel salvataggio: ' + (result.message || 'Errore sconosciuto'));
+      }
+    } catch (error) {
+      console.error('❌ Errore salvataggio prezzi:', error);
+      alert('❌ Errore nel salvataggio della configurazione prezzi');
+    } finally {
+      setIsUpdatingPricing(false);
+    }
+  };
+
   // Carica dati reali dalle API backend
   const loadRealApiData = async () => {
     if (!adminApiService) {
@@ -5391,8 +5479,9 @@ const AdminPanelPro = (): JSX.Element => {
                                 value={setting.value || ''} // setting.value is safe here
                                 onChange={(e) =>
                                   setSystemSettings(
-                                    systemSettings.map((s) =>
-                                      s.key === setting.key ? { ...s, value: e.target.value } : s
+                                (Array.isArray(systemSettings) ? systemSettings : [])
+                                  .map((s) =>
+                                    s.key === setting.key ? { ...s, value: e.target.value } : s
                                     )
                                   )
                                 }
@@ -5414,8 +5503,9 @@ const AdminPanelPro = (): JSX.Element => {
                                 value={setting.value || ''} // setting.value is safe here
                                 onChange={(e) =>
                                   setSystemSettings(
-                                    systemSettings.map((s) =>
-                                      s.key === setting.key ? { ...s, value: e.target.value } : s
+                                    (Array.isArray(systemSettings) ? systemSettings : [])
+                                      .map((s) =>
+                                        s.key === setting.key ? { ...s, value: e.target.value } : s
                                     )
                                   )
                                 }
