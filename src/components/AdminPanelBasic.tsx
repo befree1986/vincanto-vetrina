@@ -766,6 +766,7 @@ const AdminPanelBasic = (): JSX.Element => {
                       <div>
                         <label htmlFor="manual_payment_method">Metodo Pagamento:</label>
                         <select id="manual_payment_method" className="admin-input" value={manualBooking.payment_method} onChange={e => setManualBooking({ ...manualBooking, payment_method: e.target.value })}>
+                          <option value="">Seleziona metodo</option>
                           <option value="bank_transfer">Bonifico</option>
                           <option value="cash">Contanti</option>
                           <option value="pos">POS / Carta</option>
@@ -774,6 +775,7 @@ const AdminPanelBasic = (): JSX.Element => {
                       <div>
                         <label htmlFor="manual_payment_type">Tipo Pagamento:</label>
                         <select id="manual_payment_type" className="admin-input" value={manualBooking.payment_type} onChange={e => setManualBooking({ ...manualBooking, payment_type: e.target.value })}>
+                          <option value="">Seleziona tipo</option>
                           <option value="deposit">Acconto (20%)</option>
                           <option value="full">Saldo Completo</option>
                         </select>
@@ -984,60 +986,63 @@ const AdminPanelBasic = (): JSX.Element => {
             </div>
 
             <div className="admin-pricing-section">
-              <h3>📸 Galleria Principale (Home Page)</h3>
+              <h3>📸 Galleria e Immagini Sezioni</h3>
               <div className="admin-pricing-grid">
-                {[1, 2, 3, 4].map(num => (
-                  <div key={num} className="admin-stat-card">
-                    <h4>Immagine {num}</h4>
+                {(Array.isArray(systemSettings) ? systemSettings : [])
+                  .filter(s => s.category === 'gallery')
+                  .map(setting => (
+                  <div key={setting.key} className="admin-stat-card">
+                    <div className="admin-mb-sm">
+                      <label className="admin-text-xs admin-text-muted">Etichetta:</label>
+                      <input 
+                        type="text" 
+                        className="admin-input-small admin-w-full"
+                        value={setting.label || ''}
+                        onChange={(e) => {
+                          setSystemSettings(prev => prev.map(s => s.key === setting.key ? { ...s, label: e.target.value } : s));
+                        }}
+                      />
+                    </div>
+                    <div className="admin-flex-between admin-mt-sm">
+                      <h4>{setting.label || setting.key}</h4>
+                      <button 
+                        className="admin-btn-small admin-btn-danger"
+                        onClick={async () => {
+                          if(confirm('Cancellare questa immagine?')) {
+                            await updateSystemSettingValue(setting.key, '');
+                            alert('Immagine rimossa');
+                            loadRealApiData();
+                          }
+                        }}
+                      >🗑️</button>
+                    </div>
                     <div className="pricing-controls">
-                      {(() => {
-                        const imgUrl = (Array.isArray(systemSettings) ? systemSettings : []).find(s => s.key === `gallery_image_${num}`)?.value; // Safe
-                        return imgUrl ? (
-                          <img
-                            src={imgUrl}
-                            alt={`Anteprima immagine ${num}`}
-                            className="admin-gallery-image-preview admin-gallery-image-preview-styles"
-                          />
-                        ) : (
-                          <div className="admin-text-muted admin-py-lg admin-text-center admin-no-image-placeholder">
-                            Nessuna immagine
-                          </div>
-                        );
-                      })()}
+                      {setting.value ? (
+                        <img src={setting.value} alt={setting.label} className="admin-gallery-image-preview admin-gallery-image-preview-styles" />
+                      ) : (
+                        <div className="admin-text-muted admin-py-lg admin-text-center admin-no-image-placeholder">Nessuna immagine</div>
+                      )}
 
                       <label className="admin-btn admin-btn-secondary admin-btn-small admin-btn-fullwidth admin-image-upload-label">
-                        📁 {systemSettings.find(s => s.key === `gallery_image_${num}`)?.value ? 'Cambia Immagine' : 'Seleziona File'}
+                        📁 {setting.value ? 'Cambia' : 'Carica'}
                         <input // Safe
                           type="file"
                           accept="image/*"
                           className="admin-hidden-file-input"
                           onChange={(e) => {
                             const file = e.target.files?.[0];
-                            if (file) handleImageUpload(file, `gallery_image_${num}`);
+                            if (file) handleImageUpload(file, setting.key);
                           }}
                         />
                       </label>
 
-                      <button
-                        className="admin-btn-primary admin-btn-small admin-btn-fullwidth admin-mt-sm"
-                        onClick={async () => {
-                          try { // Safe
-                            const val = (Array.isArray(systemSettings) ? systemSettings : []).find(s => s.key === `gallery_image_${num}`)?.value;
-                            if (val && val.startsWith('data:')) {
-                              await updateSystemSettingValue(`gallery_image_${num}`, val);
-                              alert('✅ Immagine caricata e salvata con successo!');
-                            } else if (val) {
-                              alert('ℹ️ L\'immagine è già aggiornata.');
-                            } else {
-                              alert('⚠️ Seleziona prima un file.');
-                            }
-                          } catch (e) {
-                            alert('❌ Errore durante il salvataggio');
-                          }
-                        }}
-                      >
-                        💾 Conferma e Salva
-                      </button>
+                      {setting.value?.startsWith('data:') && (
+                        <button className="admin-btn-primary admin-btn-small admin-btn-fullwidth admin-mt-sm" onClick={async () => {
+                          await updateSystemSettingValue(setting.key, setting.value);
+                          alert('✅ Salvato!');
+                          loadRealApiData();
+                        }}>💾 Salva</button>
+                      )}
                     </div>
                   </div>
                 ))}
