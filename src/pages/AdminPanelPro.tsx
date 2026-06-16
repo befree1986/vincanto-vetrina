@@ -714,6 +714,29 @@ const AdminPanelPro = (): JSX.Element => {
     }
   };
 
+  // Handler per la sincronizzazione reale di tutti i calendari esterni (ICal)
+  const handleForceRealCalendarSync = async () => {
+    try {
+      devLog('🔄 Avvio sincronizzazione calendari reale (trigger backend)...');
+      setIsLoadingCalendars(true);
+      const res = await fetch('/api/calendar-real-sync', { method: 'POST' });
+      const json = await res.json();
+      
+      if (res.ok && json.success !== false) {
+        alert(`✅ Sincronizzazione completata con successo!\nEventi aggiornati: ${json.synced || 'OK'}`);
+        await loadCalendarConfigs();
+        await loadRealApiData();
+      } else {
+        throw new Error(json.message || 'Errore durante la sincronizzazione');
+      }
+    } catch (e) {
+      devError('❌ Errore sync reale:', e);
+      alert('❌ Errore durante la sincronizzazione reale dei calendari.');
+    } finally {
+      setIsLoadingCalendars(false);
+    }
+  };
+
   const handleTestConnection = async (config: any) => {
     if (!adminApiService) return;
 

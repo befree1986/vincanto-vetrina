@@ -727,16 +727,16 @@ const AdminPanelBasic = (): JSX.Element => {
                 {showManualForm && (
                   <form onSubmit={handleCreateManualBooking}>
                     <div className="form-group admin-grid-2-col">
-                      <div><label htmlFor="manual_first_name">Nome:</label><input id="manual_first_name" type="text" className="admin-input" value={manualBooking.first_name} onChange={e => setManualBooking({ ...manualBooking, first_name: e.target.value })} required /></div>
-                      <div><label htmlFor="manual_last_name">Cognome:</label><input id="manual_last_name" type="text" className="admin-input" value={manualBooking.last_name} onChange={e => setManualBooking({ ...manualBooking, last_name: e.target.value })} required /></div>
+                      <div><label htmlFor="manual_first_name">Nome:</label><input id="manual_first_name" type="text" className="admin-input" value={manualBooking.first_name} onChange={e => setManualBooking({ ...manualBooking, first_name: e.target.value })} required placeholder="Es: Mario" title="Nome del cliente" /></div>
+                      <div><label htmlFor="manual_last_name">Cognome:</label><input id="manual_last_name" type="text" className="admin-input" value={manualBooking.last_name} onChange={e => setManualBooking({ ...manualBooking, last_name: e.target.value })} required placeholder="Rossi" /></div>
                     </div>
                     <div className="form-group admin-grid-2-col">
-                      <div><label htmlFor="manual_email">Email:</label><input id="manual_email" type="email" className="admin-input" value={manualBooking.customer_email} onChange={e => setManualBooking({ ...manualBooking, customer_email: e.target.value })} /></div>
-                      <div><label htmlFor="manual_phone">Telefono:</label><input id="manual_phone" type="text" className="admin-input" value={manualBooking.phone} onChange={e => setManualBooking({ ...manualBooking, phone: e.target.value })} /></div>
+                      <div><label htmlFor="manual_email">Email:</label><input id="manual_email" type="email" className="admin-input" value={manualBooking.customer_email} onChange={e => setManualBooking({ ...manualBooking, customer_email: e.target.value })} placeholder="mario.rossi@email.com" title="Email del cliente" /></div>
+                      <div><label htmlFor="manual_phone">Telefono:</label><input id="manual_phone" type="text" className="admin-input" value={manualBooking.phone} onChange={e => setManualBooking({ ...manualBooking, phone: e.target.value })} placeholder="+39 333 1234567" title="Telefono del cliente" /></div>
                     </div>
                     <div className="form-group admin-grid-2-col">
-                      <div><label htmlFor="manual_check_in">Check-in:</label><input id="manual_check_in" type="date" className="admin-input" value={manualBooking.check_in} onChange={e => setManualBooking({ ...manualBooking, check_in: e.target.value })} required /></div>
-                      <div><label htmlFor="manual_check_out">Check-out:</label><input id="manual_check_out" type="date" className="admin-input" value={manualBooking.check_out} onChange={e => setManualBooking({ ...manualBooking, check_out: e.target.value })} required /></div>
+                      <div><label htmlFor="manual_check_in">Check-in:</label><input id="manual_check_in" type="date" className="admin-input" value={manualBooking.check_in} onChange={e => setManualBooking({ ...manualBooking, check_in: e.target.value })} required title="Data di check-in" /></div>
+                      <div><label htmlFor="manual_check_out">Check-out:</label><input id="manual_check_out" type="date" className="admin-input" value={manualBooking.check_out} onChange={e => setManualBooking({ ...manualBooking, check_out: e.target.value })} required title="Data di check-out" /></div>
                     </div>
 
                     {/* Servizi Extra */}
@@ -758,8 +758,8 @@ const AdminPanelBasic = (): JSX.Element => {
                     </div>
 
                     <div className="form-group admin-grid-2-col">
-                      <div><label htmlFor="manual_guests">Ospiti:</label><input id="manual_guests" type="number" className="admin-input" value={manualBooking.guests} onChange={e => setManualBooking({ ...manualBooking, guests: parseInt(e.target.value) })} min="1" /></div>
-                      <div><label htmlFor="manual_total_amount">Totale (€):</label><input id="manual_total_amount" type="number" className="admin-input" value={manualBooking.total_amount} onChange={e => setManualBooking({ ...manualBooking, total_amount: parseFloat(e.target.value) })} /></div>
+                      <div><label htmlFor="manual_guests">Ospiti:</label><input id="manual_guests" type="number" className="admin-input" value={manualBooking.guests} onChange={e => setManualBooking({ ...manualBooking, guests: parseInt(e.target.value) })} min="1" placeholder="2" /></div>
+                      <div><label htmlFor="manual_total_amount">Totale (€):</label><input id="manual_total_amount" type="number" className="admin-input" value={manualBooking.total_amount} onChange={e => setManualBooking({ ...manualBooking, total_amount: parseFloat(e.target.value) })} placeholder="0.00" /></div>
                     </div>
 
                     <div className="form-group admin-grid-2-col">
@@ -799,8 +799,8 @@ const AdminPanelBasic = (): JSX.Element => {
                 {showBlockForm && (
                   <form onSubmit={handleBlockDates}>
                     <div className="form-group admin-grid-2-col">
-                      <div><label htmlFor="block_start_date">Dal:</label><input id="block_start_date" type="date" className="admin-input" value={blockDate.start_date} onChange={e => setBlockDate({ ...blockDate, start_date: e.target.value })} required /></div>
-                      <div><label htmlFor="block_end_date">Al:</label><input id="block_end_date" type="date" className="admin-input" value={blockDate.end_date} onChange={e => setBlockDate({ ...blockDate, end_date: e.target.value })} required /></div>
+                      <div><label htmlFor="block_start_date">Dal:</label><input id="block_start_date" type="date" className="admin-input" value={blockDate.start_date} onChange={e => setBlockDate({ ...blockDate, start_date: e.target.value })} required title="Inizio blocco date" /></div>
+                      <div><label htmlFor="block_end_date">Al:</label><input id="block_end_date" type="date" className="admin-input" value={blockDate.end_date} onChange={e => setBlockDate({ ...blockDate, end_date: e.target.value })} required title="Fine blocco date" /></div>
                     </div>
                     <div className="form-group">
                       <label htmlFor="block_reason">Motivo:</label>
@@ -993,11 +993,14 @@ const AdminPanelBasic = (): JSX.Element => {
                   .map(setting => (
                   <div key={setting.key} className="admin-stat-card">
                     <div className="admin-mb-sm">
-                      <label className="admin-text-xs admin-text-muted">Etichetta:</label>
+                      <label htmlFor={`gallery-label-${setting.key}`} className="admin-text-xs admin-text-muted">Etichetta:</label>
                       <input 
+                        id={`gallery-label-${setting.key}`}
                         type="text" 
                         className="admin-input-small admin-w-full"
                         value={setting.label || ''}
+                        placeholder="Inserisci etichetta immagine"
+                        title="Etichetta immagine galleria"
                         onChange={(e) => {
                           setSystemSettings(prev => prev.map(s => s.key === setting.key ? { ...s, label: e.target.value } : s));
                         }}
@@ -1029,6 +1032,7 @@ const AdminPanelBasic = (): JSX.Element => {
                           type="file"
                           accept="image/*"
                           className="admin-hidden-file-input"
+                          title="Seleziona file immagine da caricare"
                           onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) handleImageUpload(file, setting.key);
