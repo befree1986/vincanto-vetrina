@@ -1568,22 +1568,6 @@ export default async function handler(req, res) {
             requiredMinStay = parseInt(rules.min_stay_august) || 6;
           }
 
-          // =================================================================
-          // ✨ WORKAROUND PER TEST SU AMBIENTE DI PREVIEW (DA RIMUOVERE IN PRODUZIONE)
-          const testRuleExists = seasonalRules.some(rule => rule.id === 'test-promo-agosto');
-          if (!testRuleExists) {
-              console.log('ℹ️ WORKAROUND (booking): Aggiunta regola di test per la promo di Agosto.');
-              seasonalRules.push({
-                  id: 'test-promo-agosto',
-                  name: 'Promo Agosto Test',
-                  startDate: '2026-08-14',
-                  endDate: '2026-08-17',
-                  minStay: 2,
-                  priceGroup1to2: 90,
-              });
-          }
-          // =================================================================
-
           // 🔥 LOGICA MANCANTE: Applica le regole stagionali al soggiorno minimo.
           // Questa logica era presente in 'quote' ma mancava qui.
           let activeRuleName = null;
@@ -3688,24 +3672,6 @@ END:VEVENT
         } catch (dbError) {
           console.warn('⚠️ Errore caricamento regole stagionali in quote:', dbError);
         }
-
-        // =================================================================
-        // ✨ WORKAROUND PER TEST SU AMBIENTE DI PREVIEW (DA RIMUOVERE IN PRODUZIONE)
-        // Aggiungiamo manualmente la regola di test se non la troviamo.
-        const testRuleExists = seasonalRules.some(rule => rule.id === 'test-promo-agosto');
-        if (!testRuleExists) {
-            console.log('ℹ️ WORKAROUND (quote): Aggiunta regola di test per la promo di Agosto.');
-            seasonalRules.push({
-                id: 'test-promo-agosto',
-                name: 'Promo Agosto Test',
-                startDate: '2026-08-14',
-                endDate: '2026-08-17',
-                minStay: 2,
-                priceGroup1to2: 90, // 180€ per 2 persone = 90€ a persona
-            });
-        }
-        // =================================================================
-
 
         // Applica regole stagionali se presenti
         let currentPricing = { ...pricing };
