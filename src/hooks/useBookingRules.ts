@@ -1,10 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
 
+export interface SeasonalRule {
+  id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  minStay?: number;
+  priceGroup1to2?: number;
+  priceGroup3to4?: number;
+  priceGroup5to6?: number;
+  priceGroup7to8?: number;
+}
 export interface BookingRules {
   minStay: number;
   minStayAugust: number;
   maxStay: number;
   maxGuests: number;
+  seasonalRules: SeasonalRule[];
 }
 
 export const useBookingRules = () => {
@@ -28,6 +40,7 @@ export const useBookingRules = () => {
           minStayAugust: data.pricing.minStayAugust || 6,
           maxStay: data.pricing.maxStay || 14,
           maxGuests: data.pricing.maxGuests || 8,
+          seasonalRules: data.pricing.seasonalRules || [],
         });
       } else {
         throw new Error(data.error || 'Invalid data structure for booking rules');
@@ -40,6 +53,7 @@ export const useBookingRules = () => {
         minStayAugust: 6,
         maxStay: 14,
         maxGuests: 8,
+        seasonalRules: [],
       });
     } finally {
       setLoading(false);
@@ -52,9 +66,26 @@ export const useBookingRules = () => {
 
   const getMinStayForDate = useCallback((date: Date | undefined): number => {
     if (!date || !rules) return rules?.minStay ?? 3;
-    // Usa getMonth() che rispetta il fuso orario locale dell'utente, corrispondente a ciò che vede sul calendario.
-    // getMonth() è 0-indexed, quindi Agosto è 7.
-    return date.getMonth() === 7 ? rules.minStayAugust : rules.minStay;
+
+    // Per coerenza con il backend, usiamo UTC per i confronti
+    const dateUTC = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+
+    // 1. Controlla le regole stagionali personalizzate
+    const activeRule = rules.seasonalRules.find(rule => {
+      const ruleStart = new Date(rule.startDate);
+      const ruleEnd = new Date(rule.endDate);
+      const ruleStartUTC = new Date(Date.UTC(ruleStart.getFullYear(), ruleStart.getMonth(), ruleStart.getDate()));
+      const ruleEndUTC = new Date(Date.UTC(ruleEnd.getFullYear(), ruleEnd.getMonth(), ruleEnd.getDate()));
+      return dateUTC >= ruleStartUTC && dateUTC <= ruleEndUTC;
+    });
+
+    if (activeRule && activeRule.minStay) {
+      return activeRule.minStay;
+    }
+
+    // 2. Se nessuna regola stagionale, controlla la regola di Agosto
+    // getUTCMonth() è 0-indexed, quindi Agosto è 7.
+    return date.getUTCMonth() === 7 ? rules.minStayAugust : rules.minStay;
   }, [rules]);
 
   return { rules, loading, error, getMinStayForDate };

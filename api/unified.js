@@ -59,7 +59,7 @@ if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD)
     socketTimeout: 5000
   });
   // Test connessione SMTP
-  emailTransporter.verify(function(error, success) {
+  emailTransporter.verify(function (error, success) {
     if (error) {
       console.error('[SMTP DEBUG] Errore connessione SMTP:', error);
     } else {
@@ -171,7 +171,7 @@ async function initializeTables() {
       )
     `);
     console.log('✅ Tabella calendar_events inizializzata');
-    
+
     // 🆕 Aggiungi colonna 'platform' a calendar_events se non esiste (per distinguere logica di filtro da sorgente unica)
     try {
       await pool.query(`ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS platform VARCHAR(50)`);
@@ -273,7 +273,7 @@ async function initializeTables() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
-    
+
     // Crea tabella audit per 2FA
     await pool.query(`
       CREATE TABLE IF NOT EXISTS admin_2fa_audit (
@@ -363,16 +363,16 @@ initializeTables();
 migrateDatabase();
 
 export default async function handler(req, res) {
-        // Endpoint di health check DB
-        if (req.query.action === 'db-health') {
-          try {
-            await pool.query('SELECT 1');
-            return res.status(200).json({ success: true, message: 'DB OK' });
-          } catch (err) {
-            return res.status(500).json({ success: false, error: err.message });
-          }
-        }
-  
+  // Endpoint di health check DB
+  if (req.query.action === 'db-health') {
+    try {
+      await pool.query('SELECT 1');
+      return res.status(200).json({ success: true, message: 'DB OK' });
+    } catch (err) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  }
+
   // CORS Headers - Allowlist domini autorizzati
   const allowedOrigins = [
     'https://www.vincantomaiori.it',
@@ -384,12 +384,12 @@ export default async function handler(req, res) {
     'http://127.0.0.1:3000',
     'http://127.0.0.1:5173'
   ];
-  
+
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   }
-  
+
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -413,394 +413,394 @@ export default async function handler(req, res) {
 
 
   try {
-  // Ottieni action da query params o body (dichiarazione UNA SOLA VOLTA)
-  let { action } = req.query;
-  if (req.method === 'POST' && req.body?.action) {
-    action = req.body.action;
-  }
-
-  // 🛡️ FIX: Pulisci action da eventuali parametri extra malformati (es. ?t=...)
-  if (action && typeof action === 'string' && action.includes('?')) {
-    action = action.split('?')[0];
-  }
-
-  console.log('🎯 API UNIFICATA CONSOLIDATA - Action:', action, 'Method:', req.method);
-
-  // ========================================
-  // SYSTEM SETTINGS / CMS ACTION
-  // ========================================
-  if (action === 'system-settings' || action === 'settings') {
-    if (req.method === 'GET') {
-      try {
-        const result = await pool.query('SELECT * FROM system_settings ORDER BY category, label');
-        // Ritorna le impostazioni; se chiamato come settings avvolge in {settings: ...} per compatibilità
-        if (action === 'settings') {
-          return res.status(200).json({ success: true, settings: result.rows });
-        }
-        return res.status(200).json(result.rows); // Ritorna array per il frontend
-      } catch (error) {
-        return res.status(500).json({ success: false, error: error.message });
-      }
+    // Ottieni action da query params o body (dichiarazione UNA SOLA VOLTA)
+    let { action } = req.query;
+    if (req.method === 'POST' && req.body?.action) {
+      action = req.body.action;
     }
-    if (req.method === 'POST' || req.method === 'PUT') {
-      try {
-        const { key, value } = req.body;
-        // value può essere un JSON (se stringificato dal frontend o passato come oggetto)
-        // se è oggetto, convertiamolo in stringa per TEXT
-        const valueToSave = typeof value === 'object' ? JSON.stringify(value) : value;
 
-        const result = await pool.query(`
+    // 🛡️ FIX: Pulisci action da eventuali parametri extra malformati (es. ?t=...)
+    if (action && typeof action === 'string' && action.includes('?')) {
+      action = action.split('?')[0];
+    }
+
+    console.log('🎯 API UNIFICATA CONSOLIDATA - Action:', action, 'Method:', req.method);
+
+    // ========================================
+    // SYSTEM SETTINGS / CMS ACTION
+    // ========================================
+    if (action === 'system-settings' || action === 'settings') {
+      if (req.method === 'GET') {
+        try {
+          const result = await pool.query('SELECT * FROM system_settings ORDER BY category, label');
+          // Ritorna le impostazioni; se chiamato come settings avvolge in {settings: ...} per compatibilità
+          if (action === 'settings') {
+            return res.status(200).json({ success: true, settings: result.rows });
+          }
+          return res.status(200).json(result.rows); // Ritorna array per il frontend
+        } catch (error) {
+          return res.status(500).json({ success: false, error: error.message });
+        }
+      }
+      if (req.method === 'POST' || req.method === 'PUT') {
+        try {
+          const { key, value } = req.body;
+          // value può essere un JSON (se stringificato dal frontend o passato come oggetto)
+          // se è oggetto, convertiamolo in stringa per TEXT
+          const valueToSave = typeof value === 'object' ? JSON.stringify(value) : value;
+
+          const result = await pool.query(`
           INSERT INTO system_settings (key, value) VALUES ($1, $2)
           ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
           RETURNING *
         `, [key, valueToSave]);
-        return res.status(200).json({ success: true, setting: result.rows[0] });
-      } catch (error) {
-        return res.status(500).json({ success: false, error: error.message });
+          return res.status(200).json({ success: true, setting: result.rows[0] });
+        } catch (error) {
+          return res.status(500).json({ success: false, error: error.message });
+        }
       }
     }
-  }
 
-  // ========================================
-  // TRANSLATE API (Google Translate)
-  // ========================================
-  if (action === 'translate') {
-    if (req.method === 'POST') {
-      try {
-        const { text, targetLangs } = req.body; // targetLangs es: ['en', 'de', 'fr']
-        if (!text || !targetLangs || !Array.isArray(targetLangs)) {
-          return res.status(400).json({ success: false, error: 'Testo e targetLangs richiesti' });
-        }
-        
-        const translate = (await import('translate')).default;
-        translate.engine = 'google';
-
-        const results = {};
-        for (const lang of targetLangs) {
-          try {
-            results[lang] = await translate(text, { from: 'it', to: lang });
-          } catch (e) {
-            console.error(`Errore traduzione in ${lang}:`, e);
-            results[lang] = text; // fallback
+    // ========================================
+    // TRANSLATE API (Google Translate)
+    // ========================================
+    if (action === 'translate') {
+      if (req.method === 'POST') {
+        try {
+          const { text, targetLangs } = req.body; // targetLangs es: ['en', 'de', 'fr']
+          if (!text || !targetLangs || !Array.isArray(targetLangs)) {
+            return res.status(400).json({ success: false, error: 'Testo e targetLangs richiesti' });
           }
+
+          const translate = (await import('translate')).default;
+          translate.engine = 'google';
+
+          const results = {};
+          for (const lang of targetLangs) {
+            try {
+              results[lang] = await translate(text, { from: 'it', to: lang });
+            } catch (e) {
+              console.error(`Errore traduzione in ${lang}:`, e);
+              results[lang] = text; // fallback
+            }
+          }
+
+          return res.status(200).json({ success: true, translations: results });
+        } catch (error) {
+          return res.status(500).json({ success: false, error: error.message });
         }
-        
-        return res.status(200).json({ success: true, translations: results });
-      } catch (error) {
-        return res.status(500).json({ success: false, error: error.message });
       }
     }
-  }
 
-  // ========================================
-  // 2FA SETUP - Genera secret e QR code
-  // ========================================
-  if (action === 'admin/2fa/setup') {
-    try {
-      const { email } = req.body;
-      
-      if (!email) {
-        return res.status(400).json({ success: false, error: 'Email richiesta' });
-      }
+    // ========================================
+    // 2FA SETUP - Genera secret e QR code
+    // ========================================
+    if (action === 'admin/2fa/setup') {
+      try {
+        const { email } = req.body;
 
-      // Verifica che l'utente esista (in produzione controllare anche autenticazione)
-      const userResult = await pool.query(
-        'SELECT id, email, two_factor_enabled FROM admin_users WHERE email = $1',
-        [email]
-      );
+        if (!email) {
+          return res.status(400).json({ success: false, error: 'Email richiesta' });
+        }
 
-      if (userResult.rows.length === 0) {
-        return res.status(404).json({ success: false, error: 'Utente non trovato' });
-      }
+        // Verifica che l'utente esista (in produzione controllare anche autenticazione)
+        const userResult = await pool.query(
+          'SELECT id, email, two_factor_enabled FROM admin_users WHERE email = $1',
+          [email]
+        );
 
-      const user = userResult.rows[0];
+        if (userResult.rows.length === 0) {
+          return res.status(404).json({ success: false, error: 'Utente non trovato' });
+        }
 
-      // Genera nuovo secret e QR code
-      const { secret, qrCodeUrl, otpauthUrl } = await TwoFactorAuth.generateTOTPSecret(email);
-      
-      // Cifra il secret prima di salvarlo temporaneamente
-      const encryptedSecret = TwoFactorAuth.encryptSecret(secret);
+        const user = userResult.rows[0];
 
-      // Salva il secret temporaneo (non ancora attivo)
-      await pool.query(
-        'UPDATE admin_users SET two_factor_secret = $1 WHERE id = $2',
-        [encryptedSecret, user.id]
-      );
+        // Genera nuovo secret e QR code
+        const { secret, qrCodeUrl, otpauthUrl } = await TwoFactorAuth.generateTOTPSecret(email);
 
-      // Log audit
-      await pool.query(
-        'INSERT INTO admin_2fa_audit (user_id, action, ip_address, user_agent) VALUES ($1, $2, $3, $4)',
-        [user.id, 'setup', req.headers['x-forwarded-for'] || req.connection.remoteAddress, req.headers['user-agent']]
-      );
+        // Cifra il secret prima di salvarlo temporaneamente
+        const encryptedSecret = TwoFactorAuth.encryptSecret(secret);
 
-      return res.status(200).json({
-        success: true,
-        qrCodeUrl, // Data URL del QR code da mostrare
-        otpauthUrl, // URL otpauth per debugging
-        message: 'Scansiona il QR code con Google Authenticator o app TOTP'
-      });
+        // Salva il secret temporaneo (non ancora attivo)
+        await pool.query(
+          'UPDATE admin_users SET two_factor_secret = $1 WHERE id = $2',
+          [encryptedSecret, user.id]
+        );
 
-    } catch (error) {
-      console.error('❌ Errore setup 2FA:', error);
-      return res.status(500).json({ success: false, error: error.message });
-    }
-  }
-
-  // ========================================
-  // 2FA VERIFY - Verifica codice TOTP e attiva 2FA
-  // ========================================
-  if (action === 'admin/2fa/verify') {
-    try {
-      const { email, token } = req.body;
-      
-      if (!email || !token) {
-        return res.status(400).json({ success: false, error: 'Email e token richiesti' });
-      }
-
-      // Recupera utente e secret
-      const userResult = await pool.query(
-        'SELECT id, email, two_factor_secret, two_factor_enabled FROM admin_users WHERE email = $1',
-        [email]
-      );
-
-      if (userResult.rows.length === 0) {
-        return res.status(404).json({ success: false, error: 'Utente non trovato' });
-      }
-
-      const user = userResult.rows[0];
-
-      if (!user.two_factor_secret) {
-        return res.status(400).json({ success: false, error: 'Setup 2FA non inizializzato' });
-      }
-
-      // Verifica il token TOTP
-      const isValid = TwoFactorAuth.verifyTOTP(token, user.two_factor_secret, true);
-
-      if (!isValid) {
-        // Log fallimento
+        // Log audit
         await pool.query(
           'INSERT INTO admin_2fa_audit (user_id, action, ip_address, user_agent) VALUES ($1, $2, $3, $4)',
-          [user.id, 'verify_failed', req.headers['x-forwarded-for'] || req.connection.remoteAddress, req.headers['user-agent']]
+          [user.id, 'setup', req.headers['x-forwarded-for'] || req.connection.remoteAddress, req.headers['user-agent']]
         );
-        return res.status(400).json({ success: false, error: 'Codice non valido' });
-      }
 
-      // Genera codici di recovery
-      const { codes, hashes } = await TwoFactorAuth.generateRecoveryCodes(10);
-
-      // Attiva 2FA
-      await pool.query(
-        'UPDATE admin_users SET two_factor_enabled = TRUE, recovery_codes = $1, two_factor_activated_at = NOW() WHERE id = $2',
-        [hashes, user.id]
-      );
-
-      // Log successo
-      await pool.query(
-        'INSERT INTO admin_2fa_audit (user_id, action, ip_address, user_agent) VALUES ($1, $2, $3, $4)',
-        [user.id, 'enabled', req.headers['x-forwarded-for'] || req.connection.remoteAddress, req.headers['user-agent']]
-      );
-
-      return res.status(200).json({
-        success: true,
-        message: '2FA attivato con successo',
-        recoveryCodes: codes, // IMPORTANTE: Mostra i codici UNA SOLA VOLTA
-        warning: 'Salva questi codici in un posto sicuro! Non verranno mostrati di nuovo.'
-      });
-
-    } catch (error) {
-      console.error('❌ Errore verifica 2FA:', error);
-      return res.status(500).json({ success: false, error: error.message });
-    }
-  }
-
-  // ========================================
-  // LOGIN CON 2FA - Step 1: Password
-  // ========================================
-  if (action === 'admin/login-password') {
-    try {
-      const { email, password, selectedRole } = req.body;
-      
-      if (!email || !password) {
-        return res.status(400).json({ success: false, error: 'Email e password richiesti' });
-      }
-
-      // Recupera tutti i ruoli disponibili per questa email
-      const userResult = await pool.query(
-        'SELECT id, email, password_hash, role, two_factor_enabled FROM admin_users WHERE email = $1 ORDER BY role DESC',
-        [email]
-      );
-
-      if (userResult.rows.length === 0) {
-        return res.status(401).json({ success: false, error: 'Credenziali non valide' });
-      }
-
-      // Verifica password su qualsiasi ruolo (dovrebbero essere uguali)
-      const passwordMatch = await bcrypt.compare(password, userResult.rows[0].password_hash);
-      
-      if (!passwordMatch) {
-        return res.status(401).json({ success: false, error: 'Credenziali non valide' });
-      }
-
-      // Se ci sono più ruoli disponibili, chiedi di scegliere
-      if (userResult.rows.length > 1 && !selectedRole) {
-        const availableRoles = userResult.rows.map(r => ({ role: r.role, id: r.id }));
         return res.status(200).json({
           success: true,
-          requiresRoleSelection: true,
-          availableRoles: availableRoles,
-          email: email,
-          message: 'Scegli un ruolo per accedere'
+          qrCodeUrl, // Data URL del QR code da mostrare
+          otpauthUrl, // URL otpauth per debugging
+          message: 'Scansiona il QR code con Google Authenticator o app TOTP'
         });
+
+      } catch (error) {
+        console.error('❌ Errore setup 2FA:', error);
+        return res.status(500).json({ success: false, error: error.message });
       }
+    }
 
-      // Seleziona il ruolo specifico o il primo se ce n'è solo uno
-      const user = selectedRole 
-        ? userResult.rows.find(u => u.role === selectedRole)
-        : userResult.rows[0];
+    // ========================================
+    // 2FA VERIFY - Verifica codice TOTP e attiva 2FA
+    // ========================================
+    if (action === 'admin/2fa/verify') {
+      try {
+        const { email, token } = req.body;
 
-      if (!user) {
-        return res.status(401).json({ success: false, error: 'Ruolo non disponibile' });
+        if (!email || !token) {
+          return res.status(400).json({ success: false, error: 'Email e token richiesti' });
+        }
+
+        // Recupera utente e secret
+        const userResult = await pool.query(
+          'SELECT id, email, two_factor_secret, two_factor_enabled FROM admin_users WHERE email = $1',
+          [email]
+        );
+
+        if (userResult.rows.length === 0) {
+          return res.status(404).json({ success: false, error: 'Utente non trovato' });
+        }
+
+        const user = userResult.rows[0];
+
+        if (!user.two_factor_secret) {
+          return res.status(400).json({ success: false, error: 'Setup 2FA non inizializzato' });
+        }
+
+        // Verifica il token TOTP
+        const isValid = TwoFactorAuth.verifyTOTP(token, user.two_factor_secret, true);
+
+        if (!isValid) {
+          // Log fallimento
+          await pool.query(
+            'INSERT INTO admin_2fa_audit (user_id, action, ip_address, user_agent) VALUES ($1, $2, $3, $4)',
+            [user.id, 'verify_failed', req.headers['x-forwarded-for'] || req.connection.remoteAddress, req.headers['user-agent']]
+          );
+          return res.status(400).json({ success: false, error: 'Codice non valido' });
+        }
+
+        // Genera codici di recovery
+        const { codes, hashes } = await TwoFactorAuth.generateRecoveryCodes(10);
+
+        // Attiva 2FA
+        await pool.query(
+          'UPDATE admin_users SET two_factor_enabled = TRUE, recovery_codes = $1, two_factor_activated_at = NOW() WHERE id = $2',
+          [hashes, user.id]
+        );
+
+        // Log successo
+        await pool.query(
+          'INSERT INTO admin_2fa_audit (user_id, action, ip_address, user_agent) VALUES ($1, $2, $3, $4)',
+          [user.id, 'enabled', req.headers['x-forwarded-for'] || req.connection.remoteAddress, req.headers['user-agent']]
+        );
+
+        return res.status(200).json({
+          success: true,
+          message: '2FA attivato con successo',
+          recoveryCodes: codes, // IMPORTANTE: Mostra i codici UNA SOLA VOLTA
+          warning: 'Salva questi codici in un posto sicuro! Non verranno mostrati di nuovo.'
+        });
+
+      } catch (error) {
+        console.error('❌ Errore verifica 2FA:', error);
+        return res.status(500).json({ success: false, error: error.message });
       }
+    }
 
-      // Se 2FA non è abilitato, forza il setup (primo login)
-      if (!user.two_factor_enabled) {
+    // ========================================
+    // LOGIN CON 2FA - Step 1: Password
+    // ========================================
+    if (action === 'admin/login-password') {
+      try {
+        const { email, password, selectedRole } = req.body;
+
+        if (!email || !password) {
+          return res.status(400).json({ success: false, error: 'Email e password richiesti' });
+        }
+
+        // Recupera tutti i ruoli disponibili per questa email
+        const userResult = await pool.query(
+          'SELECT id, email, password_hash, role, two_factor_enabled FROM admin_users WHERE email = $1 ORDER BY role DESC',
+          [email]
+        );
+
+        if (userResult.rows.length === 0) {
+          return res.status(401).json({ success: false, error: 'Credenziali non valide' });
+        }
+
+        // Verifica password su qualsiasi ruolo (dovrebbero essere uguali)
+        const passwordMatch = await bcrypt.compare(password, userResult.rows[0].password_hash);
+
+        if (!passwordMatch) {
+          return res.status(401).json({ success: false, error: 'Credenziali non valide' });
+        }
+
+        // Se ci sono più ruoli disponibili, chiedi di scegliere
+        if (userResult.rows.length > 1 && !selectedRole) {
+          const availableRoles = userResult.rows.map(r => ({ role: r.role, id: r.id }));
+          return res.status(200).json({
+            success: true,
+            requiresRoleSelection: true,
+            availableRoles: availableRoles,
+            email: email,
+            message: 'Scegli un ruolo per accedere'
+          });
+        }
+
+        // Seleziona il ruolo specifico o il primo se ce n'è solo uno
+        const user = selectedRole
+          ? userResult.rows.find(u => u.role === selectedRole)
+          : userResult.rows[0];
+
+        if (!user) {
+          return res.status(401).json({ success: false, error: 'Ruolo non disponibile' });
+        }
+
+        // Se 2FA non è abilitato, forza il setup (primo login)
+        if (!user.two_factor_enabled) {
+          return res.status(200).json({
+            success: true,
+            requires2FA: true,
+            requiresSetup: true, // Flag per indicare che serve setup iniziale
+            userId: user.id,
+            email: user.email,
+            role: user.role,
+            message: '2FA obbligatorio - Configura Google Authenticator per continuare'
+          });
+        }
+
+        // Se 2FA è già abilitato, richiedi il codice TOTP
         return res.status(200).json({
           success: true,
           requires2FA: true,
-          requiresSetup: true, // Flag per indicare che serve setup iniziale
+          requiresSetup: false,
           userId: user.id,
           email: user.email,
           role: user.role,
-          message: '2FA obbligatorio - Configura Google Authenticator per continuare'
+          message: 'Inserisci il codice TOTP dalla tua app di autenticazione'
         });
+
+      } catch (error) {
+        console.error('❌ Errore login password:', error);
+        return res.status(500).json({ success: false, error: error.message });
       }
-
-      // Se 2FA è già abilitato, richiedi il codice TOTP
-      return res.status(200).json({
-        success: true,
-        requires2FA: true,
-        requiresSetup: false,
-        userId: user.id,
-        email: user.email,
-        role: user.role,
-        message: 'Inserisci il codice TOTP dalla tua app di autenticazione'
-      });
-
-    } catch (error) {
-      console.error('❌ Errore login password:', error);
-      return res.status(500).json({ success: false, error: error.message });
     }
-  }
 
-  // ========================================
-  // LOGIN CON 2FA - Step 2: TOTP
-  // ========================================
-  if (action === 'admin/login-totp') {
-    try {
-      const { email, token, selectedRole } = req.body;
-      
-      if (!email || !token) {
-        return res.status(400).json({ success: false, error: 'Email e token richiesti' });
-      }
+    // ========================================
+    // LOGIN CON 2FA - Step 2: TOTP
+    // ========================================
+    if (action === 'admin/login-totp') {
+      try {
+        const { email, token, selectedRole } = req.body;
 
-      // Rate limiting
-      if (!TwoFactorAuth.checkRateLimit(email, 5, 5 * 60 * 1000)) {
-        return res.status(429).json({ 
-          success: false, 
-          error: 'Troppi tentativi. Riprova tra 5 minuti.' 
-        });
-      }
+        if (!email || !token) {
+          return res.status(400).json({ success: false, error: 'Email e token richiesti' });
+        }
 
-      // Recupera utente - Se è stato selezionato un ruolo, cerca quello specifico
-      let query = 'SELECT id, email, role, two_factor_secret, two_factor_enabled, recovery_codes FROM admin_users WHERE email = $1';
-      let params = [email];
-      
-      if (selectedRole) {
-        query += ' AND role = $2';
-        params.push(selectedRole);
-      }
-      
-      const userResult = await pool.query(query, params);
+        // Rate limiting
+        if (!TwoFactorAuth.checkRateLimit(email, 5, 5 * 60 * 1000)) {
+          return res.status(429).json({
+            success: false,
+            error: 'Troppi tentativi. Riprova tra 5 minuti.'
+          });
+        }
 
-      if (userResult.rows.length === 0) {
-        return res.status(401).json({ success: false, error: 'Credenziali non valide' });
-      }
+        // Recupera utente - Se è stato selezionato un ruolo, cerca quello specifico
+        let query = 'SELECT id, email, role, two_factor_secret, two_factor_enabled, recovery_codes FROM admin_users WHERE email = $1';
+        let params = [email];
 
-      const user = userResult.rows[0];
+        if (selectedRole) {
+          query += ' AND role = $2';
+          params.push(selectedRole);
+        }
 
-      // Se 2FA non è abilitato E non c'è un secret, l'utente non ha mai fatto il setup
-      if (!user.two_factor_enabled && !user.two_factor_secret) {
-        return res.status(400).json({ success: false, error: '2FA non abilitato per questo utente' });
-      }
+        const userResult = await pool.query(query, params);
 
-      // Se c'è un secret (anche se two_factor_enabled è false), è il primo setup
-      if (!user.two_factor_secret) {
-        return res.status(400).json({ success: false, error: 'Nessun secret TOTP trovato' });
-      }
+        if (userResult.rows.length === 0) {
+          return res.status(401).json({ success: false, error: 'Credenziali non valide' });
+        }
 
-      // Verifica TOTP
-      const isValid = TwoFactorAuth.verifyTOTP(token, user.two_factor_secret, true);
+        const user = userResult.rows[0];
 
-      if (!isValid) {
-        // Log fallimento
+        // Se 2FA non è abilitato E non c'è un secret, l'utente non ha mai fatto il setup
+        if (!user.two_factor_enabled && !user.two_factor_secret) {
+          return res.status(400).json({ success: false, error: '2FA non abilitato per questo utente' });
+        }
+
+        // Se c'è un secret (anche se two_factor_enabled è false), è il primo setup
+        if (!user.two_factor_secret) {
+          return res.status(400).json({ success: false, error: 'Nessun secret TOTP trovato' });
+        }
+
+        // Verifica TOTP
+        const isValid = TwoFactorAuth.verifyTOTP(token, user.two_factor_secret, true);
+
+        if (!isValid) {
+          // Log fallimento
+          await pool.query(
+            'INSERT INTO admin_2fa_audit (user_id, action, ip_address, user_agent) VALUES ($1, $2, $3, $4)',
+            [user.id, 'login_failed', req.headers['x-forwarded-for'] || req.connection.remoteAddress, req.headers['user-agent']]
+          );
+          return res.status(401).json({ success: false, error: 'Codice TOTP non valido' });
+        }
+
+        // Reset rate limit su successo
+        TwoFactorAuth.resetRateLimit(email);
+
+        // Se è il primo setup (two_factor_enabled è false), abilita il 2FA
+        if (!user.two_factor_enabled) {
+          await pool.query(
+            'UPDATE admin_users SET two_factor_enabled = true, two_factor_activated_at = NOW() WHERE id = $1',
+            [user.id]
+          );
+        }
+
+        // Aggiorna last_login
         await pool.query(
-          'INSERT INTO admin_2fa_audit (user_id, action, ip_address, user_agent) VALUES ($1, $2, $3, $4)',
-          [user.id, 'login_failed', req.headers['x-forwarded-for'] || req.connection.remoteAddress, req.headers['user-agent']]
-        );
-        return res.status(401).json({ success: false, error: 'Codice TOTP non valido' });
-      }
-
-      // Reset rate limit su successo
-      TwoFactorAuth.resetRateLimit(email);
-
-      // Se è il primo setup (two_factor_enabled è false), abilita il 2FA
-      if (!user.two_factor_enabled) {
-        await pool.query(
-          'UPDATE admin_users SET two_factor_enabled = true, two_factor_activated_at = NOW() WHERE id = $1',
+          'UPDATE admin_users SET last_login = NOW() WHERE id = $1',
           [user.id]
         );
+
+        // Log successo
+        await pool.query(
+          'INSERT INTO admin_2fa_audit (user_id, action, ip_address, user_agent) VALUES ($1, $2, $3, $4)',
+          [user.id, 'login_success', req.headers['x-forwarded-for'] || req.connection.remoteAddress, req.headers['user-agent']]
+        );
+
+        // Genera token di sessione (in produzione usare JWT con scadenza)
+        const sessionToken = randomBytes(32).toString('hex');
+        adminSessionStore.set(sessionToken, {
+          userId: user.id,
+          role: user.role,
+          email: user.email,
+          createdAt: Date.now()
+        });
+
+        return res.status(200).json({
+          success: true,
+          role: user.role,
+          token: sessionToken,
+          message: 'Login completato con successo'
+        });
+
+      } catch (error) {
+        console.error('❌ Errore login TOTP:', error);
+        return res.status(500).json({ success: false, error: error.message });
       }
-
-      // Aggiorna last_login
-      await pool.query(
-        'UPDATE admin_users SET last_login = NOW() WHERE id = $1',
-        [user.id]
-      );
-
-      // Log successo
-      await pool.query(
-        'INSERT INTO admin_2fa_audit (user_id, action, ip_address, user_agent) VALUES ($1, $2, $3, $4)',
-        [user.id, 'login_success', req.headers['x-forwarded-for'] || req.connection.remoteAddress, req.headers['user-agent']]
-      );
-
-      // Genera token di sessione (in produzione usare JWT con scadenza)
-      const sessionToken = randomBytes(32).toString('hex');
-      adminSessionStore.set(sessionToken, {
-        userId: user.id,
-        role: user.role,
-        email: user.email,
-        createdAt: Date.now()
-      });
-
-      return res.status(200).json({
-        success: true,
-        role: user.role,
-        token: sessionToken,
-        message: 'Login completato con successo'
-      });
-
-    } catch (error) {
-      console.error('❌ Errore login TOTP:', error);
-      return res.status(500).json({ success: false, error: error.message });
     }
-  }
 
-  // Restituisce tutti gli eventi da calendar_events (per unificazione prenotazioni)
-  if (action === 'calendar-events') {
-    try {
-      // 🔥 Filtra: ESCLUDE blocchi Airbnb (festività), MANTIENE chiusure Booking.com (vere)
-      // ESCLUDE anche blocchi Holidu (non-booking events)
-      const eventsResult = await pool.query(`
+    // Restituisce tutti gli eventi da calendar_events (per unificazione prenotazioni)
+    if (action === 'calendar-events') {
+      try {
+        // 🔥 Filtra: ESCLUDE blocchi Airbnb (festività), MANTIENE chiusure Booking.com (vere)
+        // ESCLUDE anche blocchi Holidu (non-booking events)
+        const eventsResult = await pool.query(`
         SELECT id, uid, calendar_source, summary, description, start_date, end_date, location, created_at, updated_at
         FROM calendar_events
         WHERE start_date >= NOW() - INTERVAL '1 year'
@@ -839,17 +839,17 @@ export default async function handler(req, res) {
       )
         ORDER BY start_date ASC
       `);
-      return res.status(200).json({
-        success: true,
-        events: eventsResult.rows
-      });
-    } catch (error) {
-      console.error('❌ Errore fetch calendar_events:', error.message);
-      return res.status(500).json({ success: false, error: error.message });
+        return res.status(200).json({
+          success: true,
+          events: eventsResult.rows
+        });
+      } catch (error) {
+        console.error('❌ Errore fetch calendar_events:', error.message);
+        return res.status(500).json({ success: false, error: error.message });
+      }
     }
-  }
 
-  // ...continua con la logica esistente senza ridichiarare 'action'
+    // ...continua con la logica esistente senza ridichiarare 'action'
 
     if (action === 'login') {
       if (req.method !== 'POST') {
@@ -1173,7 +1173,7 @@ export default async function handler(req, res) {
 
       // Verifica se l'utente è autenticato (controlla header Authorization o cookies)
       const token = req.headers.authorization?.replace('Bearer ', '') || req.cookies?.adminToken;
-      
+
       if (!token) {
         return res.status(401).json({
           success: false,
@@ -1208,34 +1208,34 @@ export default async function handler(req, res) {
         // Ottieni statistiche reali dal database
         const totalBookingsResult = await pool.query('SELECT COUNT(*) as count FROM bookings');
         const totalBookings = parseInt(totalBookingsResult.rows[0].count);
-        
+
         const totalRevenueResult = await pool.query('SELECT COALESCE(SUM(total_amount), 0) as sum FROM bookings WHERE status != \'cancelled\'');
         const totalRevenue = parseFloat(totalRevenueResult.rows[0].sum);
-        
+
         const totalGuestsResult = await pool.query('SELECT COALESCE(SUM(guests), 0) as sum FROM bookings WHERE status = \'confirmed\'');
         const totalGuests = parseInt(totalGuestsResult.rows[0].sum);
-        
+
         const pendingBookingsResult = await pool.query('SELECT COUNT(*) as count FROM bookings WHERE status = \'pending\'');
         const pendingBookings = parseInt(pendingBookingsResult.rows[0].count);
-        
+
         const confirmedBookingsResult = await pool.query('SELECT COUNT(*) as count FROM bookings WHERE status = \'confirmed\'');
         const confirmedBookings = parseInt(confirmedBookingsResult.rows[0].count);
-        
+
         const monthlyBookingsResult = await pool.query(`
           SELECT COUNT(*) as count FROM bookings 
           WHERE created_at >= DATE_TRUNC('month', CURRENT_DATE)
         `);
         const monthlyBookings = parseInt(monthlyBookingsResult.rows[0].count);
-        
+
         const monthlyRevenueResult = await pool.query(`
           SELECT COALESCE(SUM(total_amount), 0) as sum FROM bookings 
           WHERE created_at >= DATE_TRUNC('month', CURRENT_DATE) AND status != 'cancelled'
         `);
         const monthlyRevenue = parseFloat(monthlyRevenueResult.rows[0].sum);
-        
+
         // Calcola occupancy rate basato sui giorni prenotati vs giorni disponibili
         const occupancyRate = totalBookings > 0 ? Math.min(100, (totalBookings / 30) * 100) : 0;
-        
+
         return res.status(200).json({
           success: true,
           stats: {
@@ -1266,15 +1266,15 @@ export default async function handler(req, res) {
     if (action === 'analytics') {
       const analyticsData = [];
       const today = new Date();
-      
+
       for (let i = 29; i >= 0; i--) {
         const date = new Date(today);
         date.setDate(date.getDate() - i);
-        
+
         const bookings = Math.max(0, Math.floor(Math.random() * 3));
         const revenue = bookings * (150 + Math.random() * 100);
         const occupancy = bookings > 0 ? Math.min(100, 60 + Math.random() * 40) : 0;
-        
+
         analyticsData.push({
           date: date.toISOString().split('T')[0],
           bookings,
@@ -1282,7 +1282,7 @@ export default async function handler(req, res) {
           occupancy: Math.round(occupancy)
         });
       }
-      
+
       return res.status(200).json({
         success: true,
         analytics: analyticsData
@@ -1329,7 +1329,7 @@ export default async function handler(req, res) {
             WHERE status IN ('confirmed', 'pending', 'cancelled')
             ORDER BY created_at DESC
           `);
-          
+
           return res.status(200).json({
             success: true,
             bookings: result.rows.map(booking => ({
@@ -1361,9 +1361,9 @@ export default async function handler(req, res) {
           console.log('📝 Nuova prenotazione ricevuta:', JSON.stringify(bookingData, null, 2));
           // DEBUG: Mostra tutti i dati ricevuti
           console.log('DEBUG bookingData:', bookingData);
-          
+
           // 🔧 NORMALIZZAZIONE CAMPI: Supporto per strutture piatte e annidate (booking_data)
-          const bData = bookingData.booking_data || {}; 
+          const bData = bookingData.booking_data || {};
 
           // 🔧 NORMALIZZAZIONE CAMPI: supporta entrambi i formati (checkin/check_in, customerName/first_name, etc)
           const checkin = bookingData.checkin || bookingData.check_in || bData.checkin || bData.check_in || bData.check_in_date;
@@ -1376,13 +1376,13 @@ export default async function handler(req, res) {
           // Normalizza e forza a numero - accetta sia interi che decimali
           const totalAmount = parseFloat(bookingData.totalPrice) || parseFloat(bookingData.total_amount) || 0;
           const notes = bookingData.specialRequests || bookingData.notes || '';
-          
+
           // 🛎️ Gestione Servizi Extra per prenotazioni manuali
           // Se presenti, li aggiungiamo alle note per persistenza
           let finalNotes = notes;
           if (bookingData.selected_services && Array.isArray(bookingData.selected_services) && bookingData.selected_services.length > 0) {
-             const servicesText = bookingData.selected_services.map(s => `${s.name} (€${s.price})`).join(', ');
-             finalNotes = (finalNotes ? finalNotes + '\n\n' : '') + `[SERVIZI EXTRA]: ${servicesText}`;
+            const servicesText = bookingData.selected_services.map(s => `${s.name} (€${s.price})`).join(', ');
+            finalNotes = (finalNotes ? finalNotes + '\n\n' : '') + `[SERVIZI EXTRA]: ${servicesText}`;
           }
 
           // 🔧 Helper per estrarre costi (supporta flat o nested in booking_data)
@@ -1472,16 +1472,16 @@ export default async function handler(req, res) {
 
           if (overlappingBookings.rows.length > 0) {
             console.error('❌ CONFLITTO: Le date richieste si sovrappongono con una prenotazione/blocco esistente.', { checkin, checkout });
-            return res.status(409).json({ 
-              success: false, 
-              error: 'Le date selezionate non sono più disponibili. Si prega di scegliere un altro periodo.' 
+            return res.status(409).json({
+              success: false,
+              error: 'Le date selezionate non sono più disponibili. Si prega di scegliere un altro periodo.'
             });
           }
-          
+
           // Parsing nome/cognome da customerName o campi separati
           let firstName = 'Nome';
           let lastName = 'Cognome';
-          
+
           if (bookingData.customerName || bData.guest_name) {
             const nameParts = (bookingData.customerName || bData.guest_name).trim().split(' ');
             firstName = nameParts[0] || 'Nome';
@@ -1494,7 +1494,7 @@ export default async function handler(req, res) {
             firstName = nameParts[0] || 'Nome';
             lastName = nameParts.slice(1).join(' ') || 'Cognome';
           }
-          
+
           // 🔍 VALIDAZIONE DATI
           if (!checkin || !checkout) {
             console.error('❌ Date check-in/check-out mancanti:', { checkin, checkout });
@@ -1503,20 +1503,20 @@ export default async function handler(req, res) {
               error: 'Date check-in e check-out obbligatorie'
             });
           }
-          
+
           // 🔧 FIX: Email facoltativa per prenotazioni manuali
           let finalEmail = email;
           if (!finalEmail && bookingData.platform === 'manual') {
-             finalEmail = `manual-booking-${Date.now()}@vincanto-local.it`; // Placeholder per DB
+            finalEmail = `manual-booking-${Date.now()}@vincanto-local.it`; // Placeholder per DB
           } else if (!finalEmail) {
-             return res.status(400).json({
-               success: false,
-               error: 'Email cliente obbligatoria'
-             });
+            return res.status(400).json({
+              success: false,
+              error: 'Email cliente obbligatoria'
+            });
           }
-          
+
           console.log('✅ Dati normalizzati:', { checkin, checkout, guests, adults, children, firstName, lastName, email: finalEmail, phone, totalAmount });
-          
+
           // ⚡ Estrai status dal payload (default 'pending' se non specificato)
           const bookingStatus = bookingData.status || 'pending';
 
@@ -1532,22 +1532,22 @@ export default async function handler(req, res) {
             });
           }
           */
-          
+
           // 📅 VALIDAZIONE SOGGIORNO MINIMO (Server-Side Enforcement)
           // Recupera regole dal DB per assicurarsi che non vengano bypassate
           const pricingRulesResult = await pool.query('SELECT min_stay, min_stay_august FROM pricing_config ORDER BY id DESC LIMIT 1');
           const rules = pricingRulesResult.rows[0] || { min_stay: 3, min_stay_august: 6 };
-          
+
           const checkInDate = new Date(checkin);
           const checkOutDate = new Date(checkout);
           const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
-          
+
           const checkInYear = checkInDate.getUTCFullYear();
           const augustStart = new Date(Date.UTC(checkInYear, 7, 1)); // August 1st
           const septemberStart = new Date(Date.UTC(checkInYear, 8, 1)); // September 1st
 
           let requiredMinStay = parseInt(rules.min_stay) || 3;
-          
+
           // Controlla se l'intervallo di prenotazione si sovrappone ad Agosto
           if (checkInDate < septemberStart && checkOutDate > augustStart) {
             requiredMinStay = parseInt(rules.min_stay_august) || 6;
@@ -1561,22 +1561,22 @@ export default async function handler(req, res) {
               error: `Soggiorno minimo non rispettato. Per le date selezionate sono richieste almeno ${requiredMinStay} notti.`
             });
           }
-          
+
           // 💰 Calcolo Acconto/Saldo per Admin
           let depositAmount = Math.round(totalAmount * 0.2 * 100) / 100; // Default 20%
           let paymentStatus = 'pending';
 
           if (bookingData.platform === 'manual') {
-             if (bookingData.payment_type === 'full') {
-                depositAmount = totalAmount;
-                paymentStatus = 'paid_full'; // Considera pagato se inserito come saldo
-             } else if (bookingData.payment_type === 'deposit') {
-                // Se è acconto manuale, assumiamo che l'acconto sia stato pagato o sia da pagare
-                // Se admin inserisce, spesso è perché ha ricevuto i soldi o li sta registrando
-                paymentStatus = 'deposit_paid'; 
-             }
-             // Se specificato payment_status esplicito, usa quello
-             if (bookingData.payment_status) paymentStatus = bookingData.payment_status;
+            if (bookingData.payment_type === 'full') {
+              depositAmount = totalAmount;
+              paymentStatus = 'paid_full'; // Considera pagato se inserito come saldo
+            } else if (bookingData.payment_type === 'deposit') {
+              // Se è acconto manuale, assumiamo che l'acconto sia stato pagato o sia da pagare
+              // Se admin inserisce, spesso è perché ha ricevuto i soldi o li sta registrando
+              paymentStatus = 'deposit_paid';
+            }
+            // Se specificato payment_status esplicito, usa quello
+            if (bookingData.payment_status) paymentStatus = bookingData.payment_status;
           }
 
           const result = await pool.query(`
@@ -1603,7 +1603,7 @@ export default async function handler(req, res) {
             bookingStatus, // ⚡ Usa status dal payload invece di hardcoded 'pending'
             paymentStatus
           ]);
-          
+
           // 📧 Invia email di conferma SOLO se status non è DRAFT
           if (bookingStatus !== 'draft' && process.env.SMTP_HOST && email) { // Invia solo se email reale presente
             try {
@@ -1641,9 +1641,9 @@ export default async function handler(req, res) {
                 subject: `Conferma Prenotazione ${result.rows[0].booking_id}`,
                 html: emailHtml,
                 templateName: 'booking_confirmation',
-                metadata: { 
-                  bookingId: result.rows[0].booking_id, 
-                  totalAmount, 
+                metadata: {
+                  bookingId: result.rows[0].booking_id,
+                  totalAmount,
                   language: guestLanguage,
                   paymentMethod: bookingData.paymentMethod || bookingData.payment_method,
                   extraServices: Array.isArray(bookingData.extraServices) ? bookingData.extraServices : (Array.isArray(bookingData.extra_services) ? bookingData.extra_services : []),
@@ -1664,10 +1664,10 @@ export default async function handler(req, res) {
           } else {
             console.log('ℹ️ Email non configurata, skip invio');
           }
-          
+
           // Calcola importo da pagare per il frontend
-          const amountToPay = bookingData.payment_type === 'deposit' 
-            ? parseFloat(result.rows[0].deposit_amount) 
+          const amountToPay = bookingData.payment_type === 'deposit'
+            ? parseFloat(result.rows[0].deposit_amount)
             : parseFloat(result.rows[0].total_amount);
 
           return res.status(201).json({
@@ -1697,7 +1697,7 @@ export default async function handler(req, res) {
       if (req.method === 'PUT') {
         try {
           const { id, booking_id, ...updates } = req.body;
-          
+
           // Supporta aggiornamento tramite id (numerico) o booking_id (stringa)
           const targetId = id;
           const targetBookingId = booking_id;
@@ -1752,14 +1752,14 @@ export default async function handler(req, res) {
           }
 
           updateFields.push(`updated_at = NOW()`);
-          
+
           let query = '';
           if (targetId) {
-              updateValues.push(targetId);
-              query = `UPDATE bookings SET ${updateFields.join(', ')} WHERE id = $${paramIndex} RETURNING *`;
+            updateValues.push(targetId);
+            query = `UPDATE bookings SET ${updateFields.join(', ')} WHERE id = $${paramIndex} RETURNING *`;
           } else {
-              updateValues.push(targetBookingId);
-              query = `UPDATE bookings SET ${updateFields.join(', ')} WHERE booking_id = $${paramIndex} RETURNING *`;
+            updateValues.push(targetBookingId);
+            query = `UPDATE bookings SET ${updateFields.join(', ')} WHERE booking_id = $${paramIndex} RETURNING *`;
           }
 
           const result = await pool.query(query, updateValues);
@@ -1837,12 +1837,12 @@ export default async function handler(req, res) {
         try {
           const { id } = req.body;
           if (!id) return res.status(400).json({ success: false, error: 'ID richiesto' });
-          
+
           await pool.query('DELETE FROM blocked_dates WHERE id = $1', [id]);
           return res.status(200).json({ success: true, message: 'Data bloccata eliminata' });
         } catch (error) {
-           console.error('❌ Errore eliminazione blocked-date:', error);
-           return res.status(500).json({ success: false, error: error.message });
+          console.error('❌ Errore eliminazione blocked-date:', error);
+          return res.status(500).json({ success: false, error: error.message });
         }
       }
 
@@ -1857,11 +1857,11 @@ export default async function handler(req, res) {
             SET start_date = $1, end_date = $2, reason = $3 
             WHERE id = $4
           `, [start_date, end_date, reason, id]);
-          
+
           return res.status(200).json({ success: true, message: 'Data bloccata aggiornata' });
         } catch (error) {
-           console.error('❌ Errore modifica blocked-date:', error);
-           return res.status(500).json({ success: false, error: error.message });
+          console.error('❌ Errore modifica blocked-date:', error);
+          return res.status(500).json({ success: false, error: error.message });
         }
       }
     }
@@ -1874,42 +1874,42 @@ export default async function handler(req, res) {
       if (req.method === 'POST') {
         try {
           const { bookingId, reason } = req.body;
-          
+
           if (!bookingId) {
             return res.status(400).json({
               success: false,
               error: 'bookingId è richiesto'
             });
           }
-          
+
           console.log(`🚫 Cancellazione booking richiesta: ${bookingId}, motivo: ${reason || 'non specificato'}`);
-          
+
           // 1. Aggiorna il booking a status 'cancelled'
           // Gestione sicura ID numerico vs stringa
           let result;
           if (!isNaN(Number(bookingId))) {
-             result = await pool.query(`
+            result = await pool.query(`
                 UPDATE bookings 
                 SET status = 'cancelled', payment_status = 'cancelled', updated_at = NOW()
                 WHERE id = $1 OR booking_id = $2
                 RETURNING *
              `, [Number(bookingId), String(bookingId)]);
           } else {
-             result = await pool.query(`
+            result = await pool.query(`
                 UPDATE bookings 
                 SET status = 'cancelled', payment_status = 'cancelled', updated_at = NOW()
                 WHERE booking_id = $1
                 RETURNING *
              `, [String(bookingId)]);
           }
-          
+
           if (result.rows.length === 0) {
             return res.status(404).json({
               success: false,
               error: 'Booking non trovato'
             });
           }
-          
+
           const booking = result.rows[0];
           console.log(`✅ Booking ${booking.booking_id} marcato come cancellato`);
 
@@ -1928,7 +1928,7 @@ export default async function handler(req, res) {
             DELETE FROM blocked_dates 
             WHERE description LIKE '%' || $1 || '%'
           `, [booking.booking_id]);
-          
+
           console.log(`✅ Date liberate in blocked_dates: ${deleteBlocked.rowCount} righe rimosse`);
 
           // 2.b Libera anche eventuali eventi calendario sincronizzati (calendar_events)
@@ -1943,7 +1943,7 @@ export default async function handler(req, res) {
             try {
               const guestLanguage = detectLanguage(booking.email);
               const subject = guestLanguage === 'it' ? `Cancellazione Prenotazione ${booking.booking_id}` : `Booking Cancellation ${booking.booking_id}`;
-              
+
               // 🔧 FIX: Usa HTML inline per garantire l'invio anche se il template manca
               const reasonText = reason ? (guestLanguage === 'it' ? `<br><strong>Motivo:</strong> ${reason}` : `<br><strong>Reason:</strong> ${reason}`) : '';
               const messageText = guestLanguage === 'it'
@@ -1967,10 +1967,10 @@ export default async function handler(req, res) {
               `;
 
               await sendEmailWithAdminCopy({
-                  to: booking.email,
-                  subject: subject,
-                  html: emailHtml,
-                  templateName: 'cancellation'
+                to: booking.email,
+                subject: subject,
+                html: emailHtml,
+                templateName: 'cancellation'
               });
               console.log(`✅ Email cancellazione inviata a ${booking.email}`);
             } catch (e) {
@@ -2001,7 +2001,7 @@ export default async function handler(req, res) {
       if (req.method === 'POST') {
         try {
           const { bookingId, paymentType } = req.body; // paymentType: 'deposit', 'balance', 'full'
-          
+
           // Fetch booking
           const bookingResult = await pool.query(
             `SELECT * FROM bookings WHERE id = $1 OR booking_id = $2`,
@@ -2014,7 +2014,7 @@ export default async function handler(req, res) {
           const booking = bookingResult.rows[0];
 
           if (!booking.email) {
-             return res.status(400).json({ success: false, error: 'Email cliente mancante' });
+            return res.status(400).json({ success: false, error: 'Email cliente mancante' });
           }
 
           const guestLanguage = detectLanguage(booking.email);
@@ -2023,23 +2023,23 @@ export default async function handler(req, res) {
           let amount = 0;
 
           if (paymentType === 'deposit') {
-             amount = parseFloat(booking.deposit_amount);
-             subject = guestLanguage === 'it' ? `Promemoria Acconto - Prenotazione ${booking.booking_id}` : `Deposit Reminder - Booking ${booking.booking_id}`;
-             messageBody = guestLanguage === 'it' 
-               ? `Gentile ${booking.first_name},<br><br>Ti ricordiamo che siamo in attesa del pagamento dell'acconto di <strong>€${amount.toFixed(2)}</strong> per confermare la tua prenotazione.`
-               : `Dear ${booking.first_name},<br><br>This is a reminder that we are awaiting the deposit payment of <strong>€${amount.toFixed(2)}</strong> to confirm your booking.`;
+            amount = parseFloat(booking.deposit_amount);
+            subject = guestLanguage === 'it' ? `Promemoria Acconto - Prenotazione ${booking.booking_id}` : `Deposit Reminder - Booking ${booking.booking_id}`;
+            messageBody = guestLanguage === 'it'
+              ? `Gentile ${booking.first_name},<br><br>Ti ricordiamo che siamo in attesa del pagamento dell'acconto di <strong>€${amount.toFixed(2)}</strong> per confermare la tua prenotazione.`
+              : `Dear ${booking.first_name},<br><br>This is a reminder that we are awaiting the deposit payment of <strong>€${amount.toFixed(2)}</strong> to confirm your booking.`;
           } else if (paymentType === 'balance') {
-             amount = parseFloat(booking.total_amount) - (parseFloat(booking.deposit_amount) || 0);
-             subject = guestLanguage === 'it' ? `Promemoria Saldo - Prenotazione ${booking.booking_id}` : `Balance Payment Reminder - Booking ${booking.booking_id}`;
-             messageBody = guestLanguage === 'it'
-               ? `Gentile ${booking.first_name},<br><br>Ti ricordiamo che il saldo di <strong>€${amount.toFixed(2)}</strong> per la tua prenotazione è in scadenza.`
-               : `Dear ${booking.first_name},<br><br>This is a reminder that the balance payment of <strong>€${amount.toFixed(2)}</strong> for your booking is due.`;
+            amount = parseFloat(booking.total_amount) - (parseFloat(booking.deposit_amount) || 0);
+            subject = guestLanguage === 'it' ? `Promemoria Saldo - Prenotazione ${booking.booking_id}` : `Balance Payment Reminder - Booking ${booking.booking_id}`;
+            messageBody = guestLanguage === 'it'
+              ? `Gentile ${booking.first_name},<br><br>Ti ricordiamo che il saldo di <strong>€${amount.toFixed(2)}</strong> per la tua prenotazione è in scadenza.`
+              : `Dear ${booking.first_name},<br><br>This is a reminder that the balance payment of <strong>€${amount.toFixed(2)}</strong> for your booking is due.`;
           } else {
-             amount = parseFloat(booking.total_amount);
-             subject = guestLanguage === 'it' ? `Promemoria Pagamento - Prenotazione ${booking.booking_id}` : `Payment Reminder - Booking ${booking.booking_id}`;
-             messageBody = guestLanguage === 'it'
-               ? `Gentile ${booking.first_name},<br><br>Ti ricordiamo che siamo in attesa del pagamento totale di <strong>€${amount.toFixed(2)}</strong> per la tua prenotazione.`
-               : `Dear ${booking.first_name},<br><br>This is a reminder that we are awaiting the full payment of <strong>€${amount.toFixed(2)}</strong> for your booking.`;
+            amount = parseFloat(booking.total_amount);
+            subject = guestLanguage === 'it' ? `Promemoria Pagamento - Prenotazione ${booking.booking_id}` : `Payment Reminder - Booking ${booking.booking_id}`;
+            messageBody = guestLanguage === 'it'
+              ? `Gentile ${booking.first_name},<br><br>Ti ricordiamo che siamo in attesa del pagamento totale di <strong>€${amount.toFixed(2)}</strong> per la tua prenotazione.`
+              : `Dear ${booking.first_name},<br><br>This is a reminder that we are awaiting the full payment of <strong>€${amount.toFixed(2)}</strong> for your booking.`;
           }
 
           const emailHtml = `
@@ -2077,7 +2077,7 @@ export default async function handler(req, res) {
         try {
           // Cancella tutte le prenotazioni simulate/test/mock
           console.log('🗑️ Cancellando dati mock dal database...');
-          
+
           // Recupera ID per pulire blocked_dates
           const bookingsToDelete = await pool.query(`
             SELECT booking_id FROM bookings 
@@ -2102,21 +2102,21 @@ export default async function handler(req, res) {
           // Pulisci date bloccate associate
           if (bookingIds.length > 0) {
             for (const bid of bookingIds) {
-                await pool.query("DELETE FROM blocked_dates WHERE description LIKE '%' || $1 || '%'", [bid]);
-                await pool.query("DELETE FROM calendar_events WHERE description LIKE '%' || $1 || '%' OR summary LIKE '%' || $1 || '%'", [bid]);
+              await pool.query("DELETE FROM blocked_dates WHERE description LIKE '%' || $1 || '%'", [bid]);
+              await pool.query("DELETE FROM calendar_events WHERE description LIKE '%' || $1 || '%' OR summary LIKE '%' || $1 || '%'", [bid]);
             }
           }
-          
+
           // Cancella anche richieste contatti mock
           const contactsResult = await pool.query(`
             DELETE FROM contact_requests 
             WHERE email LIKE '%@email.com'
                OR name IN ('Anna Gialli', 'Marco Neri', 'Silvia Bianchi')
           `);
-          
+
           console.log(`✅ Cancellate ${deleteResult.rowCount} prenotazioni mock`);
           console.log(`✅ Cancellate ${contactsResult.rowCount} richieste contatti mock`);
-          
+
           return res.status(200).json({
             success: true,
             message: 'Dati mock cancellati con successo',
@@ -2155,21 +2155,21 @@ export default async function handler(req, res) {
           WHERE total_amount > 0
           ORDER BY created_at DESC
         `);
-        
+
         const payments = result.rows.map((booking, index) => ({
           id: booking.id,
           bookingId: booking.booking_id,
           amount: booking.payment_status === 'paid_full' ? parseFloat(booking.total_amount) : parseFloat(booking.deposit_amount || booking.total_amount * 0.3),
           currency: 'EUR',
-          status: booking.payment_status === 'paid_full' ? 'completed' : 
-                 booking.payment_status === 'deposit_paid' ? 'completed' : 'pending',
+          status: booking.payment_status === 'paid_full' ? 'completed' :
+            booking.payment_status === 'deposit_paid' ? 'completed' : 'pending',
           method: 'paypal', // Assumiamo PayPal per ora
           date: booking.created_at.toISOString(),
           guest: booking.guest,
           paypalLink: 'https://www.paypal.me/AntonioGuida320',
           description: `${booking.payment_status === 'paid_full' ? 'Pagamento completo' : 'Acconto'} prenotazione ${booking.check_in} - ${booking.check_out}`
         }));
-        
+
         return res.status(200).json({
           success: true,
           payments: payments
@@ -2300,9 +2300,9 @@ export default async function handler(req, res) {
       if (req.method === 'POST') {
         try {
           const { orderID, paypalOrder, bookingId, customerEmail, customerName } = req.body;
-          
+
           console.log('📦 PayPal Capture ricevuto:', { orderID, bookingId, customerEmail });
-          
+
           // Verifica che l'ordine PayPal sia stato catturato con successo
           if (!paypalOrder || paypalOrder.status !== 'COMPLETED') {
             return res.status(400).json({
@@ -2325,7 +2325,7 @@ export default async function handler(req, res) {
 
           // Log del pagamento nel database (opzionale)
           // Qui potresti salvare i dettagli PayPal nella tabella bookings
-          
+
           return res.status(200).json({
             success: true,
             message: 'Pagamento PayPal confermato',
@@ -2351,7 +2351,7 @@ export default async function handler(req, res) {
       if (req.method === 'POST') {
         try {
           const { booking_id, status, payment_id, payment_status, amount_paid } = req.body;
-          
+
           if (!booking_id || !status) {
             return res.status(400).json({
               success: false,
@@ -2471,9 +2471,9 @@ export default async function handler(req, res) {
                   subject: `Conferma Prenotazione ${booking.booking_id}`,
                   html: emailHtml,
                   templateName: 'booking_confirmation',
-                  metadata: { 
-                    bookingId: booking.booking_id, 
-                    totalAmount: booking.total_amount, 
+                  metadata: {
+                    bookingId: booking.booking_id,
+                    totalAmount: booking.total_amount,
                     language: guestLanguage,
                     paymentConfirmed: true
                   }
@@ -2565,7 +2565,7 @@ export default async function handler(req, res) {
     if (action === 'calendar-configs') {
       try {
         const result = await pool.query('SELECT * FROM calendar_configs ORDER BY id ASC');
-        
+
         return res.status(200).json({
           success: true,
           calendars: result.rows.map(row => ({
@@ -2594,7 +2594,7 @@ export default async function handler(req, res) {
           console.log('🔄 Admin Panel: Avvio sincronizzazione reale calendari...');
           const sync = new RealCalendarSync();
           const result = await sync.syncAll(); // Esegue la vera sincronizzazione
-          
+
           return res.status(200).json({
             success: true,
             message: 'Sincronizzazione completata con successo',
@@ -2689,7 +2689,7 @@ export default async function handler(req, res) {
     // ========================================
     // ADDITIONAL CALENDAR MANAGEMENT SECTION
     // ========================================
-    
+
     // Aggiungi nuovo calendario
     if (action === 'add-calendar-config') {
       if (req.method === 'POST') {
@@ -2712,7 +2712,7 @@ export default async function handler(req, res) {
         try {
           const { id } = req.query;
           const { name, calendar_type, url, is_active, sync_frequency } = req.body;
-          
+
           const result = await pool.query(
             `UPDATE calendar_configs SET 
               name = COALESCE($1, name), 
@@ -2745,7 +2745,7 @@ export default async function handler(req, res) {
         try {
           const { id } = req.query;
           await pool.query('DELETE FROM calendar_configs WHERE id = $1', [id]);
-          
+
           return res.status(200).json({
             success: true,
             message: 'Configurazione calendario eliminata',
@@ -2964,7 +2964,7 @@ export default async function handler(req, res) {
               OR LOWER(summary) LIKE '%non-available%'
             )
           )`;
-        
+
         if (futureOnly === 'true' || futureOnly === true) {
           countQuery += ' AND start_date >= CURRENT_DATE';
         }
@@ -2986,8 +2986,8 @@ export default async function handler(req, res) {
           location: row.location,
           createdAt: row.created_at,
           updatedAt: row.updated_at,
-          status: new Date(row.start_date) > new Date() ? 'upcoming' : 
-                  new Date(row.end_date) < new Date() ? 'past' : 'current'
+          status: new Date(row.start_date) > new Date() ? 'upcoming' :
+            new Date(row.end_date) < new Date() ? 'past' : 'current'
         }));
 
         return res.status(200).json({
@@ -3082,11 +3082,11 @@ END:VTIMEZONE
         for (const booking of bookingsQuery.rows) {
           const checkin = new Date(booking.check_in);
           const checkout = new Date(booking.check_out);
-          
-          const guestName = booking.first_name && booking.last_name 
-            ? `${booking.first_name} ${booking.last_name}` 
+
+          const guestName = booking.first_name && booking.last_name
+            ? `${booking.first_name} ${booking.last_name}`
             : 'Ospite';
-          
+
           const uid = generateUID('booking', booking.id, formatICalDateOnly(checkin));
           const dtstart = formatICalDateOnly(checkin);
           const dtend = formatICalDateOnly(checkout);
@@ -3110,7 +3110,7 @@ END:VEVENT
         for (const blocked of blockedQuery.rows) {
           const startDate = new Date(blocked.start_date);
           const endDate = new Date(blocked.end_date);
-          
+
           // Aggiungi 1 giorno all'end_date per iCal (end date è esclusivo in iCal)
           const icalEndDate = new Date(endDate);
           icalEndDate.setUTCDate(icalEndDate.getUTCDate() + 1);
@@ -3161,7 +3161,7 @@ END:VEVENT
           console.log('🔄 Admin Panel: Forzatura sincronizzazione...');
           const sync = new RealCalendarSync();
           const result = await sync.syncAll();
-          
+
           return res.status(200).json({
             success: true,
             message: 'Sincronizzazione forzata completata',
@@ -3183,7 +3183,7 @@ END:VEVENT
       if (req.method === 'POST') {
         try {
           const config = req.body;
-          
+
           // Simula test connessione
           return res.status(200).json({
             success: true,
@@ -3270,7 +3270,7 @@ END:VEVENT
           if (seasonalRulesResult.rows.length > 0 && seasonalRulesResult.rows[0].value) {
             seasonalRules = JSON.parse(seasonalRulesResult.rows[0].value);
           }
-          
+
           if (result.rows.length > 0) {
             const pricing = result.rows[0];
             return res.status(200).json({
@@ -3350,7 +3350,7 @@ END:VEVENT
           console.log('📝 Ricevuti dati pricing:', JSON.stringify(pricingData, null, 2));
           console.log('📊 Tipo dati ricevuti:', typeof pricingData);
           console.log('🔗 DATABASE_URL presente:', !!process.env.DATABASE_URL);
-          
+
           // Validazione dati
           if (!pricingData || typeof pricingData !== 'object') {
             console.error('❌ Dati pricing non validi:', pricingData);
@@ -3359,15 +3359,15 @@ END:VEVENT
               error: 'Dati pricing non validi'
             });
           }
-          
+
           // Test connessione database
           console.log('🔍 Test connessione database...');
           await pool.query('SELECT 1');
           console.log('✅ Database connection OK');
-          
+
           // Verifica se esiste già una configurazione
           const existingConfig = await pool.query('SELECT id FROM pricing_config LIMIT 1');
-          
+
           let result;
           if (existingConfig.rows.length > 0) {
             // UPDATE configurazione esistente
@@ -3437,7 +3437,7 @@ END:VEVENT
               pricingData.minStayAugust || pricingData.min_stay_august || 6
             ]);
           }
-          
+
           console.log('✅ Configurazione prezzi salvata:', result.rows[0]);
 
           return res.status(200).json({
@@ -3463,7 +3463,7 @@ END:VEVENT
     if (action === 'quote') {
       try {
         const { checkIn, checkOut, guests, adults, children, includeParking, childrenAges } = req.query;
-        
+
         // Validazione parametri
         if (!checkIn || !checkOut || !guests) {
           return res.status(400).json({
@@ -3600,6 +3600,28 @@ END:VEVENT
           };
         }
 
+        // Funzione helper per calcolare il prezzo notturno basato sui livelli di ospiti
+        const calculateNightlyPrice = (numGuests, pricingConfig) => {
+          if (numGuests <= 0) return 0;
+          let price = 0;
+          const guests = parseInt(numGuests);
+
+          if (guests > 0) {
+            price += Math.min(guests, 2) * (pricingConfig.priceGroup1to2 || 0);
+          }
+          if (guests > 2) {
+            price += Math.min(guests - 2, 2) * (pricingConfig.priceGroup3to4 || 0);
+          }
+          if (guests > 4) {
+            price += Math.min(guests - 4, 2) * (pricingConfig.priceGroup5to6 || 0);
+          }
+          if (guests > 6) {
+            price += Math.min(guests - 6, 2) * (pricingConfig.priceGroup7to8 || 0);
+          }
+          return price;
+        };
+
+
         // Applica regole stagionali se presenti
         let currentPricing = { ...pricing };
         let activeRuleName = null;
@@ -3623,21 +3645,38 @@ END:VEVENT
           }
         }
 
-        // 📅 VALIDAZIONE SOGGIORNO MINIMO (AGOSTO)
-        let requiredMinStay = currentPricing.minStay;
+        // 📅 VALIDAZIONE SOGGIORNO MINIMO (Server-Side Enforcement)
+        let requiredMinStay = pricing.minStay;
         const checkInYear = checkInDate.getUTCFullYear();
         const augustStart = new Date(Date.UTC(checkInYear, 7, 1)); // August 1st
         const septemberStart = new Date(Date.UTC(checkInYear, 8, 1)); // September 1st
 
         // Controlla se l'intervallo di prenotazione si sovrappone ad Agosto
-        if (!activeRuleName && checkInDate < septemberStart && checkOutDate > augustStart) {
-          requiredMinStay = currentPricing.minStayAugust;
+        if (checkInDate < septemberStart && checkOutDate > augustStart) {
+          requiredMinStay = pricing.minStayAugust;
+        }
+
+        // Le regole stagionali hanno la precedenza e possono aumentare il soggiorno minimo
+        if (seasonalRules && Array.isArray(seasonalRules)) {
+          for (let d = new Date(checkInDate); d < checkOutDate; d.setDate(d.getDate() + 1)) {
+            const currentDateUTC = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            for (const rule of seasonalRules) {
+              const ruleStartUTC = new Date(Date.UTC(new Date(rule.startDate).getFullYear(), new Date(rule.startDate).getMonth(), new Date(rule.startDate).getDate()));
+              const ruleEndUTC = new Date(Date.UTC(new Date(rule.endDate).getFullYear(), new Date(rule.endDate).getMonth(), new Date(rule.endDate).getDate()));
+
+              if (currentDateUTC >= ruleStartUTC && currentDateUTC <= ruleEndUTC) {
+                if (rule.minStay) {
+                  requiredMinStay = Math.max(requiredMinStay, rule.minStay);
+                }
+              }
+            }
+          }
         }
 
         if (nights < requiredMinStay) {
           return res.status(400).json({
             success: false,
-              error: `Per le date selezionate è richiesto un soggiorno minimo di ${requiredMinStay} notti.` // Messaggio già dinamico
+            error: `Per le date selezionate è richiesto un soggiorno minimo di ${requiredMinStay} notti.`
           });
         }
 
@@ -3645,7 +3684,7 @@ END:VEVENT
         const guestsNum = parseInt(guests);
         const adultsNum = parseInt(adults) || guestsNum;
         const childrenNum = parseInt(children) || 0;
-        
+
         console.log('🔢 PARAMETRI RICEVUTI:', {
           guests: guestsNum,
           adults: adultsNum,
@@ -3655,12 +3694,34 @@ END:VEVENT
         });
         console.log('💰 PRICING CONFIG IN USO:', currentPricing);
 
-        // 🔥 Calcola il prezzo per notte usando la logica a scaglioni corretta
-        const basePricePerNight = calculateNightlyPrice(guestsNum, currentPricing);
-        console.log(`🔢 PREZZO CALCOLATO PER NOTTE: ${basePricePerNight}€`);
+        // 🔥 NUOVA LOGICA: Calcolo per notte
+        let totalAccommodationCost = 0;
+        const detailsPerNight = [];
+
+        for (let d = new Date(checkInDate); d < checkOutDate; d.setDate(d.getDate() + 1)) {
+          let pricingForNight = { ...pricing };
+          let ruleApplied = null;
+          const currentDateUTC = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+
+          if (seasonalRules && Array.isArray(seasonalRules)) {
+            for (const rule of seasonalRules) {
+              const ruleStartUTC = new Date(Date.UTC(new Date(rule.startDate).getFullYear(), new Date(rule.startDate).getMonth(), new Date(rule.startDate).getDate()));
+              const ruleEndUTC = new Date(Date.UTC(new Date(rule.endDate).getFullYear(), new Date(rule.endDate).getMonth(), new Date(rule.endDate).getDate()));
+              if (currentDateUTC >= ruleStartUTC && currentDateUTC <= ruleEndUTC) {
+                ruleApplied = rule.name;
+                Object.assign(pricingForNight, { priceGroup1to2: rule.priceGroup1to2, priceGroup3to4: rule.priceGroup3to4, priceGroup5to6: rule.priceGroup5to6, priceGroup7to8: rule.priceGroup7to8 });
+                break;
+              }
+            }
+          }
+          const nightlyCost = calculateNightlyPrice(guestsNum, pricingForNight);
+          totalAccommodationCost += nightlyCost;
+          detailsPerNight.push({ date: d.toISOString().split('T')[0], cost: nightlyCost, rule: ruleApplied });
+        }
+        console.log('🔍 Dettaglio calcolo per notte:', detailsPerNight);
 
         // Calcola subtotale alloggio
-        const accommodationCost = basePricePerNight * nights;
+        const accommodationCost = totalAccommodationCost;
 
         // Applica sconti per soggiorni lunghi
         let discount = 0;
@@ -3673,11 +3734,11 @@ END:VEVENT
         // Calcola costi aggiuntivi
         const cleaningFee = currentPricing.cleaningFee;
         console.log(`🧽 PULIZIA: €${cleaningFee}`);
-        
+
         // 🔧 FIX: Parcheggio è un costo PER NOTTE
         const parkingCost = (includeParking === 'true') ? (currentPricing.parkingFee * nights) : 0;
         console.log(`🚗 PARCHEGGIO: ${includeParking === 'true' ? `€${currentPricing.parkingFee} × ${nights} notti = €${parkingCost}` : '€0 (non richiesto)'}`);
-        
+
         // 🔧 FIX: Tassa soggiorno per adulti + bambini >12 anni (bambini ≤12 anni gratis)
         // Parse childrenAges: può essere stringa "8,14" o già array
         let childrenAgesArray = [];
@@ -3688,12 +3749,12 @@ END:VEVENT
             childrenAgesArray = childrenAges.map(age => parseInt(age)).filter(age => !isNaN(age));
           }
         }
-        
+
         // Conta bambini >12 anni che devono pagare la tassa
         const childrenOver12 = childrenAgesArray.filter(age => age > 12).length;
         const childrenUnder12 = childrenAgesArray.filter(age => age <= 12).length;
         const taxableGuests = adultsNum + childrenOver12;
-        
+
         const touristTax = currentPricing.touristTaxAdult * taxableGuests * nights;
         console.log(`🏛️ TASSA SOGGIORNO: ${adultsNum} adulti + ${childrenOver12} bambini >12 anni (${childrenUnder12} bambini ≤12 gratis) = ${taxableGuests} ospiti × €${currentPricing.touristTaxAdult} × ${nights} notti = €${touristTax}`);
 
@@ -3735,7 +3796,7 @@ END:VEVENT
             checkOut: checkOut,
             guests: guestsNum,
             nights: nights,
-            basePrice: basePricePerNight,
+            basePrice: accommodationCost / nights, // Prezzo medio per notte
             accommodationCost: accommodationCost,
             discount: discount,
             discountAmount: discountAmount,
@@ -3748,7 +3809,7 @@ END:VEVENT
             includeParking: includeParking === 'true'
           },
           breakdown: {
-            alloggio: `€${basePricePerNight}/notte × ${nights} notti = €${accommodationCost.toFixed(2)}`,
+            alloggio: `Soggiorno per ${nights} notti = €${accommodationCost.toFixed(2)}`,
             sconto: discount > 0 ? `Sconto ${discount}%: -€${discountAmount.toFixed(2)}` : null,
             pulizie: `€${cleaningFee.toFixed(2)}`,
             parcheggio: parkingCost > 0 ? `€${currentPricing.parkingFee}/notte × ${nights} notti = €${parkingCost.toFixed(2)}` : null,
@@ -3780,7 +3841,7 @@ END:VEVENT
             FROM extra_services 
             ORDER BY sort_order ASC, id ASC
           `);
-          
+
           const services = result.rows.map(service => ({
             id: service.id,
             name: service.name,
@@ -3797,7 +3858,7 @@ END:VEVENT
             createdAt: service.created_at?.toISOString(),
             updatedAt: service.updated_at?.toISOString()
           }));
-          
+
           return res.status(200).json({
             success: true,
             services: services,
@@ -3816,7 +3877,7 @@ END:VEVENT
         try {
           // Crea nuovo servizio
           const { name, description, price, category, unit, active, included, sortOrder } = req.body;
-          
+
           // Validazione dati
           if (!name || price === undefined) {
             return res.status(400).json({
@@ -3873,7 +3934,7 @@ END:VEVENT
           // Aggiorna servizio esistente
           const { id } = req.query;
           const { name, description, price, category, unit, active, included, sortOrder } = req.body;
-          
+
           if (!id) {
             return res.status(400).json({
               success: false,
@@ -3946,7 +4007,7 @@ END:VEVENT
         try {
           // Elimina servizio
           const { id } = req.query;
-          
+
           if (!id) {
             return res.status(400).json({
               success: false,
@@ -3987,140 +4048,140 @@ END:VEVENT
     // ========================================
     if (action === 'capture-payment') {
       try {
-          const targetId = payment_id || booking_id;
+        const targetId = payment_id || booking_id;
 
-          if (!targetId) {
-            return res.status(400).json({ success: false, error: 'ID pagamento o prenotazione richiesto' });
-          }
+        if (!targetId) {
+          return res.status(400).json({ success: false, error: 'ID pagamento o prenotazione richiesto' });
+        }
 
-          // Recupera la prenotazione per ottenere gli importi corretti
-          const bookingResult = await pool.query(
-            `SELECT * FROM bookings
+        // Recupera la prenotazione per ottenere gli importi corretti
+        const bookingResult = await pool.query(
+          `SELECT * FROM bookings
              WHERE id = $1 OR booking_id = $2
              `,
-            [isNaN(Number(targetId)) ? null : Number(targetId), String(targetId)]
-          );
+          [isNaN(Number(targetId)) ? null : Number(targetId), String(targetId)]
+        );
 
-          if (bookingResult.rows.length === 0) {
-            return res.status(404).json({ success: false, error: 'Prenotazione non trovata' });
-          }
+        if (bookingResult.rows.length === 0) {
+          return res.status(404).json({ success: false, error: 'Prenotazione non trovata' });
+        }
 
-          const booking = bookingResult.rows[0];
+        const booking = bookingResult.rows[0];
 
-          // Determina il nuovo stato del pagamento e l'importo pagato
-          let newPaymentStatus;
-          let amountPaidForEmail;
+        // Determina il nuovo stato del pagamento e l'importo pagato
+        let newPaymentStatus;
+        let amountPaidForEmail;
 
-          if (paymentType === 'deposit') {
-            newPaymentStatus = 'deposit_paid';
-            amountPaidForEmail = parseFloat(booking.deposit_amount);
-          } else { // Default a pagamento completo se non specificato
-            newPaymentStatus = 'paid_full';
-            amountPaidForEmail = parseFloat(booking.total_amount);
-          }
+        if (paymentType === 'deposit') {
+          newPaymentStatus = 'deposit_paid';
+          amountPaidForEmail = parseFloat(booking.deposit_amount);
+        } else { // Default a pagamento completo se non specificato
+          newPaymentStatus = 'paid_full';
+          amountPaidForEmail = parseFloat(booking.total_amount);
+        }
 
-          // 1. Aggiorna lo stato della prenotazione a 'confirmed' e il payment_status corretto
-          const updateResult = await pool.query(
-            `UPDATE bookings 
+        // 1. Aggiorna lo stato della prenotazione a 'confirmed' e il payment_status corretto
+        const updateResult = await pool.query(
+          `UPDATE bookings 
              SET status = 'confirmed', payment_status = $1, updated_at = NOW()
              WHERE id = $2
              RETURNING *`,
-            [newPaymentStatus, booking.id]
-          );
+          [newPaymentStatus, booking.id]
+        );
 
-          const updatedBooking = updateResult.rows[0];
-          console.log(`✅ Pagamento catturato e prenotazione confermata: ${updatedBooking.booking_id} -> ${newPaymentStatus}`);
+        const updatedBooking = updateResult.rows[0];
+        console.log(`✅ Pagamento catturato e prenotazione confermata: ${updatedBooking.booking_id} -> ${newPaymentStatus}`);
 
-          // 2. Invia email di conferma finale (Pagamento Ricevuto)
-          if (process.env.SMTP_HOST) {
-            try {
-              const guestLanguage = detectLanguage(updatedBooking.email);
-              // Se la prenotazione era in 'pending', era un bonifico. Altrimenti, usa il metodo esistente.
-              const paymentMethodForEmail = booking.status === 'pending' ? 'bank_transfer' : (booking.stripe_payment_intent ? 'stripe' : 'bank_transfer');
+        // 2. Invia email di conferma finale (Pagamento Ricevuto)
+        if (process.env.SMTP_HOST) {
+          try {
+            const guestLanguage = detectLanguage(updatedBooking.email);
+            // Se la prenotazione era in 'pending', era un bonifico. Altrimenti, usa il metodo esistente.
+            const paymentMethodForEmail = booking.status === 'pending' ? 'bank_transfer' : (booking.stripe_payment_intent ? 'stripe' : 'bank_transfer');
 
-              const remainingAmount = parseFloat(updatedBooking.total_amount) - amountPaidForEmail;
+            const remainingAmount = parseFloat(updatedBooking.total_amount) - amountPaidForEmail;
 
-              const emailHtml = renderEmailTemplate('booking_final_confirmation', {
-                firstName: updatedBooking.first_name,
-                lastName: updatedBooking.last_name,
-                bookingId: updatedBooking.booking_id,
-                checkin: updatedBooking.check_in,
-                checkout: updatedBooking.check_out,
-                totalAmount: parseFloat(updatedBooking.total_amount),
-                amountPaid: amountPaidForEmail,
-                remainingAmount: remainingAmount > 0 ? remainingAmount : 0,
-                language: guestLanguage,
-                paymentMethod: paymentMethodForEmail,
-                notes: updatedBooking.notes,
-                logoUrl: 'https://www.vincantomaiori.it/logo.png',
-                siteUrl: 'https://www.vincantomaiori.it'
-              });
+            const emailHtml = renderEmailTemplate('booking_final_confirmation', {
+              firstName: updatedBooking.first_name,
+              lastName: updatedBooking.last_name,
+              bookingId: updatedBooking.booking_id,
+              checkin: updatedBooking.check_in,
+              checkout: updatedBooking.check_out,
+              totalAmount: parseFloat(updatedBooking.total_amount),
+              amountPaid: amountPaidForEmail,
+              remainingAmount: remainingAmount > 0 ? remainingAmount : 0,
+              language: guestLanguage,
+              paymentMethod: paymentMethodForEmail,
+              notes: updatedBooking.notes,
+              logoUrl: 'https://www.vincantomaiori.it/logo.png',
+              siteUrl: 'https://www.vincantomaiori.it'
+            });
 
-              await sendEmailWithAdminCopy({
-                to: updatedBooking.email,
-                subject: `Pagamento ricevuto - Prenotazione ${updatedBooking.booking_id}`,
-                html: emailHtml,
-                templateName: 'booking_final_confirmation'
-              });
-              console.log(`✅ Email conferma pagamento inviata a ${updatedBooking.email}`);
-            } catch (emailError) {
-              console.error('⚠️ Errore invio email conferma pagamento:', emailError.message);
-            }
+            await sendEmailWithAdminCopy({
+              to: updatedBooking.email,
+              subject: `Pagamento ricevuto - Prenotazione ${updatedBooking.booking_id}`,
+              html: emailHtml,
+              templateName: 'booking_final_confirmation'
+            });
+            console.log(`✅ Email conferma pagamento inviata a ${updatedBooking.email}`);
+          } catch (emailError) {
+            console.error('⚠️ Errore invio email conferma pagamento:', emailError.message);
           }
-
-          return res.status(200).json({ 
-            success: true, 
-            message: 'Pagamento catturato e prenotazione confermata con successo',
-            payment: {
-                status: newPaymentStatus,
-                amount: amountPaidForEmail,
-                date: new Date().toISOString()
-            }
-          });
-        } catch (error) {
-          console.error('❌ Errore capture-payment:', error);
-          return res.status(500).json({ success: false, error: error.message });
         }
+
+        return res.status(200).json({
+          success: true,
+          message: 'Pagamento catturato e prenotazione confermata con successo',
+          payment: {
+            status: newPaymentStatus,
+            amount: amountPaidForEmail,
+            date: new Date().toISOString()
+          }
+        });
+      } catch (error) {
+        console.error('❌ Errore capture-payment:', error);
+        return res.status(500).json({ success: false, error: error.message });
       }
+    }
 
     if (action === 'get-payment-details') {
-        try {
-            const { payment_id } = req.query;
-            if (!payment_id) {
-                return res.status(400).json({ success: false, error: 'payment_id richiesto' });
-            }
+      try {
+        const { payment_id } = req.query;
+        if (!payment_id) {
+          return res.status(400).json({ success: false, error: 'payment_id richiesto' });
+        }
 
-            const result = await pool.query(
-                `SELECT id, booking_id, total_amount, deposit_amount, payment_status, stripe_payment_intent, first_name, last_name, email, created_at 
+        const result = await pool.query(
+          `SELECT id, booking_id, total_amount, deposit_amount, payment_status, stripe_payment_intent, first_name, last_name, email, created_at 
                  FROM bookings 
                  WHERE id = $1 OR booking_id = $2`,
-                [isNaN(Number(payment_id)) ? null : Number(payment_id), String(payment_id)]
-            );
+          [isNaN(Number(payment_id)) ? null : Number(payment_id), String(payment_id)]
+        );
 
-            if (result.rows.length === 0) {
-                return res.status(404).json({ success: false, error: 'Pagamento non trovato' });
-            }
-
-            const booking = result.rows[0];
-            return res.status(200).json({
-                success: true,
-                payment: {
-                    id: booking.id,
-                    booking_id: booking.booking_id,
-                    amount: parseFloat(booking.total_amount),
-                    deposit: parseFloat(booking.deposit_amount),
-                    status: booking.payment_status,
-                    method: booking.stripe_payment_intent ? 'stripe' : 'bank_transfer',
-                    customer: `${booking.first_name} ${booking.last_name}`,
-                    email: booking.email,
-                    transaction_id: booking.stripe_payment_intent,
-                    date: booking.created_at
-                }
-            });
-        } catch (error) {
-            console.error('❌ Errore get-payment-details:', error);
-            return res.status(500).json({ success: false, error: error.message });
+        if (result.rows.length === 0) {
+          return res.status(404).json({ success: false, error: 'Pagamento non trovato' });
         }
+
+        const booking = result.rows[0];
+        return res.status(200).json({
+          success: true,
+          payment: {
+            id: booking.id,
+            booking_id: booking.booking_id,
+            amount: parseFloat(booking.total_amount),
+            deposit: parseFloat(booking.deposit_amount),
+            status: booking.payment_status,
+            method: booking.stripe_payment_intent ? 'stripe' : 'bank_transfer',
+            customer: `${booking.first_name} ${booking.last_name}`,
+            email: booking.email,
+            transaction_id: booking.stripe_payment_intent,
+            date: booking.created_at
+          }
+        });
+      } catch (error) {
+        console.error('❌ Errore get-payment-details:', error);
+        return res.status(500).json({ success: false, error: error.message });
+      }
     }
 
     // ========================================
@@ -4135,7 +4196,7 @@ END:VEVENT
             FROM blocked_dates 
             ORDER BY start_date
           `);
-          
+
           return res.status(200).json({
             success: true,
             blockedDates: result.rows
@@ -4165,15 +4226,15 @@ END:VEVENT
           if (conflict.rows.length > 0) {
             return res.status(409).json({ success: false, error: `Impossibile bloccare: date già prenotate (Booking: ${conflict.rows[0].booking_id})` });
           }
-          
+
           const result = await pool.query(`
             INSERT INTO blocked_dates (start_date, end_date, reason, description)
             VALUES ($1, $2, $3, $4)
             RETURNING id, start_date::text, end_date::text, reason, description
           `, [start_date, end_date, reason || 'maintenance', description || 'Data bloccata']);
-          
+
           console.log('🚫 Data bloccata creata:', result.rows[0]);
-          
+
           return res.status(201).json({
             success: true,
             message: 'Data bloccata creata con successo',
@@ -4181,7 +4242,7 @@ END:VEVENT
           });
         } catch (error) {
           console.error('❌ Errore creazione blocked-date:', error);
-          
+
           // Fallback: simula creazione
           return res.status(201).json({
             success: true,
@@ -4220,11 +4281,11 @@ END:VEVENT
             SET start_date = $1, end_date = $2, reason = $3 
             WHERE id = $4
           `, [start_date, end_date, reason, id]);
-          
+
           return res.status(200).json({ success: true, message: 'Data bloccata aggiornata' });
         } catch (error) {
-           console.error('❌ Errore modifica blocked-date:', error);
-           return res.status(500).json({ success: false, error: error.message });
+          console.error('❌ Errore modifica blocked-date:', error);
+          return res.status(500).json({ success: false, error: error.message });
         }
       }
 
@@ -4233,12 +4294,12 @@ END:VEVENT
         try {
           const { id } = req.body;
           if (!id) return res.status(400).json({ success: false, error: 'ID richiesto' });
-          
+
           await pool.query('DELETE FROM blocked_dates WHERE id = $1', [id]);
           return res.status(200).json({ success: true, message: 'Data bloccata eliminata' });
         } catch (error) {
-           console.error('❌ Errore eliminazione blocked-date:', error);
-           return res.status(500).json({ success: false, error: error.message });
+          console.error('❌ Errore eliminazione blocked-date:', error);
+          return res.status(500).json({ success: false, error: error.message });
         }
       }
     }
@@ -4251,7 +4312,7 @@ END:VEVENT
         try {
           // Ottieni impostazioni dal database
           const result = await pool.query('SELECT * FROM settings ORDER BY id DESC LIMIT 1');
-          
+
           if (result.rows.length > 0) {
             const settings = result.rows[0];
             return res.status(200).json({
@@ -4321,7 +4382,7 @@ END:VEVENT
       } else if (req.method === 'POST') {
         try {
           const settingsData = req.body;
-          
+
           // Prima tenta di creare la tabella se non esiste
           await pool.query(`
             CREATE TABLE IF NOT EXISTS settings (
@@ -4445,11 +4506,11 @@ END:VEVENT
       availableActions: [
         'login', 'admin/role', 'admin/2fa/setup', 'admin/2fa/verify', 'admin/login-password', 'admin/login-totp',
         'dashboard-stats', 'analytics', 'notifications',
-        'booking', 'payments', 'stripe-payment-intent', 'stripe-confirm-payment', 
+        'booking', 'payments', 'stripe-payment-intent', 'stripe-confirm-payment',
         'payment-methods', 'calendar-configs', 'calendar-sync', 'calendar-auto-sync',
         'calendar-bookings', 'ical-export',
         'blocked-dates', 'pricing-config', 'quote', 'extra-services', 'contact', 'settings',
-        'clear-test-bookings', 'update-calendar-config', 'delete-calendar-config', 
+        'clear-test-bookings', 'update-calendar-config', 'delete-calendar-config',
         'calendar-sync-status', 'force-calendar-sync', 'test-calendar-connection'
       ],
       requestedAction: action,
