@@ -31,7 +31,7 @@ class AdminApiService {
   constructor() {
     // 🎯 API UNIFICATA - CONFIGURAZIONE CONSOLIDATA
     // Usa sempre /api come fallback per funzionare correttamente sia in locale che in produzione.
-    this.baseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
+    this.baseUrl = import.meta.env.DEV && import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL : '/api';
     console.log('🎯 AdminApiService baseUrl:', this.baseUrl);
   }
 

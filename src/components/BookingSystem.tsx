@@ -259,7 +259,7 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
     useEffect(() => {
         const fetchPaymentMethods = async () => {
             try {
-                const apiUrl = import.meta.env.VITE_API_BASE_URL || 'https://vincantomaiori.it/api';
+                const apiUrl = import.meta.env.DEV && import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL : '/api';
                 const response = await fetch(`${apiUrl}/unified?action=payment-methods`);
                 const data = await response.json();
                 if (data.success) {

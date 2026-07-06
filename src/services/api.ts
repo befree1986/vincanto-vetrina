@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Base URL: usa variabile d'ambiente se presente, altrimenti fallback a '/api'
 // In dev puoi impostare VITE_API_BASE_URL all'URL di produzione per evitare 404 locali
-const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL || '/api';
+const API_BASE_URL = import.meta.env.DEV && import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL : '/api';
 
 // Configurazione Axios
 const api = axios.create({

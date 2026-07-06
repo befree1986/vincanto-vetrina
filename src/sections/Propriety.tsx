@@ -21,7 +21,7 @@ const Propriety: React.FC = () => {
   useEffect(() => {
     const loadDynamicGallery = async () => {
       try {
-        const baseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
+        const baseUrl = import.meta.env.DEV && import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL : '/api';
         const response = await fetch(`${baseUrl}/unified?action=settings`);
         if (!response.ok) return;
 
