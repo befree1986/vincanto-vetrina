@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate, useLocation } from 'react-router-dom';
 import ThemeSwitcher from './ThemeSwitcher';
+import { addLangPrefix, stripLangPrefix, SupportedLang } from '../i18n';
 import './Navbar.css';
 
 const Navbar: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -21,6 +25,16 @@ const Navbar: React.FC = () => {
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const closeMenu = () => setIsOpen(false);
+
+  // Cambia lingua navigando verso la URL corretta
+  // Es: su /en/property → clicco DE → naviga a /de/property
+  const changeLanguage = (lang: SupportedLang) => {
+    const currentPath = stripLangPrefix(location.pathname);
+    const newPath = addLangPrefix(currentPath || '/', lang);
+    i18n.changeLanguage(lang);
+    navigate(newPath);
+    closeMenu();
+  };
 
   const renderFlagSVG = (lang: string) => {
     switch (lang) {
@@ -63,8 +77,14 @@ const Navbar: React.FC = () => {
           {isOpen && (
             <>
               <div className="language-selector-mobile">
-                {['it', 'en', 'de', 'fr'].map(lang => (
-                  <button key={lang} onClick={() => { i18n.changeLanguage(lang); closeMenu(); }} className="language-flag-button" aria-label={lang}>
+                {(['it', 'en', 'de', 'fr'] as SupportedLang[]).map(lang => (
+                  <button
+                    key={lang}
+                    onClick={() => changeLanguage(lang)}
+                    className={`language-flag-button${i18n.language === lang ? ' active' : ''}`}
+                    aria-label={lang}
+                    aria-current={i18n.language === lang ? 'true' : undefined}
+                  >
                     {renderFlagSVG(lang)}
                   </button>
                 ))}
@@ -78,9 +98,9 @@ const Navbar: React.FC = () => {
           )}
         </nav>
 
-        <button 
-          className="menu-toggle" 
-          onClick={toggleMenu} 
+        <button
+          className="menu-toggle"
+          onClick={toggleMenu}
           aria-label="Toggle menu"
           aria-controls="navMenu"
         >
@@ -89,8 +109,14 @@ const Navbar: React.FC = () => {
       </div>
 
       <div className="language-selector-wrapper">
-        {['it', 'en', 'de', 'fr'].map(lang => (
-          <button key={lang} onClick={() => i18n.changeLanguage(lang)} className="language-flag-button" aria-label={lang}>
+        {(['it', 'en', 'de', 'fr'] as SupportedLang[]).map(lang => (
+          <button
+            key={lang}
+            onClick={() => changeLanguage(lang)}
+            className={`language-flag-button${i18n.language === lang ? ' active' : ''}`}
+            aria-label={lang}
+            aria-current={i18n.language === lang ? 'true' : undefined}
+          >
             {renderFlagSVG(lang)}
           </button>
         ))}

@@ -192,3 +192,15 @@
   content: "🛈";
   margin-right: 4px;
 }
+
+.footer-award-logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 1.5rem 0;
+}
+
+.footer-award-logo-img {
+  height: 80px; /* Puoi modificare questa altezza per cambiare la dimensione */
+  width: auto;
+}

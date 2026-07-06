@@ -17,6 +17,8 @@ import Accessibility from './pages/Accessibility';
 import AdminSetup from './components/AdminSetup';
 import ProtectedRoute from './components/ProtectedRoute';
 import { setupIntelligentPreload, preloadOnIdle } from './utils/preloadComponents';
+import { useTranslation } from 'react-i18next';
+import { detectLangFromPath, SUPPORTED_LANGS, SupportedLang } from './i18n';
 
 // Lazy loading per componenti pesanti
 const AdminPanelPro = lazy(() => import('./pages/AdminPanelPro'));
@@ -25,7 +27,6 @@ const TwoFactorLogin = lazy(() => import('./components/TwoFactorLogin'));
 const TwoFactorSetup = lazy(() => import('./components/TwoFactorSetup'));
 const OAuthCallback = lazy(() => import('./pages/OAuthCallback'));
 
-// Componente di loading per lazy imports
 const LazyLoadingSpinner = () => (
   <div className="flex items-center justify-center min-h-screen">
     <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
@@ -35,20 +36,110 @@ const LazyLoadingSpinner = () => (
 
 import './App.css';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
-// Rimosso Analytics per alleggerire bundle e perché chunk dedicato eliminato
-// import { Analytics } from "@vercel/analytics/react";
 import GoogleAnalytics from "./utils/GoogleAnalytics";
 import SafeSeo from './components/SafeSeo';
 import { suppressPerformanceWarnings } from './utils/eventListenerOptimizer';
 
-// Sopprimi warning di performance non critici in sviluppo
 suppressPerformanceWarnings();
+
+// Inserisce i tag hreflang nel <head> per la SEO multilingua
+// vincantomaiori.it/          → IT (canonical)
+// vincantomaiori.it/en/...    → EN
+// vincantomaiori.it/de/...    → DE
+// vincantomaiori.it/fr/...    → FR
+function HreflangTags({ pagePath }: { pagePath: string }) {
+  useEffect(() => {
+    // Rimuovi eventuali hreflang precedenti
+    document.querySelectorAll('link[hreflang]').forEach(el => el.remove());
+
+    const base = 'https://www.vincantomaiori.it';
+    const tags: { hreflang: string; href: string }[] = [
+      { hreflang: 'it', href: `${base}${pagePath}` },
+      { hreflang: 'en', href: `${base}/en${pagePath === '/' ? '' : pagePath}` },
+      { hreflang: 'de', href: `${base}/de${pagePath === '/' ? '' : pagePath}` },
+      { hreflang: 'fr', href: `${base}/fr${pagePath === '/' ? '' : pagePath}` },
+      { hreflang: 'x-default', href: `${base}${pagePath}` },
+    ];
+
+    tags.forEach(({ hreflang, href }) => {
+      const link = document.createElement('link');
+      link.setAttribute('rel', 'alternate');
+      link.setAttribute('hreflang', hreflang);
+      link.setAttribute('href', href);
+      document.head.appendChild(link);
+    });
+
+    return () => {
+      document.querySelectorAll('link[hreflang]').forEach(el => el.remove());
+    };
+  }, [pagePath]);
+
+  return null;
+}
+
+// Sincronizza i18n con la lingua nell'URL e aggiorna <html lang="">
+function LangSync() {
+  const location = useLocation();
+  const { i18n } = useTranslation();
+
+  useEffect(() => {
+    const lang = detectLangFromPath(location.pathname);
+    if (i18n.language !== lang) {
+      i18n.changeLanguage(lang);
+    }
+    document.documentElement.lang = lang;
+  }, [location.pathname, i18n]);
+
+  return null;
+}
+
+// Carica impostazioni dinamiche dal backend e inietta in i18n
+function DynamicSettingsLoader() {
+  const { i18n } = useTranslation();
+
+  useEffect(() => {
+    const loadDynamicSettings = async () => {
+      try {
+        const baseUrl = import.meta.env.DEV && import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL : '/api';
+        const response = await fetch(`${baseUrl}/unified?action=settings`);
+        if (response.ok) {
+          const data = await response.json();
+          const settings = data.settings || data;
+          if (Array.isArray(settings)) {
+            settings.forEach((setting) => {
+              // Assumiamo che se il valore è un JSON, contiene le traduzioni per lingua
+              // altrimenti è una stringa semplice per la lingua di default (it)
+              try {
+                const parsedValue = JSON.parse(setting.value);
+                if (typeof parsedValue === 'object') {
+                  Object.keys(parsedValue).forEach((lang) => {
+                    i18n.addResource(lang, 'translation', setting.key, parsedValue[lang]);
+                  });
+                } else {
+                  i18n.addResource('it', 'translation', setting.key, parsedValue);
+                }
+              } catch (e) {
+                // Non è JSON, quindi è solo testo per la lingua di default
+                i18n.addResource('it', 'translation', setting.key, setting.value);
+              }
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Errore caricamento impostazioni dinamiche:', error);
+      }
+    };
+    loadDynamicSettings();
+  }, [i18n]);
+
+  return null;
+}
 
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
-  const isAdminRoute = location.pathname.startsWith('/admin');
-  
+  const isAdminRoute = location.pathname.startsWith('/admin') || location.pathname.startsWith('/oauth');
+
   const {
     showBanner,
     setShowBanner,
@@ -59,14 +150,10 @@ function App() {
     savePreferences
   } = useCookieContext() || {};
 
-  // Setup preload intelligente per componenti lazy
   useEffect(() => {
     if (!isAdminRoute) {
-      // Avvia preload intelligente solo per le pagine normali
       const cleanup = setupIntelligentPreload();
-      // Avvia preload su idle dopo 1 secondo
       setTimeout(preloadOnIdle, 1000);
-      
       return cleanup;
     }
   }, [isAdminRoute]);
@@ -75,14 +162,12 @@ function App() {
   if (isAdminRoute) {
     return (
       <>
-        {/* Google Analytics solo se accettato */}
         {userPreferences?.analytics && <GoogleAnalytics />}
         <Suspense fallback={<LazyLoadingSpinner />}>
           <Routes>
             <Route path="/admin/login" element={
               <TwoFactorLogin
-                onLoginSuccess={(token, role) => {
-                  // Salva già nel componente; qui gestiamo solo redirect
+                onLoginSuccess={(_token, role) => {
                   if (role === 'superadmin') {
                     navigate('/admin');
                   } else {
@@ -115,52 +200,66 @@ function App() {
             <Route path="/oauth/callback" element={<OAuthCallback />} />
           </Routes>
         </Suspense>
-        {/* Analytics rimosso */}
       </>
     );
   }
 
-  // Layout normale per il sito
+  // Rimuovi il prefisso lingua per ottenere il path canonico (es. /en/about -> /about)
+  const canonicalPath = location.pathname.replace(/^\/(en|de|fr)/, '') || '/';
+
   return (
     <>
-      {/* Google Analytics pageview tracking, solo se accettato */}
+      <HreflangTags pagePath={canonicalPath} />
+      <LangSync />
+      <DynamicSettingsLoader />
       {userPreferences?.analytics && <GoogleAnalytics />}
       <Navbar />
 
       <Routes>
-        <Route
-          path="/" element={ <>
-          <SafeSeo
-            page="home"
-            ogImage="/logo.svg"
-            canonical="https://www.vincantomaori.it"
-          />
-          <Home />
-          <About />
-          <Booking />
-          <Contact />
+        {/* ── Pagine con prefisso lingua (/en/, /de/, /fr/) ── */}
+        {SUPPORTED_LANGS.filter(l => l !== 'it').map(lang => (
+          <React.Fragment key={lang}>
+            <Route path={`/${lang}`} element={
+              <>
+                <SafeSeo page="home" ogImage="/logo.svg" canonical={`https://www.vincantomaiori.it/${lang}`} />
+                <Home /><About /><Booking /><Contact />
+              </>
+            } />
+            <Route path={`/${lang}/property`} element={
+              <>
+                <SafeSeo page="property" ogImage="/logo.svg" canonical={`https://www.vincantomaiori.it/${lang}/property`} />
+                <Propriety />
+              </>
+            } />
+            <Route path={`/${lang}/cookie-policy`} element={<CookiePolicy />} />
+            <Route path={`/${lang}/privacy-policy`} element={<PrivacyPolicy />} />
+            <Route path={`/${lang}/terms-conditions`} element={<TermsConditions />} />
+            <Route path={`/${lang}/accessibility`} element={<Accessibility />} />
+          </React.Fragment>
+        ))}
+
+        {/* ── Pagine italiane (default, senza prefisso) ── */}
+        <Route path="/" element={
+          <>
+            <SafeSeo page="home" ogImage="/logo.svg" canonical="https://www.vincantomaiori.it" />
+            <Home /><About /><Booking /><Contact />
           </>
-          }
-          />
+        } />
+        <Route path="/property" element={
+          <>
+            <SafeSeo page="property" ogImage="/logo.svg" canonical="https://www.vincantomaiori.it/property" />
+            <Propriety />
+          </>
+        } />
         <Route path="/cookie-policy" element={<CookiePolicy />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-conditions" element={<TermsConditions />} />
         <Route path="/accessibility" element={<Accessibility />} />
-        <Route path="/property" element={
-          <>
-            <SafeSeo
-              page="property"
-              ogImage="/logo.svg"
-              canonical="https://www.vincantomaori.it/property"
-            />
-            <Propriety />
-          </>
-        } />
       </Routes>
 
       {showBanner && (
         <CookieBanner
-          onClose={() => setShowBanner(false)}
+          onClose={() => setConsent && setConsent(false)}
           onAccept={() => setConsent && setConsent(true)}
           onCustomize={() => {
             setShowPreferences && setShowPreferences(true);
@@ -178,7 +277,7 @@ function App() {
               savePreferences({
                 analytics: prefs.analytics,
                 marketing: prefs.marketing,
-                essential: prefs.essential !== undefined ? prefs.essential : true // ensure boolean
+                essential: prefs.essential !== undefined ? prefs.essential : true
               });
             }
           }}
@@ -200,20 +299,14 @@ const BackToTopButton: React.FC = () => {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setVisible(window.scrollY > 300);
-    };
+    const handleScroll = () => setVisible(window.scrollY > 300);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   return (
     <button
-      onClick={scrollToTop}
+      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       className={`back-to-top-btn ${visible ? 'visible' : ''}`}
       aria-label="Torna su"
     >

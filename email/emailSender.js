@@ -125,56 +125,56 @@ export async function sendEmailWithAdminCopy({ to, subject, html, templateName, 
 
   // Send admin copy if configured
  // ======================================
-//  const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_FROM;
-//  if (adminEmail && adminEmail !== to) {
-//    const adminSubject = `[ADMIN COPY] ${subject}`;
+  const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_FROM;
+  if (adminEmail && adminEmail !== to) {
+    const adminSubject = `[ADMIN COPY] ${subject}`;
     // Costruisci blocco extra per admin
-//    let adminBlock = '';
-//    try {
-//      const baseUrl = 'https://www.vincantomaori.it';
-//      const pm = String(metadata.paymentMethod || '').toLowerCase();
-//      const methodIcon = pm.includes('paypal') ? baseUrl + '/icons/paypal_icon.webp' : pm.includes('bank') ? baseUrl + '/icons/bank_icon.webp' : baseUrl + '/icons/stripe_icon.webp';
-//      const methodLabel = pm.includes('paypal') ? 'PayPal' : pm.includes('bank') ? 'Bank Transfer' : 'Card';
-//      const extras = Array.isArray(metadata.extraServices) ? metadata.extraServices : [];
-//      const paidExtras = extras.filter(s => !s.included && Number(s.price) > 0);
-//      const includedExtras = extras.filter(s => s.included);
-//      const extrasTotal = paidExtras.reduce((sum, s) => sum + Number(s.price || 0), 0);
-//      adminBlock = `
-//        <div style="background:#fff5f5;padding:16px;border-left:4px solid #c53030;margin:16px 0;border-radius:6px;">
-//          <h3 style="margin:0 0 8px 0;color:#9b2c2c;">ADMIN — Dettagli tecnici</h3>
-//          <ul style="margin:8px 0 8px 16px;padding:0;color:#2d3748;">
-//            <li><strong>Booking ID:</strong> ${metadata.bookingId || '-'}</li>
-//            <li><strong>Lingua:</strong> ${metadata.language || '-'}</li>
-//            <li><strong>Metodo pagamento:</strong> <img src="${methodIcon}" alt="${methodLabel}" width="16" height="16" style="vertical-align:middle;margin-right:6px;"/> ${methodLabel}</li>
-//           ${typeof metadata.totalAmount !== 'undefined' ? `<li><strong>Importo Totale (base):</strong> €${Number(metadata.totalAmount).toFixed(2)}</li>` : ''}
-//            ${typeof metadata.amountPaid !== 'undefined' ? `<li><strong>Pagato ora:</strong> €${Number(metadata.amountPaid).toFixed(2)}</li>` : ''}
-//          </ul>
-//          ${extras.length > 0 ? `
-//          <div style="margin-top:8px;">
-//            <div style="font-weight:600;margin-bottom:4px;">Servizi inclusi</div>
-//            <ul style="margin:0 0 8px 16px;">
-//              ${includedExtras.map(s => `<li>${(s.name || '').toString()}</li>`).join('')}
-//            </ul>
-//            <div style="font-weight:600;margin:8px 0 4px;">Servizi extra a pagamento</div>
-//            <ul style="margin:0 0 8px 16px;">
-//              ${paidExtras.map(s => `<li>${(s.name || '').toString()}: €${Number(s.price || 0).toFixed(2)}</li>`).join('')}
-//            </ul>
-//            <div style="text-align:right;color:#2d3748;font-weight:bold;">Totale extra: €${extrasTotal.toFixed(2)}</div>
-//          </div>
-//          ` : ''}
-//        </div>
-//      `;
-//   } catch {}
-//   const adminHtml = html.replace('<!--ADMIN_EXTRA-->', adminBlock);
-//   const adminResult = await sendEmailWithRetry({
-//     to: adminEmail,
-//     subject: adminSubject,
-//     html: adminHtml,
-//     templateName,
-//     metadata: { ...metadata, isAdminCopy: true }
-//   });
-//   results.push({ recipient: adminEmail, ...adminResult });
-// }
+    let adminBlock = '';
+    try {
+      const baseUrl = 'https://www.vincantomaori.it';
+      const pm = String(metadata.paymentMethod || '').toLowerCase();
+      const methodIcon = pm.includes('paypal') ? baseUrl + '/icons/paypal_icon.webp' : pm.includes('bank') ? baseUrl + '/icons/bank_icon.webp' : baseUrl + '/icons/stripe_icon.webp';
+      const methodLabel = pm.includes('paypal') ? 'PayPal' : pm.includes('bank') ? 'Bank Transfer' : 'Card';
+      const extras = Array.isArray(metadata.extraServices) ? metadata.extraServices : [];
+      const paidExtras = extras.filter(s => !s.included && Number(s.price) > 0);
+      const includedExtras = extras.filter(s => s.included);
+      const extrasTotal = paidExtras.reduce((sum, s) => sum + Number(s.price || 0), 0);
+      adminBlock = `
+        <div style="background:#fff5f5;padding:16px;border-left:4px solid #c53030;margin:16px 0;border-radius:6px;">
+          <h3 style="margin:0 0 8px 0;color:#9b2c2c;">ADMIN — Dettagli tecnici</h3>
+         <ul style="margin:8px 0 8px 16px;padding:0;color:#2d3748;">
+           <li><strong>Booking ID:</strong> ${metadata.bookingId || '-'}</li>
+            <li><strong>Lingua:</strong> ${metadata.language || '-'}</li>
+            <li><strong>Metodo pagamento:</strong> <img src="${methodIcon}" alt="${methodLabel}" width="16" height="16" style="vertical-align:middle;margin-right:6px;"/> ${methodLabel}</li>
+           ${typeof metadata.totalAmount !== 'undefined' ? `<li><strong>Importo Totale (base):</strong> €${Number(metadata.totalAmount).toFixed(2)}</li>` : ''}
+            ${typeof metadata.amountPaid !== 'undefined' ? `<li><strong>Pagato ora:</strong> €${Number(metadata.amountPaid).toFixed(2)}</li>` : ''}
+          </ul>
+          ${extras.length > 0 ? `
+          <div style="margin-top:8px;">
+            <div style="font-weight:600;margin-bottom:4px;">Servizi inclusi</div>
+            <ul style="margin:0 0 8px 16px;">
+              ${includedExtras.map(s => `<li>${(s.name || '').toString()}</li>`).join('')}
+            </ul>
+            <div style="font-weight:600;margin:8px 0 4px;">Servizi extra a pagamento</div>
+            <ul style="margin:0 0 8px 16px;">
+              ${paidExtras.map(s => `<li>${(s.name || '').toString()}: €${Number(s.price || 0).toFixed(2)}</li>`).join('')}
+            </ul>
+            <div style="text-align:right;color:#2d3748;font-weight:bold;">Totale extra: €${extrasTotal.toFixed(2)}</div>
+          </div>
+          ` : ''}
+        </div>
+      `;
+   } catch {}
+   const adminHtml = html.replace('<!--ADMIN_EXTRA-->', adminBlock);
+   const adminResult = await sendEmailWithRetry({
+     to: adminEmail,
+     subject: adminSubject,
+     html: adminHtml,
+     templateName,
+     metadata: { ...metadata, isAdminCopy: true }
+   });
+   results.push({ recipient: adminEmail, ...adminResult });
+ }
 
   return results;
 }

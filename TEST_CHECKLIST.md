@@ -24,7 +24,7 @@
 ### 2️⃣ Payment System Testing (5 min)
 
 #### Via Admin Panel UI:
-1. Go to **https://vincanto-vetrina.vercel.app/admin**
+1. Go to **https://vincantomaiori.it/admin**
 2. Navigate to **Pagamenti** tab
 3. Test actions:
    - Click "⚙️ Configura Stripe" → Enter test config
@@ -34,10 +34,10 @@
 #### Via API:
 ```bash
 # Test 1: Get transactions
-curl "https://vincanto-vetrina.vercel.app/api/payments?action=get-transactions&limit=5"
+curl "https://vincantomaiori.it/api/payments?action=get-transactions&limit=5"
 
 # Test 2: Verify payment status (use real payment_id)
-curl "https://vincanto-vetrina.vercel.app/api/payments?action=verify-status&payment_id=pi_test_123"
+curl "https://vincantomaiori.it/api/payments?action=verify-status&payment_id=pi_test_123"
 ```
 
 **Expected:**
@@ -59,10 +59,10 @@ curl "https://vincanto-vetrina.vercel.app/api/payments?action=verify-status&paym
 #### Via API:
 ```bash
 # Test SMTP connection
-curl "https://vincanto-vetrina.vercel.app/api/emails?action=test"
+curl "https://vincantomaiori.it/api/emails?action=test"
 
 # Send template email
-curl -X POST "https://vincanto-vetrina.vercel.app/api/emails?action=send-template" \
+curl -X POST "https://vincantomaiori.it/api/emails?action=send-template" \
   -H "Content-Type: application/json" \
   -d '{
     "to": "your-email@example.com",
@@ -97,16 +97,16 @@ curl -X POST "https://vincanto-vetrina.vercel.app/api/emails?action=send-templat
 ```bash
 # Get today's analytics
 TODAY=$(date +%Y-%m-%d)
-curl "https://vincanto-vetrina.vercel.app/api/analytics?action=get-daily&date=$TODAY"
+curl "https://vincantomaiori.it/api/analytics?action=get-daily&date=$TODAY"
 
 # Aggregate today (creates/updates analytics)
-curl -X POST "https://vincanto-vetrina.vercel.app/api/analytics?action=aggregate-today"
+curl -X POST "https://vincantomaiori.it/api/analytics?action=aggregate-today"
 
 # Get 30-day summary
-curl "https://vincanto-vetrina.vercel.app/api/analytics?action=get-summary&days=30"
+curl "https://vincantomaiori.it/api/analytics?action=get-summary&days=30"
 
 # Export CSV
-curl "https://vincanto-vetrina.vercel.app/api/analytics?action=export-csv&start_date=2025-11-01&end_date=2025-11-30" -o analytics.csv
+curl "https://vincantomaiori.it/api/analytics?action=export-csv&start_date=2025-11-01&end_date=2025-11-30" -o analytics.csv
 ```
 
 **Expected:**

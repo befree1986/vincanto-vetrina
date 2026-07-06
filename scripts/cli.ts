@@ -1,6 +1,7 @@
 import inquirer from 'inquirer';
 import fs from 'fs';
 import path from 'path';
+import { execSync } from 'child_process';
 import { scanCssFiles } from '../utils/cssScanner';
 import { getClassUsageReport } from '../utils/classUsage';
 import { applyCorrections } from '../src/utils/correctionEngine';
@@ -205,6 +206,180 @@ async function runPublishTracker() {
   console.log('\n📦 Changelog generato in:', fileName);
 }
 
+async function runReplaceDomains() {
+  console.log('\n🔍 Scansione INTERO PROGETTO per riferimenti a vercel.app...');
+
+  const { mode } = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'mode',
+      message: '🔄 Modalità sostituzione domini:',
+      choices: [
+        { name: '👀 Simulazione (Mostra solo cosa verrebbe cambiato)', value: 'dry' },
+        { name: '✍️  Manuale (Conferma per ogni file)', value: 'manual' },
+        { name: '🚀 Automatica (Sostituisci tutto subito)', value: 'auto' }
+      ]
+    }
+  ]);
+  
+  function getAllFiles(dirPath: string, arrayOfFiles: string[] = []) {
+    const files = fs.readdirSync(dirPath);
+    files.forEach(function(file) {
+      // Ignora cartelle di sistema, dipendenze e build
+      if (['node_modules', '.git', '.next', '.vercel', 'dist', 'coverage'].includes(file)) return;
+
+      if (fs.statSync(path.join(dirPath, file)).isDirectory()) {
+        getAllFiles(path.join(dirPath, file), arrayOfFiles);
+      } else {
+        arrayOfFiles.push(path.join(dirPath, file));
+      }
+    });
+    return arrayOfFiles;
+  }
+
+  const files = getAllFiles('./');
+  let count = 0;
+  const regex = /https?:\/\/vincanto[-a-zA-Z0-9]*\.vercel\.app/g;
+
+  for (const file of files) {
+    // Include più estensioni (xml, txt, env, yml, ecc.) per una pulizia completa
+    if (file.match(/\.(ts|tsx|js|jsx|json|md|mdx|html|css|scss|xml|txt|yml|yaml)$/i) || path.basename(file).startsWith('.env')) {
+      const content = fs.readFileSync(file, 'utf-8');
+      
+      if (regex.test(content)) {
+        const matches = content.match(regex) || [];
+        const uniqueMatches = [...new Set(matches)]; // Rimuove duplicati per visualizzazione pulita
+        
+        console.log(`\n📄 Trovato in: ${file}`);
+        uniqueMatches.forEach(m => console.log(`   🔴 ${m}  -->  🟢 https://vincantomaiori.it`));
+
+        if (mode === 'dry') {
+          count++;
+          continue;
+        }
+
+        let shouldReplace = true;
+        if (mode === 'manual') {
+          const { confirm } = await inquirer.prompt([
+            { type: 'confirm', name: 'confirm', message: 'Sostituire in questo file?', default: true }
+          ]);
+          shouldReplace = confirm;
+        }
+
+        if (shouldReplace) {
+          const newContent = content.replace(regex, 'https://vincantomaiori.it');
+          fs.writeFileSync(file, newContent, 'utf-8');
+          console.log(`   ✅ Aggiornato.`);
+          count++;
+        } else {
+          console.log(`   ⏭️  Saltato.`);
+        }
+      }
+    }
+  }
+
+  if (count === 0) {
+    console.log('\n✨ Nessun riferimento a vercel.app trovato (o nessuna modifica effettuata).');
+  } else {
+    if (mode === 'dry') {
+      console.log(`\n🔍 Trovati ${count} file con riferimenti da aggiornare.`);
+    } else {
+      console.log(`\n🎉 Aggiornati ${count} file.`);
+    }
+  }
+}
+
+async function runGitManager() {
+  console.log('\n🐙 Gestione Repository Git');
+  
+  // Verifica se è un repo git
+  try {
+    execSync('git rev-parse --is-inside-work-tree', { stdio: 'ignore' });
+  } catch {
+    console.error('❌ Questa cartella non è inizializzata come repository Git.');
+    const { init } = await inquirer.prompt([{ type: 'confirm', name: 'init', message: 'Vuoi inizializzare Git ora?', default: true }]);
+    if (init) {
+      execSync('git init');
+      console.log('✅ Git inizializzato.');
+    } else {
+      return;
+    }
+  }
+
+  let currentRemoteUrl = 'Nessuno';
+  try {
+    currentRemoteUrl = execSync('git remote get-url origin', { stdio: 'pipe' }).toString().trim();
+  } catch {}
+  console.log(`\n🔗 Remote attuale: \x1b[36m${currentRemoteUrl}\x1b[0m`);
+
+  const { action } = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'action',
+      message: 'Scegli azione:',
+      choices: [
+        { name: '🚀 Push (Invia tutto a GitHub)', value: 'push' },
+        { name: '🔗 Configura Remote (Collega a GitHub)', value: 'remote' },
+        { name: '📊 Stato (Status)', value: 'status' },
+        { name: '🔙 Indietro', value: 'back' }
+      ]
+    }
+  ]);
+
+  if (action === 'back') return;
+
+  if (action === 'remote') {
+    const currentRemote = execSync('git remote -v').toString();
+    console.log('\nAttuale configurazione remote:\n' + (currentRemote || 'Nessun remote configurato.'));
+    
+    const { newRemote } = await inquirer.prompt([
+      { type: 'input', name: 'newRemote', message: 'Inserisci URL repository GitHub (es. https://github.com/tuo-utente/vincanto.git):' }
+    ]);
+    
+    if (newRemote) {
+      try {
+        execSync('git remote remove origin', { stdio: 'ignore' });
+      } catch {}
+      execSync(`git remote add origin ${newRemote}`);
+      console.log('✅ Remote origin aggiornato.');
+    }
+  }
+
+  if (action === 'status') {
+    console.log('\n' + execSync('git status').toString());
+  }
+
+  if (action === 'push') {
+    const { message } = await inquirer.prompt([
+      { type: 'input', name: 'message', message: '💬 Messaggio commit:', default: 'Aggiornamento progetto' }
+    ]);
+
+    console.log('⏳ Aggiunta file...');
+    execSync('git add .');
+    
+    console.log('⏳ Commit...');
+    try {
+      execSync(`git commit -m "${message}"`);
+    } catch {
+      console.log('ℹ️ Nessuna modifica da committare.');
+    }
+
+    console.log('⏳ Push verso GitHub...');
+    try {
+      execSync('git push');
+      console.log('✅ Push completato!');
+    } catch {
+      console.log('⚠️ Push standard fallito. Provo push upstream (primo invio)...');
+      try {
+        execSync('git push -u origin main');
+        console.log('✅ Primo push completato!');
+      } catch (err) {
+        console.error('❌ Errore durante il push. Verifica di aver configurato il remote correttamente.');
+      }
+    }
+  }
+}
+
 async function main() {
   const { task } = await inquirer.prompt([
     {
@@ -224,6 +399,10 @@ async function main() {
         { name: '🛠️ Applica suggerimenti SEO automaticamente', value: 'seo-auto' },
         { name: '🔍 Verifica SEO con confronto web e applica', value: 'seo-verify' },
         { name: '💬 Prompt libero IA', value: 'free' },
+        { name: '🔄 Aggiorna domini (vincanto...vercel.app -> vincantomaiori.it)', value: 'replace-domains' },
+        { name: '🚀 Pubblica su Vercel', value: 'deploy' },
+        { name: '🐙 Gestione Git (Push su GitHub)', value: 'git' },
+        { name: '🐞 Vedi Log Errori Vercel', value: 'logs' },
         { name: '❌ Esci', value: 'exit' },
       ]
     }
@@ -239,6 +418,49 @@ async function main() {
   if (task === 'publish') await runPublishTracker();
   if (task === 'seo-auto') await runSeoAutoApply();
   if (task === 'free') await runFreePromptCLI();
+  if (task === 'replace-domains') await runReplaceDomains();
+  if (task === 'git') await runGitManager();
+  if (task === 'deploy') {
+    const { mode } = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'mode',
+        message: '🚀 Opzioni di Pubblicazione Vercel:',
+        choices: [
+          { name: '⚡ Pubblica subito (sul progetto già collegato)', value: 'fast' },
+          { name: '🔗 Cambia progetto di destinazione (re-link) e pubblica', value: 'relink' },
+          { name: '❌ Annulla', value: 'exit' }
+        ]
+      }
+    ]);
+
+    if (mode === 'exit') return;
+
+    if (mode === 'relink') {
+      console.log('\n🔗 Avvio procedura di collegamento a un nuovo progetto...');
+      try {
+        execSync('npx vercel link', { stdio: 'inherit' });
+      } catch (error) {
+        console.error('\n❌ Collegamento interrotto.');
+        return;
+      }
+    }
+
+    console.log('\n🚀 Avvio deploy in produzione...');
+    try {
+      execSync('npx vercel --prod', { stdio: 'inherit' });
+    } catch (error) {
+      console.error('\n❌ Deploy interrotto o fallito.');
+    }
+  }
+  if (task === 'logs') {
+    console.log('\n🐞 Recupero ultimi log di produzione da Vercel...');
+    try {
+      execSync('npx vercel logs --prod --limit 20', { stdio: 'inherit' });
+    } catch (error) {
+      console.error('\n❌ Impossibile recuperare i log. Verifica il login con "npx vercel login".');
+    }
+  }
   if (task === 'seo') {
     const { filePath, keyword } = await inquirer.prompt([
       { type: 'input', name: 'filePath', message: '📄 File da analizzare:' },

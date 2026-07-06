@@ -1,0 +1,117 @@
+.seasonal-pricing-manager {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.rules-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.rule-card {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 15px;
+    background: #fafafa;
+}
+
+.rule-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.rule-name-input {
+    font-size: 1.1rem;
+    font-weight: bold;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    flex-grow: 1;
+    margin-right: 15px;
+}
+
+.btn-remove-rule {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.rule-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+}
+
+.form-group label {
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.form-group input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.actions-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.btn-add-rule {
+    background: #2ecc71;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-save-rules {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.save-status {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.save-status.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.save-status.error {
+    background: #f8d7da;
+    color: #721c24;
+}

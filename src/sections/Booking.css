@@ -146,3 +146,16 @@
   font-size: 1.1rem;
   display: block;
 }
+
+.booking-award-container {
+  margin-top: 3rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.booking-award-image {
+  max-width: 250px;
+  width: 100%;
+  height: auto;
+}

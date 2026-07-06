@@ -43,7 +43,7 @@ export default defineConfig({
       // Usa l'API di produzione in dev se USE_PROD_API=true
       const useProd = process.env.USE_PROD_API === 'true';
       const target = useProd
-        ? 'https://vincanto-vetrina.vercel.app'
+        ? 'https://vincantomaiori.it'
         : 'http://localhost:3000';
       return {
         // Proxy generico: tutte le chiamate /api/*

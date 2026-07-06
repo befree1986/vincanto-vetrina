@@ -157,19 +157,34 @@ interface BookingSystemProps {
     onClose?: () => void;
 }
 
+const internalStyles = `
+.summary-extras { margin: 10px 0; }
+.summary-extras ul { margin: 5px 0 5px 20px; padding: 0; }
+.summary-divider { margin: 10px 0; border: 0; border-top: 1px solid #eee; }
+.amount-highlight { font-size: 1.1em; color: #2563eb; margin-top: 10px; }
+.balance-note { font-size: 0.9em; color: #666; }
+.privacy-checkbox-container { margin-top: 15px; display: flex; align-items: flex-start; gap: 10px; }
+.privacy-checkbox-container input[type="checkbox"] { width: auto; margin-top: 4px; }
+.privacy-checkbox-container label { font-size: 0.9em; font-weight: normal; }
+.privacy-checkbox-container label a { text-decoration: underline; }
+`;
+
+const IS_DEV = import.meta.env.DEV;
+
 const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
     const { t, i18n } = useTranslation();
     
     // 🔍 DEBUG: Log mount/unmount
     React.useEffect(() => {
-        console.log('✅ BookingSystem mounted');
-        return () => console.log('❌ BookingSystem unmounted');
+        if (IS_DEV) console.log('✅ BookingSystem mounted');
+        return () => { if (IS_DEV) console.log('❌ BookingSystem unmounted'); };
     }, []);
     
     // 📊 Stati base
     const [currentStep, setCurrentStep] = useState<Step>('dates');
     const [error, setError] = useState<string | null>(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
+    const [privacyAccepted, setPrivacyAccepted] = useState(false);
     
     // 🛎️ Servizi extra - INIZIALIZZATI A ZERO
     const [extraServicesCost, setExtraServicesCost] = useState(0);
@@ -179,9 +194,14 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
     const [bookingResult, setBookingResult] = useState<any | null>(null);
     const [paymentCompleted, setPaymentCompleted] = useState(false);
     const [paymentPopup, setPaymentPopup] = useState<{show: boolean, message: string}>({show: false, message: ''});
-    const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
+    const [paymentMethods, setPaymentMethods] = useState<any[]>([
+        { id: 'stripe_card', name: 'Carta di Credito/Debito', enabled: true },
+        { id: 'paypal', name: 'PayPal', enabled: true },
+        { id: 'bank_transfer', name: 'Bonifico Bancario', enabled: true },
+    ]);
     // 💰 Payment amount - stored before submitBooking to avoid quote state issues
     const [paymentAmount, setPaymentAmount] = useState<number>(0);
+    const [storedBreakdown, setStoredBreakdown] = useState<any>(null); // 💾 Persistenza costi
     
     // 🎯 Custom hooks (dopo tutti gli useState)
     const {
@@ -227,7 +247,7 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
             return total + (service.price || 0);
         }, 0);
         
-        console.log('💰 BookingSystem extraCost:', { total: selectedExtraServices.length, paid: paidServices.length, cost: totalCost });
+        if (IS_DEV) console.log('💰 BookingSystem extraCost:', { total: selectedExtraServices.length, paid: paidServices.length, cost: totalCost });
         setExtraServicesCost(totalCost);
     }, [quote, selectedExtraServices]);
 
@@ -239,18 +259,33 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
     useEffect(() => {
         const fetchPaymentMethods = async () => {
             try {
-                const apiUrl = import.meta.env.VITE_API_BASE_URL || 'https://vincanto-vetrina.vercel.app/api';
+                const apiUrl = import.meta.env.DEV && import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL : '/api';
                 const response = await fetch(`${apiUrl}/unified?action=payment-methods`);
                 const data = await response.json();
                 if (data.success) {
-                    setPaymentMethods(data.methods);
+                    // Forza l'abilitazione di Stripe e PayPal e normalizza gli ID
+                    let methods = data.methods.map((m: any) => {
+                        if (m.id === 'stripe') return { ...m, id: 'stripe_card', enabled: true };
+                        if (m.id === 'stripe_card') return { ...m, enabled: true };
+                        if (m.id === 'paypal') return { ...m, enabled: true };
+                        return m;
+                    });
+
+                    // Se l'API non li restituisce, li aggiungiamo manualmente
+                    if (!methods.find((m: any) => m.id === 'stripe_card')) {
+                        methods.push({ id: 'stripe_card', name: 'Carta di Credito/Debito', enabled: true });
+                    }
+                    if (!methods.find((m: any) => m.id === 'paypal')) {
+                        methods.push({ id: 'paypal', name: 'PayPal', enabled: true });
+                    }
+                    setPaymentMethods(methods);
                 }
             } catch (e) {
                 console.error("Failed to fetch payment methods", e);
                 // Fallback in caso di errore API
                 setPaymentMethods([
-                    { id: 'stripe_card', name: 'Carta di Credito/Debito', enabled: false },
-                    { id: 'paypal', name: 'PayPal', enabled: false },
+                    { id: 'stripe_card', name: 'Carta di Credito/Debito', enabled: true },
+                    { id: 'paypal', name: 'PayPal', enabled: true },
                     { id: 'bank_transfer', name: 'Bonifico Bancario', enabled: true },
                 ]);
             }
@@ -264,7 +299,7 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
             const total = (quote ? quote.totalAmount : 0) + (extraServicesCost || 0);
             if (!paymentAmount || Number(paymentAmount) <= 0) {
                 setPaymentAmount(total);
-                console.log('🛡️ Guard set paymentAmount:', total);
+                if (IS_DEV) console.log('🛡️ Guard set paymentAmount:', total);
             }
         }
     }, [currentStep, quote, extraServicesCost]);
@@ -273,7 +308,7 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
     
     // ⚡ FIX: Memoize onServicesChange to prevent infinite loop in ExtraServices
     const handleServicesChange = React.useCallback((services: any[], totalCost: number) => {
-        console.log('🛎️ Services changed:', services.length, 'Total:', totalCost);
+        if (IS_DEV) console.log('🛎️ Services changed:', services.length, 'Total:', totalCost);
         setSelectedExtraServices(services);
         setExtraServicesCost(totalCost);
     }, []); // Empty deps: la funzione è stabile
@@ -301,11 +336,25 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                 throw new Error('Booking ID mancante - impossibile confermare pagamento');
             }
 
+            // Dati riepilogo costi per email (recuperati dallo stato corrente)
+            // 🔧 FIX: Usa storedBreakdown se disponibile (più sicuro), altrimenti prova a ricostruirlo
+            const breakdownData = storedBreakdown || (quote ? {
+                accommodationCost: (quote as any).accommodationCost || 0,
+                cleaningFee: quote.cleaningFee || 0,
+                parkingCost: quote.parkingCost || 0,
+                touristTax: quote.touristTax || 0,
+                extraServicesCost: extraServicesCost || 0,
+                nights: quote.nights || 0
+            } : {});
+
             // Calcola l'importo pagato (acconto o totale) INCLUSI SERVIZI EXTRA
             const totalWithExtras = (quote?.totalAmount || 0) + extraServicesCost;
-            const amountPaid = formData.payment_type === 'deposit' && quote
-                ? Math.round(totalWithExtras * 0.3 * 100) / 100
+            const isDeposit = formData.payment_type === 'deposit';
+            const amountPaid = isDeposit && quote
+                ? Math.round(totalWithExtras * 0.2 * 100) / 100 // Corretto a 20% per coerenza
                 : totalWithExtras;
+            
+            const dbPaymentStatus = isDeposit ? 'deposit_paid' : 'paid_full';
 
             // Aggiorna booking da DRAFT a CONFIRMED con dati pagamento
             const updateResult = await updateBookingStatus(
@@ -313,11 +362,12 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                 'confirmed',
                 {
                     payment_id: data?.payment_intent_id || data?.paymentId || null,
-                    payment_status: 'success',
+                    payment_status: dbPaymentStatus, // Invia stato specifico invece di 'success' generico
                     amount_paid: amountPaid,
                     // 🛎️ Passa i servizi extra per includerli nell'email di conferma
                     extra_services: selectedExtraServices.map(s => ({ id: s.id, name: s.name, price: s.price, included: !!s.included })),
-                    language: i18n.language || 'it'
+                    language: i18n.language || 'it',
+                    ...breakdownData
                 }
             );
 
@@ -347,9 +397,9 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
         try {
             // Quando pagamento fallisce, cancella il booking draft
             if (bookingResult?.booking_id) {
-                console.log(`🚫 Cancellazione booking ${bookingResult.booking_id} per errore pagamento: ${errorMessage}`);
+                if (IS_DEV) console.log(`🚫 Cancellazione booking ${bookingResult.booking_id} per errore pagamento: ${errorMessage}`);
                 await cancelBooking(bookingResult.booking_id, reason || `${t('booking.error.paymentFailedReason')}: ${errorMessage}`);
-                console.log(`✅ Booking ${bookingResult.booking_id} cancellato con successo`);
+                if (IS_DEV) console.log(`✅ Booking ${bookingResult.booking_id} cancellato con successo`);
             }
         } catch (error: any) {
             console.error('Errore nella cancellazione del booking:', error);
@@ -431,6 +481,12 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
             firstErrorField?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             return;
         }
+
+        // Check max guests (Safety check on submit)
+        if (formData.num_adults + formData.num_children > 8) {
+            setError(t('booking.error.maxGuests', 'Il numero massimo di ospiti consentito è 8.'));
+            return;
+        }
         
         // ✅ VALIDAZIONE CAMPI ESSENZIALI
         if (!formData.guest_name?.trim()) {
@@ -453,33 +509,39 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
             setError(t('booking.error.paymentMethodRequired', 'Seleziona un metodo di pagamento'));
             return;
         }
+        if (!privacyAccepted) {
+            setError(t('booking.error.privacyRequired', 'Devi accettare la privacy policy per procedere.'));
+            return;
+        }
         try {
             // ✅ Calcola totale completo (quote + servizi extra)
             const totalAmount = quote ? (quote.totalAmount + extraServicesCost) : 0;
             
+            // Dati riepilogo costi per email
+            const breakdownData = quote ? {
+                accommodationCost: (quote as any).accommodationCost,
+                cleaningFee: quote.cleaningFee,
+                parkingCost: quote.parkingCost,
+                touristTax: quote.touristTax,
+                extraServicesCost: extraServicesCost,
+                nights: quote.nights
+            } : {};
+            
+            setStoredBreakdown(breakdownData); // 💾 Salva breakdown per uso futuro (es. post-pagamento)
+
+            if (IS_DEV) console.log('📧 Invio breakdown costi per email:', breakdownData);
+
             // 🔍 DEBUG: Verifica valori PRIMA di salvare paymentAmount
-            console.log('🔍 PRE-PAYMENT DEBUG [v2.0]:', {
+            if (IS_DEV) { console.log('🔍 PRE-PAYMENT DEBUG [v2.0]:', {
                 quote_exists: !!quote,
                 quote_totalAmount: quote?.totalAmount,
                 extraServicesCost,
                 calculated_totalAmount: totalAmount,
                 payment_method: formData.payment_method,
                 payment_type: formData.payment_type
-            });
-            
-            // 💰 STORE AMOUNT BEFORE submitBooking - quote might become undefined after
+            }); }// 💰 STORE AMOUNT BEFORE submitBooking - quote might become undefined after
             setPaymentAmount(totalAmount);
-            console.log('💰 Saved paymentAmount:', totalAmount);
-            
-            // 🛟 Popola window.debugPaymentData per fallback Stripe/PayPal
-            (window as any).debugPaymentData = {
-                quote,
-                extraServicesCost,
-                totalAmount,
-                timestamp: new Date().toISOString()
-            };
-            console.log('🛟 Populated debugPaymentData for fallback:', (window as any).debugPaymentData);
-            
+            if (IS_DEV) console.log('💰 Saved paymentAmount:', totalAmount);
             // Reset flag pagamento completato quando si richiede un nuovo pagamento
             setPaymentCompleted(false);
             
@@ -489,7 +551,10 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                 // Verrà aggiornato a CONFIRMED in handlePaymentSuccess() dopo verifica pagamento
                 const result: any = await submitBooking(
                     totalAmount,
-                    { status: 'draft' },
+                    { 
+                        status: 'draft',
+                        ...breakdownData
+                    },
                     selectedExtraServices.map(s => ({ id: s.id, name: s.name, price: s.price, included: !!s.included }))
                 );
                 setBookingResult(result || null);
@@ -499,7 +564,10 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                 // Bonifico bancario: crea booking subito come PENDING (pagamento offline)
                 const result: any = await submitBooking(
                     totalAmount,
-                    { status: 'pending' },
+                    { 
+                        status: 'pending',
+                        ...breakdownData
+                    },
                     selectedExtraServices.map(s => ({ id: s.id, name: s.name, price: s.price, included: !!s.included }))
                 );
                 setBookingResult(result || null);
@@ -546,8 +614,15 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                                 <label htmlFor="adults">{getSafeTranslation(t, 'booking.adults', 'Adulti')}</label>
                                 <p className="guest-desc">{getSafeTranslation(t, 'booking.age18Plus', 'Età 18+')}</p>
                             </div>
-                            <select id="adults" value={formData.num_adults} onChange={(e)=>setFormData({ num_adults: parseInt(e.target.value) })} className="guest-select">
-                                {[1,2,3,4,5,6].map(n=> <option key={n} value={n}>{n}</option>)}
+                            <select id="adults" value={formData.num_adults} onChange={(e)=>{
+                                const val = parseInt(e.target.value);
+                                if (val + formData.num_children > 8) {
+                                    alert(t('booking.error.maxGuests', 'Il numero massimo di ospiti consentito è 8.'));
+                                    return;
+                                }
+                                setFormData({ num_adults: val });
+                            }} className="guest-select">
+                                {[1,2,3,4,5,6,7,8].map(n=> <option key={n} value={n}>{n}</option>)}
                             </select>
                         </div>
                         <div className="guest-card">
@@ -556,8 +631,15 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                                 <label htmlFor="children">{getSafeTranslation(t, 'booking.children', 'Bambini')}</label>
                                 <p className="guest-desc">{getSafeTranslation(t, 'booking.age0to17', 'Età 0-17')}</p>
                             </div>
-                            <select id="children" value={formData.num_children} onChange={(e)=>setFormData({ num_children: parseInt(e.target.value) })} className="guest-select">
-                                {[0,1,2,3,4].map(n=> <option key={n} value={n}>{n}</option>)}
+                            <select id="children" value={formData.num_children} onChange={(e)=>{
+                                const val = parseInt(e.target.value);
+                                if (formData.num_adults + val > 8) {
+                                    alert(t('booking.error.maxGuests', 'Il numero massimo di ospiti consentito è 8.'));
+                                    return;
+                                }
+                                setFormData({ num_children: val });
+                            }} className="guest-select">
+                                {[0,1,2,3,4,5,6].map(n=> <option key={n} value={n}>{n}</option>)}
                             </select>
                         </div>
                     </div>
@@ -622,7 +704,7 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                             onChange={(e) => setFormData({ parking_option: e.target.value as any })}
                         />
                         <label htmlFor="parking-private-details">
-                            {getSafeTranslation(t, 'booking.privateParking', 'Parcheggio privato riservato e custodito')}
+                            {getSafeTranslation(t, 'booking.privateParking', 'Parcheggio privato')}
                         </label>
                     </div>
                 </div>
@@ -666,6 +748,18 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                     <div className="input-group">
                         <label htmlFor="message">{getSafeTranslation(t, 'booking.specialRequests', 'Richieste Speciali')}</label>
                         <textarea id="message" rows={3} value={formData.guest_message} onChange={(e)=>setFormData({ guest_message: e.target.value })} />
+                    </div>
+                    
+                    <div className="input-group privacy-checkbox-container">
+                        <input
+                            type="checkbox"
+                            id="bookingPrivacyCheck"
+                            checked={privacyAccepted}
+                            onChange={(e) => setPrivacyAccepted(e.target.checked)}
+                        />
+                        <label htmlFor="bookingPrivacyCheck">
+                            {t('booking.privacyConsent', 'Ho letto e accetto la')} <a href="/privacy-policy" target="_blank" rel="noopener noreferrer">{t('booking.privacyPolicy', 'Privacy Policy')}</a> {t('booking.and', 'e')} <a href="/terms-conditions" target="_blank" rel="noopener noreferrer">{t('booking.termsConditions', 'Termini e Condizioni')}</a>.
+                        </label>
                     </div>
                 </div>
                 <div className="payment-options">
@@ -811,6 +905,7 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
 
     return (
         <div className="booking-system">
+            <style>{internalStyles}</style>
             {renderStepIndicator()}
             
             <div className="booking-content">
@@ -913,7 +1008,7 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                                             onChange={(e) => setFormData({ parking_option: e.target.value as any })}
                                         />
                                         <label htmlFor="parking-private-pay">
-                                            {t('booking.privateParking', 'Parcheggio privato riservato e custodito')}
+                                            {t('booking.privateParking', 'Parcheggio privato')}
                                         </label>
                                     </div>
 
@@ -936,15 +1031,12 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                                     // 💰 Use stored paymentAmount instead of recalculating
                                     const depositAmount = Math.round(paymentAmount * 0.20 * 100) / 100;
                                     const finalAmount = formData.payment_type === 'deposit' ? depositAmount : paymentAmount;
-                                    
-                                    console.log('💳 Stripe Amount Calculation:', {
+                    if (IS_DEV) { console.log('💳 Stripe Amount Calculation:', {
                                         storedPaymentAmount: paymentAmount,
                                         depositAmount,
                                         payment_type: formData.payment_type,
                                         finalAmount
-                                    });
-                                    
-                                    return (
+                                    }); }return (
                                         <StripePayment
                                             bookingId={bookingResult.booking_id || bookingResult.id?.toString() || ''}
                                             amount={finalAmount}
@@ -968,15 +1060,12 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                                     // 💰 Use stored paymentAmount instead of recalculating
                                     const depositAmount = Math.round(paymentAmount * 0.20 * 100) / 100;
                                     const finalAmount = formData.payment_type === 'deposit' ? depositAmount : paymentAmount;
-                                    
-                                    console.log('🅿️ PayPal Amount Calculation:', {
+                    if (IS_DEV) { console.log('🅿️ PayPal Amount Calculation:', {
                                         storedPaymentAmount: paymentAmount,
                                         depositAmount,
                                         payment_type: formData.payment_type,
                                         finalAmount
-                                    });
-                                    
-                                    return (
+                                    }); }return (
                                         <PayPalPayment
                                             bookingId={bookingResult.booking_id || bookingResult.id?.toString() || ''}
                                             amount={finalAmount}
@@ -1077,15 +1166,58 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                                         <p><strong>{getSafeTranslation(t, 'booking.summary.checkIn', 'Check-in')}:</strong> {formData.check_in_date?.toLocaleDateString()}</p>
                                         <p><strong>{getSafeTranslation(t, 'booking.summary.checkOut', 'Check-out')}:</strong> {formData.check_out_date?.toLocaleDateString()}</p>
                                         <p><strong>{getSafeTranslation(t, 'booking.guests', 'Ospiti')}:</strong> {t('booking.summary.guestsCount', '{{adults}} adulti, {{children}} bambini', { adults: formData.num_adults, children: formData.num_children })}</p>
-                                        <p><strong>{formData.payment_method === 'bank_transfer' 
-                                        ? getSafeTranslation(t, 'booking.summary.amountToPay', 'Importo da Pagare') 
-                                        : getSafeTranslation(t, 'booking.summary.totalPaid', 'Totale Pagato')
-                                        }:
-                                        </strong> €{bookingResult.amountToPay?.toFixed(2)}
-                                        </p>
-                                        {formData.payment_method === 'bank_transfer' && (
-                                            <p className="pending-status">{getSafeTranslation(t, 'booking.summary.statusPending', 'Stato: In attesa di pagamento')}</p>
+                                        
+                                        {/* Servizi Extra */}
+                                        {selectedExtraServices.length > 0 && (
+                                            <div className="summary-extras">
+                                                <strong>{getSafeTranslation(t, 'booking.extraServices', 'Servizi Extra')}:</strong>
+                                                <ul>
+                                                    {selectedExtraServices.map((s: any) => (
+                                                        <li key={s.id}>
+                                                            {s.name} {s.included ? `(${getSafeTranslation(t, 'booking.included', 'Incluso')})` : `(€${s.price})`}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
                                         )}
+
+                                        {/* Parcheggio */}
+                                        {formData.parking_option !== 'none' && (
+                                            <p><strong>{getSafeTranslation(t, 'booking.parking', 'Parcheggio')}:</strong> {
+                                                formData.parking_option === 'private' 
+                                                    ? getSafeTranslation(t, 'booking.privateParking', 'Parcheggio privato') 
+                                                    : getSafeTranslation(t, 'booking.streetParking', 'Parcheggio su strada')
+                                            } {formData.parking_option === 'private' && (quote?.parkingCost || 0) > 0 ? `(€${(quote?.parkingCost || 0).toFixed(2)})` : ''}</p>
+                                        )}
+
+                                        {/* Pulizia */}
+                                        {quote && quote.cleaningFee > 0 && (
+                                            <p><strong>{getSafeTranslation(t, 'booking.cleaning', 'Pulizia finale')}:</strong> €{quote.cleaningFee.toFixed(2)}</p>
+                                        )}
+
+                                        {/* Tassa di soggiorno */}
+                                        {quote && quote.touristTax > 0 && (
+                                            <p><strong>{getSafeTranslation(t, 'booking.touristTax', 'Tassa di soggiorno')}:</strong> €{quote.touristTax.toFixed(2)}</p>
+                                        )}
+
+                                        <hr className="summary-divider" />
+
+                                        {/* Totale */}
+                                        <p><strong>{getSafeTranslation(t, 'booking.total', 'Totale')}:</strong> €{bookingResult.booking.total_amount.toFixed(2)}</p>
+
+                                        {/* Acconto e Saldo */}
+                                        {formData.payment_type === 'deposit' && (
+                                            <>
+                                                <p><strong>{getSafeTranslation(t, 'booking.deposit', 'Acconto (20%)')}:</strong> €{bookingResult.booking.deposit_amount.toFixed(2)}</p>
+                                                <p><strong>{getSafeTranslation(t, 'booking.remaining', 'Saldo al check-in')}:</strong> €{(bookingResult.booking.total_amount - bookingResult.booking.deposit_amount).toFixed(2)}</p>
+                                            </>
+                                        )}
+
+                                        <p><strong>{getSafeTranslation(t, 'booking.summary.status', 'Stato')}:</strong> {
+                                            formData.payment_method === 'bank_transfer' 
+                                            ? getSafeTranslation(t, 'booking.summary.statusPending', 'In attesa di pagamento') 
+                                            : getSafeTranslation(t, 'booking.summary.statusConfirmed', 'Confermata')
+                                        }</p>
                                     </div>
                                 )}
 
@@ -1096,7 +1228,17 @@ const BookingSystem: React.FC<BookingSystemProps> = ({ onClose }) => {
                                             <p><strong>{getSafeTranslation(t, 'booking.bank.beneficiary', 'Beneficiario')}:</strong> Guida Antonio</p>
                                             <p><strong>{getSafeTranslation(t, 'booking.bank.iban', 'IBAN')}:</strong> IT04 D360 8105 038 288844288937</p>
                                             <p><strong>{getSafeTranslation(t, 'booking.bank.reason', 'Causale')}:</strong> {getSafeTranslation(t, 'booking.bank.reason.booking', 'Prenotazione')} {bookingResult?.booking_id}</p>
-                                            <p><strong>{getSafeTranslation(t, 'booking.bank.amountToTransfer', 'Importo da versare')}:</strong> €{bookingResult?.amountToPay?.toFixed(2)}</p>
+                                            
+                                            <p className="amount-highlight">
+                                                <strong>{getSafeTranslation(t, 'booking.bank.amountToTransfer', 'Importo da versare')}:</strong> €{(bookingResult?.amountToPay || (formData.payment_type === 'deposit' ? bookingResult?.booking?.deposit_amount : bookingResult?.booking?.total_amount) || 0).toFixed(2)}
+                                                {formData.payment_type === 'deposit' && <span> ({getSafeTranslation(t, 'booking.deposit', 'Acconto')})</span>}
+                                            </p>
+
+                                            {formData.payment_type === 'deposit' && (
+                                                <p className="balance-note">
+                                                    {t('booking.bank.balanceNote', 'Il saldo di €{{amount}} dovrà essere versato al check-in.', { amount: (bookingResult.booking.total_amount - bookingResult.booking.deposit_amount).toFixed(2) })}
+                                                </p>
+                                            )}
                                         </div>
                                         <p className="bank-note">⚠️ {getSafeTranslation(t, 'booking.bank.note', 'Importante: Ti abbiamo inviato una email con tutti i dettagli. La prenotazione sarà confermata definitivamente dopo la ricezione e verifica del bonifico bancario. Ti contatteremo entro 24-48 ore dalla ricezione del pagamento.')}</p>
                                     </div>

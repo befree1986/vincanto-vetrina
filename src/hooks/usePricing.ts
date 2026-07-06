@@ -51,24 +51,24 @@ export const usePricing = () => {
   const fetchCurrentPrice = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       log('🔥 Caricamento prezzi dal nuovo sistema unificato...');
-      
+
       // 🎯 USA LA NUOVA API UNIFICATA
       const cacheBuster = new Date().getTime();
       const response = await fetch(`/api/unified?action=pricing-config&_t=${cacheBuster}`);
-      
+
       if (!response.ok) {
         throw new Error('Errore nel caricamento prezzi');
       }
-      
+
       const result = await response.json();
-      
+
       if (result.success && result.pricing) {
         const apiData = result.pricing;
         log('🔍 Dati ricevuti dall\'API Unificata:', apiData);
-        
+
         // 🔥 NUOVO: Gestione dati dal sistema pricing-config
         const transformedData = {
           basePrice: apiData.priceGroup1to2 || 75,
@@ -90,20 +90,20 @@ export const usePricing = () => {
             touristTaxAdult: apiData.touristTaxAdult || 2.00,
             touristTaxChild: apiData.touristTaxChild || 0
           },
-            discounts: {
-              weekly: Number(apiData.weeklyDiscount) || 10,
-              monthly: Number(apiData.monthlyDiscount) || 15
-            }
-          };
-          
-          log('🎯 Dati sistema base + aggiuntive trasformati:', transformedData);
-          setCurrentPrice(transformedData);
+          discounts: {
+            weekly: Number(apiData.weeklyDiscount) || 10,
+            monthly: Number(apiData.monthlyDiscount) || 15
+          }
+        };
+
+        log('🎯 Dati sistema base + aggiuntive trasformati:', transformedData);
+        setCurrentPrice(transformedData);
       } else {
         throw new Error('Formato risposta API non valido');
       }
     } catch (err) {
       console.error('❌ Errore fetch prezzi:', err);
-      
+
       // 🔥 NUOVO: Fallback con sistema base + aggiuntive predefinito
       setCurrentPrice({
         basePrice: 75,
@@ -138,52 +138,31 @@ export const usePricing = () => {
 
   // 🔥 NUOVO: Funzione helper per calcolare prezzo per un numero specifico di ospiti
   const calculatePriceForGuests = (guests: number): number => {
-    if (!currentPrice?.groupPricing) return 150; // Base fallback
-    
-    const config = currentPrice.groupPricing;
-    
-    // Base: 150€ per le prime 2 persone (75€ × 2)
-    const basePrice = config.priceGroup1to2 * 2; // €75 × 2 = €150
-    
-    if (guests <= 2) return basePrice;
-    
-    let totalPrice = basePrice;
-    
-    // 3a persona: aggiunge 20€
-    if (guests >= 3) {
-      // LOGICA CORRETTA: priceGroup3to4 dovrebbe essere il prezzo PER PERSONA aggiuntiva
-      // Assumiamo che priceGroup3to4 contenga il prezzo aggiuntivo diretto
-      totalPrice += 20; // €20 per la 3a persona (hardcoded finché non sistemiamo il DB)
+    if (!currentPrice?.groupPricing) return 0;
+
+    const p = currentPrice.groupPricing;
+    const g = guests;
+    let price = 0;
+
+    if (g > 0) {
+      const tier1Guests = Math.min(g, 2);
+      price += tier1Guests * (p.priceGroup1to2 || 0);
     }
-    
-    // 4a persona
-    if (guests >= 4) {
-      totalPrice += 20; // €20 per la 4a persona
+    if (g > 2) {
+      const tier2Guests = Math.min(g - 2, 2);
+      price += tier2Guests * (p.priceGroup3to4 || 0);
     }
-    
-    // 5a persona  
-    if (guests >= 5) {
-      totalPrice += 20; // €20 per la 5a persona
+    if (g > 4) {
+      const tier3Guests = Math.min(g - 4, 2);
+      price += tier3Guests * (p.priceGroup5to6 || 0);
     }
-    
-    // 6a persona
-    if (guests >= 6) {
-      totalPrice += 20; // €20 per la 6a persona
+    if (g > 6) {
+      const tier4Guests = Math.min(g - 6, 2);
+      price += tier4Guests * (p.priceGroup7to8 || 0);
     }
-    
-    // 7a persona
-    if (guests >= 7) {
-      totalPrice += 20; // €20 per la 7a persona
-    }
-    
-    // 8a persona
-    if (guests >= 8) {
-      totalPrice += 20; // €20 per la 8a persona
-    }
-    
-    log(`🔢 CALCOLO PREZZI: ${guests} persone = ${totalPrice}€ (base: ${basePrice}€ + aggiuntive: ${totalPrice - basePrice}€)`);
-    
-    return totalPrice;
+
+    log(`🔢 CALCOLO PREZZI FRONTEND: ${guests} persone = ${price}€`);
+    return price;
   };
 
   // Fetch storico prezzi (mantenuto per compatibilità)
@@ -222,7 +201,7 @@ export const usePricing = () => {
   const updatePrice = async (newPrice: Partial<PriceData>) => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const response = await fetch('/api/unified?action=pricing-config', {
         method: 'POST',
@@ -231,16 +210,16 @@ export const usePricing = () => {
         },
         body: JSON.stringify(newPrice),
       });
-      
+
       if (!response.ok) {
         throw new Error('Errore nell\'aggiornamento prezzo');
       }
-      
+
       const data = await response.json();
       setCurrentPrice(data);
-      
+
       await fetchPriceHistory();
-      
+
       return data;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Errore sconosciuto');

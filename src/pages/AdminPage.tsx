@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import CalendarManager from '../components/CalendarManager';
-import './AdminPage.css';
+import SeasonalPricingManager from './SeasonalPricingManager';
 
 const AdminPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('calendars');
@@ -8,8 +8,10 @@ const AdminPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  // Password semplice per demo - in produzione usare autenticazione robusta
-  const adminPassword = 'vincanto2024';
+  // La password non deve essere qui. Usiamo una variabile d'ambiente.
+  // In un file .env.local (che è in .gitignore) aggiungi:
+  // VITE_ADMIN_PASSWORD="la_tua_password_segreta"
+  const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD;
 
   // Controlla se l'utente era già autenticato
   useEffect(() => {
@@ -70,7 +72,7 @@ const AdminPage: React.FC = () => {
     <div className="admin-page">
       <div className="admin-header">
         <h1>🏨 Amministrazione Vincanto</h1>
-        <button 
+        <button
           className="btn-logout"
           onClick={handleLogout}
         >
@@ -101,7 +103,7 @@ const AdminPage: React.FC = () => {
 
       <div className="admin-content">
         {activeTab === 'calendars' && <CalendarManager />}
-        
+
         {activeTab === 'bookings' && (
           <div className="bookings-panel">
             <h2>📋 Gestione Prenotazioni</h2>
@@ -111,21 +113,9 @@ const AdminPage: React.FC = () => {
             </div>
           </div>
         )}
-        
+
         {activeTab === 'settings' && (
-          <div className="settings-panel">
-            <h2>⚙️ Impostazioni Sistema</h2>
-            <div className="coming-soon">
-              <p>🚧 Sezione in sviluppo</p>
-              <p>Qui sarà possibile configurare:</p>
-              <ul>
-                <li>Prezzi e politiche di prenotazione</li>
-                <li>Notifiche email</li>
-                <li>Parametri di sistema</li>
-                <li>Backup e manutenzione</li>
-              </ul>
-            </div>
-          </div>
+          <SeasonalPricingManager />
         )}
       </div>
     </div>

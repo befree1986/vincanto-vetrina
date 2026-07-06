@@ -48,7 +48,7 @@ export const useExtraServices = (): ExtraServicesData => {
       
       // 🎯 USA API UNIFICATA PER CONSISTENZA
       const timestamp = new Date().getTime();
-      const apiUrl = import.meta.env.VITE_API_BASE_URL || 'https://vincanto-vetrina.vercel.app/api';
+      const apiUrl = import.meta.env.DEV && import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL : '/api';
       const response = await fetch(`${apiUrl}/unified?action=extra-services&_t=${timestamp}`);
       
       if (response.ok) {
@@ -130,7 +130,7 @@ export const useExtraServices = (): ExtraServicesData => {
               name: t('extraServices.parking', 'Parcheggio Privato'),
               price: 20,
               unit: 'notte',
-              description: t('extraServices.parkingDesc', 'Posto auto riservato e custodito'),
+              description: t('extraServices.parkingDesc', 'Posto auto riservato'),
               category: 'parcheggio',
               available: true,
               active: true,
@@ -209,7 +209,7 @@ export const useExtraServices = (): ExtraServicesData => {
           name: t('extraServices.parking', 'Parcheggio Privato'),
           price: 20,
           unit: 'notte',
-          description: t('extraServices.parkingDesc', 'Posto auto riservato e custodito'),
+          description: t('extraServices.parkingDesc', 'Posto auto riservato'),
           category: 'parcheggio',
           available: true,
           included: false,

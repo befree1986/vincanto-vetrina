@@ -78,8 +78,8 @@ async function setupCalendars() {
     
     console.log('\n🔧 Comandi Utili:');
     console.log('• Test sistema: npm run test-calendar');
-    console.log('• Sync manuale: curl "https://vincanto-vetrina.vercel.app/api/availability-sync?action=sync-all"');
-    console.log('• Admin panel: https://vincanto-vetrina.vercel.app/admin');
+    console.log('• Sync manuale: curl "https://vincantomaiori.it/api/availability-sync?action=sync-all"');
+    console.log('• Admin panel: https://vincantomaiori.it/admin');
     
   } catch (error) {
     console.error('❌ Errore durante setup:', error);
@@ -240,7 +240,7 @@ function displayNextSteps() {
   
   console.log('\n🔄 Sync Automatica (Opzionale):');
   console.log('Aggiungi a crontab per sync automatica ogni 15 minuti:');
-  console.log('*/15 * * * * curl -X GET "https://vincanto-vetrina.vercel.app/api/availability-sync?action=sync-all"');
+  console.log('*/15 * * * * curl -X GET "https://vincantomaiori.it/api/availability-sync?action=sync-all"');
 }
 
 // === AVVIO SCRIPT ===

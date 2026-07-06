@@ -52,7 +52,7 @@ node scripts/quick-api-test.mjs
 
 Oppure via browser:
 ```
-https://vincanto-vetrina.vercel.app/api/emails?action=test
+https://vincantomaiori.it/api/emails?action=test
 ```
 
 Dovresti vedere:

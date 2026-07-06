@@ -8,7 +8,12 @@ import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 
 // Chiave per cifratura secret (in produzione usare variabile ambiente!)
-const ENCRYPTION_KEY = process.env.TOTP_ENCRYPTION_KEY || 'vincanto-2fa-key-change-in-production-32chars!!';
+const ENCRYPTION_KEY = process.env.TOTP_ENCRYPTION_KEY;
+if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length < 32) {
+  console.error('❌ ERRORE CRITICO: La variabile d\'ambiente TOTP_ENCRYPTION_KEY non è impostata o è troppo corta (richiesti 32 caratteri).');
+  // In un ambiente di produzione, questo dovrebbe fermare l'applicazione.
+  // process.exit(1); // Decommenta se necessario per bloccare l'avvio.
+}
 const ALGORITHM = 'aes-256-cbc';
 const IV_LENGTH = 16;
 
