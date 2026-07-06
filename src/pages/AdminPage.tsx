@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import CalendarManager from '../components/CalendarManager';
-import './AdminPage.css';
+import SeasonalPricingManager from './SeasonalPricingManager';
 
 const AdminPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('calendars');
@@ -115,19 +115,7 @@ const AdminPage: React.FC = () => {
         )}
 
         {activeTab === 'settings' && (
-          <div className="settings-panel">
-            <h2>⚙️ Impostazioni Sistema</h2>
-            <div className="coming-soon">
-              <p>🚧 Sezione in sviluppo</p>
-              <p>Qui sarà possibile configurare:</p>
-              <ul>
-                <li>Prezzi e politiche di prenotazione</li>
-                <li>Notifiche email</li>
-                <li>Parametri di sistema</li>
-                <li>Backup e manutenzione</li>
-              </ul>
-            </div>
-          </div>
+          <SeasonalPricingManager />
         )}
       </div>
     </div>

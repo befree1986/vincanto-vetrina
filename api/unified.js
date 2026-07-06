@@ -3709,7 +3709,10 @@ END:VEVENT
               const ruleEndUTC = new Date(Date.UTC(new Date(rule.endDate).getFullYear(), new Date(rule.endDate).getMonth(), new Date(rule.endDate).getDate()));
               if (currentDateUTC >= ruleStartUTC && currentDateUTC <= ruleEndUTC) {
                 ruleApplied = rule.name;
-                Object.assign(pricingForNight, { priceGroup1to2: rule.priceGroup1to2, priceGroup3to4: rule.priceGroup3to4, priceGroup5to6: rule.priceGroup5to6, priceGroup7to8: rule.priceGroup7to8 });
+                if (rule.priceGroup1to2 != null) pricingForNight.priceGroup1to2 = rule.priceGroup1to2;
+                if (rule.priceGroup3to4 != null) pricingForNight.priceGroup3to4 = rule.priceGroup3to4;
+                if (rule.priceGroup5to6 != null) pricingForNight.priceGroup5to6 = rule.priceGroup5to6;
+                if (rule.priceGroup7to8 != null) pricingForNight.priceGroup7to8 = rule.priceGroup7to8;
                 break;
               }
             }
