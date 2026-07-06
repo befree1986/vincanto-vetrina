@@ -3622,6 +3622,20 @@ END:VEVENT
         };
 
 
+        // Recupera le regole stagionali dal database
+        let seasonalRules = [];
+        try {
+          const seasonalRulesResult = await pool.query(
+            "SELECT value FROM system_settings WHERE key = 'seasonal_pricing_rules'"
+          );
+          if (seasonalRulesResult.rows.length > 0 && seasonalRulesResult.rows[0].value) {
+            const val = seasonalRulesResult.rows[0].value;
+            seasonalRules = typeof val === 'string' ? JSON.parse(val) : val;
+          }
+        } catch (dbError) {
+          console.warn('⚠️ Errore caricamento regole stagionali in quote:', dbError);
+        }
+
         // Applica regole stagionali se presenti
         let currentPricing = { ...pricing };
         let activeRuleName = null;
