@@ -7,7 +7,7 @@ import '../styles/AdminUXResponsive.css';
 import AdminApiService from '../services/adminApiService';
 import AdminPricing from '../components/admin/AdminPricing';
 import ExtraServicesAdmin from '../components/admin/ExtraServicesAdmin'; // Assicurati che il percorso sia corretto
-import SeasonalPricing from '../components/admin/SeasonalPricing';
+import SeasonalPricingManager from './SeasonalPricingManager';
 import GalleryManager from '../components/admin/GalleryManager';
 import ContentManager from '../components/admin/ContentManager';
 import { useAdminRole } from '../hooks/useAdminRole';
@@ -2131,7 +2131,7 @@ const AdminPanelPro = (): JSX.Element => {
             />
 
             {/* Sezione Prezzi Personalizzati per Periodo */}
-          <SeasonalPricing />
+          <SeasonalPricingManager />
           </>
           )}
 

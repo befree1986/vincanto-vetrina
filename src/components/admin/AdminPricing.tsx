@@ -62,9 +62,9 @@ const AdminPricing: React.FC<AdminPricingProps> = ({
               <NumericInput
                 id="basePrice"
                 label="Prezzo per persona (base 2 persone)"
-                value={pricingConfig.basePrice || pricingConfig.priceGroup1to2}
-                onChange={(value) => updatePricingField('basePrice', value)}
-                min={1}
+                value={pricingConfig.priceGroup1to2 ?? 75}
+                onChange={(value) => updatePricingField('priceGroup1to2', value)}
+                min={0}
                 max={999}
                 suffix="€/persona"
                 required
@@ -91,9 +91,9 @@ const AdminPricing: React.FC<AdminPricingProps> = ({
               <NumericInput
                 id="additionalGuest3to4"
                 label="3-4 persone (costo aggiuntivo/persona)"
-                value={pricingConfig.additionalGuest3to4 || pricingConfig.priceGroup3to4}
-                onChange={(value) => updatePricingField('additionalGuest3to4', value)}
-                min={1}
+                value={pricingConfig.priceGroup3to4 ?? 95}
+                onChange={(value) => updatePricingField('priceGroup3to4', value)}
+                min={0}
                 max={999}
                 suffix="€/persona"
                 required
@@ -102,9 +102,9 @@ const AdminPricing: React.FC<AdminPricingProps> = ({
               <NumericInput
                 id="additionalGuest5to6"
                 label="5-6 persone (costo aggiuntivo/persona)"
-                value={pricingConfig.additionalGuest5to6 || pricingConfig.priceGroup5to6}
-                onChange={(value) => updatePricingField('additionalGuest5to6', value)}
-                min={1}
+                value={pricingConfig.priceGroup5to6 ?? 115}
+                onChange={(value) => updatePricingField('priceGroup5to6', value)}
+                min={0}
                 max={999}
                 suffix="€/persona"
                 required
@@ -113,9 +113,9 @@ const AdminPricing: React.FC<AdminPricingProps> = ({
               <NumericInput
                 id="additionalGuest7to8"
                 label="7-8 persone (costo aggiuntivo/persona)"
-                value={pricingConfig.additionalGuest7to8 || pricingConfig.priceGroup7to8}
-                onChange={(value) => updatePricingField('additionalGuest7to8', value)}
-                min={1}
+                value={pricingConfig.priceGroup7to8 ?? 135}
+                onChange={(value) => updatePricingField('priceGroup7to8', value)}
+                min={0}
                 max={999}
                 suffix="€/persona"
                 required
