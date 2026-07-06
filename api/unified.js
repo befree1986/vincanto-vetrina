@@ -1671,6 +1671,12 @@ export default async function handler(req, res) {
                 nights: parseInt(bookingData.nights || bookingData.booking_data?.nights) || 0,
                 logoUrl: 'https://www.vincantomaiori.it/logo.png',
                 siteUrl: 'https://www.vincantomaiori.it'
+                accommodationCost: parseFloat(bookingData.accommodationCost) || 0,
+                cleaningFee: parseFloat(bookingData.cleaningFee) || 0,
+                parkingCost: parseFloat(bookingData.parkingCost) || 0,
+                touristTax: parseFloat(bookingData.touristTax) || 0,
+                extraServicesCost: parseFloat(bookingData.extraServicesCost) || 0,
+                nights: parseInt(bookingData.nights) || 0
 
               });
               const emailResults = await sendEmailWithAdminCopy({
@@ -1690,6 +1696,11 @@ export default async function handler(req, res) {
                   parkingCost: parkingCost,
                   touristTax: touristTax,
                   extraServicesCost: extraServicesCost,
+                  accommodationCost: parseFloat(bookingData.accommodationCost) || 0,
+                  cleaningFee: parseFloat(bookingData.cleaningFee) || 0,
+                  parkingCost: parseFloat(bookingData.parkingCost) || 0,
+                  touristTax: parseFloat(bookingData.touristTax) || 0,
+                  extraServicesCost: parseFloat(bookingData.extraServicesCost) || 0,
                   nights: parseInt(bookingData.nights) || 0
                 }
               });
