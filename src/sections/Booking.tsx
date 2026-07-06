@@ -46,6 +46,16 @@ const Booking: React.FC = () => {
           isOpen={isModalOpen} 
           onClose={() => setIsModalOpen(false)} 
         />
+
+        {/* Immagine Award prima del divider */}
+        <div className="booking-image-container booking-award-container">
+          <img 
+            src="/Digital-Award_TRA-2026.png" 
+            alt="Traveller Review Awards 2026" 
+            className="img-fluid booking-award-image"
+            loading="lazy"
+          />
+        </div>
       </div>
       <LemonDivider position="left" />
       </section>

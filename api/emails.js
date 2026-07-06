@@ -106,6 +106,8 @@ async function sendTemplateEmail(req, res) {
             <p><strong>📅 Check-out:</strong> ${variables.check_out}</p>
             <p><strong>👥 Ospiti:</strong> ${variables.guests}</p>
             <p><strong>💰 Totale:</strong> €${variables.total_amount}</p>
+            ${variables.amount_paid ? `<p><strong>💳 Pagato:</strong> €${variables.amount_paid}</p>` : ''}
+            ${variables.remaining_amount > 0 ? `<p><strong>⏳ Da pagare in loco:</strong> €${variables.remaining_amount}</p>` : ''}
           </div>
           <p>Ti invieremo le istruzioni di check-in 24 ore prima del tuo arrivo.</p>
           <p>A presto!<br><strong>Il Team Vincanto</strong></p>

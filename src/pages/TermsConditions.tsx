@@ -213,7 +213,13 @@ const TermsConditions = () => {
 
         <div className="policy-actions">
           <button
-            onClick={() => window.history.back()}
+            onClick={() => {
+              window.close();
+              // Fallback: se il browser impedisce la chiusura, torna alla home
+              setTimeout(() => {
+                window.location.href = '/';
+              }, 500);
+            }}
             className="close-page-btn"
             aria-label="Close page"
           >

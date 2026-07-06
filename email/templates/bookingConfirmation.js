@@ -75,10 +75,10 @@ export function bookingConfirmationTemplate(data) {
     <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 680px; margin: 0 auto; background: #ffffff; color:#444;">
 
       <!-- HEADER -->
-      <div style="width:100%; height:260px; background:url('https://vincanto-vetrina.vercel.app/limoneto.webp') center/cover no-repeat;">
+      <div style="width:100%; height:260px; background:url('https://vincantomaiori.it/limoneto.webp') center/cover no-repeat;">
         <div style="background:linear-gradient(135deg, rgba(10,18,60,0.85), rgba(10,18,60,0.35)); width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:0 20px;">
         
-          <img src="https://vincanto-vetrina.vercel.app/logo.svg" alt="Vincanto Maiori" width="70" style="margin-bottom:10px; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));">
+          <img src="https://vincantomaiori.it/logo.svg" alt="Vincanto Maiori" width="70" style="margin-bottom:10px; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));">
 
           <div style="color:#FDFBF7; font-size:24px; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px;">
             Vincanto Maiori

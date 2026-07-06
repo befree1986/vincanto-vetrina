@@ -39,7 +39,8 @@ async function createPaymentIntent(req, res) {
     amount: Math.round(amount * 100),
     currency: 'eur',
     receipt_email: customer_email,
-    metadata: { booking_id, customer_email, customer_name }
+    metadata: { booking_id, customer_email, customer_name },
+    payment_method_types: ['card']
   });
 
   // Log transaction in DB

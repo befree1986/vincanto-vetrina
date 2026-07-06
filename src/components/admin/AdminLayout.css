@@ -1,0 +1,312 @@
+/* AdminLayout.css */
+
+.admin-layout {
+  width: 100vw;
+  max-width: 100vw;
+  min-width: 0;
+  position: relative;
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  /* Sidebar fisso, contenuto flessibile */
+  grid-template-rows: auto 1fr;
+  /* Header fisso, contenuto flessibile */
+  min-height: 100vh;
+  background-color: #f4f7f6;
+  /* Sfondo leggero */
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-layout .admin-content {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.admin-layout .admin-content > .admin-panel-pro,
+.admin-layout .admin-content > .admin-panel-basic {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.admin-layout .admin-content > .admin-panel-pro > .admin-main,
+.admin-layout .admin-content > .admin-panel-basic > .admin-main {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.admin-layout .admin-panel-basic {
+  display: block;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box;
+}
+
+.admin-layout .admin-panel-pro {
+  display: block;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box;
+}
+
+.admin-layout .admin-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+}
+
+.admin-layout > .admin-header {
+  grid-column: 1 / -1;
+  /* Occupa tutta la larghezza */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 25px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  z-index: 1000;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 25px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  z-index: 1000;
+}
+
+.admin-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-logo {
+  font-size: 22px;
+  font-weight: 700;
+  color: #2c3e50;
+  /* Colore scuro per il logo */
+  text-decoration: none;
+}
+
+.admin-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.admin-sidebar {
+  grid-row: 2 / 3;
+  /* Sotto l'header */
+  grid-column: 1 / 2;
+  /* Prima colonna */
+  background-color: #2c3e50;
+  /* Colore scuro per la sidebar */
+  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.admin-nav-link {
+  display: flex;
+  align-items: center;
+  padding: 12px 25px;
+  color: #ecf0f1;
+  /* Testo chiaro */
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  transition: background-color 0.2s, color 0.2s;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-nav-link:hover:not(:disabled) {
+  background-color: #34495e;
+  /* Scuro più chiaro all'hover */
+  color: #ffffff;
+}
+
+.admin-nav-link.active {
+  background-color: #3498db;
+  /* Colore primario per attivo */
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.admin-nav-link.disabled {
+  color: #7f8c8d;
+  /* Grigio per disabilitato */
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Stile speciale per il pulsante switch nel menu */
+.admin-nav-link[title*="Vista"] {
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  color: #ffffff;
+  font-weight: 600;
+  margin-left: 15px;
+  margin-right: 15px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+}
+
+.admin-nav-link[title*="Vista"]:hover {
+  background: linear-gradient(135deg, #e67e22, #d35400);
+  box-shadow: 0 4px 12px rgba(230, 126, 34, 0.4);
+}
+
+.admin-nav-link[title*="Vista"].active {
+  background: linear-gradient(135deg, #d35400, #ba4a00);
+  box-shadow: 0 4px 12px rgba(211, 84, 0, 0.5);
+}
+
+.admin-content {
+  grid-row: 2 / 3;
+  grid-column: 2 / 3;
+  padding: 20px;
+  overflow-y: auto;
+  /* Permette lo scroll del contenuto */
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.admin-content>* {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Stili per i badge di ruolo */
+.admin-badge-superadmin {
+  background-color: #e74c3c;
+  /* Rosso per SuperAdmin */
+  color: white;
+}
+
+.admin-badge-admin {
+  background-color: #f39c12;
+  /* Arancione per Admin */
+  color: white;
+}
+
+/* Stili per il messaggio di accesso negato nelle sezioni */
+.admin-access-denied-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  /* Altezza minima per centrare */
+  text-align: center;
+}
+
+.admin-access-denied-card {
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 40px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  max-width: 500px;
+  width: 100%;
+}
+
+.admin-access-denied-icon {
+  font-size: 60px;
+  margin-bottom: 20px;
+  color: #e74c3c;
+  /* Rosso per l'icona di blocco */
+}
+
+.admin-access-denied-title {
+  font-size: 28px;
+  color: #2c3e50;
+  margin-bottom: 15px;
+}
+
+.admin-access-denied-text {
+  font-size: 18px;
+  color: #34495e;
+  margin-bottom: 10px;
+}
+
+.admin-access-denied-hint {
+  font-size: 16px;
+  color: #7f8c8d;
+}
+
+/* Responsive adjustments */
+
+.admin-btn-switch-basic {
+  background-color: #f39c12;
+  color: white;
+  border: none;
+}
+
+@media (max-width: 768px) {
+  .admin-layout {
+    grid-template-columns: 1fr;
+    /* Sidebar scompare o diventa a scomparsa */
+    grid-template-rows: auto auto 1fr;
+  }
+
+  .admin-sidebar {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding: 10px 15px;
+    border-bottom: 1px solid #34495e;
+  }
+
+  .admin-nav-link {
+    padding: 10px 15px;
+  }
+
+  .admin-content {
+    grid-column: 1 / -1;
+    padding: 20px;
+  }
+
+  .admin-header-actions {
+    gap: 10px;
+  }
+
+  .admin-hidden-mobile {
+    display: none;
+  }
+
+  .admin-visible-mobile {
+    display: inline-block;
+  }
+}

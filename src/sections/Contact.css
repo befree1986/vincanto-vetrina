@@ -223,3 +223,33 @@
   height: 0;
   opacity: 0;
 }
+
+/* Stile per la checkbox GDPR */
+.privacy-checkbox-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 15px 0;
+  font-size: 0.9rem;
+  color: #555;
+  text-align: left;
+}
+
+.privacy-checkbox-container input[type="checkbox"] {
+  margin-top: 4px;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #d2691e;
+}
+
+.privacy-checkbox-container label {
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.privacy-checkbox-container a {
+  color: inherit;
+  text-decoration: underline;
+  font-weight: 600;
+}

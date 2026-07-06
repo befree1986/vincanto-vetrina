@@ -267,11 +267,20 @@
 /* === MAIN LAYOUT MODERNO === */
 .admin-panel-pro {
   min-height: 100vh;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   background: var(--admin-bg);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   display: flex;
   flex-direction: column;
   color: var(--admin-text);
+}
+
+.admin-main {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .admin-header {
@@ -2154,6 +2163,95 @@
   border: 1px solid #ffeaa7;
 }
 
+/* Gallery Image Preview Styles */
+.admin-gallery-image-preview-styles {
+  margin-top: 10px;
+  max-height: 100px;
+  border-radius: 5px;
+  object-fit: cover;
+  width: 100%;
+}
+
+.admin-pricing-grid-single {
+  grid-template-columns: 1fr !important;
+}
+
+/* Live Preview Styles for AdminPanelPro */
+.admin-content-layout {
+  display: grid;
+  gap: 2.5rem;
+  align-items: start;
+}
+
+.admin-content-layout-preview {
+  grid-template-columns: 1fr 450px;
+}
+
+.admin-preview-column {
+  position: sticky;
+  top: 100px;
+}
+
+.preview-window {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+  border: 1px solid var(--admin-border);
+}
+
+.preview-nav {
+  height: 40px;
+  background: var(--admin-card-hover);
+  border-bottom: 1px solid var(--admin-border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+}
+
+.preview-dots-container {
+  display: flex;
+  gap: 6px;
+}
+
+.preview-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+.preview-dot-red { background: #ff5f56; }
+.preview-dot-yellow { background: #ffbd2e; }
+.preview-dot-green { background: #27c93f; }
+
+.preview-label {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--admin-text-muted);
+  font-weight: 700;
+}
+
+.preview-body {
+  padding: 35px;
+  max-height: 650px;
+  overflow-y: auto;
+}
+
+.preview-hero-section { text-align: center; margin-bottom: 45px; }
+.preview-hero-title { font-size: 34px; font-weight: 800; margin-bottom: 15px; color: #1e293b; }
+.preview-hero-subtitle { font-size: 17px; line-height: 1.6; color: #64748b; }
+
+.preview-about-section { margin-bottom: 35px; padding: 25px; background: #f8fafc; border-radius: 12px; border-left: 5px solid var(--admin-primary); }
+.preview-about-title { font-size: 22px; font-weight: 700; margin-bottom: 12px; }
+.preview-about-content { font-size: 14px; line-height: 1.8; }
+
+.preview-pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.preview-pricing-card { padding: 25px; border-radius: 14px; text-align: center; }
+.preview-pricing-card-primary { background: var(--admin-primary-light); }
+.preview-pricing-label { font-size: 10px; font-weight: 800; }
+.preview-pricing-value { font-size: 28px; font-weight: 900; color: var(--admin-primary); margin-top: 5px; }
+
+.preview-caption { text-align: center; font-size: 12px; color: var(--admin-text-muted); margin-top: 20px; }
+
 .sync-indicator.error {
   background: #f8d7da;
   color: #721c24;
@@ -2397,4 +2495,16 @@
   margin-bottom: 20px;
   font-size: 14px;
   line-height: 1.5;
+}
+
+.admin-btn-delete-permanent {
+  margin-left: 5px;
+  opacity: 0.8;
+}
+
+/* Stile per il pulsante di sollecito pagamento */
+.admin-btn-reminder {
+  background-color: #0ea5e9;
+  color: white;
+  margin-left: 4px;
 }

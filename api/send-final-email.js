@@ -42,7 +42,9 @@ export default async function handler(req, res) {
       fromEmail: process.env.SMTP_FROM,
       language: guestLanguage,
       paymentMethod,
-      extraServices: Array.isArray(extraServices) ? extraServices : (Array.isArray(extra_services) ? extra_services : [])
+      extraServices: Array.isArray(extraServices) ? extraServices : (Array.isArray(extra_services) ? extra_services : []),
+      logoUrl: 'https://www.vincantomaiori.it/logo.svg',
+      siteUrl: 'https://www.vincantomaiori.it'
     });
 
     const results = await sendEmailWithAdminCopy({

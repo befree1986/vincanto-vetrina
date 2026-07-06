@@ -1,4 +1,5 @@
 // Simple local Express server to run Vercel serverless API in dev
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 

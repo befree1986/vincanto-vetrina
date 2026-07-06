@@ -130,7 +130,17 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
           language: i18n.language || 'it'
         };
 
-        const resp = await fetch('/api/booking/confirm', {
+        // Ricostruisci breakdown costi da quoteData
+        const breakdownData = {
+            accommodationCost: quoteData.accommodationCost || 0,
+            cleaningFee: quoteData.cleaningFee || 0,
+            parkingCost: quoteData.parkingCost || 0,
+            touristTax: quoteData.touristTax || 0,
+            extraServicesCost: extraServicesCost || 0,
+            nights: quoteData.nights || 0
+        };
+
+        const resp = await fetch('/api/unified?action=booking', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -139,7 +149,9 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
             payment_id: null,
             amount: amountPaid,
             total_amount: quoteData.totalAmount,
-            booking_data: formattedBookingData
+            booking_data: formattedBookingData,
+            ...breakdownData, // 🛎️ Invia breakdown costi
+            extra_services: selectedExtraServices // 🛎️ Invia servizi extra
           })
         });
         const data = await resp.json();
@@ -205,7 +217,17 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
       language: i18n.language || 'it'
     };
 
-    fetch('/api/booking/confirm', {
+    // Ricostruisci breakdown costi
+    const breakdownData = booking.quote ? {
+        accommodationCost: booking.quote.accommodationCost,
+        cleaningFee: booking.quote.cleaningFee,
+        parkingCost: booking.quote.parkingCost,
+        touristTax: booking.quote.touristTax,
+        extraServicesCost: extraServicesCost,
+        nights: booking.quote.nights
+    } : {};
+
+    fetch('/api/unified?action=booking', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -214,7 +236,9 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
         payment_id: null,
         amount: amountPaid,
         total_amount: booking.quote.totalAmount,
-        booking_data: bookingData
+        booking_data: bookingData,
+        ...breakdownData, // 🛎️ Invia breakdown costi
+        extra_services: selectedExtraServices // 🛎️ Invia servizi extra
       })
     })
       .then(async (resp) => {
@@ -272,7 +296,17 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
         language: i18n.language || 'it'
       };
 
-      fetch('/api/booking/confirm', {
+      // Ricostruisci breakdown costi
+      const breakdownData = booking.quote ? {
+          accommodationCost: booking.quote.accommodationCost,
+          cleaningFee: booking.quote.cleaningFee,
+          parkingCost: booking.quote.parkingCost,
+          touristTax: booking.quote.touristTax,
+          extraServicesCost: extraServicesCost,
+          nights: booking.quote.nights
+      } : {};
+
+      fetch('/api/unified?action=booking', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -283,7 +317,9 @@ const BookingStep3: React.FC<BookingStep3Props> = ({
             ? Math.round(booking.quote.totalAmount * 0.3 * 100) / 100
             : Math.round(booking.quote.totalAmount * 100) / 100,
           total_amount: booking.quote.totalAmount,
-          booking_data: bookingData
+          booking_data: bookingData,
+          ...breakdownData, // 🛎️ Invia breakdown costi
+          extra_services: selectedExtraServices // 🛎️ Invia servizi extra
         })
       })
         .then(async (resp) => {

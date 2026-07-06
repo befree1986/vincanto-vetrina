@@ -24,6 +24,9 @@ const PrivacyPolicy = () => {
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://www.vincantomaiori.it/privacy-policy" />
       </Helmet>
+      <style>{`
+        nav, .navbar, header { display: none !important; }
+      `}</style>
       <main className="policy-container">
         <h1>{lang === "it" ? "Informativa sulla Privacy" : lang === "de" ? "Datenschutzerklärung" : lang === "fr" ? "Politique de Confidentialité" : "Privacy Policy"}</h1>
         <p>Last updated / Ultimo aggiornamento: {content.lastUpdated}</p>
@@ -52,7 +55,13 @@ const PrivacyPolicy = () => {
 
       <div className="policy-actions">
         <button
-          onClick={() => window.history.back()}
+          onClick={() => {
+            window.close();
+            // Fallback: se il browser impedisce la chiusura, torna alla home
+            setTimeout(() => {
+              window.location.href = '/';
+            }, 500);
+          }}
           className="close-page-btn"
           aria-label="Close page"
         >

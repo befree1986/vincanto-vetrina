@@ -82,16 +82,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ success: false, error: 'Importo totale non valido' });
     }
 
-    // 🔒 VALIDAZIONE METODO DI PAGAMENTO (Blocco temporaneo metodi disabilitati)
-    const requestedMethod = (payment_method || '').toLowerCase();
-    if (requestedMethod.includes('paypal') || requestedMethod.includes('stripe') || requestedMethod.includes('card')) {
-      console.error(`❌ Blocco booking-confirm: Tentativo di pagamento con metodo disabilitato (${requestedMethod})`);
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Questo metodo di pagamento è temporaneamente disabilitato. Si prega di scegliere Bonifico Bancario.' 
-      });
-    }
-
     // 📅 VALIDAZIONE SOGGIORNO MINIMO (Sicurezza Backend)
     try {
       const pricingResult = await pool.query('SELECT min_stay, min_stay_august FROM pricing_config ORDER BY id DESC LIMIT 1');
@@ -132,7 +122,7 @@ export default async function handler(req, res) {
 
     //Calcola il valore da salvare come "acconto": se è saldo completp, è uguale al totale.
     const isFullPayment = paymentStatusDb === 'paid_full';
-    const depositValue = isFullPayment ? totalAmount : Math.round(totalAmount * 0.3 * 100) / 100;
+    const depositValue = isFullPayment ? totalAmount : Math.round(totalAmount * 0.2 * 100) / 100;
 
     console.log('✅ Dati validati:', { 
       checkin, checkout, guests, adults, children, 
@@ -170,23 +160,6 @@ export default async function handler(req, res) {
     const savedBooking = result.rows[0];
     console.log('✅ Prenotazione salvata:', savedBooking);
 
-    // Inserisci date bloccate nel calendario
-    try {
-      await pool.query(`
-        INSERT INTO blocked_dates (start_date, end_date, reason, description)
-        VALUES ($1, $2, $3, $4)
-        ON CONFLICT DO NOTHING
-      `, [
-        checkin,
-        checkout,
-        'booking',
-        `Prenotazione ${bookingId} - ${firstName} ${lastName}`
-      ]);
-      console.log('✅ Date bloccate nel calendario');
-    } catch (blockError) {
-      console.warn('⚠️ Errore blocco date (non-critico):', blockError.message);
-    }
-
     // Invia email di conferma (se pagamento successo o bonifico in attesa)
     // Per il bonifico, l'email con i dettagli per pagare viene inviata subito.
     const isBankTransfer = payment_method.toLowerCase().includes('bank');
@@ -215,7 +188,9 @@ export default async function handler(req, res) {
           parkingCost: booking_data.parkingCost,
           touristTax: booking_data.touristTax,
           extraServicesCost: booking_data.extraServicesCost,
-          nights: booking_data.nights
+          nights: booking_data.nights,
+          logoUrl: 'https://www.vincantomaiori.it/logo.png',
+          siteUrl: 'https://www.vincantomaiori.it'
         });
 
         await sendEmailWithAdminCopy({

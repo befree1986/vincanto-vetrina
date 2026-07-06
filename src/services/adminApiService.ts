@@ -30,8 +30,9 @@ class AdminApiService {
 
   constructor() {
     // 🎯 API UNIFICATA - CONFIGURAZIONE CONSOLIDATA
-    this.baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://vincanto-vetrina.vercel.app/api';
-    console.log('🎯 AdminApiService PRODUZIONE API UNIFICATA:', this.baseUrl);
+    // Usa sempre /api come fallback per funzionare correttamente sia in locale che in produzione.
+    this.baseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
+    console.log('🎯 AdminApiService baseUrl:', this.baseUrl);
   }
 
   // Forza la sincronizzazione reale dei calendari (chiama direttamente l'API serverless)
@@ -352,6 +353,20 @@ class AdminApiService {
       method: 'PUT',
       body: JSON.stringify({ key, value }),
     });
+  }
+
+  // Translation (API Unificata)
+  async autoTranslate(text: string, targetLangs: string[]) {
+    try {
+      const data = await this.request('translate', {
+        method: 'POST',
+        body: JSON.stringify({ text, targetLangs }),
+      });
+      return data.translations || {};
+    } catch (error) {
+      console.error('Error auto-translating:', error);
+      return {};
+    }
   }
 
   // Health Check (API Unificata)

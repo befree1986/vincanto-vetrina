@@ -1,6 +1,7 @@
 import React from 'react';
 import NumericInput from '../NumericInput';
 import '../NumericInput.css';
+import './AdminPricing.css';
 
 interface AdminPricingProps {
   pricingConfig: any;
@@ -24,196 +25,6 @@ const AdminPricing: React.FC<AdminPricingProps> = ({
 }) => {
   return (
     <>
-      <style>{`
-        .service-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 1rem;
-        }
-        
-        .service-controls {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-        }
-        
-        .toggle-switch {
-          position: relative;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          cursor: pointer;
-        }
-        
-        .toggle-switch input {
-          opacity: 0;
-          width: 0;
-          height: 0;
-        }
-        
-        .toggle-slider {
-          position: relative;
-          width: 40px;
-          height: 20px;
-          background-color: #ccc;
-          border-radius: 20px;
-          transition: 0.4s;
-        }
-        
-        .toggle-slider:before {
-          position: absolute;
-          content: "";
-          height: 16px;
-          width: 16px;
-          left: 2px;
-          top: 2px;
-          background-color: white;
-          border-radius: 50%;
-          transition: 0.4s;
-        }
-        
-        .toggle-switch input:checked + .toggle-slider {
-          background-color: #2196F3;
-        }
-        
-        .toggle-switch input:checked + .toggle-slider:before {
-          transform: translateX(20px);
-        }
-        
-        .service-pricing {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-          align-items: flex-end;
-        }
-        
-        .included-toggle {
-          margin-bottom: 0.5rem;
-        }
-        
-        .included-label {
-          font-weight: bold;
-          margin-left: 0.5rem;
-        }
-        
-        .service-price-container input:disabled {
-          background-color: #f5f5f5;
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-        
-        /* 🔥 NUOVO: Stili per sezione servizi unificata */
-        .unified-services-list {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-          margin-bottom: 2rem;
-        }
-        
-        .unified-service-card {
-          background: #f9f9f9;
-          border: 1px solid #ddd;
-          border-radius: 8px;
-          padding: 1rem;
-        }
-        
-        .service-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 0.5rem;
-        }
-        
-        .service-icon {
-          margin-right: 0.5rem;
-        }
-        
-        .service-name-input {
-          border: none;
-          background: transparent;
-          font-size: inherit;
-          font-weight: bold;
-          min-width: 200px;
-        }
-        
-        .service-actions {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-        }
-        
-        .delete-service-btn {
-          background: #ff4444;
-          color: white;
-          border: none;
-          border-radius: 4px;
-          padding: 0.25rem 0.5rem;
-          cursor: pointer;
-          font-size: 0.9rem;
-        }
-        
-        .service-content {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-        
-        .service-description {
-          color: #666;
-          font-size: 0.9rem;
-          flex: 1;
-        }
-        
-        .service-pricing {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-        }
-        
-        .price-input {
-          display: flex;
-          align-items: center;
-          gap: 0.25rem;
-        }
-        
-        .price-field {
-          width: 80px;
-          padding: 0.25rem;
-          border: 1px solid #ccc;
-          border-radius: 4px;
-        }
-        
-        .add-service-form {
-          background: #e8f4fd;
-          border: 2px dashed #2196F3;
-          border-radius: 8px;
-          padding: 1rem;
-          margin-bottom: 1rem;
-        }
-        
-        .form-row {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-        }
-        
-        .add-btn {
-          background: #2196F3;
-          color: white;
-          border: none;
-          border-radius: 4px;
-          padding: 0.5rem 1rem;
-          cursor: pointer;
-          font-weight: bold;
-        }
-        
-        .add-btn:disabled {
-          background: #ccc;
-          cursor: not-allowed;
-        }
-      `}</style>
-      
       <div className="admin-prezzi">
         <div className="admin-header">
         <h2>⚙️ Configurazione Prezzi e Sistema</h2>
@@ -258,6 +69,19 @@ const AdminPricing: React.FC<AdminPricingProps> = ({
                 suffix="€/persona"
                 required
               />
+              <div className="admin-gallery-image-input-group">
+                <label className="admin-gallery-image-label">Immagine (URL)</label>
+                <input
+                  type="url"
+                  className="admin-input"
+                  placeholder="https://..."
+                  value={pricingConfig.imageGroup1to2 || ''}
+                  onChange={(e) => updatePricingField('imageGroup1to2', e.target.value as any)}
+                />
+                {pricingConfig.imageGroup1to2 && (
+                   <img src={pricingConfig.imageGroup1to2} alt="Group 1-2" className="admin-image-preview-small" />
+                )}
+              </div>
             </div>
           </div>
           

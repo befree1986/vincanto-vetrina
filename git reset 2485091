@@ -1,0 +1,93 @@
+[33ma1a602a[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/dynamic-content[m[33m)[m Nuove integrazioni
+[33m04836a1[m Rimosse chiavi API e aggiornate funzionalità
+[33m47411d7[m feat: implement advanced admin panel with seasonal pricing, content management, and dynamic pricing hook
+[33mf703c56[m[33m ([m[1;31morigin/feature/dynamic-content[m[33m)[m style: Raggruppa i contenuti per sezione nel ContentManager
+[33m1a4db92[m feat: Exclude booking section from ContentManager
+[33m738fcbc[m feat: Collega ContentManager e GalleryManager ai pannelli Admin e frontend
+[33m06c78a3[m fix: Carica variabili .env nel server locale
+[33m355e684[m feat: Aggiunti contenuti dinamici, traduzione automatica e upload immagini
+[33m2485091[m[33m ([m[1;31morigin/master[m[33m, [m[1;32mmaster[m[33m)[m aggiornamento layout8
+[33m87ffc5b[m aggiornamento layout7
+[33m8b7a025[m aggiornamento layout6
+[33m7286c5c[m aggiornamento layout6
+[33m55179c7[m aggiornamento layout6
+[33m17155a3[m aggiornamento layout6
+[33mbc1581b[m aggiornamento layout5
+[33mf149394[m admin layout+calendario adminpanelbasic4
+[33me16c8ef[m admin layout+calendario adminpanelbasic3
+[33m58fb3eb[m admin layout+calendario adminpanelbasic3
+[33ma623209[m admin layout+calendario adminpanelbasic2
+[33me91fb4d[m admin layout+calendario adminpanelbasic
+[33m4b4b68f[m admin layout4
+[33m0822be1[m admin layout3
+[33m693891f[m admin layout2
+[33m8d195d9[m aggiornamento layout1
+[33m60c9d63[m aggiornamento layout1
+[33m96e8a7b[m aggiornamento layout1
+[33m613623b[m aggiornamento layot e funzinalita
+[33md2d35e2[m aggiornamento layot e funzinalita
+[33m67e076c[m feat: Implementazione gestione contenuti e fix admin panel
+[33m20502b7[m fix: risolto errore di sintassi JSX ESBuild in AdminPanelPro
+[33m7181901[m aggiornamento layout pannello admin con nuove funzionalità
+[33ma24139d[m modified:   src/i18n.ts renamed:    src/locales/de/translation.json -> src/locales/de/translation_de.json deleted:    src/locales/en/translation.json new file:   src/locales/en/translation_en.json renamed:    src/locales/fr/translation.json -> src/locales/fr/translation_fr.json renamed:    src/locales/it/translation.json -> src/locales/it/translation_it.json
+[33md696e37[m modified:   src/App.tsx modified:   src/components/Navbar.tsx modified:   src/i18n.ts modified:   vercel.json ottimizazione del codice e aggiornamento dei link di navigazione per supportare la lingua attiva senza modificare gli anchor hash.
+[33m1b71e8c[m correzione bug: il banner non si chiudeva più dopo averlo accettato o rifiutato, perché la funzione di chiusura era stata sovrascritta da quella di setConsent. Ora setConsent gestisce anche la chiusura del banner, e non c'è più bisogno di una funzione separata per chiuderlo.
+[33mf8d47cb[m Correzioni per il commit: - Modificato src/App.tsx per gestire correttamente la chiusura del banner dei cookie e per migliorare la gestione del login. - Modificato src/components/CookieContext.tsx per aggiornare la logica di gestione del consenso dei cookie. - Modificato src/components/PreferencesModal.tsx per migliorare l'interfaccia utente e la gestione delle preferenze dei cookie. - Modificato src/sections/data/cookiePolicy.ts per correggere l'importazione del tipo PolicyContent. - Modificato src/sections/data/privacyPolicy.ts per aggiornare il contenuto della politica sulla privacy.
+[33m67fb4f9[m modified:   api/unified.js
+[33m4f22778[m Nuovo aggiornamento: Modifiche al sistema di pagamento e aggiornamenti nei file di traduzione per una maggiore chiarezza sui prezzi.
+[33mf7b92a0[m Aggiornamento Blocco Metodi di Pagamento Temporaneamente Disabilitati e Aggiunta Metadata per Stripe Payment Intents
+[33mc906412[m aggiornamento messaggio di commit per blocco temporaneo metodi di pagamento disabilitati in booking-confirm.js
+[33m2cb8431[m integrazione pagamenti
+[33m1334a5f[m Merge branch 'master' of https://github.com/befree1986/vincanto-vetrina
+[33m8ffaa2f[m aggiornamenti vari e metodo di pagamento
+[33m3f19fda[m Update translation.json
+[33m715e87c[m Update price per night header in Italian translation
+[33mf7dcf51[m Correct translation for price per night header
+[33m195d6b4[m aggiunta logo Booking Award
+[33m46c2f99[m aggiunta logo Booking Award
+[33me827b15[m correzioni IMG Chi Siamo
+[33m4d68254[m correzioni IMG Chi Siamo
+[33ma18f6a8[m correzioni IMG Chi Siamo
+[33m3a15011[m correzioni IMG Chi Siamo
+[33m7d55760[m correzioni IMG Chi Siamo
+[33ma35fa6e[m correzioni IMG Chi Siamo
+[33m44fe788[m inserimento blocco nr di persone a 8, traduzioni, inserimento msg errore, correzioni immagini
+[33m85a4291[m aggiornamento numero Adulti a 8
+[33mfcb3d32[m aggiornamento prezzi
+[33mdb64e64[m aggiornamento GDPR
+[33m61286bf[m Configura deploy su branch master
+[33m6fd756f[m aggiornamento testo
+[33m802d786[m aggiornamento testo
+[33m67c46d1[m aggiornamenti
+[33m14f70c6[m correzione descrizione
+[33mb273e6a[m aggiornamenti
+[33m67a276b[m aggiornamenti
+[33m317eb5d[m aggiornamento
+[33m4e3dddc[m aggiornamento descrizioni
+[33m14e3f89[m aggiornamento descrizioni
+[33mf44c719[m aggiornamento traduzioni
+[33m498538f[m aggiornamento descrizioni
+[33m5f60fe0[m cambio colore titolo h2 in blu
+[33m17ac362[m cambio colore titolo h2 in giallo
+[33m4c3bf0e[m cambio colore titolo h2 in giallo
+[33mbfa8665[m cambio colore titolo h2 in giallo
+[33m23d8449[m cambio colore titolo h2 in giallo
+[33m6c88ebf[m aggiornamenti mail, pannello e gestione reminder mail
+[33mbfc4b45[m aggiornamenti mail, pannello e gestione reminder mail
+[33m7f7cce6[m personalizzazione pannello admin basic
+[33m816e890[m personalizzazione pannello admin basic
+[33mb8d817b[m personalizzazione pannello admin basic
+[33ma990153[m personalizzazione pannello admin basic
+[33mec6a565[m personalizzazione pannello admin basic
+[33m796c672[m personalizzazione pannello admin basic
+[33m8a58282[m correzione ripilgo prenotazione e mail prenotazione
+[33m0eb8bd6[m correzione ripilgo prenotazione e mail prenotazione
+[33mad0c82c[m aggiornamento pannelli adminpro e adminbasic
+[33m3046158[m aggiornamento pannelli adminpro e adminbasic
+[33ma55c930[m aggiornamento pannelli adminpro e adminbasic
+[33me5f5e46[m aggiornamento pannelli adminpro e adminbasic
+[33m11f7b18[m aggiornamento pannelli adminpro e adminbasic
+[33m63c2d84[m aggiornamento pannelli adminpro e adminbasic
+[33me6f5ea7[m aggiornamento pannelli adminpro e adminbasic
+[33m09fce3a[m aggiornamento pannelli adminpro e adminbasic
+[33m642effc[m aggiornamento pannelli adminpro e adminbasic

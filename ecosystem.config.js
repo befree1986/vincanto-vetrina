@@ -71,7 +71,7 @@ module.exports = {
       user: 'www-data',
       host: 'your-server-ip',
       ref: 'origin/master',
-      repo: 'https://github.com/your-username/vincanto.git',
+      repo: 'https://github.com/befree1986/vincanto-vetrina.git',
       path: '/var/www/vincanto',
       'pre-deploy-local': '',
       'post-deploy': 'cd vincanto-backend && npm install --production && npm run db:setup && pm2 reload ecosystem.config.js --env production',
@@ -86,7 +86,7 @@ module.exports = {
       user: 'www-data',
       host: 'your-staging-server-ip',
       ref: 'origin/develop',
-      repo: 'https://github.com/your-username/vincanto.git',
+      repo: 'https://github.com/befree1986/vincanto-vetrina.git',
       path: '/var/www/vincanto-staging',
       'post-deploy': 'cd vincanto-backend && npm install && npm run db:setup && pm2 reload ecosystem.config.js --env staging',
       env: {

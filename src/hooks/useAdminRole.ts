@@ -16,6 +16,7 @@ export const useAdminRole = (): AdminRoleState & {
   isSuperAdmin: () => boolean;
   isAdmin: () => boolean;
   hasAccess: (requiredRole: AdminRole) => boolean;
+  error: string | null;
 } => {
   const [state, setState] = useState<AdminRoleState>({
     role: null,
@@ -26,70 +27,47 @@ export const useAdminRole = (): AdminRoleState & {
   useEffect(() => {
     const fetchAdminRole = async () => {
       try {
-        // Verifica se esiste un token
         const token = localStorage.getItem('vincanto_admin_token');
         if (!token) {
-          setState({
-            role: 'guest',
-            isLoading: false,
-            error: null
-          });
+          setState({ role: 'guest', isLoading: false, error: null });
           return;
         }
 
-        // Prova prima da localStorage
         const storedRole = localStorage.getItem('vincanto_admin_role');
         if (storedRole && ['superadmin', 'admin'].includes(storedRole)) {
-          setState({
-            role: storedRole as AdminRole,
-            isLoading: false,
-            error: null
-          });
+          setState({ role: storedRole as AdminRole, isLoading: false, error: null });
           return;
         }
 
-        // Se non in localStorage, prova da API
-        try {
-          const response = await fetch('/api/admin/role', {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('vincanto_admin_token') || ''}`
-            }
-          });
-          
-          if (response.ok) {
-            const data = await response.json();
-            const role = data.role as AdminRole;
-            
-            // Salva il ruolo in localStorage per accesso futuro
-            localStorage.setItem('vincanto_admin_role', role);
-            
-            setState({
-              role,
-              isLoading: false,
-              error: null
-            });
-          } else {
-            // Se l'API non risponde, considera come guest
-            setState({
-              role: 'guest',
-              isLoading: false,
-              error: 'Impossibile verificare il ruolo'
-            });
+        const response = await fetch('/api/unified?action=admin/role', {
+          headers: {
+            'Authorization': `Bearer ${token}`
           }
-        } catch (apiError) {
-          console.warn('API role check failed, defaulting to guest', apiError);
-          setState({
-            role: 'guest',
-            isLoading: false,
-            error: null
-          });
-        }
-      } catch (err) {
-        setState({
-          role: 'guest',
-          isLoading: false,
-          error: err instanceof Error ? err.message : 'Errore sconosciuto'
         });
+
+        if (!response.ok) {
+          localStorage.removeItem('vincanto_admin_role');
+          localStorage.removeItem('vincanto_admin_email');
+          setState({ role: 'guest', isLoading: false, error: 'Impossibile verificare il ruolo' });
+          return;
+        }
+
+        const data = await response.json();
+        const role = data.role as AdminRole;
+
+        if (data.success && ['superadmin', 'admin'].includes(role)) {
+          localStorage.setItem('vincanto_admin_role', role);
+          setState({ role, isLoading: false, error: null });
+          return;
+        }
+
+        localStorage.removeItem('vincanto_admin_role');
+        localStorage.removeItem('vincanto_admin_email');
+        setState({ role: 'guest', isLoading: false, error: 'Impossibile verificare il ruolo' });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Errore imprevisto durante la verifica del ruolo';
+        console.warn('API role check failed, defaulting to guest', err);
+        setState({ role: 'guest', isLoading: false, error: message });
       }
     };
 

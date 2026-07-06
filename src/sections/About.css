@@ -1,10 +1,18 @@
+/* Assicuriamo che il contenitore Parallax abbia un'altezza esplicita */
+.about-section > div:first-child {
+  min-height: 400px;
+  position: relative;
+}
+
 .about-hero {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 300px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
   color: var(--white);
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  width: 100%;
 }
 
 .about-hero h2 {
@@ -67,8 +75,47 @@
   margin-right: 0;
 }
 
+.location-image-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.location-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 @media (max-width: 992px) {
   .location-info {
     grid-template-columns: 1fr;
+  }
+  
+  .location-image-container {
+    min-height: 250px;
+    margin-top: 2rem;
+  }
+
+  .about-hero {
+    padding: 0 1rem; /* Aggiunge un po' di spazio laterale */
+  }
+
+  /*
+   * Fallback per l'immagine hero "Chi Siamo" su mobile.
+   * Il componente ParallaxBackground (il primo div dentro .about-section) ha problemi su mobile.
+   * Questa regola applica un'immagine di sfondo statica per garantire la visibilità.
+   */
+  .about-section > div:first-child {
+    background-image: url("/lemon.webp") !important; /* Sovrascrive lo stile inline del componente */
+    background-attachment: scroll !important; /* Disabilita l'effetto parallasse */
+    background-size: cover !important;
+    background-position: center !important;
+    min-height: 45vh; /* Spostiamo l'altezza sul contenitore */
   }
 }

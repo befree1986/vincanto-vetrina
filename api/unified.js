@@ -18,6 +18,21 @@ const pool = new Pool({
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
+// Session store per admin login 2FA
+const adminSessionStore = new Map();
+const ADMIN_SESSION_TTL_MS = 1000 * 60 * 60 * 8; // 8 ore
+
+const cleanExpiredAdminSessions = () => {
+  const now = Date.now();
+  for (const [token, session] of adminSessionStore.entries()) {
+    if (now - session.createdAt > ADMIN_SESSION_TTL_MS) {
+      adminSessionStore.delete(token);
+    }
+  }
+};
+
+setInterval(cleanExpiredAdminSessions, 1000 * 60 * 15);
+
 // Email transporter configuration
 let emailTransporter = null;
 if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
@@ -76,6 +91,19 @@ async function initializeTables() {
       )
     `);
     console.log('✅ Tabella blocked_dates inizializzata');
+
+    // 🆕 Crea tabella monthly_pricing_rules se non esiste
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS monthly_pricing_rules (
+        id SERIAL PRIMARY KEY,
+        month INTEGER UNIQUE NOT NULL CHECK (month >= 1 AND month <= 12),
+        base_price DECIMAL(10,2) NOT NULL,
+        min_stay INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✅ Tabella monthly_pricing_rules inizializzata');
 
     // Crea tabella bookings se non esiste
     await pool.query(`
@@ -143,6 +171,43 @@ async function initializeTables() {
       )
     `);
     console.log('✅ Tabella calendar_events inizializzata');
+    
+    // 🆕 Aggiungi colonna 'platform' a calendar_events se non esiste (per distinguere logica di filtro da sorgente unica)
+    try {
+      await pool.query(`ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS platform VARCHAR(50)`);
+    } catch (e) { console.log('Info: colonna platform già presente o errore:', e.message); }
+
+    // 🆕 Crea tabella calendar_configs per gestire i calendari dinamicamente
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS calendar_configs (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        calendar_type VARCHAR(50) NOT NULL,
+        url TEXT NOT NULL,
+        is_active BOOLEAN DEFAULT true,
+        sync_frequency INTEGER DEFAULT 60,
+        last_sync TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✅ Tabella calendar_configs inizializzata');
+
+    // Seed calendari di default se la tabella è vuota
+    const calendarsCount = await pool.query('SELECT COUNT(*) FROM calendar_configs');
+    if (parseInt(calendarsCount.rows[0].count) === 0) {
+      // Gli URL iCal vengono letti dalle variabili d'ambiente per sicurezza.
+      // Rimuoviamo i valori di fallback hardcoded.
+      const defaultUrlBooking = process.env.BOOKING_ICAL_URL;
+      const defaultUrlAirbnb = process.env.AIRBNB_ICAL_URL;
+      const defaultUrlHolidu = process.env.HOLIDU_ICAL_URL;
+
+      // Inserisci solo se le variabili d'ambiente sono definite
+      if (defaultUrlBooking) await pool.query("INSERT INTO calendar_configs (name, calendar_type, url, sync_frequency) VALUES ($1, $2, $3, $4)", ['Booking.com', 'booking', defaultUrlBooking, 60]);
+      if (defaultUrlAirbnb) await pool.query("INSERT INTO calendar_configs (name, calendar_type, url, sync_frequency) VALUES ($1, $2, $3, $4)", ['Airbnb', 'airbnb', defaultUrlAirbnb, 30]);
+      if (defaultUrlHolidu) await pool.query("INSERT INTO calendar_configs (name, calendar_type, url, sync_frequency) VALUES ($1, $2, $3, $4)", ['Holidu', 'holidu', defaultUrlHolidu, 60]);
+      console.log('✅ Calendari di default inseriti in calendar_configs');
+    }
 
     // 🆕 Crea tabella extra_services se non esiste
     await pool.query(`
@@ -163,6 +228,63 @@ async function initializeTables() {
       )
     `);
     console.log('✅ Tabella extra_services inizializzata');
+
+    // 🆕 Crea tabella system_settings per CMS generico
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS system_settings (
+        id SERIAL PRIMARY KEY,
+        key VARCHAR(100) UNIQUE NOT NULL,
+        value TEXT,
+        label VARCHAR(255),
+        category VARCHAR(50) DEFAULT 'general',
+        type VARCHAR(50) DEFAULT 'text',
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✅ Tabella system_settings inizializzata');
+
+    // Seed settings di base se vuota
+    const sysSettingsCount = await pool.query('SELECT COUNT(*) FROM system_settings');
+    if (parseInt(sysSettingsCount.rows[0].count) === 0) {
+      await pool.query(`
+        INSERT INTO system_settings (key, value, label, category, type) VALUES
+        ('home_hero_title', 'Vincanto Maori', 'Titolo Hero Home', 'home', 'text'),
+        ('home_hero_subtitle', 'La tua casa vacanze a Maiori: un angolo di paradiso tra i limoni della Costiera Amalfitana', 'Sottotitolo Hero Home', 'home', 'textarea'),
+        ('display_price_base', '70', 'Prezzo esposto base (es: € 70)', 'pricing_display', 'text'),
+        ('display_price_extra', '20', 'Prezzo esposto extra (es: € 20)', 'pricing_display', 'text'),
+        ('about_description_main', 'Situati a soli 2 km dal centro paese...', 'Descrizione Principale Chi Siamo', 'about', 'textarea')
+      `);
+    }
+
+    // 🆕 Crea tabella admin_users se non esiste
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS admin_users (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100),
+        email VARCHAR(200) UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        role VARCHAR(50) DEFAULT 'admin',
+        two_factor_enabled BOOLEAN DEFAULT false,
+        two_factor_secret TEXT,
+        recovery_codes TEXT[],
+        last_login TIMESTAMP,
+        two_factor_activated_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
+    // Crea tabella audit per 2FA
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS admin_2fa_audit (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES admin_users(id),
+        action VARCHAR(50),
+        ip_address VARCHAR(50),
+        user_agent TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
     // 🆕 Crea tabella email_logs
     await initializeEmailLogsTable();
@@ -201,7 +323,7 @@ async function initializeTables() {
         ('Colazione Italiana', 'Colazione italiana completa con prodotti locali', 15.00, 'food', 'per_person_per_day', true, true, NULL, NULL, 4),
         ('Transfer Aeroporto', 'Servizio transfer da/per Aeroporto di Palermo', 45.00, 'transport', 'per_stay', true, false, NULL, NULL, 5),
         ('Culla per Bambini', 'Culla con biancheria per bambini 0-6 anni', 30.00, 'bambini', 'per_stay', true, false, 0, 7, 6),
-        ('Parcheggio Privato Extra', 'Posto auto aggiuntivo nel parcheggio privato', 10.00, 'parking', 'per_night', false, false, NULL, NULL, 7),
+        ('Parcheggio Privato Extra', 'Posto auto aggiuntivo nel parcheggio privato', 20.00, 'parking', 'per_night', false, false, NULL, NULL, 7),
         ('Kit Welcome', 'Kit di benvenuto con prodotti tipici siciliani', 25.00, 'gift', 'per_stay', true, true, NULL, NULL, 8)
       `);
       console.log('✅ Servizi extra di default inseriti');
@@ -256,7 +378,7 @@ export default async function handler(req, res) {
     'https://www.vincantomaiori.it',
     'https://vincantomaiori.it',
     'https://account.vincantomaiori.it', // Subdominio admin (quando pronto)
-    'https://vincanto-vetrina.vercel.app', // Staging Vercel
+    'https://vincantomaiori.it', // Staging Vercel
     'http://localhost:3000', // Dev backend
     'http://localhost:5173', // Dev frontend Vite
     'http://127.0.0.1:3000',
@@ -290,9 +412,10 @@ export default async function handler(req, res) {
   }
 
 
+  try {
   // Ottieni action da query params o body (dichiarazione UNA SOLA VOLTA)
   let { action } = req.query;
-  if (req.method === 'POST' && req.body && req.body.action) {
+  if (req.method === 'POST' && req.body?.action) {
     action = req.body.action;
   }
 
@@ -302,6 +425,72 @@ export default async function handler(req, res) {
   }
 
   console.log('🎯 API UNIFICATA CONSOLIDATA - Action:', action, 'Method:', req.method);
+
+  // ========================================
+  // SYSTEM SETTINGS / CMS ACTION
+  // ========================================
+  if (action === 'system-settings' || action === 'settings') {
+    if (req.method === 'GET') {
+      try {
+        const result = await pool.query('SELECT * FROM system_settings ORDER BY category, label');
+        // Ritorna le impostazioni; se chiamato come settings avvolge in {settings: ...} per compatibilità
+        if (action === 'settings') {
+          return res.status(200).json({ success: true, settings: result.rows });
+        }
+        return res.status(200).json(result.rows); // Ritorna array per il frontend
+      } catch (error) {
+        return res.status(500).json({ success: false, error: error.message });
+      }
+    }
+    if (req.method === 'POST' || req.method === 'PUT') {
+      try {
+        const { key, value } = req.body;
+        // value può essere un JSON (se stringificato dal frontend o passato come oggetto)
+        // se è oggetto, convertiamolo in stringa per TEXT
+        const valueToSave = typeof value === 'object' ? JSON.stringify(value) : value;
+
+        const result = await pool.query(`
+          INSERT INTO system_settings (key, value) VALUES ($1, $2)
+          ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
+          RETURNING *
+        `, [key, valueToSave]);
+        return res.status(200).json({ success: true, setting: result.rows[0] });
+      } catch (error) {
+        return res.status(500).json({ success: false, error: error.message });
+      }
+    }
+  }
+
+  // ========================================
+  // TRANSLATE API (Google Translate)
+  // ========================================
+  if (action === 'translate') {
+    if (req.method === 'POST') {
+      try {
+        const { text, targetLangs } = req.body; // targetLangs es: ['en', 'de', 'fr']
+        if (!text || !targetLangs || !Array.isArray(targetLangs)) {
+          return res.status(400).json({ success: false, error: 'Testo e targetLangs richiesti' });
+        }
+        
+        const translate = (await import('translate')).default;
+        translate.engine = 'google';
+
+        const results = {};
+        for (const lang of targetLangs) {
+          try {
+            results[lang] = await translate(text, { from: 'it', to: lang });
+          } catch (e) {
+            console.error(`Errore traduzione in ${lang}:`, e);
+            results[lang] = text; // fallback
+          }
+        }
+        
+        return res.status(200).json({ success: true, translations: results });
+      } catch (error) {
+        return res.status(500).json({ success: false, error: error.message });
+      }
+    }
+  }
 
   // ========================================
   // 2FA SETUP - Genera secret e QR code
@@ -586,6 +775,12 @@ export default async function handler(req, res) {
 
       // Genera token di sessione (in produzione usare JWT con scadenza)
       const sessionToken = randomBytes(32).toString('hex');
+      adminSessionStore.set(sessionToken, {
+        userId: user.id,
+        role: user.role,
+        email: user.email,
+        createdAt: Date.now()
+      });
 
       return res.status(200).json({
         success: true,
@@ -656,17 +851,14 @@ export default async function handler(req, res) {
 
   // ...continua con la logica esistente senza ridichiarare 'action'
 
-  try {
-    // ========================================
-    // AUTHENTICATION SECTION
-    // ========================================
     if (action === 'login') {
       if (req.method !== 'POST') {
         return res.status(405).json({ success: false, error: 'Metodo non consentito' });
       }
 
+      // VULNERABILITÀ: Password in chiaro. Usiamo una variabile d'ambiente.
       const { password } = req.body;
-      const correctPassword = 'vincanto2025';
+      const correctPassword = process.env.LEGACY_ADMIN_PASSWORD; // Spostata in .env
 
       if (password === correctPassword) {
         return res.status(200).json({
@@ -701,8 +893,9 @@ export default async function handler(req, res) {
           });
         }
 
-        // Verifica password attuale (hardcoded per ora)
-        const correctPassword = 'vincanto2025';
+        // 🚨 ATTENZIONE: Questo metodo di login è insicuro e deprecato.
+        // Verifica password attuale (da variabile d'ambiente)
+        const correctPassword = process.env.LEGACY_ADMIN_PASSWORD;
         if (currentPassword !== correctPassword) {
           return res.status(401).json({
             success: false,
@@ -989,11 +1182,21 @@ export default async function handler(req, res) {
         });
       }
 
-      // Se token valido, ritorna il ruolo (il frontend deciderà se superadmin o admin)
+      const session = adminSessionStore.get(token);
+      if (!session) {
+        return res.status(401).json({
+          success: false,
+          role: 'guest',
+          authenticated: false,
+          error: 'Token admin non valido o scaduto'
+        });
+      }
+
       return res.status(200).json({
         success: true,
-        role: 'superadmin', // Da backend sempre superadmin, il frontend gestisce la logica
-        authenticated: true
+        role: session.role,
+        authenticated: true,
+        email: session.email
       });
     }
 
@@ -1105,7 +1308,7 @@ export default async function handler(req, res) {
     if (action === 'booking') {
       if (req.method === 'GET') {
         try {
-          // Ottieni solo le prenotazioni CONFERMATE o IN ATTESA (non draft o cancellate)
+          // Ottieni le prenotazioni CONFERMATE, IN ATTESA e CANCELLATE (esclude solo draft/abbandonate)
           // draft = non ancora pagato, cancelled = rifiutato
           const result = await pool.query(`
             SELECT 
@@ -1123,7 +1326,7 @@ export default async function handler(req, res) {
               payment_status as payment_method,
               created_at
             FROM bookings 
-            WHERE status IN ('confirmed', 'pending')
+            WHERE status IN ('confirmed', 'pending', 'cancelled')
             ORDER BY created_at DESC
           `);
           
@@ -1159,17 +1362,46 @@ export default async function handler(req, res) {
           // DEBUG: Mostra tutti i dati ricevuti
           console.log('DEBUG bookingData:', bookingData);
           
+          // 🔧 NORMALIZZAZIONE CAMPI: Supporto per strutture piatte e annidate (booking_data)
+          const bData = bookingData.booking_data || {}; 
+
           // 🔧 NORMALIZZAZIONE CAMPI: supporta entrambi i formati (checkin/check_in, customerName/first_name, etc)
-          const checkin = bookingData.checkin || bookingData.check_in;
-          const checkout = bookingData.checkout || bookingData.check_out;
-          const guests = bookingData.guests || (bookingData.adults || 0) + (bookingData.children || 0) || 1;
-          const adults = bookingData.adults || bookingData.guests || 1;
-          const children = bookingData.children || 0;
-          const email = bookingData.customerEmail || bookingData.email;
-          const phone = bookingData.customerPhone || bookingData.phone;
+          const checkin = bookingData.checkin || bookingData.check_in || bData.checkin || bData.check_in || bData.check_in_date;
+          const checkout = bookingData.checkout || bookingData.check_out || bData.checkout || bData.check_out || bData.check_out_date;
+          const guests = bookingData.guests || bData.guests || (bookingData.adults || bData.adults || 0) + (bookingData.children || bData.children || 0) || 1;
+          const adults = bookingData.adults || bData.adults || bookingData.guests || bData.guests || 1;
+          const children = bookingData.children || bData.children || 0;
+          const email = bookingData.customerEmail || bookingData.email || bookingData.customer_email || bData.guest_email || bData.email;
+          const phone = bookingData.customerPhone || bookingData.phone || bData.guest_phone || bData.phone;
           // Normalizza e forza a numero - accetta sia interi che decimali
           const totalAmount = parseFloat(bookingData.totalPrice) || parseFloat(bookingData.total_amount) || 0;
           const notes = bookingData.specialRequests || bookingData.notes || '';
+          
+          // 🛎️ Gestione Servizi Extra per prenotazioni manuali
+          // Se presenti, li aggiungiamo alle note per persistenza
+          let finalNotes = notes;
+          if (bookingData.selected_services && Array.isArray(bookingData.selected_services) && bookingData.selected_services.length > 0) {
+             const servicesText = bookingData.selected_services.map(s => `${s.name} (€${s.price})`).join(', ');
+             finalNotes = (finalNotes ? finalNotes + '\n\n' : '') + `[SERVIZI EXTRA]: ${servicesText}`;
+          }
+
+          // 🔧 Helper per estrarre costi (supporta flat o nested in booking_data)
+          const getCost = (key) => parseFloat(bookingData[key]) || parseFloat(bookingData.booking_data?.[key]) || 0;
+
+          // 🧮 CALCOLO INTELLIGENTE COSTI (Fallback)
+          // Se accommodationCost non è fornito (es. prenotazione manuale), calcolalo per differenza
+          let cleaningFee = getCost('cleaningFee');
+          let parkingCost = getCost('parkingCost');
+          let touristTax = getCost('touristTax');
+          let extraServicesCost = getCost('extraServicesCost');
+          let accommodationCost = getCost('accommodationCost');
+
+          if (accommodationCost <= 0 && totalAmount > 0) {
+            // Se manca il costo soggiorno, è il totale meno gli altri costi noti
+            accommodationCost = totalAmount - cleaningFee - parkingCost - touristTax - extraServicesCost;
+            if (accommodationCost < 0) accommodationCost = totalAmount; // Sicurezza
+          }
+
           // Log di debug per il totale
           console.log('DEBUG totalAmount calcolato:', totalAmount, 'tipo:', typeof totalAmount);
           // Blocca se il totale non è valido (solo se realmente 0 o NaN)
@@ -1184,7 +1416,7 @@ export default async function handler(req, res) {
             `
             WITH unavailable_periods AS (
               -- Prenotazioni dirette confermate
-              SELECT check_in AS start_date, check_out AS end_date FROM bookings WHERE status = 'confirmed'
+              SELECT check_in AS start_date, check_out AS end_date FROM bookings WHERE status IN ('confirmed', 'pending')
               
               UNION ALL
       
@@ -1203,7 +1435,7 @@ export default async function handler(req, res) {
                 OR LOWER(description) LIKE '%cancelled%'
               )
               AND NOT (
-                calendar_source = 'airbnb' AND (
+                (platform = 'airbnb' OR calendar_source = 'airbnb') AND (
                   LOWER(summary) LIKE '%not available%'
                   OR LOWER(summary) LIKE '%blocked%'
                   OR LOWER(summary) LIKE '%holiday%'
@@ -1214,7 +1446,7 @@ export default async function handler(req, res) {
                 )
               )
               AND NOT (
-                calendar_source = 'airbnb' AND (
+                (platform = 'airbnb' OR calendar_source = 'airbnb') AND (
                   LOWER(summary) LIKE '%maintenance%'
                   OR LOWER(summary) LIKE '%pulizie%'
                   OR LOWER(summary) LIKE '%cleaning%'
@@ -1222,7 +1454,7 @@ export default async function handler(req, res) {
                 )
               )
               AND NOT (
-                calendar_source = 'holidu' AND (
+                (platform = 'holidu' OR calendar_source = 'holidu') AND (
                   LOWER(summary) LIKE '%not available%'
                   OR LOWER(summary) LIKE '%unavailable%'
                   OR LOWER(summary) LIKE '%non disponibile%'
@@ -1250,13 +1482,17 @@ export default async function handler(req, res) {
           let firstName = 'Nome';
           let lastName = 'Cognome';
           
-          if (bookingData.customerName) {
-            const nameParts = bookingData.customerName.trim().split(' ');
+          if (bookingData.customerName || bData.guest_name) {
+            const nameParts = (bookingData.customerName || bData.guest_name).trim().split(' ');
+            firstName = nameParts[0] || 'Nome';
+            lastName = nameParts.slice(1).join(' ') || bData.guest_surname || 'Cognome';
+          } else if (bookingData.first_name || bookingData.last_name || bData.first_name || bData.last_name) {
+            firstName = bookingData.first_name || bData.first_name || 'Nome';
+            lastName = bookingData.last_name || bData.last_name || 'Cognome';
+          } else if (bookingData.customer_name) { // 🔧 FIX: Supporto snake_case dal frontend admin
+            const nameParts = bookingData.customer_name.trim().split(' ');
             firstName = nameParts[0] || 'Nome';
             lastName = nameParts.slice(1).join(' ') || 'Cognome';
-          } else if (bookingData.first_name || bookingData.last_name) {
-            firstName = bookingData.first_name || 'Nome';
-            lastName = bookingData.last_name || 'Cognome';
           }
           
           // 🔍 VALIDAZIONE DATI
@@ -1268,28 +1504,34 @@ export default async function handler(req, res) {
             });
           }
           
-          if (!email) {
-            console.error('❌ Email cliente mancante');
-            return res.status(400).json({
-              success: false,
-              error: 'Email cliente obbligatoria'
-            });
+          // 🔧 FIX: Email facoltativa per prenotazioni manuali
+          let finalEmail = email;
+          if (!finalEmail && bookingData.platform === 'manual') {
+             finalEmail = `manual-booking-${Date.now()}@vincanto-local.it`; // Placeholder per DB
+          } else if (!finalEmail) {
+             return res.status(400).json({
+               success: false,
+               error: 'Email cliente obbligatoria'
+             });
           }
           
-          console.log('✅ Dati normalizzati:', { checkin, checkout, guests, adults, children, firstName, lastName, email, phone, totalAmount });
+          console.log('✅ Dati normalizzati:', { checkin, checkout, guests, adults, children, firstName, lastName, email: finalEmail, phone, totalAmount });
           
           // ⚡ Estrai status dal payload (default 'pending' se non specificato)
           const bookingStatus = bookingData.status || 'pending';
 
-           // 🔒 VALIDAZIONE METODO DI PAGAMENTO (Blocco temporaneo metodi disabilitati)
-          // Controllo più aggressivo: blocca se contiene parole chiave vietate
+          /*
+           * 🔒 BLOCCO PAGAMENTI ONLINE (Temporaneamente disabilitato come nota)
+           * Questo blocco impediva l'uso di Stripe e PayPal.
+           * È stato commentato per riabilitare i pagamenti.
           const requestedMethod = (bookingData.paymentMethod || bookingData.payment_method || '').toLowerCase();
           if (requestedMethod.includes('paypal') || requestedMethod.includes('stripe') || requestedMethod.includes('card')) {
-             return res.status(400).json({ 
-               success: false, 
-               error: 'Questo metodo di pagamento è temporaneamente disabilitato. Si prega di scegliere Bonifico Bancario.' 
-             });
+            return res.status(400).json({ 
+              success: false, 
+              error: 'Questo metodo di pagamento è temporaneamente disabilitato. Si prega di scegliere Bonifico Bancario.' 
+            });
           }
+          */
           
           // 📅 VALIDAZIONE SOGGIORNO MINIMO (Server-Side Enforcement)
           // Recupera regole dal DB per assicurarsi che non vengano bypassate
@@ -1311,7 +1553,8 @@ export default async function handler(req, res) {
             requiredMinStay = parseInt(rules.min_stay_august) || 6;
           }
 
-          if (nights < requiredMinStay) {
+          // 🔧 FIX: Bypass min stay per prenotazioni manuali admin
+          if (bookingData.platform !== 'manual' && nights < requiredMinStay) {
             console.error(`❌ Tentativo di prenotazione bloccato: ${nights} notti richieste, minimo ${requiredMinStay}.`);
             return res.status(400).json({
               success: false,
@@ -1319,6 +1562,23 @@ export default async function handler(req, res) {
             });
           }
           
+          // 💰 Calcolo Acconto/Saldo per Admin
+          let depositAmount = Math.round(totalAmount * 0.2 * 100) / 100; // Default 20%
+          let paymentStatus = 'pending';
+
+          if (bookingData.platform === 'manual') {
+             if (bookingData.payment_type === 'full') {
+                depositAmount = totalAmount;
+                paymentStatus = 'paid_full'; // Considera pagato se inserito come saldo
+             } else if (bookingData.payment_type === 'deposit') {
+                // Se è acconto manuale, assumiamo che l'acconto sia stato pagato o sia da pagare
+                // Se admin inserisce, spesso è perché ha ricevuto i soldi o li sta registrando
+                paymentStatus = 'deposit_paid'; 
+             }
+             // Se specificato payment_status esplicito, usa quello
+             if (bookingData.payment_status) paymentStatus = bookingData.payment_status;
+          }
+
           const result = await pool.query(`
             INSERT INTO bookings (
               booking_id, check_in, check_out, guests, adults, children,
@@ -1335,17 +1595,17 @@ export default async function handler(req, res) {
             children,
             firstName,
             lastName,
-            email,
+            finalEmail,
             phone,
             totalAmount,
-            Math.round(totalAmount * 0.2 * 100) / 100, // 20% acconto arrotondato
-            notes,
+            depositAmount,
+            finalNotes,
             bookingStatus, // ⚡ Usa status dal payload invece di hardcoded 'pending'
-            'pending'
+            paymentStatus
           ]);
           
           // 📧 Invia email di conferma SOLO se status non è DRAFT
-          if (bookingStatus !== 'draft' && process.env.SMTP_HOST) {
+          if (bookingStatus !== 'draft' && process.env.SMTP_HOST && email) { // Invia solo se email reale presente
             try {
               const guestLanguage = detectLanguage(email);
               const emailHtml = renderEmailTemplate('booking_confirmation', {
@@ -1359,18 +1619,21 @@ export default async function handler(req, res) {
                 children,
                 totalAmount,
                 depositAmount: Math.round(totalAmount * 0.2 * 100) / 100,
+                notes, // 📝 Passa il messaggio dell'utente al template
                 fromEmail: process.env.SMTP_FROM,
                 language: guestLanguage,
                 paymentMethod: bookingData.paymentMethod || bookingData.payment_method,
                 // 🛎️ Includi eventuali servizi extra passati dal frontend
                 extraServices: Array.isArray(bookingData.extraServices) ? bookingData.extraServices : (Array.isArray(bookingData.extra_services) ? bookingData.extra_services : []),
                 // 🔥 Passa il breakdown dei costi al template email
-                accommodationCost: bookingData.accommodationCost,
-                cleaningFee: bookingData.cleaningFee,
-                parkingCost: bookingData.parkingCost,
-                touristTax: bookingData.touristTax,
-                extraServicesCost: bookingData.extraServicesCost,
-                nights: bookingData.nights
+                accommodationCost: accommodationCost,
+                cleaningFee: cleaningFee,
+                parkingCost: parkingCost,
+                touristTax: touristTax,
+                extraServicesCost: extraServicesCost,
+                nights: parseInt(bookingData.nights || bookingData.booking_data?.nights) || 0,
+                logoUrl: 'https://www.vincantomaiori.it/logo.png',
+                siteUrl: 'https://www.vincantomaiori.it'
 
               });
               const emailResults = await sendEmailWithAdminCopy({
@@ -1385,12 +1648,12 @@ export default async function handler(req, res) {
                   paymentMethod: bookingData.paymentMethod || bookingData.payment_method,
                   extraServices: Array.isArray(bookingData.extraServices) ? bookingData.extraServices : (Array.isArray(bookingData.extra_services) ? bookingData.extra_services : []),
                   // Admin copy metadata
-                  accommodationCost: bookingData.accommodationCost,
-                  cleaningFee: bookingData.cleaningFee,
-                  parkingCost: bookingData.parkingCost,
-                  touristTax: bookingData.touristTax,
-                  extraServicesCost: bookingData.extraServicesCost,
-                  nights: bookingData.nights
+                  accommodationCost: accommodationCost,
+                  cleaningFee: cleaningFee,
+                  parkingCost: parkingCost,
+                  touristTax: touristTax,
+                  extraServicesCost: extraServicesCost,
+                  nights: parseInt(bookingData.nights) || 0
                 }
               });
               const primarySuccess = emailResults.find(r => r.recipient === email)?.success;
@@ -1402,12 +1665,22 @@ export default async function handler(req, res) {
             console.log('ℹ️ Email non configurata, skip invio');
           }
           
+          // Calcola importo da pagare per il frontend
+          const amountToPay = bookingData.payment_type === 'deposit' 
+            ? parseFloat(result.rows[0].deposit_amount) 
+            : parseFloat(result.rows[0].total_amount);
+
           return res.status(201).json({
             success: true,
             message: 'Prenotazione creata con successo',
-            booking: result.rows[0],
+            booking: {
+              ...result.rows[0],
+              total_amount: parseFloat(result.rows[0].total_amount),
+              deposit_amount: parseFloat(result.rows[0].deposit_amount)
+            },
             // 💰 Frontend mapping: includi payment_amount per compatibilità StripePayment/PayPalPayment
             payment_amount: totalAmount,
+            amountToPay: amountToPay, // 🔧 FIX: Restituisci importo da pagare esplicito
             booking_id: result.rows[0].booking_id,
             id: result.rows[0].id
           });
@@ -1423,11 +1696,16 @@ export default async function handler(req, res) {
 
       if (req.method === 'PUT') {
         try {
-          const { id, ...updates } = req.body;
-          if (!id) {
+          const { id, booking_id, ...updates } = req.body;
+          
+          // Supporta aggiornamento tramite id (numerico) o booking_id (stringa)
+          const targetId = id;
+          const targetBookingId = booking_id;
+
+          if (!targetId && !targetBookingId) {
             return res.status(400).json({
               success: false,
-              error: 'ID prenotazione obbligatorio'
+              error: 'ID prenotazione obbligatorio (id o booking_id)'
             });
           }
 
@@ -1460,6 +1738,11 @@ export default async function handler(req, res) {
             updateFields.push(`status = $${paramIndex++}`);
             updateValues.push(updates.status);
           }
+          // Aggiungi supporto per payment_status se inviato
+          if (updates.payment_status) {
+            updateFields.push(`payment_status = $${paramIndex++}`);
+            updateValues.push(updates.payment_status);
+          }
 
           if (updateFields.length === 0) {
             return res.status(400).json({
@@ -1469,14 +1752,15 @@ export default async function handler(req, res) {
           }
 
           updateFields.push(`updated_at = NOW()`);
-          updateValues.push(id);
-
-          const query = `
-            UPDATE bookings 
-            SET ${updateFields.join(', ')}
-            WHERE id = $${paramIndex}
-            RETURNING *
-          `;
+          
+          let query = '';
+          if (targetId) {
+              updateValues.push(targetId);
+              query = `UPDATE bookings SET ${updateFields.join(', ')} WHERE id = $${paramIndex} RETURNING *`;
+          } else {
+              updateValues.push(targetBookingId);
+              query = `UPDATE bookings SET ${updateFields.join(', ')} WHERE booking_id = $${paramIndex} RETURNING *`;
+          }
 
           const result = await pool.query(query, updateValues);
 
@@ -1512,10 +1796,19 @@ export default async function handler(req, res) {
             });
           }
 
+          // Recupera booking_id prima di eliminare per pulire le date
+          const bookingCheck = await pool.query('SELECT booking_id FROM bookings WHERE id = $1', [id]);
+          const bookingIdToDelete = bookingCheck.rows[0]?.booking_id;
+
           const result = await pool.query(
             `DELETE FROM bookings WHERE id = $1 RETURNING *`,
             [id]
           );
+
+          if (bookingIdToDelete) {
+            await pool.query("DELETE FROM blocked_dates WHERE description LIKE '%' || $1 || '%'", [bookingIdToDelete]);
+            await pool.query("DELETE FROM calendar_events WHERE description LIKE '%' || $1 || '%' OR summary LIKE '%' || $1 || '%'", [bookingIdToDelete]);
+          }
 
           if (result.rows.length === 0) {
             return res.status(404).json({
@@ -1538,12 +1831,45 @@ export default async function handler(req, res) {
           });
         }
       }
+
+      // 🔧 FIX: Aggiunto metodo DELETE per eliminare date bloccate
+      if (req.method === 'DELETE') {
+        try {
+          const { id } = req.body;
+          if (!id) return res.status(400).json({ success: false, error: 'ID richiesto' });
+          
+          await pool.query('DELETE FROM blocked_dates WHERE id = $1', [id]);
+          return res.status(200).json({ success: true, message: 'Data bloccata eliminata' });
+        } catch (error) {
+           console.error('❌ Errore eliminazione blocked-date:', error);
+           return res.status(500).json({ success: false, error: error.message });
+        }
+      }
+
+      // 🔧 FIX: Aggiunto metodo PUT per modificare date bloccate
+      if (req.method === 'PUT') {
+        try {
+          const { id, start_date, end_date, reason } = req.body;
+          if (!id) return res.status(400).json({ success: false, error: 'ID richiesto' });
+
+          await pool.query(`
+            UPDATE blocked_dates 
+            SET start_date = $1, end_date = $2, reason = $3 
+            WHERE id = $4
+          `, [start_date, end_date, reason, id]);
+          
+          return res.status(200).json({ success: true, message: 'Data bloccata aggiornata' });
+        } catch (error) {
+           console.error('❌ Errore modifica blocked-date:', error);
+           return res.status(500).json({ success: false, error: error.message });
+        }
+      }
     }
 
     // ========================================
     // CANCEL BOOKING ENDPOINT
     // ========================================
-    // Cancella o marca come cancelled un booking (usato quando pagamento fallisce)
+    // Cancella o marca come cancelled un booking (usato quando pagamento fallisce o da admin)
     if (action === 'cancel-booking') {
       if (req.method === 'POST') {
         try {
@@ -1556,17 +1882,26 @@ export default async function handler(req, res) {
             });
           }
           
-          console.log(`🚫 Cancellazione booking: ${bookingId}, motivo: ${reason || 'non specificato'}`);
+          console.log(`🚫 Cancellazione booking richiesta: ${bookingId}, motivo: ${reason || 'non specificato'}`);
           
-          // Aggiorna il booking a status 'cancelled'
-          const result = await pool.query(`
-            UPDATE bookings 
-            SET status = 'cancelled', 
-                payment_status = 'cancelled',
-                updated_at = NOW()
-            WHERE booking_id = $1 OR id = $1
-            RETURNING *
-          `, [bookingId]);
+          // 1. Aggiorna il booking a status 'cancelled'
+          // Gestione sicura ID numerico vs stringa
+          let result;
+          if (!isNaN(Number(bookingId))) {
+             result = await pool.query(`
+                UPDATE bookings 
+                SET status = 'cancelled', payment_status = 'cancelled', updated_at = NOW()
+                WHERE id = $1 OR booking_id = $2
+                RETURNING *
+             `, [Number(bookingId), String(bookingId)]);
+          } else {
+             result = await pool.query(`
+                UPDATE bookings 
+                SET status = 'cancelled', payment_status = 'cancelled', updated_at = NOW()
+                WHERE booking_id = $1
+                RETURNING *
+             `, [String(bookingId)]);
+          }
           
           if (result.rows.length === 0) {
             return res.status(404).json({
@@ -1575,11 +1910,78 @@ export default async function handler(req, res) {
             });
           }
           
-          console.log(`✅ Booking ${bookingId} cancellato con successo`);
+          const booking = result.rows[0];
+          console.log(`✅ Booking ${booking.booking_id} marcato come cancellato`);
+
+          // 1.b Salva il motivo della cancellazione nelle note (se presente)
+          if (reason) {
+            await pool.query(`
+              UPDATE bookings 
+              SET notes = COALESCE(notes, '') || E'\n[CANCELLATA]: ' || $1
+              WHERE id = $2
+            `, [reason, booking.id]);
+          }
+
+          // 2. Libera le date nel calendario (rimuovi da blocked_dates)
+          // Le date in blocked_dates sono inserite con descrizione "Prenotazione VIN..."
+          const deleteBlocked = await pool.query(`
+            DELETE FROM blocked_dates 
+            WHERE description LIKE '%' || $1 || '%'
+          `, [booking.booking_id]);
+          
+          console.log(`✅ Date liberate in blocked_dates: ${deleteBlocked.rowCount} righe rimosse`);
+
+          // 2.b Libera anche eventuali eventi calendario sincronizzati (calendar_events)
+          const deleteCalendarEvents = await pool.query(`
+            DELETE FROM calendar_events
+            WHERE description LIKE '%' || $1 || '%' OR summary LIKE '%' || $1 || '%'
+          `, [booking.booking_id]);
+          console.log(`✅ Eventi calendario rimossi: ${deleteCalendarEvents.rowCount}`);
+
+          // 3. Invia email di cancellazione
+          if (process.env.SMTP_HOST && booking.email) {
+            try {
+              const guestLanguage = detectLanguage(booking.email);
+              const subject = guestLanguage === 'it' ? `Cancellazione Prenotazione ${booking.booking_id}` : `Booking Cancellation ${booking.booking_id}`;
+              
+              // 🔧 FIX: Usa HTML inline per garantire l'invio anche se il template manca
+              const reasonText = reason ? (guestLanguage === 'it' ? `<br><strong>Motivo:</strong> ${reason}` : `<br><strong>Reason:</strong> ${reason}`) : '';
+              const messageText = guestLanguage === 'it'
+                ? `Gentile ${booking.first_name || 'Ospite'},<br><br>La tua prenotazione <strong>${booking.booking_id}</strong> è stata cancellata.${reasonText}`
+                : `Dear ${booking.first_name || 'Guest'},<br><br>Your booking <strong>${booking.booking_id}</strong> has been cancelled.${reasonText}`;
+
+              const emailHtml = `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+                  <div style="text-align: center; margin-bottom: 20px;">
+                    <img src="https://www.vincantomaiori.it/logo.png" alt="Vincanto Maori" style="max-height: 80px;">
+                  </div>
+                  <h2 style="color: #d32f2f; text-align: center;">${subject}</h2>
+                  <div style="font-size: 16px; line-height: 1.6; color: #333;">
+                    ${messageText}
+                  </div>
+                  <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; font-size: 12px; color: #888;">
+                    <p>Vincanto Maori - Via Torre di Milo, 7 - Maiori (SA)</p>
+                    <p><a href="https://www.vincantomaiori.it" style="color: #2563eb; text-decoration: none;">www.vincantomaiori.it</a></p>
+                  </div>
+                </div>
+              `;
+
+              await sendEmailWithAdminCopy({
+                  to: booking.email,
+                  subject: subject,
+                  html: emailHtml,
+                  templateName: 'cancellation'
+              });
+              console.log(`✅ Email cancellazione inviata a ${booking.email}`);
+            } catch (e) {
+              console.error('⚠️ Errore invio email cancellazione:', e.message);
+            }
+          }
+
           return res.status(200).json({
             success: true,
-            message: 'Booking cancellato con successo',
-            bookingId: bookingId,
+            message: 'Booking cancellato con successo e date liberate',
+            bookingId: booking.booking_id,
             reason: reason
           });
         } catch (error) {
@@ -1593,6 +1995,81 @@ export default async function handler(req, res) {
     }
 
     // ========================================
+    // SEND PAYMENT REMINDER
+    // ========================================
+    if (action === 'send-payment-reminder') {
+      if (req.method === 'POST') {
+        try {
+          const { bookingId, paymentType } = req.body; // paymentType: 'deposit', 'balance', 'full'
+          
+          // Fetch booking
+          const bookingResult = await pool.query(
+            `SELECT * FROM bookings WHERE id = $1 OR booking_id = $2`,
+            [isNaN(Number(bookingId)) ? null : Number(bookingId), String(bookingId)]
+          );
+
+          if (bookingResult.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Prenotazione non trovata' });
+          }
+          const booking = bookingResult.rows[0];
+
+          if (!booking.email) {
+             return res.status(400).json({ success: false, error: 'Email cliente mancante' });
+          }
+
+          const guestLanguage = detectLanguage(booking.email);
+          let subject = '';
+          let messageBody = '';
+          let amount = 0;
+
+          if (paymentType === 'deposit') {
+             amount = parseFloat(booking.deposit_amount);
+             subject = guestLanguage === 'it' ? `Promemoria Acconto - Prenotazione ${booking.booking_id}` : `Deposit Reminder - Booking ${booking.booking_id}`;
+             messageBody = guestLanguage === 'it' 
+               ? `Gentile ${booking.first_name},<br><br>Ti ricordiamo che siamo in attesa del pagamento dell'acconto di <strong>€${amount.toFixed(2)}</strong> per confermare la tua prenotazione.`
+               : `Dear ${booking.first_name},<br><br>This is a reminder that we are awaiting the deposit payment of <strong>€${amount.toFixed(2)}</strong> to confirm your booking.`;
+          } else if (paymentType === 'balance') {
+             amount = parseFloat(booking.total_amount) - (parseFloat(booking.deposit_amount) || 0);
+             subject = guestLanguage === 'it' ? `Promemoria Saldo - Prenotazione ${booking.booking_id}` : `Balance Payment Reminder - Booking ${booking.booking_id}`;
+             messageBody = guestLanguage === 'it'
+               ? `Gentile ${booking.first_name},<br><br>Ti ricordiamo che il saldo di <strong>€${amount.toFixed(2)}</strong> per la tua prenotazione è in scadenza.`
+               : `Dear ${booking.first_name},<br><br>This is a reminder that the balance payment of <strong>€${amount.toFixed(2)}</strong> for your booking is due.`;
+          } else {
+             amount = parseFloat(booking.total_amount);
+             subject = guestLanguage === 'it' ? `Promemoria Pagamento - Prenotazione ${booking.booking_id}` : `Payment Reminder - Booking ${booking.booking_id}`;
+             messageBody = guestLanguage === 'it'
+               ? `Gentile ${booking.first_name},<br><br>Ti ricordiamo che siamo in attesa del pagamento totale di <strong>€${amount.toFixed(2)}</strong> per la tua prenotazione.`
+               : `Dear ${booking.first_name},<br><br>This is a reminder that we are awaiting the full payment of <strong>€${amount.toFixed(2)}</strong> for your booking.`;
+          }
+
+          const emailHtml = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+              <div style="text-align: center; margin-bottom: 20px;">
+                <img src="https://www.vincantomaiori.it/logo.png" alt="Vincanto Maori" style="max-height: 80px;">
+              </div>
+              <h2 style="color: #2563eb; text-align: center;">${subject}</h2>
+              <div style="font-size: 16px; line-height: 1.6; color: #333;">
+                ${messageBody}
+                <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-top: 20px;">
+                  <strong>${guestLanguage === 'it' ? 'Dati per il bonifico:' : 'Bank Transfer Details:'}</strong><br />
+                  Beneficiario: ${process.env.BANK_HOLDER || 'Guida Antonio'}<br />
+                  IBAN: ${process.env.BANK_IBAN || 'ITXX XXXX XXXX XXXX XXXX XXXX XXX'}<br />
+                  Causale: Prenotazione ${booking.booking_id}
+                </div>
+              </div>
+            </div>
+          `;
+
+          await sendEmailWithAdminCopy({ to: booking.email, subject, html: emailHtml, templateName: 'payment_reminder' });
+          return res.status(200).json({ success: true, message: 'Email di promemoria inviata' });
+        } catch (error) {
+          console.error('❌ Errore invio promemoria:', error);
+          return res.status(500).json({ success: false, error: error.message });
+        }
+      }
+    }
+
+    // ========================================
     // CLEAR TEST DATA SECTION
     // ========================================
     if (action === 'clear-test-bookings') {
@@ -1601,6 +2078,17 @@ export default async function handler(req, res) {
           // Cancella tutte le prenotazioni simulate/test/mock
           console.log('🗑️ Cancellando dati mock dal database...');
           
+          // Recupera ID per pulire blocked_dates
+          const bookingsToDelete = await pool.query(`
+            SELECT booking_id FROM bookings 
+            WHERE booking_id LIKE 'VIN%' 
+               OR email LIKE '%@email.com'
+               OR first_name IN ('Mario', 'Anna', 'Giuseppe', 'Marco', 'Silvia')
+               OR last_name IN ('Rossi', 'Bianchi', 'Verdi', 'Neri', 'Gialli')
+               OR id IN (1, 2, 3, 4, 5)
+          `);
+          const bookingIds = bookingsToDelete.rows.map(r => r.booking_id);
+
           // Cancella prenotazioni con pattern tipici dei dati mock
           const deleteResult = await pool.query(`
             DELETE FROM bookings 
@@ -1610,6 +2098,14 @@ export default async function handler(req, res) {
                OR last_name IN ('Rossi', 'Bianchi', 'Verdi', 'Neri', 'Gialli')
                OR id IN (1, 2, 3, 4, 5)
           `);
+
+          // Pulisci date bloccate associate
+          if (bookingIds.length > 0) {
+            for (const bid of bookingIds) {
+                await pool.query("DELETE FROM blocked_dates WHERE description LIKE '%' || $1 || '%'", [bid]);
+                await pool.query("DELETE FROM calendar_events WHERE description LIKE '%' || $1 || '%' OR summary LIKE '%' || $1 || '%'", [bid]);
+            }
+          }
           
           // Cancella anche richieste contatti mock
           const contactsResult = await pool.query(`
@@ -1721,7 +2217,9 @@ export default async function handler(req, res) {
           const paymentIntent = await stripe.paymentIntents.create({
             amount: Math.round(Number(safeAmount) * 100),
             currency,
-            metadata: { bookingId, guestEmail }
+            metadata: { bookingId, guestEmail },
+            // automatic_payment_methods: { enabled: true } // ⚡ Disabilitato per evitare errori di configurazione dashboard
+            payment_method_types: ['card'] // ⚡ Forza carta di credito
           });
           return res.status(200).json({
             success: true,
@@ -1751,10 +2249,26 @@ export default async function handler(req, res) {
       if (req.method === 'POST') {
         try {
           const { paymentIntentId, bookingId } = req.body;
-          
-          // Simula conferma pagamento Stripe
-          // In produzione: const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-          
+          const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+          // Recupera PaymentIntent reale
+          let paymentIntent;
+          try {
+            paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+          } catch (stripeError) {
+            return res.status(400).json({
+              success: false,
+              message: 'PaymentIntent non trovato',
+              error: stripeError.message
+            });
+          }
+          // Verifica stato
+          if (paymentIntent.status !== 'succeeded' && paymentIntent.status !== 'requires_capture') {
+            return res.status(400).json({
+              success: false,
+              message: `Pagamento non riuscito: ${paymentIntent.status}`,
+              status: paymentIntent.status
+            });
+          }
           // Aggiorna stato pagamento nel database
           await pool.query(`
             UPDATE bookings 
@@ -1763,13 +2277,12 @@ export default async function handler(req, res) {
                 updated_at = NOW()
             WHERE booking_id = $2
           `, [paymentIntentId, bookingId]);
-          
           return res.status(200).json({
             success: true,
             message: 'Pagamento confermato con successo',
             paymentIntentId: paymentIntentId,
             bookingId: bookingId,
-            status: 'succeeded'
+            status: paymentIntent.status
           });
         } catch (error) {
           console.error('❌ Errore conferma Stripe:', error);
@@ -1855,6 +2368,22 @@ export default async function handler(req, res) {
             });
           }
 
+          // 🔧 Helper per estrarre costi dal body
+          const getCost = (key) => parseFloat(req.body[key]) || parseFloat(req.body.booking_data?.[key]) || 0;
+
+          // 🧮 CALCOLO INTELLIGENTE COSTI (Fallback per update)
+          // Recupera il totale dal DB se non presente nel body, per calcoli coerenti
+          // (Qui assumiamo che i costi parziali siano passati nel body, altrimenti usiamo 0 o logica simile)
+          let cleaningFee = getCost('cleaningFee');
+          let parkingCost = getCost('parkingCost');
+          let touristTax = getCost('touristTax');
+          let extraServicesCost = getCost('extraServicesCost');
+          let accommodationCost = getCost('accommodationCost');
+
+          // Nota: In update-status spesso non abbiamo il totalAmount nel body, ma è nel DB.
+          // Se accommodationCost è 0, l'email mostrerà 0, ma è meglio che mostrare NaN.
+          // Se il frontend invia storedBreakdown, questi valori saranno > 0.
+
           // Prepara update query con dati payment opzionali
           const updateFields = ['status = $1', 'updated_at = NOW()'];
           const values = [status];
@@ -1868,7 +2397,7 @@ export default async function handler(req, res) {
 
           if (payment_status) {
             updateFields.push(`payment_status = $${paramIndex}`);
-            values.push(payment_status === 'success' ? 'paid_deposit' : payment_status);
+            values.push(payment_status === 'success' ? 'deposit_paid' : payment_status);
             paramIndex++;
           }
 
@@ -1923,8 +2452,18 @@ export default async function handler(req, res) {
                   fromEmail: process.env.SMTP_FROM,
                   language: guestLanguage,
                   paymentMethod: req.body.payment_method || req.body.paymentMethod,
+                  notes: booking.notes, // 📝 Passa le note
                   // 🛎️ Se il client invia i servizi extra nel corpo della richiesta, includili nell'email
-                  extraServices: Array.isArray(req.body.extra_services) ? req.body.extra_services : (Array.isArray(req.body.extraServices) ? req.body.extraServices : [])
+                  extraServices: Array.isArray(req.body.extra_services) ? req.body.extra_services : (Array.isArray(req.body.extraServices) ? req.body.extraServices : (Array.isArray(req.body.booking_data?.extra_services) ? req.body.booking_data.extra_services : [])),
+                  // 🔥 Passa il breakdown dei costi dal body della richiesta (il DB non ha questi campi)
+                  accommodationCost: accommodationCost,
+                  cleaningFee: cleaningFee,
+                  parkingCost: parkingCost,
+                  touristTax: touristTax,
+                  extraServicesCost: extraServicesCost,
+                  nights: parseInt(req.body.nights) || 0,
+                  logoUrl: 'https://www.vincantomaiori.it/logo.png',
+                  siteUrl: 'https://www.vincantomaiori.it'
                 });
 
                 const emailResults = await sendEmailWithAdminCopy({
@@ -1967,14 +2506,13 @@ export default async function handler(req, res) {
     }
 
     if (action === 'payment-methods') {
-      return res.status(200).json({
-        success: true,
-        methods: [
+      try {
+        const methods = [
           {
             id: 'paypal',
             name: 'PayPal',
             type: 'redirect',
-            enabled: false, // DISATTIVATO
+            enabled: true,
             url: 'https://www.paypal.me/AntonioGuida320',
             description: 'Pagamento rapido e sicuro tramite PayPal',
             fees: 'Commissione PayPal: 3.4% + €0.35'
@@ -1983,7 +2521,7 @@ export default async function handler(req, res) {
             id: 'stripe_card',
             name: 'Carta di Credito/Debito',
             type: 'card',
-            enabled: false, // DISATTIVATO
+            enabled: true,
             supported_cards: ['visa', 'mastercard', 'amex'],
             description: 'Pagamento diretto con carta di credito o debito',
             fees: 'Commissione: 1.4% + €0.25'
@@ -2002,89 +2540,52 @@ export default async function handler(req, res) {
             type: 'manual',
             enabled: true,
             account_details: {
-              iban: 'IT04D3608105038288844288937',
-              bic: 'PPAYITR1XXX',
+              iban: process.env.BANK_IBAN || 'ITXX XXXX XXXX XXXX XXXX XXXX XXX',
+              bic: process.env.BANK_BIC || 'PPAYITR1XXX',
               bank_name: 'PostePay S.p.A.',
-              account_holder: 'Guida Antonio'
+              account_holder: process.env.BANK_HOLDER || 'Guida Antonio'
             },
             description: 'Bonifico tradizionale su conto corrente'
           }
-        ],
-        defaultMethod: 'bank_transfer'
-      });
+        ];
+        return res.status(200).json({
+          success: true,
+          methods: methods,
+          defaultMethod: 'bank_transfer'
+        });
+      } catch (error) {
+        console.error('❌ Errore nel caricare la configurazione dei metodi di pagamento:', error);
+        return res.status(500).json({ success: false, error: 'Impossibile caricare i metodi di pagamento.' });
+      }
     }
 
     // ========================================
     // CALENDAR MANAGEMENT SECTION
     // ========================================
     if (action === 'calendar-configs') {
-      return res.status(200).json({
-        success: true,
-        calendars: [
-          {
-            id: 1,
-            name: 'Google Calendar Vincanto (Privato)',
-            calendar_type: 'google',
-            url: 'https://calendar.google.com/calendar/ical/vincantomaiori%40gmail.com/private-c093b952abd5d0bafc2261928153f36d/basic.ics',
-            is_active: true,
-            sync_frequency: 15,
-            last_sync: new Date().toISOString(),
-            status: 'connected',
-            events_synced: 12,
-            priority: 1
-          },
-          {
-            id: 2,
-            name: 'Booking.com Principale',
-            calendar_type: 'booking_com',
-            url: process.env.BOOKING_ICAL_URL || 'https://ical.booking.com/v1/export?t=d6fd211b-ce0a-486b-b98c-6fda80504dd0',
-            is_active: true,
-            sync_frequency: 60,
-            last_sync: new Date(Date.now() - 3600000).toISOString(),
-            status: 'connected',
-            events_synced: 8,
-            priority: 2
-          },
-          {
-            id: 3,
-            name: 'Holidu Calendar',
-            calendar_type: 'holidu',
-            url: process.env.HOLIDU_ICAL_URL || 'https://api.host.holidu.com/pmc/rest/apartments/65376863/ical.ics?key=72d27a56f3e8836f690500877301d000',
-            is_active: true,
-            sync_frequency: 60,
-            last_sync: new Date(Date.now() - 1800000).toISOString(),
-            status: 'connected',
-            events_synced: 7,
-            priority: 3
-          },
-          {
-            id: 4,
-            name: 'Airbnb Calendar',
-            calendar_type: 'airbnb',
-            url: process.env.AIRBNB_ICAL_URL || 'https://www.airbnb.com/calendar/ical/1387891577187940063.ics?s=6622673f28e122e6b2b3336efd4d140e&locale=it',
-            is_active: true,
-            sync_frequency: 30,
-            last_sync: new Date(Date.now() - 1200000).toISOString(),
-            status: 'connected',
-            events_synced: 5,
-            priority: 4
+      try {
+        const result = await pool.query('SELECT * FROM calendar_configs ORDER BY id ASC');
+        
+        return res.status(200).json({
+          success: true,
+          calendars: result.rows.map(row => ({
+            id: row.id,
+            name: row.name,
+            calendar_type: row.calendar_type,
+            url: row.url,
+            is_active: row.is_active,
+            sync_frequency: row.sync_frequency,
+            last_sync: row.last_sync,
+            status: row.is_active ? 'connected' : 'disabled'
+          })),
+          stats: {
+            total: result.rows.length,
+            active: result.rows.filter(r => r.is_active).length
           }
-        ],
-        stats: {
-          total: 4,
-          active: 4,
-          googleCalendar: 1,
-          external: 3,
-          lastSyncSuccess: new Date().toISOString(),
-          totalEventsSynced: 32,
-          calendarsConfigured: {
-            google: { active: true, url: 'vincantomaiori@gmail.com' },
-            booking: { active: true, url: 'ical.booking.com' },
-            holidu: { active: true, url: 'api.host.holidu.com' },
-            airbnb: { active: true, url: 'airbnb.com/1387891577187940063' }
-          }
-        }
-      });
+        });
+      } catch (error) {
+        return res.status(500).json({ success: false, error: error.message });
+      }
     }
 
     if (action === 'calendar-sync') {
@@ -2189,22 +2690,45 @@ export default async function handler(req, res) {
     // ADDITIONAL CALENDAR MANAGEMENT SECTION
     // ========================================
     
+    // Aggiungi nuovo calendario
+    if (action === 'add-calendar-config') {
+      if (req.method === 'POST') {
+        try {
+          const { name, calendar_type, url, sync_frequency } = req.body;
+          const result = await pool.query(
+            'INSERT INTO calendar_configs (name, calendar_type, url, sync_frequency) VALUES ($1, $2, $3, $4) RETURNING *',
+            [name, calendar_type, url, sync_frequency || 60]
+          );
+          return res.status(201).json({ success: true, calendar: result.rows[0] });
+        } catch (error) {
+          return res.status(500).json({ success: false, error: error.message });
+        }
+      }
+    }
+
     // Aggiorna configurazione calendario
     if (action === 'update-calendar-config') {
       if (req.method === 'PUT' || req.method === 'POST') {
         try {
           const { id } = req.query;
-          const configData = req.body;
+          const { name, calendar_type, url, is_active, sync_frequency } = req.body;
           
-          // Simula aggiornamento configurazione calendario
+          const result = await pool.query(
+            `UPDATE calendar_configs SET 
+              name = COALESCE($1, name), 
+              calendar_type = COALESCE($2, calendar_type), 
+              url = COALESCE($3, url), 
+              is_active = COALESCE($4, is_active), 
+              sync_frequency = COALESCE($5, sync_frequency),
+              updated_at = NOW()
+             WHERE id = $6 RETURNING *`,
+            [name, calendar_type, url, is_active, sync_frequency, id]
+          );
+
           return res.status(200).json({
             success: true,
             message: 'Configurazione calendario aggiornata',
-            calendar: {
-              id: id,
-              ...configData,
-              updated_at: new Date().toISOString()
-            }
+            calendar: result.rows[0]
           });
         } catch (error) {
           return res.status(500).json({
@@ -2220,6 +2744,7 @@ export default async function handler(req, res) {
       if (req.method === 'DELETE') {
         try {
           const { id } = req.query;
+          await pool.query('DELETE FROM calendar_configs WHERE id = $1', [id]);
           
           return res.status(200).json({
             success: true,
@@ -2336,7 +2861,7 @@ export default async function handler(req, res) {
         }
 
         // Costruisci query - 🔥 Filtra solo prenotazioni valide, esclude blocchi/festività
-        let query = `
+        let sqlQuery = `
           SELECT 
             id,
             uid,
@@ -2352,7 +2877,7 @@ export default async function handler(req, res) {
           FROM calendar_events
           WHERE 1=1
             AND NOT (
-              calendar_source = 'airbnb' AND (
+              (platform = 'airbnb' OR calendar_source = 'airbnb') AND (
                 LOWER(summary) LIKE '%not available%'
                 OR LOWER(summary) LIKE '%blocked%'
                 OR LOWER(summary) LIKE '%holiday%'
@@ -2363,7 +2888,7 @@ export default async function handler(req, res) {
               )
             )
             AND NOT (
-              calendar_source = 'airbnb' AND (
+              (platform = 'airbnb' OR calendar_source = 'airbnb') AND (
                 LOWER(summary) LIKE '%maintenance%'
                 OR LOWER(summary) LIKE '%pulizie%'
                 OR LOWER(summary) LIKE '%cleaning%'
@@ -2376,30 +2901,38 @@ export default async function handler(req, res) {
               OR LOWER(description) LIKE '%canceled%'
               OR LOWER(description) LIKE '%cancelled%'
             )
+            AND NOT (
+              (platform = 'holidu' OR calendar_source = 'holidu') AND (
+                LOWER(summary) LIKE '%not available%'
+                OR LOWER(summary) LIKE '%unavailable%'
+                OR LOWER(summary) LIKE '%non disponibile%'
+                OR LOWER(summary) LIKE '%non-available%'
+              )
+            )
         `;
 
         const params = [];
         let paramCount = 1;
 
         if (futureOnly === 'true' || futureOnly === true) {
-          query += ` AND start_date >= CURRENT_DATE`;
+          sqlQuery += ` AND start_date >= CURRENT_DATE`;
         }
 
         if (platform && platform !== 'all') {
-          query += ` AND calendar_source = $${paramCount}`;
+          sqlQuery += ` AND (platform = $${paramCount} OR calendar_source = $${paramCount})`;
           params.push(platform);
           paramCount++;
         }
 
-        query += ` ORDER BY start_date ASC LIMIT $${paramCount}`;
+        sqlQuery += ` ORDER BY start_date ASC LIMIT $${paramCount}`;
         params.push(parseInt(limit));
 
-        const result = await pool.query(query, params);
+        const result = await pool.query(sqlQuery, params);
 
         // Conta totale - 🔥 Applica gli stessi filtri (esclude Airbnb blocchi, mantiene Booking chiusure)
         let countQuery = `SELECT COUNT(*) as total FROM calendar_events WHERE 1=1
           AND NOT (
-            calendar_source = 'airbnb' AND (
+            (platform = 'airbnb' OR calendar_source = 'airbnb') AND (
               LOWER(summary) LIKE '%not available%'
               OR LOWER(summary) LIKE '%blocked%'
               OR LOWER(summary) LIKE '%holiday%'
@@ -2410,25 +2943,33 @@ export default async function handler(req, res) {
             )
           )
           AND NOT (
-            calendar_source = 'airbnb' AND (
+            (platform = 'airbnb' OR calendar_source = 'airbnb') AND (
               LOWER(summary) LIKE '%maintenance%'
               OR LOWER(summary) LIKE '%pulizie%'
               OR LOWER(summary) LIKE '%cleaning%'
               OR LOWER(summary) LIKE '%manutenzione%'
             )
           )
-        And NOT (
-          LOWER(summary) LIKE '%canceled%'
-          OR LOWER(summary) LIKE '%cancelled%'
-          OR LOWER(description) LIKE '%canceled%'
-          OR LOWER(description) LIKE '%cancelled%'
-        )`;
+          AND NOT (
+            LOWER(summary) LIKE '%canceled%'
+            OR LOWER(summary) LIKE '%cancelled%'
+            OR LOWER(description) LIKE '%canceled%'
+            OR LOWER(description) LIKE '%cancelled%'
+          )
+          AND NOT (
+            (platform = 'holidu' OR calendar_source = 'holidu') AND (
+              LOWER(summary) LIKE '%not available%'
+              OR LOWER(summary) LIKE '%unavailable%'
+              OR LOWER(summary) LIKE '%non disponibile%'
+              OR LOWER(summary) LIKE '%non-available%'
+            )
+          )`;
         
         if (futureOnly === 'true' || futureOnly === true) {
           countQuery += ' AND start_date >= CURRENT_DATE';
         }
         if (platform && platform !== 'all') {
-          countQuery += ` AND calendar_source = '${platform}'`;
+          countQuery += ` AND (platform = '${platform}' OR calendar_source = '${platform}')`;
         }
         const countResult = await pool.query(countQuery);
 
@@ -2500,7 +3041,7 @@ export default async function handler(req, res) {
 
         // Query date bloccate admin
         const blockedQuery = await pool.query(`
-          SELECT id, start_date, end_date, reason
+          SELECT id, start_date::text, end_date::text, reason
           FROM blocked_dates
           ORDER BY start_date DESC
         `);
@@ -2598,6 +3139,10 @@ END:VEVENT
         // Imposta header per download file .ics
         res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
         res.setHeader('Content-Disposition', 'attachment; filename="vincanto-calendar.ics"');
+        // 🔥 Disabilita cache per forzare le piattaforme esterne a leggere i dati aggiornati
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
         return res.status(200).send(icalContent);
 
       } catch (error) {
@@ -2661,6 +3206,52 @@ END:VEVENT
     }
 
     // ========================================
+    // MONTHLY PRICING RULES SECTION
+    // ========================================
+    if (action === 'monthly-rules') {
+      if (req.method === 'GET') {
+        try {
+          const result = await pool.query('SELECT * FROM monthly_pricing_rules ORDER BY month ASC');
+          return res.status(200).json({ success: true, rules: result.rows });
+        } catch (error) {
+          console.error('Error fetching monthly rules:', error);
+          return res.status(500).json({ success: false, error: 'Database error' });
+        }
+      }
+
+      if (req.method === 'POST') {
+        const { month, basePrice, minStay } = req.body;
+        if (!month || !basePrice || !minStay) {
+          return res.status(400).json({ success: false, error: 'Parametri mancanti' });
+        }
+        try {
+          await pool.query(
+            `INSERT INTO monthly_pricing_rules (month, base_price, min_stay) 
+             VALUES ($1, $2, $3) 
+             ON CONFLICT (month) 
+             DO UPDATE SET base_price = $2, min_stay = $3, updated_at = CURRENT_TIMESTAMP`,
+            [month, basePrice, minStay]
+          );
+          return res.status(200).json({ success: true, message: 'Regola mensile salvata' });
+        } catch (error) {
+          console.error('Error saving monthly rule:', error);
+          return res.status(500).json({ success: false, error: 'Database error' });
+        }
+      }
+
+      if (req.method === 'DELETE') {
+        const { month } = req.query;
+        try {
+          await pool.query('DELETE FROM monthly_pricing_rules WHERE month = $1', [month]);
+          return res.status(200).json({ success: true, message: 'Regola eliminata' });
+        } catch (error) {
+          console.error('Error deleting monthly rule:', error);
+          return res.status(500).json({ success: false, error: 'Database error' });
+        }
+      }
+    }
+
+    // ========================================
     // PRICING CONFIGURATION SECTION
     // ========================================
     if (action === 'pricing-config') {
@@ -2668,6 +3259,17 @@ END:VEVENT
         try {
           // Ottieni configurazione prezzi dal database
           const result = await pool.query('SELECT * FROM pricing_config ORDER BY id DESC LIMIT 1');
+          const monthlyResult = await pool.query('SELECT * FROM monthly_pricing_rules ORDER BY month ASC');
+          const monthlyRules = monthlyResult.rows;
+
+          // ✨ NUOVO: Carica anche le regole di prezzo stagionali
+          const seasonalRulesResult = await pool.query(
+            "SELECT value FROM system_settings WHERE key = 'seasonal_pricing_rules'"
+          );
+          let seasonalRules = [];
+          if (seasonalRulesResult.rows.length > 0 && seasonalRulesResult.rows[0].value) {
+            seasonalRules = JSON.parse(seasonalRulesResult.rows[0].value);
+          }
           
           if (result.rows.length > 0) {
             const pricing = result.rows[0];
@@ -2688,7 +3290,9 @@ END:VEVENT
                 minStay: parseInt(pricing.min_stay) || 3,
                 maxStay: parseInt(pricing.max_stay) || 14,
                 maxGuests: parseInt(pricing.max_guests) || 8,
-                minStayAugust: parseInt(pricing.min_stay_august) || 6
+                minStayAugust: parseInt(pricing.min_stay_august) || 6,
+                monthlyRules: monthlyRules,
+                seasonalRules: seasonalRules // ✨ Aggiungi le regole alla risposta
               }
             });
           } else {
@@ -2710,7 +3314,9 @@ END:VEVENT
                 minStay: 3,
                 maxStay: 14,
                 maxGuests: 8,
-                minStayAugust: 6
+                minStayAugust: 6,
+                monthlyRules: monthlyRules,
+                seasonalRules: seasonalRules // ✨ Aggiungi le regole anche nel fallback
               }
             });
           }
@@ -2883,7 +3489,7 @@ END:VEVENT
         const availabilityCheck = await pool.query(
           `
           WITH unavailable_periods AS (
-            SELECT check_in AS start_date, check_out AS end_date FROM bookings WHERE status = 'confirmed'
+            SELECT check_in AS start_date, check_out AS end_date FROM bookings WHERE status IN ('confirmed', 'pending')
             UNION ALL
             SELECT start_date, end_date FROM blocked_dates
             UNION ALL
@@ -2895,7 +3501,7 @@ END:VEVENT
               OR LOWER(description) LIKE '%cancelled%'
             )
             AND NOT (
-              calendar_source = 'airbnb' AND (
+              (platform = 'airbnb' OR calendar_source = 'airbnb') AND (
                 LOWER(summary) LIKE '%not available%'
                 OR LOWER(summary) LIKE '%blocked%'
                 OR LOWER(summary) LIKE '%holiday%'
@@ -2906,7 +3512,7 @@ END:VEVENT
               )
             )
             AND NOT (
-              calendar_source = 'airbnb' AND (
+              (platform = 'airbnb' OR calendar_source = 'airbnb') AND (
                 LOWER(summary) LIKE '%maintenance%'
                 OR LOWER(summary) LIKE '%pulizie%'
                 OR LOWER(summary) LIKE '%cleaning%'
@@ -2914,7 +3520,7 @@ END:VEVENT
               )
             )
             AND NOT (
-              calendar_source = 'holidu' AND (
+              (platform = 'holidu' OR calendar_source = 'holidu') AND (
                 LOWER(summary) LIKE '%not available%'
                 OR LOWER(summary) LIKE '%unavailable%'
                 OR LOWER(summary) LIKE '%non disponibile%'
@@ -2994,26 +3600,47 @@ END:VEVENT
           };
         }
 
+        // Applica regole stagionali se presenti
+        let currentPricing = { ...pricing };
+        let activeRuleName = null;
+
+        if (seasonalRules && Array.isArray(seasonalRules)) {
+          for (const rule of seasonalRules) {
+            const ruleStart = new Date(rule.startDate);
+            const ruleEnd = new Date(rule.endDate);
+            if (checkInDate >= ruleStart && checkInDate <= ruleEnd) {
+              console.log(`✅ Applica regola stagionale: ${rule.name}`);
+              activeRuleName = rule.name;
+              currentPricing.minStay = rule.minStay || currentPricing.minStay;
+              currentPricing.priceGroup1to2 = rule.priceGroup1to2 || currentPricing.priceGroup1to2;
+              currentPricing.priceGroup3to4 = rule.priceGroup3to4 || currentPricing.priceGroup3to4;
+              currentPricing.priceGroup5to6 = rule.priceGroup5to6 || currentPricing.priceGroup5to6;
+              currentPricing.priceGroup7to8 = rule.priceGroup7to8 || currentPricing.priceGroup7to8;
+              // La regola stagionale ha la precedenza anche su quella di agosto
+              currentPricing.minStayAugust = rule.minStay || currentPricing.minStayAugust;
+              break;
+            }
+          }
+        }
+
         // 📅 VALIDAZIONE SOGGIORNO MINIMO (AGOSTO)
+        let requiredMinStay = currentPricing.minStay;
         const checkInYear = checkInDate.getUTCFullYear();
         const augustStart = new Date(Date.UTC(checkInYear, 7, 1)); // August 1st
         const septemberStart = new Date(Date.UTC(checkInYear, 8, 1)); // September 1st
 
-        let requiredMinStay = pricing.minStay;
-        
         // Controlla se l'intervallo di prenotazione si sovrappone ad Agosto
-        if (checkInDate < septemberStart && checkOutDate > augustStart) {
-          requiredMinStay = pricing.minStayAugust;
+        if (!activeRuleName && checkInDate < septemberStart && checkOutDate > augustStart) {
+          requiredMinStay = currentPricing.minStayAugust;
         }
 
         if (nights < requiredMinStay) {
           return res.status(400).json({
             success: false,
-            error: `Per le date selezionate è richiesto un soggiorno minimo di ${requiredMinStay} notti.`
+              error: `Per le date selezionate è richiesto un soggiorno minimo di ${requiredMinStay} notti.` // Messaggio già dinamico
           });
         }
 
-        // Calcola prezzo base per ospiti con LOGICA CORRETTA
         // 🔢 CALCOLO PREZZO DINAMICO BASATO SU CONFIGURAZIONE DB (Admin Panel)
         const guestsNum = parseInt(guests);
         const adultsNum = parseInt(adults) || guestsNum;
@@ -3026,33 +3653,11 @@ END:VEVENT
           nights: nights,
           includeParking: includeParking
         });
-        console.log('💰 PRICING CONFIG:', pricing);
-        let basePricePerNight = 0;
-        
-        // Tier 1: Ospiti 1-2 (Prezzo a persona * numero persone, max 2)
-        const tier1Guests = Math.min(guestsNum, 2);
-        basePricePerNight += tier1Guests * pricing.priceGroup1to2;
-        
-        // Tier 2: Ospiti 3-4
-        if (guestsNum > 2) {
-          const tier2Guests = Math.min(guestsNum - 2, 2);
-          basePricePerNight += tier2Guests * pricing.priceGroup3to4;
-        }
-        
-        console.log(`🔢 PREZZO BASE PER NOTTE: ${basePricePerNight}€`);
-        // Tier 3: Ospiti 5-6
-        if (guestsNum > 4) {
-          const tier3Guests = Math.min(guestsNum - 4, 2);
-          basePricePerNight += tier3Guests * pricing.priceGroup5to6;
-        }
-        
-        // Tier 4: Ospiti 7-8+
-        if (guestsNum > 6) {
-          const tier4Guests = guestsNum - 6; 
-          basePricePerNight += tier4Guests * pricing.priceGroup7to8;
-        }
-        
-        console.log(`🔢 CALCOLO BASE (${guestsNum} persone): ${basePricePerNight}€ (Configurazione DB usata)`);
+        console.log('💰 PRICING CONFIG IN USO:', currentPricing);
+
+        // 🔥 Calcola il prezzo per notte usando la logica a scaglioni corretta
+        const basePricePerNight = calculateNightlyPrice(guestsNum, currentPricing);
+        console.log(`🔢 PREZZO CALCOLATO PER NOTTE: ${basePricePerNight}€`);
 
         // Calcola subtotale alloggio
         const accommodationCost = basePricePerNight * nights;
@@ -3060,18 +3665,18 @@ END:VEVENT
         // Applica sconti per soggiorni lunghi
         let discount = 0;
         if (nights >= 28) discount = pricing.monthlyDiscount; // 15% sconto mensile
-        else if (nights >= 7) discount = pricing.weeklyDiscount; // 10% sconto settimanale
+        else if (nights >= 7) discount = currentPricing.weeklyDiscount; // 10% sconto settimanale
 
         const discountAmount = (accommodationCost * discount) / 100;
         const discountedAccommodation = accommodationCost - discountAmount;
 
         // Calcola costi aggiuntivi
-        const cleaningFee = pricing.cleaningFee;
+        const cleaningFee = currentPricing.cleaningFee;
         console.log(`🧽 PULIZIA: €${cleaningFee}`);
         
         // 🔧 FIX: Parcheggio è un costo PER NOTTE
-        const parkingCost = (includeParking === 'true') ? (pricing.parkingFee * nights) : 0;
-        console.log(`🚗 PARCHEGGIO: ${includeParking === 'true' ? `€${pricing.parkingFee} × ${nights} notti = €${parkingCost}` : '€0 (non richiesto)'}`);
+        const parkingCost = (includeParking === 'true') ? (currentPricing.parkingFee * nights) : 0;
+        console.log(`🚗 PARCHEGGIO: ${includeParking === 'true' ? `€${currentPricing.parkingFee} × ${nights} notti = €${parkingCost}` : '€0 (non richiesto)'}`);
         
         // 🔧 FIX: Tassa soggiorno per adulti + bambini >12 anni (bambini ≤12 anni gratis)
         // Parse childrenAges: può essere stringa "8,14" o già array
@@ -3089,23 +3694,23 @@ END:VEVENT
         const childrenUnder12 = childrenAgesArray.filter(age => age <= 12).length;
         const taxableGuests = adultsNum + childrenOver12;
         
-        const touristTax = pricing.touristTaxAdult * taxableGuests * nights;
-        console.log(`🏛️ TASSA SOGGIORNO: ${adultsNum} adulti + ${childrenOver12} bambini >12 anni (${childrenUnder12} bambini ≤12 gratis) = ${taxableGuests} ospiti × €${pricing.touristTaxAdult} × ${nights} notti = €${touristTax}`);
+        const touristTax = currentPricing.touristTaxAdult * taxableGuests * nights;
+        console.log(`🏛️ TASSA SOGGIORNO: ${adultsNum} adulti + ${childrenOver12} bambini >12 anni (${childrenUnder12} bambini ≤12 gratis) = ${taxableGuests} ospiti × €${currentPricing.touristTaxAdult} × ${nights} notti = €${touristTax}`);
 
         // Genera descrizione tassa di soggiorno dettagliata
         let taxDescription = '';
         if (childrenOver12 > 0 && childrenUnder12 > 0) {
           // Caso con bambini sia sopra che sotto i 12 anni
-          taxDescription = `€${pricing.touristTaxAdult}/persona/notte × ${taxableGuests} ospiti (${adultsNum} adulti + ${childrenOver12} bambini >12 anni, ${childrenUnder12} bambini ≤12 gratis) × ${nights} notti = €${touristTax.toFixed(2)}`;
+          taxDescription = `€${currentPricing.touristTaxAdult}/persona/notte × ${taxableGuests} ospiti (${adultsNum} adulti + ${childrenOver12} bambini >12 anni, ${childrenUnder12} bambini ≤12 gratis) × ${nights} notti = €${touristTax.toFixed(2)}`;
         } else if (childrenOver12 > 0) {
           // Caso con bambini solo sopra i 12 anni
-          taxDescription = `€${pricing.touristTaxAdult}/persona/notte × ${taxableGuests} ospiti (${adultsNum} adulti + ${childrenOver12} bambini >12 anni) × ${nights} notti = €${touristTax.toFixed(2)}`;
+          taxDescription = `€${currentPricing.touristTaxAdult}/persona/notte × ${taxableGuests} ospiti (${adultsNum} adulti + ${childrenOver12} bambini >12 anni) × ${nights} notti = €${touristTax.toFixed(2)}`;
         } else if (childrenUnder12 > 0) {
           // Caso con bambini solo sotto i 12 anni
-          taxDescription = `€${pricing.touristTaxAdult}/adulto/notte × ${adultsNum} adulti (${childrenUnder12} bambini ≤12 anni gratis) × ${nights} notti = €${touristTax.toFixed(2)}`;
+          taxDescription = `€${currentPricing.touristTaxAdult}/adulto/notte × ${adultsNum} adulti (${childrenUnder12} bambini ≤12 anni gratis) × ${nights} notti = €${touristTax.toFixed(2)}`;
         } else {
           // Caso solo adulti
-          taxDescription = `€${pricing.touristTaxAdult}/adulto/notte × ${adultsNum} adulti × ${nights} notti = €${touristTax.toFixed(2)}`;
+          taxDescription = `€${currentPricing.touristTaxAdult}/adulto/notte × ${adultsNum} adulti × ${nights} notti = €${touristTax.toFixed(2)}`;
         }
 
         // Calcola totale
@@ -3146,7 +3751,7 @@ END:VEVENT
             alloggio: `€${basePricePerNight}/notte × ${nights} notti = €${accommodationCost.toFixed(2)}`,
             sconto: discount > 0 ? `Sconto ${discount}%: -€${discountAmount.toFixed(2)}` : null,
             pulizie: `€${cleaningFee.toFixed(2)}`,
-            parcheggio: parkingCost > 0 ? `€${pricing.parkingFee}/notte × ${nights} notti = €${parkingCost.toFixed(2)}` : null,
+            parcheggio: parkingCost > 0 ? `€${currentPricing.parkingFee}/notte × ${nights} notti = €${parkingCost.toFixed(2)}` : null,
             tassa: taxDescription,
             totale: `€${totalAmount.toFixed(2)}`,
             acconto: `€${depositAmount.toFixed(2)} ( 20%)`
@@ -3378,20 +3983,144 @@ END:VEVENT
     }
 
     // ========================================
-    // CONTACT FORM SECTION
+    // CAPTURE PAYMENT SECTION
     // ========================================
-    if (action === 'contact') {
-      if (req.method === 'POST') {
-        const { name, email, message, phone } = req.body;
-        
-        console.log('📧 Nuovo messaggio contatti:', { name, email, message, phone });
-        
-        return res.status(200).json({
-          success: true,
-          message: 'Messaggio inviato con successo',
-          contact_id: `contact_${Date.now()}`
-        });
+    if (action === 'capture-payment') {
+      try {
+          const targetId = payment_id || booking_id;
+
+          if (!targetId) {
+            return res.status(400).json({ success: false, error: 'ID pagamento o prenotazione richiesto' });
+          }
+
+          // Recupera la prenotazione per ottenere gli importi corretti
+          const bookingResult = await pool.query(
+            `SELECT * FROM bookings
+             WHERE id = $1 OR booking_id = $2
+             `,
+            [isNaN(Number(targetId)) ? null : Number(targetId), String(targetId)]
+          );
+
+          if (bookingResult.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Prenotazione non trovata' });
+          }
+
+          const booking = bookingResult.rows[0];
+
+          // Determina il nuovo stato del pagamento e l'importo pagato
+          let newPaymentStatus;
+          let amountPaidForEmail;
+
+          if (paymentType === 'deposit') {
+            newPaymentStatus = 'deposit_paid';
+            amountPaidForEmail = parseFloat(booking.deposit_amount);
+          } else { // Default a pagamento completo se non specificato
+            newPaymentStatus = 'paid_full';
+            amountPaidForEmail = parseFloat(booking.total_amount);
+          }
+
+          // 1. Aggiorna lo stato della prenotazione a 'confirmed' e il payment_status corretto
+          const updateResult = await pool.query(
+            `UPDATE bookings 
+             SET status = 'confirmed', payment_status = $1, updated_at = NOW()
+             WHERE id = $2
+             RETURNING *`,
+            [newPaymentStatus, booking.id]
+          );
+
+          const updatedBooking = updateResult.rows[0];
+          console.log(`✅ Pagamento catturato e prenotazione confermata: ${updatedBooking.booking_id} -> ${newPaymentStatus}`);
+
+          // 2. Invia email di conferma finale (Pagamento Ricevuto)
+          if (process.env.SMTP_HOST) {
+            try {
+              const guestLanguage = detectLanguage(updatedBooking.email);
+              // Se la prenotazione era in 'pending', era un bonifico. Altrimenti, usa il metodo esistente.
+              const paymentMethodForEmail = booking.status === 'pending' ? 'bank_transfer' : (booking.stripe_payment_intent ? 'stripe' : 'bank_transfer');
+
+              const remainingAmount = parseFloat(updatedBooking.total_amount) - amountPaidForEmail;
+
+              const emailHtml = renderEmailTemplate('booking_final_confirmation', {
+                firstName: updatedBooking.first_name,
+                lastName: updatedBooking.last_name,
+                bookingId: updatedBooking.booking_id,
+                checkin: updatedBooking.check_in,
+                checkout: updatedBooking.check_out,
+                totalAmount: parseFloat(updatedBooking.total_amount),
+                amountPaid: amountPaidForEmail,
+                remainingAmount: remainingAmount > 0 ? remainingAmount : 0,
+                language: guestLanguage,
+                paymentMethod: paymentMethodForEmail,
+                notes: updatedBooking.notes,
+                logoUrl: 'https://www.vincantomaiori.it/logo.png',
+                siteUrl: 'https://www.vincantomaiori.it'
+              });
+
+              await sendEmailWithAdminCopy({
+                to: updatedBooking.email,
+                subject: `Pagamento ricevuto - Prenotazione ${updatedBooking.booking_id}`,
+                html: emailHtml,
+                templateName: 'booking_final_confirmation'
+              });
+              console.log(`✅ Email conferma pagamento inviata a ${updatedBooking.email}`);
+            } catch (emailError) {
+              console.error('⚠️ Errore invio email conferma pagamento:', emailError.message);
+            }
+          }
+
+          return res.status(200).json({ 
+            success: true, 
+            message: 'Pagamento catturato e prenotazione confermata con successo',
+            payment: {
+                status: newPaymentStatus,
+                amount: amountPaidForEmail,
+                date: new Date().toISOString()
+            }
+          });
+        } catch (error) {
+          console.error('❌ Errore capture-payment:', error);
+          return res.status(500).json({ success: false, error: error.message });
+        }
       }
+
+    if (action === 'get-payment-details') {
+        try {
+            const { payment_id } = req.query;
+            if (!payment_id) {
+                return res.status(400).json({ success: false, error: 'payment_id richiesto' });
+            }
+
+            const result = await pool.query(
+                `SELECT id, booking_id, total_amount, deposit_amount, payment_status, stripe_payment_intent, first_name, last_name, email, created_at 
+                 FROM bookings 
+                 WHERE id = $1 OR booking_id = $2`,
+                [isNaN(Number(payment_id)) ? null : Number(payment_id), String(payment_id)]
+            );
+
+            if (result.rows.length === 0) {
+                return res.status(404).json({ success: false, error: 'Pagamento non trovato' });
+            }
+
+            const booking = result.rows[0];
+            return res.status(200).json({
+                success: true,
+                payment: {
+                    id: booking.id,
+                    booking_id: booking.booking_id,
+                    amount: parseFloat(booking.total_amount),
+                    deposit: parseFloat(booking.deposit_amount),
+                    status: booking.payment_status,
+                    method: booking.stripe_payment_intent ? 'stripe' : 'bank_transfer',
+                    customer: `${booking.first_name} ${booking.last_name}`,
+                    email: booking.email,
+                    transaction_id: booking.stripe_payment_intent,
+                    date: booking.created_at
+                }
+            });
+        } catch (error) {
+            console.error('❌ Errore get-payment-details:', error);
+            return res.status(500).json({ success: false, error: error.message });
+        }
     }
 
     // ========================================
@@ -3424,6 +4153,18 @@ END:VEVENT
         try {
           // Crea nuova data bloccata nel database
           const { start_date, end_date, reason, description } = req.body;
+
+          // 🔒 CHECK CONFLITTI: Verifica se le date sono già prenotate
+          const conflict = await pool.query(`
+            SELECT booking_id FROM bookings 
+            WHERE status IN ('confirmed', 'pending')
+            AND check_in < $2 AND check_out > $1
+            LIMIT 1
+          `, [start_date, end_date]);
+
+          if (conflict.rows.length > 0) {
+            return res.status(409).json({ success: false, error: `Impossibile bloccare: date già prenotate (Booking: ${conflict.rows[0].booking_id})` });
+          }
           
           const result = await pool.query(`
             INSERT INTO blocked_dates (start_date, end_date, reason, description)
@@ -3453,6 +4194,51 @@ END:VEVENT
               description: req.body.description || 'Data bloccata'
             }
           });
+        }
+      }
+
+      // 🔧 FIX: Metodo PUT per modificare date bloccate (Spostato qui)
+      if (req.method === 'PUT') {
+        try {
+          const { id, start_date, end_date, reason } = req.body;
+          if (!id) return res.status(400).json({ success: false, error: 'ID richiesto' });
+
+          // 🔒 CHECK CONFLITTI SU MODIFICA
+          const conflict = await pool.query(`
+            SELECT booking_id FROM bookings 
+            WHERE status IN ('confirmed', 'pending')
+            AND check_in < $2 AND check_out > $1
+            LIMIT 1
+          `, [start_date, end_date]);
+
+          if (conflict.rows.length > 0) {
+            return res.status(409).json({ success: false, error: `Impossibile aggiornare: date già prenotate (Booking: ${conflict.rows[0].booking_id})` });
+          }
+
+          await pool.query(`
+            UPDATE blocked_dates 
+            SET start_date = $1, end_date = $2, reason = $3 
+            WHERE id = $4
+          `, [start_date, end_date, reason, id]);
+          
+          return res.status(200).json({ success: true, message: 'Data bloccata aggiornata' });
+        } catch (error) {
+           console.error('❌ Errore modifica blocked-date:', error);
+           return res.status(500).json({ success: false, error: error.message });
+        }
+      }
+
+      // 🔧 FIX: Metodo DELETE per eliminare date bloccate (Spostato qui)
+      if (req.method === 'DELETE') {
+        try {
+          const { id } = req.body;
+          if (!id) return res.status(400).json({ success: false, error: 'ID richiesto' });
+          
+          await pool.query('DELETE FROM blocked_dates WHERE id = $1', [id]);
+          return res.status(200).json({ success: true, message: 'Data bloccata eliminata' });
+        } catch (error) {
+           console.error('❌ Errore eliminazione blocked-date:', error);
+           return res.status(500).json({ success: false, error: error.message });
         }
       }
     }
@@ -3596,6 +4382,54 @@ END:VEVENT
             success: false,
             error: 'Errore salvataggio impostazioni'
           });
+        }
+      }
+    }
+
+    // ========================================
+    // EMAIL PREVIEW & TEST SECTION
+    // ========================================
+    if (action === 'preview-email') {
+      if (req.method === 'GET') {
+        try {
+          const { type, lang } = req.query;
+          const templateName = type || 'booking_confirmation';
+          const language = lang || 'it';
+
+          // Dati simulati per la preview
+          const mockData = {
+            firstName: 'Mario',
+            lastName: 'Rossi',
+            bookingId: 'VIN-PREVIEW-123',
+            checkin: new Date().toISOString().split('T')[0],
+            checkout: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0], // +3 giorni
+            guests: 2,
+            adults: 2,
+            children: 0,
+            totalAmount: 450.00,
+            depositAmount: 90.00,
+            amountPaid: 450.00, // Per template conferma finale
+            fromEmail: process.env.SMTP_FROM || 'info@vincantomaiori.it',
+            language: language,
+            paymentMethod: 'bank_transfer',
+            extraServices: ['Parcheggio Privato', 'Colazione'],
+            accommodationCost: 350.00,
+            cleaningFee: 60.00,
+            parkingCost: 40.00,
+            touristTax: 8.00,
+            extraServicesCost: 30.00,
+            nights: 3,
+            logoUrl: 'https://www.vincantomaiori.it/logo.svg',
+            siteUrl: 'https://www.vincantomaiori.it'
+          };
+
+          const html = renderEmailTemplate(templateName, mockData);
+
+          res.setHeader('Content-Type', 'text/html');
+          return res.status(200).send(html);
+        } catch (error) {
+          console.error('❌ Errore preview email:', error);
+          return res.status(500).send(`<h1>Errore generazione preview</h1><pre>${error.message}</pre>`);
         }
       }
     }

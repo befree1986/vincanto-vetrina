@@ -1,6 +1,8 @@
+import "./Accessibility.css";
+
 const Accessibility = () => {
   return (
-    <main style={{ padding: "2rem", maxWidth: "800px", margin: "auto" }}>
+    <main className="accessibility-container">
       <h1>Accessibilità del Sito</h1>
       <p>Ultimo aggiornamento: 2 agosto 2025</p>
 
@@ -32,7 +34,7 @@ const Accessibility = () => {
         </a>
       </p>
 
-      <p style={{ marginTop: "2rem" }}>
+      <p className="accessibility-thanks">
         Grazie per contribuire a migliorare l'accessibilità del sito.
       </p>
 
@@ -43,9 +45,15 @@ const Accessibility = () => {
         </small>
       </footer>
 
-      <div style={{ textAlign: "center", marginTop: "2rem" }}>
+      <div className="accessibility-actions">
         <button
-          onClick={() => window.close()}
+          onClick={() => {
+            window.close();
+            // Fallback: se il browser impedisce la chiusura (es. pagina non aperta da script), torna alla home
+            setTimeout(() => {
+              window.location.href = '/';
+            }, 500);
+          }}
           className="close-page-btn"
           aria-label="Chiudi la pagina"
         >

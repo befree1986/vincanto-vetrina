@@ -65,3 +65,7 @@ CLEANUP_BACKUPS/
 *_backup/
 *.zip
 *.tar.gz
+
+# File di configurazione locali con secrets
+.claude/settings.local.json
+.codex/config.toml

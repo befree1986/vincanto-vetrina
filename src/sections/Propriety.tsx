@@ -15,8 +15,32 @@ const Propriety: React.FC = () => {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [lightboxImages, setLightboxImages] = useState<GalleryImage[]>([]);
+  const [dynamicGalleryData, setDynamicGalleryData] = useState(galleryData);
   const touchStartX = useRef(0);
   const pricing = usePricing();
+  useEffect(() => {
+    const loadDynamicGallery = async () => {
+      try {
+        const baseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
+        const response = await fetch(`${baseUrl}/unified?action=settings`);
+        if (!response.ok) return;
+
+        const data = await response.json();
+        const settings = Array.isArray(data.settings) ? data.settings : [];
+        const gallerySetting = settings.find((setting: any) => setting.key === 'gallery_data');
+        if (!gallerySetting?.value) return;
+
+        const parsedGallery = JSON.parse(gallerySetting.value);
+        if (Array.isArray(parsedGallery) && parsedGallery.length > 0) {
+          setDynamicGalleryData(parsedGallery);
+        }
+      } catch (error) {
+        console.error('Errore caricamento galleria dinamica:', error);
+      }
+    };
+
+    loadDynamicGallery();
+  }, []);
 
   // Debug: log dello stato pricing
   useEffect(() => {
@@ -75,6 +99,13 @@ const Propriety: React.FC = () => {
 
   useEffect(() => {
     const images = document.querySelectorAll('.gallery-img');
+    // Fallback: se IntersectionObserver non è disponibile, mostra tutte le immagini su mobile
+    if (!('IntersectionObserver' in window)) {
+      images.forEach((img) => {
+        img.classList.add('visible'); // Solo visible, così la transizione parte
+      });
+      return;
+    }
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
@@ -106,7 +137,7 @@ const Propriety: React.FC = () => {
 
         {/* Galleria immagini */}
         <div className="gallery-grid">
-          {galleryData.map((section, sectionIndex) => {
+          {dynamicGalleryData.map((section, sectionIndex) => {
             const allImages = section.mainImage
               ? [section.mainImage, ...section.images]
               : section.images;

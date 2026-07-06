@@ -10,7 +10,7 @@ import {
 import { createStripePaymentIntent, confirmStripePayment, handleApiError } from '../services/api';
 import './StripePayment.css';
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY!);
 
 interface StripePaymentProps {
     bookingId: string;

@@ -66,9 +66,11 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
         console.log('✅ Login completato senza 2FA:', { token: data.token, role: data.role });
         localStorage.setItem('vincanto_admin_token', data.token);
         localStorage.setItem('vincanto_admin_role', data.role);
+        localStorage.setItem('vincanto_admin_email', email);
         console.log('💾 Salvato in localStorage:', {
           token: localStorage.getItem('vincanto_admin_token'),
-          role: localStorage.getItem('vincanto_admin_role')
+          role: localStorage.getItem('vincanto_admin_role'),
+          email: localStorage.getItem('vincanto_admin_email')
         });
         onLoginSuccess(data.token, data.role);
         return;
@@ -192,6 +194,7 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
       // Login completato
       localStorage.setItem('vincanto_admin_token', data.token);
       localStorage.setItem('vincanto_admin_role', data.role);
+      localStorage.setItem('vincanto_admin_email', email);
       onLoginSuccess(data.token, data.role);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Errore di verifica';

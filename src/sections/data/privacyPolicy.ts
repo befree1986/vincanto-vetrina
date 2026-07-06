@@ -22,7 +22,7 @@ export const privacyPolicyContent: Record<string, PolicyContent> = {
 				id: 'controller',
 				title: '1. Titolare del trattamento',
 				body:
-					'Vincanto Maiori – Via Torre di Milo, 7 – 84010 Maiori (SA), info@vincantomaiori.it. Per ogni richiesta in materia privacy puoi scriverci via email.'
+					'Vincanto Maiori – Via Torre di Milo, 7 – 84010 Maiori (SA), info@vincantomaiori.it. Per ogni richiesta in materia privacy puoi scriverci via email. Ai sensi dell\'art. 37 GDPR non è prevista la nomina di un Responsabile della Protezione dei Dati (DPO), in quanto il trattamento non rientra nei casi obbligatori.'
 			},
 			{
 				id: 'data-types',
@@ -51,12 +51,13 @@ export const privacyPolicyContent: Record<string, PolicyContent> = {
 				id: 'recipients',
 				title: '4. Destinatari e servizi terzi',
 				list: [
-					'Hosting e delivery: Vercel.',
-					'Database e storage: PostgreSQL (Neon o equivalente) e backup controllati.',
-					'Pagamenti: Stripe, PayPal (processor e gateway).',
-					'Email e notifiche: Nodemailer/SMTP.',
+					'Hosting e delivery: Vercel Inc. (USA) – trasferimento coperto da SCC.',
+					'Database e storage: Neon Inc. (USA) – PostgreSQL managed, trasferimento coperto da SCC.',
+					'Pagamenti: Stripe, Inc. (USA) e PayPal Holdings, Inc. (USA) – trasferimento coperto da SCC.',
+					'Email e notifiche: Seeweb S.r.l. (IT) – authsmtp.securemail.pro, server ubicato in Italia.',
 					'Calendari esterni in sola lettura: Airbnb, Booking.com, Holidu (feed iCal).',
-					'Analytics opzionali: solo se abilitati dal consenso cookie.'
+					'Analytics (Google Analytics): Google LLC (USA) – attivati solo con consenso, trasferimento coperto da SCC.',
+					'Analytics opzionali aggiuntivi: solo se abilitati dal consenso cookie.'
 				],
 				note: 'I fornitori possono trovarsi in UE o extra-UE; in caso di trasferimenti internazionali, applichiamo Clausole Contrattuali Standard (SCC) o garanzie equivalenti quando richiesto.'
 			},
@@ -74,7 +75,7 @@ export const privacyPolicyContent: Record<string, PolicyContent> = {
 				id: 'rights',
 				title: '6. Diritti degli interessati',
 				body:
-					'Puoi esercitare accesso, rettifica, cancellazione, limitazione, portabilità, opposizione e revoca del consenso scrivendo a info@vincantomaiori.it. Hai diritto di proporre reclamo al Garante Privacy.'
+					'Puoi esercitare accesso, rettifica, cancellazione, limitazione, portabilità, opposizione e revoca del consenso scrivendo a info@vincantomaiori.it. Risponderemo entro 30 giorni dalla ricezione della richiesta (termine prorogabile fino a 90 giorni in casi di particolare complessità). Hai diritto di proporre reclamo al Garante per la protezione dei dati personali (www.gpdp.it).'
 			},
 			{
 				id: 'security',
@@ -118,7 +119,7 @@ export const privacyPolicyContent: Record<string, PolicyContent> = {
 				id: 'controller',
 				title: '1. Data Controller',
 				body:
-					'Vincanto Maiori – Via Torre di Milo, 7 – 84010 Maiori (SA), Italy – info@vincantomaiori.it. You can contact us by email for any privacy request.'
+					'Vincanto Maiori – Via Torre di Milo, 7 – 84010 Maiori (SA), Italy – info@vincantomaiori.it. You can contact us by email for any privacy request. As per Art. 37 GDPR, no Data Protection Officer (DPO) has been appointed, as the processing does not fall within the mandatory cases.'
 			},
 			{
 				id: 'data-types',
@@ -147,12 +148,13 @@ export const privacyPolicyContent: Record<string, PolicyContent> = {
 				id: 'recipients',
 				title: '4. Recipients and third parties',
 				list: [
-					'Hosting and delivery: Vercel.',
-					'Database/storage: PostgreSQL (Neon or equivalent) with controlled backups.',
-					'Payments: Stripe, PayPal.',
-					'Email/notifications: Nodemailer/SMTP.',
+					'Hosting and delivery: Vercel Inc. (USA) – transfer covered by SCC.',
+					'Database/storage: Neon Inc. (USA) – managed PostgreSQL, transfer covered by SCC.',
+					'Payments: Stripe, Inc. (USA) and PayPal Holdings, Inc. (USA) – transfer covered by SCC.',
+					'Email/notifications: Seeweb S.r.l. (IT) – authsmtp.securemail.pro, server located in Italy.',
 					'External calendars (read-only): Airbnb, Booking.com, Holidu iCal feeds.',
-					'Optional analytics: only if enabled by cookie consent.'
+					'Analytics (Google Analytics): Google LLC (USA) – enabled only with consent, transfer covered by SCC.',
+					'Additional optional analytics: only if enabled by cookie consent.'
 				],
 				note: 'Suppliers may be located in the EU or outside; for international transfers we apply Standard Contractual Clauses (SCC) or equivalent safeguards when required.'
 			},
@@ -170,7 +172,7 @@ export const privacyPolicyContent: Record<string, PolicyContent> = {
 				id: 'rights',
 				title: '6. Your rights',
 				body:
-					'You can exercise access, rectification, erasure, restriction, portability, objection, and withdraw consent by emailing info@vincantomaiori.it. You can also lodge a complaint with the competent Data Protection Authority.'
+					'You can exercise access, rectification, erasure, restriction, portability, objection, and withdraw consent by emailing info@vincantomaiori.it. We will respond within 30 days of receiving your request (extendable to 90 days in complex cases). You can also lodge a complaint with the Italian Data Protection Authority (Garante, www.gpdp.it) or with the supervisory authority of your country of residence within the EU.'
 			},
 			{
 				id: 'security',
@@ -214,7 +216,7 @@ export const privacyPolicyContent: Record<string, PolicyContent> = {
 				id: 'controller',
 				title: '1. Verantwortlicher',
 				body:
-					'Vincanto Maiori – Via Torre di Milo, 7 – 84010 Maiori (SA), Italien – info@vincantomaiori.it. Für Datenschutzanfragen kontaktieren Sie uns per E-Mail.'
+					'Vincanto Maiori – Via Torre di Milo, 7 – 84010 Maiori (SA), Italien – info@vincantomaiori.it. Für Datenschutzanfragen kontaktieren Sie uns per E-Mail. Gemäß Art. 37 DSGVO wurde kein Datenschutzbeauftragter (DSB) benannt, da die Verarbeitung nicht unter die obligatorischen Fälle fällt.'
 			},
 			{
 				id: 'data-types',
@@ -243,12 +245,13 @@ export const privacyPolicyContent: Record<string, PolicyContent> = {
 				id: 'recipients',
 				title: '4. Empfänger und Drittanbieter',
 				list: [
-					'Hosting/Delivery: Vercel.',
-					'Datenbank/Storage: PostgreSQL (Neon oder ähnlich) mit Backups.',
-					'Zahlungen: Stripe, PayPal.',
-					'E-Mail/Benachrichtigungen: Nodemailer/SMTP.',
+					'Hosting/Delivery: Vercel Inc. (USA) – Transfer durch SCC abgedeckt.',
+					'Datenbank/Storage: Neon Inc. (USA) – Managed PostgreSQL, Transfer durch SCC abgedeckt.',
+					'Zahlungen: Stripe, Inc. (USA) und PayPal Holdings, Inc. (USA) – Transfer durch SCC abgedeckt.',
+					'E-Mail/Benachrichtigungen: Seeweb S.r.l. (IT) – authsmtp.securemail.pro, Server in Italien.',
 					'Externe Kalender (Read-only): Airbnb, Booking.com, Holidu iCal.',
-					'Optionale Analytics nur bei Cookie-Einwilligung.'
+					'Analytics (Google Analytics): Google LLC (USA) – nur mit Einwilligung aktiviert, Transfer durch SCC abgedeckt.',
+					'Weitere optionale Analytics nur bei Cookie-Einwilligung.'
 				],
 				note: 'Drittanbieter können in der EU oder außerhalb sitzen; bei internationalen Transfers nutzen wir Standardvertragsklauseln (SCC) oder gleichwertige Garantien, sofern erforderlich.'
 			},
@@ -266,7 +269,7 @@ export const privacyPolicyContent: Record<string, PolicyContent> = {
 				id: 'rights',
 				title: '6. Rechte der Betroffenen',
 				body:
-					'Sie können Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit, Widerspruch und Widerruf der Einwilligung ausüben, indem Sie an info@vincantomaiori.it schreiben. Beschwerderecht bei der zuständigen Aufsichtsbehörde.'
+					'Sie können Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit, Widerspruch und Widerruf der Einwilligung ausüben, indem Sie an info@vincantomaiori.it schreiben. Wir antworten innerhalb von 30 Tagen (verlängerbar auf 90 Tage bei komplexen Fällen). Beschwerderecht bei der italienischen Datenschutzbehörde (Garante, www.gpdp.it) oder der zuständigen Aufsichtsbehörde Ihres EU-Wohnsitzlandes.'
 			},
 			{
 				id: 'security',
@@ -310,7 +313,7 @@ export const privacyPolicyContent: Record<string, PolicyContent> = {
 				id: 'controller',
 				title: '1. Responsable du traitement',
 				body:
-					'Vincanto Maiori – Via Torre di Milo, 7 – 84010 Maiori (SA), Italie – info@vincantomaiori.it. Contactez-nous par email pour toute demande liée à la confidentialité.'
+					'Vincanto Maiori – Via Torre di Milo, 7 – 84010 Maiori (SA), Italie – info@vincantomaiori.it. Contactez-nous par email pour toute demande liée à la confidentialité. Conformément à l\'art. 37 RGPD, aucun Délégué à la Protection des Données (DPD) n\'a été désigné, le traitement ne relevant pas des cas obligatoires.'
 			},
 			{
 				id: 'data-types',
@@ -339,14 +342,15 @@ export const privacyPolicyContent: Record<string, PolicyContent> = {
 				id: 'recipients',
 				title: '4. Destinataires et tiers',
 				list: [
-					'Hébergement et delivery : Vercel.',
-					'Base de données/storage : PostgreSQL (Neon ou équivalent) avec sauvegardes.',
-					'Paiements : Stripe, PayPal.',
-					'Email/notifications : Nodemailer/SMTP.',
+					'Hébergement et delivery : Vercel Inc. (USA) – transfert couvert par CCT.',
+					'Base de données/storage : Neon Inc. (USA) – PostgreSQL managé, transfert couvert par CCT.',
+					'Paiements : Stripe, Inc. (USA) et PayPal Holdings, Inc. (USA) – transfert couvert par CCT.',
+					'Email/notifications : Seeweb S.r.l. (IT) – authsmtp.securemail.pro, serveur situé en Italie.',
 					'Calendriers externes (lecture seule) : flux iCal Airbnb, Booking.com, Holidu.',
-					'Analytics optionnels : uniquement si activés par le consentement cookie.'
+					'Analytics (Google Analytics) : Google LLC (USA) – activés uniquement avec consentement, transfert couvert par CCT.',
+					'Analytics optionnels supplémentaires : uniquement si activés par le consentement cookie.'
 				],
-				note: 'Les prestataires peuvent être situés dans ou hors UE ; pour les transferts internationaux, nous appliquons les Clauses Contractuelles Types (SCC) ou garanties équivalentes lorsque requis.'
+				note: 'Les prestataires peuvent être situés dans ou hors UE ; pour les transferts internationaux, nous appliquons les Clauses Contractuelles Types (CCT) ou garanties équivalentes lorsque requis.'
 			},
 			{
 				id: 'retention',
@@ -362,7 +366,7 @@ export const privacyPolicyContent: Record<string, PolicyContent> = {
 				id: 'rights',
 				title: '6. Vos droits',
 				body:
-					'Vous pouvez exercer accès, rectification, effacement, limitation, portabilité, opposition et retrait du consentement en écrivant à info@vincantomaiori.it. Vous pouvez aussi déposer une réclamation auprès de l’autorité de contrôle compétente.'
+					'Vous pouvez exercer accès, rectification, effacement, limitation, portabilité, opposition et retrait du consentement en écrivant à info@vincantomaiori.it. Nous répondrons dans un délai de 30 jours (prorogeable à 90 jours en cas de complexité). Vous pouvez aussi déposer une réclamation auprès de l\'autorité italienne de protection des données (Garante, www.gpdp.it) ou de l\'autorité de contrôle de votre pays de résidence au sein de l\'UE.'
 			},
 			{
 				id: 'security',
