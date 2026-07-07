@@ -1574,26 +1574,22 @@ export default async function handler(req, res) {
             requiredMinStay = parseInt(rules.min_stay_august) || 6;
           }
 
-          // 🔥 LOGICA MANCANTE: Applica le regole stagionali al soggiorno minimo.
-          // Questa logica era presente in 'quote' ma mancava qui.
-          let activeRuleName = null;
+          // 🔥 LOGICA CORRETTA: Applica le regole stagionali al soggiorno minimo, controllando ogni giorno.
           if (seasonalRules && Array.isArray(seasonalRules)) {
-            for (const rule of seasonalRules) {
-              const ruleStart = new Date(rule.startDate);
-              const ruleEnd = new Date(rule.endDate);
-              // Controlliamo se il check-in cade nel periodo della regola
-              if (checkInDate >= ruleStart && checkInDate <= ruleEnd) {
-                activeRuleName = rule.name;
-                // La regola stagionale ha la precedenza
-                requiredMinStay = rule.minStay || requiredMinStay;
-                break;
+            for (let d = new Date(checkInDate); d < checkOutDate; d.setDate(d.getDate() + 1)) {
+              const currentDateUTC = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+              for (const rule of seasonalRules) {
+                const ruleStartUTC = new Date(Date.UTC(new Date(rule.startDate).getFullYear(), new Date(rule.startDate).getMonth(), new Date(rule.startDate).getDate()));
+                const ruleEndUTC = new Date(Date.UTC(new Date(rule.endDate).getFullYear(), new Date(rule.endDate).getMonth(), new Date(rule.endDate).getDate()));
+
+                if (currentDateUTC >= ruleStartUTC && currentDateUTC <= ruleEndUTC) {
+                  if (rule.minStay) {
+                    // La regola più restrittiva (il numero più alto di notti) vince
+                    requiredMinStay = Math.max(requiredMinStay, rule.minStay);
+                  }
+                }
               }
             }
-          }
-
-          // Se nessuna regola stagionale è attiva, ri-controlla la regola di agosto
-          if (!activeRuleName && (checkInDate < septemberStart && checkOutDate > augustStart)) {
-            requiredMinStay = parseInt(rules.min_stay_august) || 6;
           }
 
           // 🔧 FIX: Bypass min stay per prenotazioni manuali admin
@@ -3690,40 +3686,36 @@ END:VEVENT
           console.warn('⚠️ Errore caricamento regole stagionali in quote:', dbError);
         }
 
-        // Applica regole stagionali se presenti
-        let currentPricing = { ...pricing };
-        let activeRuleName = null;
-
-        if (seasonalRules && Array.isArray(seasonalRules)) {
-          for (const rule of seasonalRules) {
-            const ruleStart = new Date(rule.startDate);
-            const ruleEnd = new Date(rule.endDate);
-            if (checkInDate >= ruleStart && checkInDate <= ruleEnd) {
-              console.log(`✅ Applica regola stagionale: ${rule.name}`);
-              activeRuleName = rule.name;
-              currentPricing.minStay = rule.minStay || currentPricing.minStay;
-              currentPricing.priceGroup1to2 = rule.priceGroup1to2 || currentPricing.priceGroup1to2;
-              currentPricing.priceGroup3to4 = rule.priceGroup3to4 || currentPricing.priceGroup3to4;
-              currentPricing.priceGroup5to6 = rule.priceGroup5to6 || currentPricing.priceGroup5to6;
-              currentPricing.priceGroup7to8 = rule.priceGroup7to8 || currentPricing.priceGroup7to8;
-              // La regola stagionale ha la precedenza anche su quella di agosto
-              currentPricing.minStayAugust = rule.minStay || currentPricing.minStayAugust;
-              break;
-            }
-          }
-        }
-
-        // 📅 VALIDAZIONE SOGGIORNO MINIMO (Server-Side Enforcement)
+        // 📅 VALIDAZIONE SOGGIORNO MINIMO (Server-Side Enforcement) - LOGICA CORRETTA
         let requiredMinStay = pricing.minStay;
         const checkInYear = checkInDate.getUTCFullYear();
         const augustStart = new Date(Date.UTC(checkInYear, 7, 1)); // August 1st
         const septemberStart = new Date(Date.UTC(checkInYear, 8, 1)); // September 1st
 
-        // Controlla se l'intervallo di prenotazione si sovrappone ad Agosto
+        // 1. Applica regola di base per Agosto se il periodo si sovrappone
         if (checkInDate < septemberStart && checkOutDate > augustStart) {
           requiredMinStay = pricing.minStayAugust;
         }
 
+        // 2. Itera su ogni giorno della prenotazione per trovare la regola più restrittiva
+        if (seasonalRules && Array.isArray(seasonalRules)) {
+          for (let d = new Date(checkInDate); d < checkOutDate; d.setDate(d.getDate() + 1)) {
+            const currentDateUTC = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            for (const rule of seasonalRules) {
+              const ruleStartUTC = new Date(Date.UTC(new Date(rule.startDate).getFullYear(), new Date(rule.startDate).getMonth(), new Date(rule.startDate).getDate()));
+              const ruleEndUTC = new Date(Date.UTC(new Date(rule.endDate).getFullYear(), new Date(rule.endDate).getMonth(), new Date(rule.endDate).getDate()));
+
+              if (currentDateUTC >= ruleStartUTC && currentDateUTC <= ruleEndUTC) {
+                if (rule.minStay) {
+                  // La regola più restrittiva (il numero più alto di notti) vince
+                  requiredMinStay = Math.max(requiredMinStay, rule.minStay);
+                }
+              }
+            }
+          }
+        }
+
+        // 3. Validazione finale
         if (nights < requiredMinStay) {
           return res.status(400).json({
             success: false,
@@ -3743,7 +3735,7 @@ END:VEVENT
           nights: nights,
           includeParking: includeParking
         });
-        console.log('💰 PRICING CONFIG IN USO:', currentPricing);
+        console.log('💰 PRICING CONFIG IN USO:', pricing);
 
         // 🔥 NUOVA LOGICA: Calcolo per notte
         let totalAccommodationCost = 0;
@@ -3779,19 +3771,19 @@ END:VEVENT
 
         // Applica sconti per soggiorni lunghi
         let discount = 0;
-        if (nights >= 28) discount = pricing.monthlyDiscount; // 15% sconto mensile
-        else if (nights >= 7) discount = currentPricing.weeklyDiscount; // 10% sconto settimanale
+        if (nights >= 28) discount = pricing.monthlyDiscount;
+        else if (nights >= 7) discount = pricing.weeklyDiscount;
 
         const discountAmount = (accommodationCost * discount) / 100;
         const discountedAccommodation = accommodationCost - discountAmount;
 
         // Calcola costi aggiuntivi
-        const cleaningFee = currentPricing.cleaningFee;
+        const cleaningFee = pricing.cleaningFee;
         console.log(`🧽 PULIZIA: €${cleaningFee}`);
 
         // 🔧 FIX: Parcheggio è un costo PER NOTTE
-        const parkingCost = (includeParking === 'true') ? (currentPricing.parkingFee * nights) : 0;
-        console.log(`🚗 PARCHEGGIO: ${includeParking === 'true' ? `€${currentPricing.parkingFee} × ${nights} notti = €${parkingCost}` : '€0 (non richiesto)'}`);
+        const parkingCost = (includeParking === 'true') ? (pricing.parkingFee * nights) : 0;
+        console.log(`🚗 PARCHEGGIO: ${includeParking === 'true' ? `€${pricing.parkingFee} × ${nights} notti = €${parkingCost}` : '€0 (non richiesto)'}`);
 
         // 🔧 FIX: Tassa soggiorno per adulti + bambini >12 anni (bambini ≤12 anni gratis)
         // Parse childrenAges: può essere stringa "8,14" o già array
@@ -3809,23 +3801,23 @@ END:VEVENT
         const childrenUnder12 = childrenAgesArray.filter(age => age <= 12).length;
         const taxableGuests = adultsNum + childrenOver12;
 
-        const touristTax = currentPricing.touristTaxAdult * taxableGuests * nights;
-        console.log(`🏛️ TASSA SOGGIORNO: ${adultsNum} adulti + ${childrenOver12} bambini >12 anni (${childrenUnder12} bambini ≤12 gratis) = ${taxableGuests} ospiti × €${currentPricing.touristTaxAdult} × ${nights} notti = €${touristTax}`);
+        const touristTax = pricing.touristTaxAdult * taxableGuests * nights;
+        console.log(`🏛️ TASSA SOGGIORNO: ${adultsNum} adulti + ${childrenOver12} bambini >12 anni (${childrenUnder12} bambini ≤12 gratis) = ${taxableGuests} ospiti × €${pricing.touristTaxAdult} × ${nights} notti = €${touristTax}`);
 
         // Genera descrizione tassa di soggiorno dettagliata
         let taxDescription = '';
         if (childrenOver12 > 0 && childrenUnder12 > 0) {
           // Caso con bambini sia sopra che sotto i 12 anni
-          taxDescription = `€${currentPricing.touristTaxAdult}/persona/notte × ${taxableGuests} ospiti (${adultsNum} adulti + ${childrenOver12} bambini >12 anni, ${childrenUnder12} bambini ≤12 gratis) × ${nights} notti = €${touristTax.toFixed(2)}`;
+          taxDescription = `€${pricing.touristTaxAdult}/persona/notte × ${taxableGuests} ospiti (${adultsNum} adulti + ${childrenOver12} bambini >12 anni, ${childrenUnder12} bambini ≤12 gratis) × ${nights} notti = €${touristTax.toFixed(2)}`;
         } else if (childrenOver12 > 0) {
           // Caso con bambini solo sopra i 12 anni
-          taxDescription = `€${currentPricing.touristTaxAdult}/persona/notte × ${taxableGuests} ospiti (${adultsNum} adulti + ${childrenOver12} bambini >12 anni) × ${nights} notti = €${touristTax.toFixed(2)}`;
+          taxDescription = `€${pricing.touristTaxAdult}/persona/notte × ${taxableGuests} ospiti (${adultsNum} adulti + ${childrenOver12} bambini >12 anni) × ${nights} notti = €${touristTax.toFixed(2)}`;
         } else if (childrenUnder12 > 0) {
           // Caso con bambini solo sotto i 12 anni
-          taxDescription = `€${currentPricing.touristTaxAdult}/adulto/notte × ${adultsNum} adulti (${childrenUnder12} bambini ≤12 anni gratis) × ${nights} notti = €${touristTax.toFixed(2)}`;
+          taxDescription = `€${pricing.touristTaxAdult}/adulto/notte × ${adultsNum} adulti (${childrenUnder12} bambini ≤12 anni gratis) × ${nights} notti = €${touristTax.toFixed(2)}`;
         } else {
           // Caso solo adulti
-          taxDescription = `€${currentPricing.touristTaxAdult}/adulto/notte × ${adultsNum} adulti × ${nights} notti = €${touristTax.toFixed(2)}`;
+          taxDescription = `€${pricing.touristTaxAdult}/adulto/notte × ${adultsNum} adulti × ${nights} notti = €${touristTax.toFixed(2)}`;
         }
 
         // Calcola totale
@@ -3866,7 +3858,7 @@ END:VEVENT
             alloggio: `Soggiorno per ${nights} notti = €${accommodationCost.toFixed(2)}`,
             sconto: discount > 0 ? `Sconto ${discount}%: -€${discountAmount.toFixed(2)}` : null,
             pulizie: `€${cleaningFee.toFixed(2)}`,
-            parcheggio: parkingCost > 0 ? `€${currentPricing.parkingFee}/notte × ${nights} notti = €${parkingCost.toFixed(2)}` : null,
+            parcheggio: parkingCost > 0 ? `€${pricing.parkingFee}/notte × ${nights} notti = €${parkingCost.toFixed(2)}` : null,
             tassa: taxDescription,
             totale: `€${totalAmount.toFixed(2)}`,
             acconto: `€${depositAmount.toFixed(2)} ( 20%)`
