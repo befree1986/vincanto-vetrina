@@ -359,6 +359,26 @@ async function migrateDatabase() {
 }
 
 /**
+ * Fetches seasonal pricing rules from the database and applies a
+ * workaround for Vercel preview/development environments if necessary.
+ */
+async function getSeasonalRules(pool) {
+  let seasonalRules = [];
+  try {
+    const result = await pool.query("SELECT value FROM system_settings WHERE key = 'seasonal_pricing_rules'");
+    if (result.rows.length > 0 && result.rows[0].value) {
+      const val = result.rows[0].value;
+      // Ensure val is not null/undefined before parsing
+      seasonalRules = typeof val === 'string' ? JSON.parse(val) : (val || []);
+    }
+  } catch (e) {
+    console.warn('Could not load seasonal rules from DB', e);
+  }
+
+  return seasonalRules;
+}
+
+/**
  * Calcola il soggiorno minimo richiesto per un dato intervallo di date,
  * dando priorità alle regole stagionali.
  */
@@ -370,17 +390,7 @@ async function getRequiredMinStay(checkInDate, checkOutDate, pool) {
   const augustMinStay = parseInt(rules.min_stay_august) || 6;
 
   // 2. Get seasonal rules
-  let seasonalRules = [];
-  try {
-    const seasonalRulesResult = await pool.query("SELECT value FROM system_settings WHERE key = 'seasonal_pricing_rules'");
-    if (seasonalRulesResult.rows.length > 0 && seasonalRulesResult.rows[0].value) {
-      const val = seasonalRulesResult.rows[0].value;
-      seasonalRules = typeof val === 'string' ? JSON.parse(val) : (val || []);
-    }
-  } catch (e) {
-    console.warn('Could not load seasonal rules for minStay check', e);
-  }
-
+  const seasonalRules = await getSeasonalRules(pool);
   let finalRequiredMinStay = 0;
   const checkInYear = checkInDate.getUTCFullYear();
   const augustStart = new Date(Date.UTC(checkInYear, 7, 1));
