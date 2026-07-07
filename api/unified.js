@@ -1563,42 +1563,45 @@ export default async function handler(req, res) {
           const checkOutDate = new Date(checkout);
           const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
 
+          // 📅 VALIDAZIONE SOGGIORNO MINIMO (Server-Side Enforcement) - LOGICA RIVISTA
+          let finalRequiredMinStay = 0;
           const checkInYear = checkInDate.getUTCFullYear();
           const augustStart = new Date(Date.UTC(checkInYear, 7, 1)); // August 1st
           const septemberStart = new Date(Date.UTC(checkInYear, 8, 1)); // September 1st
 
-          let requiredMinStay = parseInt(rules.min_stay) || 3;
+          for (let d = new Date(checkInDate); d < checkOutDate; d.setDate(d.getDate() + 1)) {
+            const currentDateUTC = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            let minStayForThisDay = parseInt(rules.min_stay) || 3;
+            let seasonalRuleFound = false;
 
-          // Controlla se l'intervallo di prenotazione si sovrappone ad Agosto
-          if (checkInDate < septemberStart && checkOutDate > augustStart) {
-            requiredMinStay = parseInt(rules.min_stay_august) || 6;
-          }
-
-          // 🔥 LOGICA CORRETTA: Applica le regole stagionali al soggiorno minimo, controllando ogni giorno.
-          if (seasonalRules && Array.isArray(seasonalRules)) {
-            for (let d = new Date(checkInDate); d < checkOutDate; d.setDate(d.getDate() + 1)) {
-              const currentDateUTC = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            // 1. Controlla le regole stagionali (priorità massima)
+            if (seasonalRules && Array.isArray(seasonalRules)) {
               for (const rule of seasonalRules) {
                 const ruleStartUTC = new Date(Date.UTC(new Date(rule.startDate).getFullYear(), new Date(rule.startDate).getMonth(), new Date(rule.startDate).getDate()));
                 const ruleEndUTC = new Date(Date.UTC(new Date(rule.endDate).getFullYear(), new Date(rule.endDate).getMonth(), new Date(rule.endDate).getDate()));
 
                 if (currentDateUTC >= ruleStartUTC && currentDateUTC <= ruleEndUTC) {
                   if (rule.minStay) {
-                    // La regola più restrittiva (il numero più alto di notti) vince
-                    requiredMinStay = Math.max(requiredMinStay, rule.minStay);
+                    minStayForThisDay = rule.minStay;
+                    seasonalRuleFound = true;
+                    break;
                   }
                 }
               }
             }
+
+            // 2. Se nessuna regola stagionale, controlla la regola di Agosto
+            if (!seasonalRuleFound && (currentDateUTC >= augustStart && currentDateUTC < septemberStart)) {
+              minStayForThisDay = parseInt(rules.min_stay_august) || 6;
+            }
+
+            finalRequiredMinStay = Math.max(finalRequiredMinStay, minStayForThisDay);
           }
 
-          // 🔧 FIX: Bypass min stay per prenotazioni manuali admin
-          if (bookingData.platform !== 'manual' && nights < requiredMinStay) {
-            console.error(`❌ Tentativo di prenotazione bloccato: ${nights} notti richieste, minimo ${requiredMinStay}.`);
-            return res.status(400).json({
-              success: false,
-              error: `Soggiorno minimo non rispettato. Per le date selezionate sono richieste almeno ${requiredMinStay} notti.`
-            });
+          // 3. Validazione finale (con bypass per admin)
+          if (bookingData.platform !== 'manual' && nights < finalRequiredMinStay) {
+            console.error(`❌ Tentativo di prenotazione bloccato: ${nights} notti richieste, minimo ${finalRequiredMinStay}.`);
+            return res.status(400).json({ success: false, error: `Soggiorno minimo non rispettato. Per le date selezionate sono richieste almeno ${finalRequiredMinStay} notti.` });
           }
 
           // 💰 Calcolo Acconto/Saldo per Admin
