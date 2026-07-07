@@ -39,11 +39,14 @@ const SeasonalPricingManager: React.FC = () => {
             priceGroup3to4: 0,
             priceGroup5to6: 0,
             priceGroup7to8: 0,
+            cleaningFee: undefined,
+            parkingFee: undefined,
+            touristTaxAdult: undefined,
         };
         setSeasonalRules(prev => [...prev, newRule]);
     };
 
-    const handleRuleChange = (id: string, field: keyof SeasonalRule, value: string | number) => {
+    const handleRuleChange = (id: string, field: keyof SeasonalRule, value: string | number | undefined) => {
         setSeasonalRules(prev =>
             prev.map(rule =>
                 rule.id === id ? { ...rule, [field]: value } : rule
@@ -113,6 +116,11 @@ const SeasonalPricingManager: React.FC = () => {
                                 <div className="form-group"><label>Prezzo 3-4 Ospiti</label><input type="number" min="0" placeholder="€/persona" value={rule.priceGroup3to4 || ''} onChange={(e) => handleRuleChange(rule.id, 'priceGroup3to4', parseFloat(e.target.value) || 0)} /></div>
                                 <div className="form-group"><label>Prezzo 5-6 Ospiti</label><input type="number" min="0" placeholder="€/persona" value={rule.priceGroup5to6 || ''} onChange={(e) => handleRuleChange(rule.id, 'priceGroup5to6', parseFloat(e.target.value) || 0)} /></div>
                                 <div className="form-group"><label>Prezzo 7-8 Ospiti</label><input type="number" min="0" placeholder="€/persona" value={rule.priceGroup7to8 || ''} onChange={(e) => handleRuleChange(rule.id, 'priceGroup7to8', parseFloat(e.target.value) || 0)} /></div>
+                            </div>
+                            <div className="rule-row price-groups extra-fees">
+                                <div className="form-group"><label>Tassa Pulizia</label><input type="number" min="0" placeholder="Default" value={rule.cleaningFee ?? ''} onChange={(e) => handleRuleChange(rule.id, 'cleaningFee', e.target.value === '' ? undefined : parseFloat(e.target.value))} /></div>
+                                <div className="form-group"><label>Parcheggio/notte</label><input type="number" min="0" placeholder="Default" value={rule.parkingFee ?? ''} onChange={(e) => handleRuleChange(rule.id, 'parkingFee', e.target.value === '' ? undefined : parseFloat(e.target.value))} /></div>
+                                <div className="form-group"><label>Tassa Sogg./persona</label><input type="number" min="0" step="0.1" placeholder="Default" value={rule.touristTaxAdult ?? ''} onChange={(e) => handleRuleChange(rule.id, 'touristTaxAdult', e.target.value === '' ? undefined : parseFloat(e.target.value))} /></div>
                             </div>
                         </div>
                     </div>

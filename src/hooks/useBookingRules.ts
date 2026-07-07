@@ -10,6 +10,9 @@ export interface SeasonalRule {
   priceGroup3to4?: number;
   priceGroup5to6?: number;
   priceGroup7to8?: number;
+  cleaningFee?: number;
+  parkingFee?: number;
+  touristTaxAdult?: number;
 }
 export interface BookingRules {
   minStay: number;
