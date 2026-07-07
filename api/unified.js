@@ -634,6 +634,12 @@ export default async function handler(req, res) {
           return res.status(401).json({ success: false, error: 'Credenziali non valide' });
         }
 
+        // Aggiungi un controllo di sicurezza per prevenire crash se il password_hash è corrotto o mancante
+        if (!userResult.rows[0].password_hash || typeof userResult.rows[0].password_hash !== 'string') {
+          console.error(`❌ Tentativo di login per l'utente ${email} fallito: password_hash non valido o mancante nel database.`);
+          return res.status(500).json({ success: false, error: 'Errore di configurazione utente. Contattare l\'amministratore.' });
+        }
+
         // Verifica password su qualsiasi ruolo (dovrebbero essere uguali)
         const passwordMatch = await bcrypt.compare(password, userResult.rows[0].password_hash);
 
@@ -1670,7 +1676,7 @@ export default async function handler(req, res) {
                 extraServicesCost: extraServicesCost,
                 nights: parseInt(bookingData.nights || bookingData.booking_data?.nights) || 0,
                 logoUrl: 'https://www.vincantomaiori.it/logo.png',
-                siteUrl: 'https://www.vincantomaiori.it'
+                siteUrl: 'https://www.vincantomaiori.it',
                 accommodationCost: parseFloat(bookingData.accommodationCost) || 0,
                 cleaningFee: parseFloat(bookingData.cleaningFee) || 0,
                 parkingCost: parseFloat(bookingData.parkingCost) || 0,
