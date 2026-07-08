@@ -1980,7 +1980,7 @@ const AdminPanelPro = (): JSX.Element => {
           {/* Dashboard con Dati Backend Reali */}
           {activeTab === 'dashboard' && (
             <div className="admin-section admin-animate-fade-in">
-              <h2>📊 Dashboard Live (Build: {new Date().toLocaleTimeString()}) {isLoadingData && <span className="admin-loading"><div className="admin-spinner"></div> Caricamento...</span>}</h2>
+              <h2>📊 Dashboard Live {isLoadingData && <span className="admin-loading"><div className="admin-spinner"></div> Caricamento...</span>}</h2>
 
               {/* Statistiche Principali */}
               <div className="admin-mb-xl">
@@ -4502,4 +4502,5 @@ const AdminPanelPro = (): JSX.Element => {
     </AdminLayout>
   );
 };
+export default AdminPanelPro;
 export default AdminPanelPro;
