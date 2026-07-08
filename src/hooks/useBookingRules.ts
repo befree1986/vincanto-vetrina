@@ -31,7 +31,7 @@ export const useBookingRules = () => {
     setLoading(true);
     setError(null);
     try {
-      const apiUrl = import.meta.env.DEV && import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL : '/api';
+      const apiUrl = import.meta.env.VITE_API_BASE_URL || 'https://vincantomaiori.it/api';
       const response = await fetch(`${apiUrl}/unified?action=pricing-config`);
       if (!response.ok) {
         throw new Error('Failed to fetch booking rules');
