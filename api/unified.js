@@ -389,8 +389,8 @@ async function getRequiredMinStay(checkInDate, checkOutDate, pool) {
   const defaultMinStay = parseInt(rules.min_stay) || 3;
   const augustMinStay = parseInt(rules.min_stay_august) || 6;
 
-  // 2. Get seasonal rules
-  const seasonalRules = await getSeasonalRules(pool);
+  // 2. Use provided seasonal rules
+  console.log(`DEBUG getRequiredMinStay: Using ${seasonalRules.length} seasonal rules.`);
   let finalRequiredMinStay = 0; // Inizia da 0 per trovare il massimo corretto
   const checkInYear = checkInDate.getUTCFullYear();
   const augustStart = new Date(Date.UTC(checkInYear, 7, 1));
@@ -398,9 +398,9 @@ async function getRequiredMinStay(checkInDate, checkOutDate, pool) {
 
   for (let d = new Date(checkInDate); d < checkOutDate; d.setDate(d.getDate() + 1)) {
     const currentDateUTC = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-    let minStayForThisDay = defaultMinStay; // Default per ogni giorno
+    let minStayForThisDay = defaultMinStay; // Inizia con il minimo di default per *ogni giorno*
     let seasonalRuleFound = false;
-
+    console.log(`DEBUG getRequiredMinStay: Checking date ${currentDateUTC.toISOString().split('T')[0]} against rules.`);
     if (seasonalRules && Array.isArray(seasonalRules)) {
       for (const rule of seasonalRules) {
         const ruleStartUTC = new Date(Date.UTC(new Date(rule.startDate).getFullYear(), new Date(rule.startDate).getMonth(), new Date(rule.startDate).getDate()));
@@ -408,6 +408,7 @@ async function getRequiredMinStay(checkInDate, checkOutDate, pool) {
         if (currentDateUTC >= ruleStartUTC && currentDateUTC <= ruleEndUTC && rule.minStay) {
           minStayForThisDay = rule.minStay;
           seasonalRuleFound = true;
+          console.log(`DEBUG getRequiredMinStay: Rule "${rule.name}" applies to ${currentDateUTC.toISOString().split('T')[0]} with minStay ${rule.minStay}.`);
           break;
         }
       }
@@ -415,8 +416,10 @@ async function getRequiredMinStay(checkInDate, checkOutDate, pool) {
 
     if (!seasonalRuleFound && (currentDateUTC >= augustStart && currentDateUTC < septemberStart)) {
       minStayForThisDay = augustMinStay;
+      console.log(`DEBUG getRequiredMinStay: No seasonal rule, August rule applies to ${currentDateUTC.toISOString().split('T')[0]} with minStay ${augustMinStay}.`);
     }
     finalRequiredMinStay = Math.max(finalRequiredMinStay, minStayForThisDay);
+    console.log(`DEBUG getRequiredMinStay: minStayForThisDay: ${minStayForThisDay}, finalRequiredMinStay: ${finalRequiredMinStay}`);
   }
   return finalRequiredMinStay;
 }
@@ -488,6 +491,9 @@ export default async function handler(req, res) {
     }
 
     console.log('🎯 API UNIFICATA CONSOLIDATA - Action:', action, 'Method:', req.method);
+
+    // Fetch seasonal rules once per request for consistency
+    const seasonalRules = await getSeasonalRules(pool);
 
     // ========================================
     // SYSTEM SETTINGS / CMS ACTION
