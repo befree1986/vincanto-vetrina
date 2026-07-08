@@ -738,6 +738,24 @@ class AdminApiService {
     }
   }
 
+  // --- Gestione Regole Stagionali (NUOVA TABELLA) ---
+
+  public async getSeasonalRules(): Promise<{ success: boolean; rules: any[] }> {
+      return this.request('seasonal-rules', { method: 'GET' });
+  }
+
+  public async createSeasonalRule(ruleData: any): Promise<{ success: boolean; rule: any }> {
+      return this.request('seasonal-rules', { method: 'POST', body: JSON.stringify(ruleData) });
+  }
+
+  public async updateSeasonalRule(id: number, ruleData: any): Promise<{ success: boolean; rule: any }> {
+      return this.request(`seasonal-rules&id=${id}`, { method: 'PUT', body: JSON.stringify(ruleData) });
+  }
+
+  public async deleteSeasonalRule(id: number): Promise<{ success: boolean }> {
+      return this.request(`seasonal-rules&id=${id}`, { method: 'DELETE' });
+  }
+
 }
 
 export default AdminApiService;

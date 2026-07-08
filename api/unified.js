@@ -243,6 +243,28 @@ async function initializeTables() {
     `);
     console.log('✅ Tabella system_settings inizializzata');
 
+    // 🔥 NUOVA TABELLA DEDICATA PER REGOLE STAGIONALI
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS seasonal_pricing_rules (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        start_date DATE NOT NULL,
+        end_date DATE NOT NULL,
+        min_stay INTEGER,
+        price_group_1to2 DECIMAL(10, 2),
+        price_group_3to4 DECIMAL(10, 2),
+        price_group_5to6 DECIMAL(10, 2),
+        price_group_7to8 DECIMAL(10, 2),
+        cleaning_fee DECIMAL(10, 2),
+        parking_fee DECIMAL(10, 2),
+        tourist_tax_adult DECIMAL(10, 2),
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    console.log('✅ Tabella seasonal_pricing_rules inizializzata (struttura DB definitiva)');
+
     // Seed settings di base se vuota
     const sysSettingsCount = await pool.query('SELECT COUNT(*) FROM system_settings');
     if (parseInt(sysSettingsCount.rows[0].count) === 0) {
@@ -382,7 +404,7 @@ async function getSeasonalRules(pool) {
  * Calcola il soggiorno minimo richiesto per un dato intervallo di date,
  * dando priorità alle regole stagionali.
  */
-async function getRequiredMinStay(checkInDate, checkOutDate, pool) {
+async function getRequiredMinStay(checkInDate, checkOutDate, pool, seasonalRules) {
   // 1. Get default rules
   const pricingRulesResult = await pool.query('SELECT min_stay, min_stay_august FROM pricing_config ORDER BY id DESC LIMIT 1');
   const rules = pricingRulesResult.rows[0] || { min_stay: 3, min_stay_august: 6 };
@@ -390,25 +412,22 @@ async function getRequiredMinStay(checkInDate, checkOutDate, pool) {
   const augustMinStay = parseInt(rules.min_stay_august) || 6;
 
   // 2. Use provided seasonal rules
-  console.log(`DEBUG getRequiredMinStay: Using ${seasonalRules.length} seasonal rules.`);
-  let finalRequiredMinStay = 0; // Inizia da 0 per trovare il massimo corretto
+  let finalRequiredMinStay = defaultMinStay; // Inizia con il minimo di default
   const checkInYear = checkInDate.getUTCFullYear();
   const augustStart = new Date(Date.UTC(checkInYear, 7, 1));
   const septemberStart = new Date(Date.UTC(checkInYear, 8, 1));
 
   for (let d = new Date(checkInDate); d < checkOutDate; d.setDate(d.getDate() + 1)) {
     const currentDateUTC = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-    let minStayForThisDay = defaultMinStay; // Inizia con il minimo di default per *ogni giorno*
+    let minStayForThisDay = defaultMinStay;
     let seasonalRuleFound = false;
-    console.log(`DEBUG getRequiredMinStay: Checking date ${currentDateUTC.toISOString().split('T')[0]} against rules.`);
     if (seasonalRules && Array.isArray(seasonalRules)) {
       for (const rule of seasonalRules) {
-        const ruleStartUTC = new Date(Date.UTC(new Date(rule.startDate).getFullYear(), new Date(rule.startDate).getMonth(), new Date(rule.startDate).getDate()));
-        const ruleEndUTC = new Date(Date.UTC(new Date(rule.endDate).getFullYear(), new Date(rule.endDate).getMonth(), new Date(rule.endDate).getDate()));
+        const ruleStartUTC = new Date(Date.UTC(new Date(rule.startDate).getUTCFullYear(), new Date(rule.startDate).getUTCMonth(), new Date(rule.startDate).getUTCDate()));
+        const ruleEndUTC = new Date(Date.UTC(new Date(rule.endDate).getUTCFullYear(), new Date(rule.endDate).getUTCMonth(), new Date(rule.endDate).getUTCDate()));
         if (currentDateUTC >= ruleStartUTC && currentDateUTC <= ruleEndUTC && rule.minStay) {
           minStayForThisDay = rule.minStay;
           seasonalRuleFound = true;
-          console.log(`DEBUG getRequiredMinStay: Rule "${rule.name}" applies to ${currentDateUTC.toISOString().split('T')[0]} with minStay ${rule.minStay}.`);
           break;
         }
       }
@@ -416,10 +435,8 @@ async function getRequiredMinStay(checkInDate, checkOutDate, pool) {
 
     if (!seasonalRuleFound && (currentDateUTC >= augustStart && currentDateUTC < septemberStart)) {
       minStayForThisDay = augustMinStay;
-      console.log(`DEBUG getRequiredMinStay: No seasonal rule, August rule applies to ${currentDateUTC.toISOString().split('T')[0]} with minStay ${augustMinStay}.`);
     }
     finalRequiredMinStay = Math.max(finalRequiredMinStay, minStayForThisDay);
-    console.log(`DEBUG getRequiredMinStay: minStayForThisDay: ${minStayForThisDay}, finalRequiredMinStay: ${finalRequiredMinStay}`);
   }
   return finalRequiredMinStay;
 }
@@ -524,6 +541,97 @@ export default async function handler(req, res) {
           RETURNING *
         `, [key, valueToSave]);
           return res.status(200).json({ success: true, setting: result.rows[0] });
+        } catch (error) {
+          return res.status(500).json({ success: false, error: error.message });
+        }
+      }
+    }
+
+    // ========================================
+    // SEASONAL PRICING RULES - CRUD DEDICATO
+    // ========================================
+    if (action === 'seasonal-rules') {
+      // GET: Lista tutte le regole
+      if (req.method === 'GET') {
+        try {
+          const result = await pool.query('SELECT * FROM seasonal_pricing_rules ORDER BY start_date ASC');
+          // Converte le date in formato YYYY-MM-DD per il frontend
+          const rules = result.rows.map(row => ({
+            ...row,
+            start_date: new Date(row.start_date).toISOString().split('T')[0],
+            end_date: new Date(row.end_date).toISOString().split('T')[0],
+          }));
+          return res.status(200).json({ success: true, rules });
+        } catch (error) {
+          return res.status(500).json({ success: false, error: error.message });
+        }
+      }
+
+      // POST: Crea una nuova regola
+      if (req.method === 'POST') {
+        try {
+          const { name, start_date, end_date, min_stay, price_group_1to2, price_group_3to4, price_group_5to6, price_group_7to8, cleaning_fee, parking_fee, tourist_tax_adult, is_active } = req.body;
+          const result = await pool.query(`
+            INSERT INTO seasonal_pricing_rules (name, start_date, end_date, min_stay, price_group_1to2, price_group_3to4, price_group_5to6, price_group_7to8, cleaning_fee, parking_fee, tourist_tax_adult, is_active)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            RETURNING *;
+          `, [
+            name, start_date, end_date, min_stay,
+            price_group_1to2, price_group_3to4, price_group_5to6, price_group_7to8,
+            cleaning_fee, parking_fee, tourist_tax_adult, is_active
+          ]);
+          const newRule = result.rows[0];
+          newRule.start_date = new Date(newRule.start_date).toISOString().split('T')[0];
+          newRule.end_date = new Date(newRule.end_date).toISOString().split('T')[0];
+          return res.status(201).json({ success: true, rule: newRule });
+        } catch (error) {
+          return res.status(500).json({ success: false, error: error.message });
+        }
+      }
+
+      // PUT: Aggiorna una regola esistente
+      if (req.method === 'PUT') {
+        try {
+          const { id } = req.query;
+          const { name, start_date, end_date, min_stay, price_group_1to2, price_group_3to4, price_group_5to6, price_group_7to8, cleaning_fee, parking_fee, tourist_tax_adult, is_active } = req.body;
+          
+          if (!id) return res.status(400).json({ success: false, error: 'ID regola mancante' });
+
+          const result = await pool.query(`
+            UPDATE seasonal_pricing_rules SET
+              name = $1, start_date = $2, end_date = $3, min_stay = $4,
+              price_group_1to2 = $5, price_group_3to4 = $6, price_group_5to6 = $7, price_group_7to8 = $8,
+              cleaning_fee = $9, parking_fee = $10, tourist_tax_adult = $11, is_active = $12,
+              updated_at = CURRENT_TIMESTAMP
+            WHERE id = $13
+            RETURNING *;
+          `, [
+            name, start_date, end_date, min_stay,
+            price_group_1to2, price_group_3to4, price_group_5to6, price_group_7to8,
+            cleaning_fee, parking_fee, tourist_tax_adult, is_active,
+            id
+          ]);
+
+          if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Regola non trovata' });
+          }
+          const updatedRule = result.rows[0];
+          updatedRule.start_date = new Date(updatedRule.start_date).toISOString().split('T')[0];
+          updatedRule.end_date = new Date(updatedRule.end_date).toISOString().split('T')[0];
+          return res.status(200).json({ success: true, rule: updatedRule });
+        } catch (error) {
+          return res.status(500).json({ success: false, error: error.message });
+        }
+      }
+
+      // DELETE: Elimina una regola
+      if (req.method === 'DELETE') {
+        try {
+          const { id } = req.query;
+          if (!id) return res.status(400).json({ success: false, error: 'ID regola mancante' });
+          const result = await pool.query('DELETE FROM seasonal_pricing_rules WHERE id = $1 RETURNING id', [id]);
+          if (result.rowCount === 0) return res.status(404).json({ success: false, error: 'Regola non trovata' });
+          return res.status(200).json({ success: true, message: 'Regola eliminata', deletedId: id });
         } catch (error) {
           return res.status(500).json({ success: false, error: error.message });
         }

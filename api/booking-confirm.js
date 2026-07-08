@@ -87,21 +87,45 @@ export default async function handler(req, res) {
       const pricingResult = await pool.query('SELECT min_stay, min_stay_august FROM pricing_config ORDER BY id DESC LIMIT 1');
       const rules = pricingResult.rows[0] || { min_stay: 3, min_stay_august: 6 };
       
+      // 🔥 NUOVO: Carica regole stagionali dal DB
+      const seasonalRulesResult = await pool.query("SELECT * FROM seasonal_pricing_rules WHERE is_active = true");
+      const seasonalRules = seasonalRulesResult.rows;
+
       const checkInDate = new Date(checkin);
       const checkOutDate = new Date(checkout);
       const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+      
+      let requiredMinStay = 0;
       const checkInYear = checkInDate.getUTCFullYear();
       const augustStart = new Date(Date.UTC(checkInYear, 7, 1)); // August 1st
       const septemberStart = new Date(Date.UTC(checkInYear, 8, 1)); // September 1st
 
-      let requiredMinStay = parseInt(rules.min_stay) || 3;
-      if (checkInDate < septemberStart && checkOutDate > augustStart) {
-        requiredMinStay = parseInt(rules.min_stay_august) || 6;
-      }
-      console.log(`📅 BOOKING-CONFIRM CHECK: Range [${checkin}, ${checkout}], Overlaps August: ${checkInDate < septemberStart && checkOutDate > augustStart}, MinStay Required: ${requiredMinStay}, Notti: ${nights}`);
+      for (let d = new Date(checkInDate); d < checkOutDate; d.setDate(d.getDate() + 1)) {
+        const currentDateUTC = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+        let minStayForThisDay = parseInt(rules.min_stay) || 3;
+        let seasonalRuleFound = false;
 
+        if (seasonalRules && Array.isArray(seasonalRules)) {
+            for (const rule of seasonalRules) {
+                const ruleStartUTC = new Date(Date.UTC(new Date(rule.start_date).getUTCFullYear(), new Date(rule.start_date).getUTCMonth(), new Date(rule.start_date).getUTCDate()));
+                const ruleEndUTC = new Date(Date.UTC(new Date(rule.end_date).getUTCFullYear(), new Date(rule.end_date).getUTCMonth(), new Date(rule.end_date).getUTCDate()));
+                if (currentDateUTC >= ruleStartUTC && currentDateUTC <= ruleEndUTC && rule.min_stay) {
+                    minStayForThisDay = rule.min_stay;
+                    seasonalRuleFound = true;
+                    break;
+                }
+            }
+        }
+
+        if (!seasonalRuleFound && (currentDateUTC >= augustStart && currentDateUTC < septemberStart)) {
+            minStayForThisDay = parseInt(rules.min_stay_august) || 6;
+        }
+        requiredMinStay = Math.max(requiredMinStay, minStayForThisDay);
+      }
+
+      console.log(`📅 BOOKING-CONFIRM CHECK: Range [${checkin}, ${checkout}], MinStay Required: ${requiredMinStay}, Notti: ${nights}`);
       if (nights < requiredMinStay) {
-        console.error(`❌ Blocco booking-confirm: ${nights} notti richieste ad Agosto (min ${requiredMinStay})`);
+        console.error(`❌ Blocco booking-confirm: ${nights} notti richieste (min ${requiredMinStay})`);
         return res.status(400).json({ success: false, error: `Soggiorno minimo non rispettato (${requiredMinStay} notti).` });
       }
     } catch (ruleError) {
