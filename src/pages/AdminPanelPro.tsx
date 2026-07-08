@@ -145,9 +145,9 @@ const AdminPanelPro = (): JSX.Element => {
     if (!adminApiService) return;
     const reader = new FileReader();
     reader.onload = (e) => {
-        const dataUrl = e.target?.result as string;
-        setSystemSettings(prev => prev.map(s => s.key === settingKey ? { ...s, value: dataUrl } : s));
-        alert("Anteprima immagine aggiornata. Clicca 'Salva' per applicare la modifica.");
+      const dataUrl = e.target?.result as string;
+      setSystemSettings(prev => prev.map(s => s.key === settingKey ? { ...s, value: dataUrl } : s));
+      alert("Anteprima immagine aggiornata. Clicca 'Salva' per applicare la modifica.");
     };
     reader.readAsDataURL(file);
   };
@@ -285,14 +285,14 @@ const AdminPanelPro = (): JSX.Element => {
     // Le funzioni di gestione servizi extra sono ora nel componente ExtraServicesAdmin
   };
   */
-/*
-  // === FUNZIONI PER GESTIONE CALENDARI ESTERNI ===
-
-  const handleEditCalendar = (calendar: any) => {
-    alert(`⚠️ Modifica calendario: ${calendar.name || 'Senza nome'}\n\nFunzionalità di modifica in fase di sviluppo.`);
-    debugLog.log('✏️ Editing calendario:', calendar);
-  };
-*/
+  /*
+    // === FUNZIONI PER GESTIONE CALENDARI ESTERNI ===
+  
+    const handleEditCalendar = (calendar: any) => {
+      alert(`⚠️ Modifica calendario: ${calendar.name || 'Senza nome'}\n\nFunzionalità di modifica in fase di sviluppo.`);
+      debugLog.log('✏️ Editing calendario:', calendar);
+    };
+  */
   // === FUNZIONI GESTIONE PAGAMENTI ===
 
   const savePaymentSettings = async () => {
@@ -960,250 +960,250 @@ const AdminPanelPro = (): JSX.Element => {
   };
 
   // === GESTIONE DATE BLOCCATE ===
-/*
-  const handleAddBlockedDate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!adminApiService) return;
-
-    try {
-      await adminApiService.addBlockedDate(newBlockedDate);
-      setShowBlockDateForm(false);
-      setNewBlockedDate({
-        start_date: '',
-        end_date: '',
-        reason: 'maintenance'
-      });
-      await loadRealApiData();
-      alert('✅ Date bloccate aggiunte con successo!');
-    } catch (error) {
-      alert('❌ Errore nell\'aggiungere le date bloccate');
-    }
-  };
-
-  const handleRemoveBlockedDate = async (id: string) => {
-    if (confirm('⚠️ Rimuovere il blocco per queste date?')) {
+  /*
+    const handleAddBlockedDate = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!adminApiService) return;
+  
       try {
-        setIsLoadingData(true);
-        const response = await fetch('/api/unified?action=blocked-dates', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id })
+        await adminApiService.addBlockedDate(newBlockedDate);
+        setShowBlockDateForm(false);
+        setNewBlockedDate({
+          start_date: '',
+          end_date: '',
+          reason: 'maintenance'
         });
-        const result = await response.json();
-        if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
-
         await loadRealApiData();
-        alert('✅ Blocco rimosso con successo!');
+        alert('✅ Date bloccate aggiunte con successo!');
       } catch (error) {
-        alert('❌ Errore nella rimozione del blocco');
-      } finally {
-        setIsLoadingData(false);
+        alert('❌ Errore nell\'aggiungere le date bloccate');
       }
-    }
-  };
-*/
-
-/*
-  const handleCompleteAirbnbSetup = async () => {
-    const apiKey = prompt('🔑 Inserisci la tua API Key di Airbnb:');
-    if (!apiKey) return;
-
-    try {
-      if (!adminApiService) return;
-
-      const setupData = {
-        platform: 'airbnb',
-        apiKey: apiKey,
-        isActive: true
-      };
-
-      const result = await adminApiService.setupExternalCalendar(setupData);
-
-      if (result.success) {
-        alert('✅ Setup Airbnb completato con successo!');
-        // await loadCalendarConfigs();
-      } else {
-        alert('❌ Setup fallito: ' + (result.error || 'Errore sconosciuto'));
-      }
-    } catch (error) {
-      console.error('Errore setup Airbnb:', error);
-      alert('❌ Errore nel setup Airbnb. Verifica la tua API Key.');
-    }
-  };
-
-  const handleTestAirbnbAPI = async () => {
-    try {
-      if (!adminApiService) return;
-
-      const testResult = await adminApiService.testExternalCalendarAPI('airbnb');
-
-      if (testResult.success) {
-        alert(`✅ Test API Airbnb riuscito!\n\n📊 Status: ${testResult.status}\n📅 Calendari trovati: ${testResult.calendarsCount || 0}`);
-      } else {
-        alert(`❌ Test API fallito: ${testResult.error || 'Errore sconosciuto'}`);
-      }
-    } catch (error) {
-      console.error('Errore test API Airbnb:', error);
-      alert('❌ Errore nel test delle API Airbnb');
-    }
-  };
-
-  const handleCancelAirbnbSetup = async () => {
-    const confirm = window.confirm('⚠️ Sei sicuro di voler annullare il setup Airbnb? Tutte le configurazioni verranno rimosse.');
-
-    if (!confirm) return;
-
-    try {
-      if (!adminApiService) return;
-
-      await adminApiService.removeExternalCalendar('airbnb');
-      alert('🗑️ Setup Airbnb annullato e configurazioni rimosse');
-      // await loadCalendarConfigs();
-    } catch (error) {
-      console.error('Errore annullamento setup:', error);
-      alert('❌ Errore nell\'annullamento del setup');
-    }
-  };
-
-  const handleTestGeneralConnection = async () => {
-    try {
-      if (!adminApiService) return;
-
-      const connectionTest = await adminApiService.testCalendarConnection();
-
-      const statusMessage = `📧 Test Connessioni Generale\n\n` +
-        `📱 Connessione Internet: ${connectionTest.internet ? '✅' : '❌'}\n` +
-        `📅 Google Calendar: ${connectionTest.google ? '✅' : '❌'}\n` +
-        `📧 Airbnb API: ${connectionTest.airbnb ? '✅' : '❌'}\n` +
-        `💾 Database: ${connectionTest.database ? '✅' : '❌'}\n\n` +
-        `📊 Stato Generale: ${connectionTest.overall ? '✅ Tutto OK' : '❌ Problemi rilevati'}`;
-
-      alert(statusMessage);
-    } catch (error) {
-      console.error('Errore test connessioni:', error);
-      alert('❌ Errore nel test delle connessioni');
-    }
-  };
-
-  const handleSyncAllCalendars = async () => {
-    const confirm = window.confirm('🔄 Sincronizzare tutti i calendari?\n\nQuesta operazione potrebbe richiedere alcuni minuti.');
-
-    if (!confirm) return;
-
-    try {
-      if (!adminApiService) return;
-      // setIsLoadingCalendars(true);
-
-      const syncResults = await adminApiService.syncAllCalendars();
-
-      const resultMessage = `🔄 Sincronizzazione Completata\n\n` +
-        `✅ Successi: ${syncResults.successful || 0}\n` +
-        `❌ Errori: ${syncResults.failed || 0}\n` +
-        `📅 Eventi totali: ${syncResults.totalEvents || 0}\n\n` +
-        `${syncResults.errors && syncResults.errors.length > 0 ? 'Dettagli errori:\n' + syncResults.errors.join('\n') : ''}`;
-
-      alert(resultMessage);
-      // await loadCalendarConfigs();
-    } catch (error) {
-      console.error('Errore sincronizzazione calendari:', error);
-      alert('❌ Errore nella sincronizzazione di tutti i calendari');
-    } finally {
-      // setIsLoadingCalendars(false);
-    }
-  };
-
-  const handleShowOccupancyDashboard = () => {
-    // Simula apertura dashboard occupazione
-    const occupancyData = {
-      today: '75%',
-      thisWeek: '82%',
-      thisMonth: '68%',
-      nextMonth: '45%'
     };
-
-    const dashboardMessage = `📊 Dashboard Occupazione\n\n` +
-      `📅 Oggi: ${occupancyData.today}\n` +
-      `📅 Questa settimana: ${occupancyData.thisWeek}\n` +
-      `📊 Questo mese: ${occupancyData.thisMonth}\n` +
-      `📅 Prossimo mese: ${occupancyData.nextMonth}\n\n` +
-      `💡 Suggerimento: Considera di aumentare i prezzi nei periodi di alta occupazione.`;
-
-    alert(dashboardMessage);
-  };
-
-  const handleShowSyncReport = async () => {
-    try {
-      if (!adminApiService) return;
-
-      const report = await adminApiService.getFullSyncReport();
-
-      const reportMessage = `📊 Report Sincronizzazioni Completo\n\n` +
-        `📊 Sincronizzazioni oggi: ${report.todaySync || 0}\n` +
-        `📅 Sincronizzazioni settimana: ${report.weekSync || 0}\n` +
-        `🔄 Ultima sincronizzazione: ${report.lastSync || 'Mai'}\n` +
-        `⏱️ Media tempo sync: ${report.averageTime || '0'}s\n` + // Corretto
-        `✅ Tasso successo: ${report.successRate || 0}%\n\n` + // Corretto
-        `🏆 Platform più affidabile: ${report.bestPlatform || 'N/A'}`; // Corretto
-
-      alert(reportMessage);
-    } catch (error) {
-      console.error('Errore report sincronizzazioni:', error);
-      alert('❌ Errore nel recupero del report sincronizzazioni');
-    }
-  };
-
-  const handleExportCalendarConfig = async (calendarConfigs: any, calendarStats: any) => {
-    try {
-      const configData = {
-        calendars: calendarConfigs,
-        settings: calendarStats,
-        timestamp: new Date().toISOString(),
-        exportedBy: 'Vincanto Admin Panel',
-      };
-
-      const jsonString = JSON.stringify(configData, null, 2);
-
-      // Crea e scarica il file
-      const blob = new Blob([jsonString], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `vincanto-calendar-config-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      alert('📥 Configurazione calendari esportata con successo!');
-    } catch (error) {
-      console.error('Errore esportazione:', error);
-      alert('❌ Errore nell\'esportazione della configurazione');
-    }
-  };
-
-  const handleAdvancedCalendarSettings = () => {
-    const settings = prompt(`⚙️ Impostazioni Avanzate Calendari\n\nInserisci nuove impostazioni (JSON format):\n\nEsempio:\n{\n  "syncInterval": 30,\n  "maxRetries": 3,\n  "timeoutSeconds": 60\n}`,
-      JSON.stringify({
-        syncInterval: 30,
-        maxRetries: 3,
-        timeoutSeconds: 60,
-        autoSync: true
-      }, null, 2)
-    );
-
-    if (!settings) return;
-
-    try {
-      const parsedSettings = JSON.parse(settings);
-
-      // Simula salvataggio impostazioni avanzate
-      alert(`⚙️ Impostazioni avanzate salvate!\n\n${JSON.stringify(parsedSettings, null, 2)}`);
-    } catch (error) {
-      alert('❌ Formato JSON non valido. Riprova.');
-    }
-  };
-
+  
+    const handleRemoveBlockedDate = async (id: string) => {
+      if (confirm('⚠️ Rimuovere il blocco per queste date?')) {
+        try {
+          setIsLoadingData(true);
+          const response = await fetch('/api/unified?action=blocked-dates', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
+          });
+          const result = await response.json();
+          if (!result.success) throw new Error(result.error || 'Errore sconosciuto');
+  
+          await loadRealApiData();
+          alert('✅ Blocco rimosso con successo!');
+        } catch (error) {
+          alert('❌ Errore nella rimozione del blocco');
+        } finally {
+          setIsLoadingData(false);
+        }
+      }
+    };
   */
+
+  /*
+    const handleCompleteAirbnbSetup = async () => {
+      const apiKey = prompt('🔑 Inserisci la tua API Key di Airbnb:');
+      if (!apiKey) return;
+  
+      try {
+        if (!adminApiService) return;
+  
+        const setupData = {
+          platform: 'airbnb',
+          apiKey: apiKey,
+          isActive: true
+        };
+  
+        const result = await adminApiService.setupExternalCalendar(setupData);
+  
+        if (result.success) {
+          alert('✅ Setup Airbnb completato con successo!');
+          // await loadCalendarConfigs();
+        } else {
+          alert('❌ Setup fallito: ' + (result.error || 'Errore sconosciuto'));
+        }
+      } catch (error) {
+        console.error('Errore setup Airbnb:', error);
+        alert('❌ Errore nel setup Airbnb. Verifica la tua API Key.');
+      }
+    };
+  
+    const handleTestAirbnbAPI = async () => {
+      try {
+        if (!adminApiService) return;
+  
+        const testResult = await adminApiService.testExternalCalendarAPI('airbnb');
+  
+        if (testResult.success) {
+          alert(`✅ Test API Airbnb riuscito!\n\n📊 Status: ${testResult.status}\n📅 Calendari trovati: ${testResult.calendarsCount || 0}`);
+        } else {
+          alert(`❌ Test API fallito: ${testResult.error || 'Errore sconosciuto'}`);
+        }
+      } catch (error) {
+        console.error('Errore test API Airbnb:', error);
+        alert('❌ Errore nel test delle API Airbnb');
+      }
+    };
+  
+    const handleCancelAirbnbSetup = async () => {
+      const confirm = window.confirm('⚠️ Sei sicuro di voler annullare il setup Airbnb? Tutte le configurazioni verranno rimosse.');
+  
+      if (!confirm) return;
+  
+      try {
+        if (!adminApiService) return;
+  
+        await adminApiService.removeExternalCalendar('airbnb');
+        alert('🗑️ Setup Airbnb annullato e configurazioni rimosse');
+        // await loadCalendarConfigs();
+      } catch (error) {
+        console.error('Errore annullamento setup:', error);
+        alert('❌ Errore nell\'annullamento del setup');
+      }
+    };
+  
+    const handleTestGeneralConnection = async () => {
+      try {
+        if (!adminApiService) return;
+  
+        const connectionTest = await adminApiService.testCalendarConnection();
+  
+        const statusMessage = `📧 Test Connessioni Generale\n\n` +
+          `📱 Connessione Internet: ${connectionTest.internet ? '✅' : '❌'}\n` +
+          `📅 Google Calendar: ${connectionTest.google ? '✅' : '❌'}\n` +
+          `📧 Airbnb API: ${connectionTest.airbnb ? '✅' : '❌'}\n` +
+          `💾 Database: ${connectionTest.database ? '✅' : '❌'}\n\n` +
+          `📊 Stato Generale: ${connectionTest.overall ? '✅ Tutto OK' : '❌ Problemi rilevati'}`;
+  
+        alert(statusMessage);
+      } catch (error) {
+        console.error('Errore test connessioni:', error);
+        alert('❌ Errore nel test delle connessioni');
+      }
+    };
+  
+    const handleSyncAllCalendars = async () => {
+      const confirm = window.confirm('🔄 Sincronizzare tutti i calendari?\n\nQuesta operazione potrebbe richiedere alcuni minuti.');
+  
+      if (!confirm) return;
+  
+      try {
+        if (!adminApiService) return;
+        // setIsLoadingCalendars(true);
+  
+        const syncResults = await adminApiService.syncAllCalendars();
+  
+        const resultMessage = `🔄 Sincronizzazione Completata\n\n` +
+          `✅ Successi: ${syncResults.successful || 0}\n` +
+          `❌ Errori: ${syncResults.failed || 0}\n` +
+          `📅 Eventi totali: ${syncResults.totalEvents || 0}\n\n` +
+          `${syncResults.errors && syncResults.errors.length > 0 ? 'Dettagli errori:\n' + syncResults.errors.join('\n') : ''}`;
+  
+        alert(resultMessage);
+        // await loadCalendarConfigs();
+      } catch (error) {
+        console.error('Errore sincronizzazione calendari:', error);
+        alert('❌ Errore nella sincronizzazione di tutti i calendari');
+      } finally {
+        // setIsLoadingCalendars(false);
+      }
+    };
+  
+    const handleShowOccupancyDashboard = () => {
+      // Simula apertura dashboard occupazione
+      const occupancyData = {
+        today: '75%',
+        thisWeek: '82%',
+        thisMonth: '68%',
+        nextMonth: '45%'
+      };
+  
+      const dashboardMessage = `📊 Dashboard Occupazione\n\n` +
+        `📅 Oggi: ${occupancyData.today}\n` +
+        `📅 Questa settimana: ${occupancyData.thisWeek}\n` +
+        `📊 Questo mese: ${occupancyData.thisMonth}\n` +
+        `📅 Prossimo mese: ${occupancyData.nextMonth}\n\n` +
+        `💡 Suggerimento: Considera di aumentare i prezzi nei periodi di alta occupazione.`;
+  
+      alert(dashboardMessage);
+    };
+  
+    const handleShowSyncReport = async () => {
+      try {
+        if (!adminApiService) return;
+  
+        const report = await adminApiService.getFullSyncReport();
+  
+        const reportMessage = `📊 Report Sincronizzazioni Completo\n\n` +
+          `📊 Sincronizzazioni oggi: ${report.todaySync || 0}\n` +
+          `📅 Sincronizzazioni settimana: ${report.weekSync || 0}\n` +
+          `🔄 Ultima sincronizzazione: ${report.lastSync || 'Mai'}\n` +
+          `⏱️ Media tempo sync: ${report.averageTime || '0'}s\n` + // Corretto
+          `✅ Tasso successo: ${report.successRate || 0}%\n\n` + // Corretto
+          `🏆 Platform più affidabile: ${report.bestPlatform || 'N/A'}`; // Corretto
+  
+        alert(reportMessage);
+      } catch (error) {
+        console.error('Errore report sincronizzazioni:', error);
+        alert('❌ Errore nel recupero del report sincronizzazioni');
+      }
+    };
+  
+    const handleExportCalendarConfig = async (calendarConfigs: any, calendarStats: any) => {
+      try {
+        const configData = {
+          calendars: calendarConfigs,
+          settings: calendarStats,
+          timestamp: new Date().toISOString(),
+          exportedBy: 'Vincanto Admin Panel',
+        };
+  
+        const jsonString = JSON.stringify(configData, null, 2);
+  
+        // Crea e scarica il file
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `vincanto-calendar-config-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+  
+        alert('📥 Configurazione calendari esportata con successo!');
+      } catch (error) {
+        console.error('Errore esportazione:', error);
+        alert('❌ Errore nell\'esportazione della configurazione');
+      }
+    };
+  
+    const handleAdvancedCalendarSettings = () => {
+      const settings = prompt(`⚙️ Impostazioni Avanzate Calendari\n\nInserisci nuove impostazioni (JSON format):\n\nEsempio:\n{\n  "syncInterval": 30,\n  "maxRetries": 3,\n  "timeoutSeconds": 60\n}`,
+        JSON.stringify({
+          syncInterval: 30,
+          maxRetries: 3,
+          timeoutSeconds: 60,
+          autoSync: true
+        }, null, 2)
+      );
+  
+      if (!settings) return;
+  
+      try {
+        const parsedSettings = JSON.parse(settings);
+  
+        // Simula salvataggio impostazioni avanzate
+        alert(`⚙️ Impostazioni avanzate salvate!\n\n${JSON.stringify(parsedSettings, null, 2)}`);
+      } catch (error) {
+        alert('❌ Formato JSON non valido. Riprova.');
+      }
+    };
+  
+    */
   // === NUOVE FUNZIONI PRENOTAZIONI AGGIUNTE ===
   /*
 
@@ -1258,110 +1258,110 @@ const AdminPanelPro = (): JSX.Element => {
       alert(`📧 Invio Email di Massa Avviato!\n\n📧 Tipo: ${type}\n👥 Destinatari: ${recipientCount} clienti\n⚠️ Tempo stimato: 15-20 minuti\n\n✅ Email aggiunte alla coda di invio\n📊 Riceverai un report al completamento`);
     }
   };
-/*
-  const handleExportBookingsExcel = async () => {
-    try {
-      // Simula la generazione di un file Excel
-      const bookingsData = [
-        ...realBookings.map(b => ({
-          ID: b.id,
-          Cliente: b.customer_name || b.guestName || 'N/A',
-          Email: b.customer_email || 'N/A',
-          CheckIn: b.check_in || b.checkIn,
-          CheckOut: b.check_out || b.checkOut,
-          Ospiti: b.guests,
-          Totale: b.total_amount || b.totalPrice || 0,
-          Stato: b.status,
-          Piattaforma: b.platform || 'N/A',
-          DataCreazione: new Date().toISOString()
-        })),
-        ...recentBookings.map(b => ({
-          ID: b.id,
-          Cliente: b.guestName || 'Ospite Sconosciuto',
-          Email: (b.guestName ? b.guestName.toLowerCase().replace(' ', '.') : 'ospite') + '@email.com',
-          CheckIn: b.checkIn,
-          CheckOut: b.checkOut,
-          Ospiti: b.guests,
-          Totale: b.totalPrice,
-          Stato: b.status,
-          Piattaforma: b.platform,
-          DataCreazione: new Date().toISOString()
-        }))
-      ];
-
-      // Crea CSV (simulazione Excel)
-      const csvContent = [
-        'ID,Cliente,Email,CheckIn,CheckOut,Ospiti,Totale,Stato,Piattaforma,DataCreazione',
-        ...bookingsData.map(row =>
-          `${row.ID},"${row.Cliente}","${row.Email}",${row.CheckIn},${row.CheckOut},${row.Ospiti},${row.Totale},"${row.Stato}","${row.Piattaforma}",${row.DataCreazione}`
-        )
-      ].join('\n');
-
-      // Scarica il file
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `vincanto-prenotazioni-${new Date().toISOString().split('T')[0]}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      alert(`💾 Export Excel Completato!\n\n📥 File: vincanto-prenotazioni-${new Date().toISOString().split('T')[0]}.csv\n📊 Righe esportate: ${bookingsData.length}\n💾 Download avviato automaticamente`);
-    } catch (error) {
-      console.error('Errore export Excel:', error);
-      alert('❌ Errore nell\'esportazione Excel');
-    }
-  };
+  /*
+    const handleExportBookingsExcel = async () => {
+      try {
+        // Simula la generazione di un file Excel
+        const bookingsData = [
+          ...realBookings.map(b => ({
+            ID: b.id,
+            Cliente: b.customer_name || b.guestName || 'N/A',
+            Email: b.customer_email || 'N/A',
+            CheckIn: b.check_in || b.checkIn,
+            CheckOut: b.check_out || b.checkOut,
+            Ospiti: b.guests,
+            Totale: b.total_amount || b.totalPrice || 0,
+            Stato: b.status,
+            Piattaforma: b.platform || 'N/A',
+            DataCreazione: new Date().toISOString()
+          })),
+          ...recentBookings.map(b => ({
+            ID: b.id,
+            Cliente: b.guestName || 'Ospite Sconosciuto',
+            Email: (b.guestName ? b.guestName.toLowerCase().replace(' ', '.') : 'ospite') + '@email.com',
+            CheckIn: b.checkIn,
+            CheckOut: b.checkOut,
+            Ospiti: b.guests,
+            Totale: b.totalPrice,
+            Stato: b.status,
+            Piattaforma: b.platform,
+            DataCreazione: new Date().toISOString()
+          }))
+        ];
   
-  const handleSyncAllPlatforms = async () => {
-    const confirm = window.confirm('🔄 Sincronizzare tutte le piattaforme?\n\nQuesta operazione potrebbe richiedere alcuni minuti e aggiornare tutte le prenotazioni.');
-
-    if (!confirm) return;
-
-    try {
-      setIsLoadingData(true);
-
-      // Simula sincronizzazione con tutte le piattaforme
-      const platforms = ['Airbnb', 'Booking.com', 'Expedia', 'Google Calendar'];
-      const syncResults = {
-        airbnb: { success: true, newBookings: 3, updated: 1 },
-        booking: { success: true, newBookings: 2, updated: 0 },
-        expedia: { success: false, error: 'API timeout' },
-        google: { success: true, newBookings: 0, updated: 2 },
-        vrbo: { success: true, newBookings: 1, updated: 0 }
-      };
-
-      await new Promise(resolve => setTimeout(resolve, 3000)); // Simula attesa
-
-      const successfulPlatforms = Object.values(syncResults).filter(r => r.success).length;
-      const totalNewBookings = Object.values(syncResults).filter(r => r.success).reduce((sum, r) => sum + ((r as any).newBookings || 0), 0);
-      const totalUpdated = Object.values(syncResults).filter(r => r.success).reduce((sum, r) => sum + ((r as any).updated || 0), 0);
-
-      const resultMessage = `🔄 Sincronizzazione Completata!\n\n` +
-        `✅ Piattaforme sincronizzate: ${successfulPlatforms}/${platforms.length}\n` +
-        `➕ Nuove prenotazioni: ${totalNewBookings}\n` +
-        `⚠️ Prenotazioni aggiornate: ${totalUpdated}\n\n` +
-        `📊 Dettagli:\n` +
-        `• Airbnb: ${syncResults.airbnb.success ? `✅ ${(syncResults.airbnb as any).newBookings} nuove, ${(syncResults.airbnb as any).updated} aggiornate` : '❌'}\n` +
-        `• Booking.com: ${syncResults.booking.success ? `✅ ${syncResults.booking.newBookings} nuove, ${syncResults.booking.updated} aggiornate` : '❌'}\n` +
-        `• Expedia: ${syncResults.expedia.success ? '✅' : '❌ ' + syncResults.expedia.error}\n` +
-        `• Google Calendar: ${syncResults.google.success ? `✅ ${syncResults.google.newBookings} nuove, ${syncResults.google.updated} aggiornate` : '❌'}\n` +
-        `• VRBO: ${syncResults.vrbo.success ? `✅ ${syncResults.vrbo.newBookings} nuove, ${syncResults.vrbo.updated} aggiornate` : '❌'}`;
-
-      alert(resultMessage);
-
-      // Ricarica i dati dopo la sincronizzazione
-      await loadRealApiData();
-    } catch (error) {
-      console.error('Errore sincronizzazione piattaforme:', error);
-      alert('❌ Errore nella sincronizzazione delle piattaforme');
-    } finally {
-      setIsLoadingData(false);
-    }
-  };
-*/
+        // Crea CSV (simulazione Excel)
+        const csvContent = [
+          'ID,Cliente,Email,CheckIn,CheckOut,Ospiti,Totale,Stato,Piattaforma,DataCreazione',
+          ...bookingsData.map(row =>
+            `${row.ID},"${row.Cliente}","${row.Email}",${row.CheckIn},${row.CheckOut},${row.Ospiti},${row.Totale},"${row.Stato}","${row.Piattaforma}",${row.DataCreazione}`
+          )
+        ].join('\n');
+  
+        // Scarica il file
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `vincanto-prenotazioni-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+  
+        alert(`💾 Export Excel Completato!\n\n📥 File: vincanto-prenotazioni-${new Date().toISOString().split('T')[0]}.csv\n📊 Righe esportate: ${bookingsData.length}\n💾 Download avviato automaticamente`);
+      } catch (error) {
+        console.error('Errore export Excel:', error);
+        alert('❌ Errore nell\'esportazione Excel');
+      }
+    };
+    
+    const handleSyncAllPlatforms = async () => {
+      const confirm = window.confirm('🔄 Sincronizzare tutte le piattaforme?\n\nQuesta operazione potrebbe richiedere alcuni minuti e aggiornare tutte le prenotazioni.');
+  
+      if (!confirm) return;
+  
+      try {
+        setIsLoadingData(true);
+  
+        // Simula sincronizzazione con tutte le piattaforme
+        const platforms = ['Airbnb', 'Booking.com', 'Expedia', 'Google Calendar'];
+        const syncResults = {
+          airbnb: { success: true, newBookings: 3, updated: 1 },
+          booking: { success: true, newBookings: 2, updated: 0 },
+          expedia: { success: false, error: 'API timeout' },
+          google: { success: true, newBookings: 0, updated: 2 },
+          vrbo: { success: true, newBookings: 1, updated: 0 }
+        };
+  
+        await new Promise(resolve => setTimeout(resolve, 3000)); // Simula attesa
+  
+        const successfulPlatforms = Object.values(syncResults).filter(r => r.success).length;
+        const totalNewBookings = Object.values(syncResults).filter(r => r.success).reduce((sum, r) => sum + ((r as any).newBookings || 0), 0);
+        const totalUpdated = Object.values(syncResults).filter(r => r.success).reduce((sum, r) => sum + ((r as any).updated || 0), 0);
+  
+        const resultMessage = `🔄 Sincronizzazione Completata!\n\n` +
+          `✅ Piattaforme sincronizzate: ${successfulPlatforms}/${platforms.length}\n` +
+          `➕ Nuove prenotazioni: ${totalNewBookings}\n` +
+          `⚠️ Prenotazioni aggiornate: ${totalUpdated}\n\n` +
+          `📊 Dettagli:\n` +
+          `• Airbnb: ${syncResults.airbnb.success ? `✅ ${(syncResults.airbnb as any).newBookings} nuove, ${(syncResults.airbnb as any).updated} aggiornate` : '❌'}\n` +
+          `• Booking.com: ${syncResults.booking.success ? `✅ ${syncResults.booking.newBookings} nuove, ${syncResults.booking.updated} aggiornate` : '❌'}\n` +
+          `• Expedia: ${syncResults.expedia.success ? '✅' : '❌ ' + syncResults.expedia.error}\n` +
+          `• Google Calendar: ${syncResults.google.success ? `✅ ${syncResults.google.newBookings} nuove, ${syncResults.google.updated} aggiornate` : '❌'}\n` +
+          `• VRBO: ${syncResults.vrbo.success ? `✅ ${syncResults.vrbo.newBookings} nuove, ${syncResults.vrbo.updated} aggiornate` : '❌'}`;
+  
+        alert(resultMessage);
+  
+        // Ricarica i dati dopo la sincronizzazione
+        await loadRealApiData();
+      } catch (error) {
+        console.error('Errore sincronizzazione piattaforme:', error);
+        alert('❌ Errore nella sincronizzazione delle piattaforme');
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+  */
   // === NUOVE FUNZIONI PAGAMENTI AGGIUNTE ===
 
   const handleConfigureStripe = () => {
@@ -1980,7 +1980,7 @@ const AdminPanelPro = (): JSX.Element => {
           {/* Dashboard con Dati Backend Reali */}
           {activeTab === 'dashboard' && (
             <div className="admin-section admin-animate-fade-in">
-              <h2>📊 Dashboard Live {isLoadingData && <span className="admin-loading"><div className="admin-spinner"></div> Caricamento...</span>}</h2>
+              <h2>📊 Dashboard Live (Build: {new Date().toLocaleTimeString()}) {isLoadingData && <span className="admin-loading"><div className="admin-spinner"></div> Caricamento...</span>}</h2>
 
               {/* Statistiche Principali */}
               <div className="admin-mb-xl">
@@ -2098,41 +2098,41 @@ const AdminPanelPro = (): JSX.Element => {
           {/* Sezione Prezzi SEMPLIFICATA */}
           {activeTab === 'prezzi' && (
             <>
-            <AdminPricing
-              pricingConfig={pricingConfig}
-              updatePricingField={updatePricingField}
-              savePricingConfig={savePricingConfig}
-              resetPricingConfig={() => {
-                // Reset alla configurazione di default per gruppi
-                const defaultConfig = {
-                  priceGroup1to2: 75,
-                  priceGroup3to4: 95,
-                  priceGroup5to6: 115,
-                  priceGroup7to8: 135,
-                  cleaningFee: 50,
-                  parkingFee: 20,
-                  touristTaxAdult: 2.00,
-                  touristTaxChild: 0,
-                  weekendSurcharge: 0,
-                  weeklyDiscount: 10,
-                  monthlyDiscount: 15,
-                  minStay: 2,
-                  maxStay: 14,
-                  maxGuests: 8,
-                  advanceBookingDiscount: 0,
-                  lastMinuteDiscount: 0
-                };
-                Object.keys(defaultConfig).forEach(key => {
-                  updatePricingField(key, defaultConfig[key as keyof typeof defaultConfig]);
-                });
-              }}
-              isUpdatingPricing={isUpdatingPricing}
-              showSuccessMessage={false}
-            />
+              <AdminPricing
+                pricingConfig={pricingConfig}
+                updatePricingField={updatePricingField}
+                savePricingConfig={savePricingConfig}
+                resetPricingConfig={() => {
+                  // Reset alla configurazione di default per gruppi
+                  const defaultConfig = {
+                    priceGroup1to2: 75,
+                    priceGroup3to4: 95,
+                    priceGroup5to6: 115,
+                    priceGroup7to8: 135,
+                    cleaningFee: 50,
+                    parkingFee: 20,
+                    touristTaxAdult: 2.00,
+                    touristTaxChild: 0,
+                    weekendSurcharge: 0,
+                    weeklyDiscount: 10,
+                    monthlyDiscount: 15,
+                    minStay: 2,
+                    maxStay: 14,
+                    maxGuests: 8,
+                    advanceBookingDiscount: 0,
+                    lastMinuteDiscount: 0
+                  };
+                  Object.keys(defaultConfig).forEach(key => {
+                    updatePricingField(key, defaultConfig[key as keyof typeof defaultConfig]);
+                  });
+                }}
+                isUpdatingPricing={isUpdatingPricing}
+                showSuccessMessage={false}
+              />
 
-            {/* Sezione Prezzi Personalizzati per Periodo */}
-          <SeasonalPricingManager />
-          </>
+              {/* Sezione Prezzi Personalizzati per Periodo */}
+              <SeasonalPricingManager />
+            </>
           )}
 
           {/* === SEZIONE SERVIZI EXTRA === */}
@@ -2756,7 +2756,7 @@ const AdminPanelPro = (): JSX.Element => {
                             className="admin-btn-small"
                             onClick={() => window.open(`/admin/transaction/${transaction.id}`, '_blank')}
                             title="Vedi dettagli"
-                              >
+                          >
                             📝 Dettagli
                           </button>
                         </div>
@@ -3216,7 +3216,7 @@ const AdminPanelPro = (): JSX.Element => {
                     window.URL.revokeObjectURL(url);
 
                     alert(`💾 Export completato!\n\n📊 File: vincanto-transazioni-${new Date().toISOString().split('T')[0]}.csv\n📋 Transazioni: ${transactions.length}\n✅ Download avviato`);
-                  } catch (error:any) {
+                  } catch (error: any) {
                     console.log('❌ Errore export:', error);
                     alert('❌ Errore export: ' + error.message);
                   }
@@ -4338,7 +4338,8 @@ const AdminPanelPro = (): JSX.Element => {
                           <button
                             className="admin-btn-small admin-btn-danger"
                             onClick={async () => {
-                              if (window.confirm('Rimuovere questa immagine?')) { await updateSystemSettingValue(setting.key, ''); alert('Immagine rimossa');
+                              if (window.confirm('Rimuovere questa immagine?')) {
+                                await updateSystemSettingValue(setting.key, ''); alert('Immagine rimossa');
                                 loadRealApiData();
                               }
                             }}
@@ -4414,7 +4415,7 @@ const AdminPanelPro = (): JSX.Element => {
                                   id={`setting-${setting.key}`}
                                   className="admin-input admin-textarea"
                                   value={setting.value ?? ''}
-                                  onChange={(e) => setSystemSettings(prev => 
+                                  onChange={(e) => setSystemSettings(prev =>
                                     prev.map(s => s.key === setting.key ? { ...s, value: e.target.value } : s)
                                   )}
                                   rows={4}
@@ -4433,7 +4434,7 @@ const AdminPanelPro = (): JSX.Element => {
                                   type="text"
                                   className="admin-input"
                                   value={setting.value ?? ''}
-                                  onChange={(e) => setSystemSettings(prev => 
+                                  onChange={(e) => setSystemSettings(prev =>
                                     prev.map(s => s.key === setting.key ? { ...s, value: e.target.value } : s)
                                   )}
                                   title={setting.label || setting.key}
