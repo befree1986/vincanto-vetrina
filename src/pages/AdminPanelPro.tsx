@@ -4503,4 +4503,3 @@ const AdminPanelPro = (): JSX.Element => {
   );
 };
 export default AdminPanelPro;
-export default AdminPanelPro;
