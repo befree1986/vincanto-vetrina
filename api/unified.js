@@ -3521,8 +3521,8 @@ END:VEVENT
                 maxStay: parseInt(pricing.max_stay) || 14,
                 maxGuests: parseInt(pricing.max_guests) || 8,
                 minStayAugust: parseInt(pricing.min_stay_august) || 6,
-                monthlyRules: monthlyRules,
-                seasonalRules: seasonalRules // ✨ Aggiungi le regole alla risposta
+                monthlyRules: monthlyRules, // Mantenuto per eventuale uso futuro
+                seasonalRules: seasonalRules // 🔥 CORRETTO: Usa le regole dalla nuova tabella
               }
             });
           } else {
@@ -3545,8 +3545,8 @@ END:VEVENT
                 maxStay: 14,
                 maxGuests: 8,
                 minStayAugust: 6,
-                monthlyRules: monthlyRules,
-                seasonalRules: seasonalRules // ✨ Aggiungi le regole anche nel fallback
+                monthlyRules: [],
+                seasonalRules: [] // In caso di errore, restituisce array vuoto
               }
             });
           }
