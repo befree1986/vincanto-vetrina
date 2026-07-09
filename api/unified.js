@@ -381,6 +381,29 @@ async function migrateDatabase() {
 }
 
 /**
+ * Funzione helper per calcolare il prezzo notturno basato sui livelli di ospiti.
+ */
+const calculateNightlyPrice = (numGuests, pricingConfig) => {
+  if (numGuests <= 0) return 0;
+  let price = 0;
+  const guests = parseInt(numGuests);
+
+  if (guests > 0) {
+    price += Math.min(guests, 2) * (pricingConfig.priceGroup1to2 || 0);
+  }
+  if (guests > 2) {
+    price += Math.min(guests - 2, 2) * (pricingConfig.priceGroup3to4 || 0);
+  }
+  if (guests > 4) {
+    price += Math.min(guests - 4, 2) * (pricingConfig.priceGroup5to6 || 0);
+  }
+  if (guests > 6) {
+    price += Math.min(guests - 6, 2) * (pricingConfig.priceGroup7to8 || 0);
+  }
+  return price;
+};
+
+/**
  * Fetches seasonal pricing rules from the database with detailed logging.
  * 🔥🔥🔥 SOLUZIONE DEFINITIVA: Legge dalla tabella dedicata 'seasonal_pricing_rules'.
  */
@@ -520,9 +543,6 @@ export default async function handler(req, res) {
     }
 
     console.log('🎯 API UNIFICATA CONSOLIDATA - Action:', action, 'Method:', req.method);
-
-    // Fetch seasonal rules once per request for consistency
-    const seasonalRules = await getSeasonalRules(pool);
 
     // ========================================
     // SYSTEM SETTINGS / CMS ACTION
@@ -1567,10 +1587,10 @@ export default async function handler(req, res) {
           const adults = bookingData.adults || bData.adults || bookingData.guests || bData.guests || 1;
           const children = bookingData.children || bData.children || 0;
           const email = bookingData.customerEmail || bookingData.email || bookingData.customer_email || bData.guest_email || bData.email;
-          const phone = bookingData.customerPhone || bookingData.phone || bData.guest_phone || bData.phone;
-          // Normalizza e forza a numero - accetta sia interi che decimali
-          const totalAmount = parseFloat(bookingData.totalPrice) || parseFloat(bookingData.total_amount) || 0;
+          const phone = bookingData.customerPhone || bookingData.phone || bData.guest_phone || bData.phone;          
           const notes = bookingData.specialRequests || bookingData.notes || '';
+          const parkingOption = bookingData.parkingOption || 'none'; // Get parking option from bookingData
+          const childrenAges = bookingData.childrenAges || '';
 
           // 🛎️ Gestione Servizi Extra per prenotazioni manuali
           // Se presenti, li aggiungiamo alle note per persistenza
@@ -1581,21 +1601,85 @@ export default async function handler(req, res) {
           }
 
           // 🔧 Helper per estrarre costi (supporta flat o nested in booking_data)
-          const getCost = (key) => parseFloat(bookingData[key]) || parseFloat(bookingData.booking_data?.[key]) || 0;
+          // const getCost = (key) => parseFloat(bookingData[key]) || parseFloat(bookingData.booking_data?.[key]) || 0;
 
-          // 🧮 CALCOLO INTELLIGENTE COSTI (Fallback)
-          // Se accommodationCost non è fornito (es. prenotazione manuale), calcolalo per differenza
-          let cleaningFee = getCost('cleaningFee');
-          let parkingCost = getCost('parkingCost');
-          let touristTax = getCost('touristTax');
-          let extraServicesCost = getCost('extraServicesCost');
-          let accommodationCost = getCost('accommodationCost');
+          // 🧮 CALCOLO INTELLIGENTE COSTI (Fallback se totalAmount è 0 o non valido)
+          let totalAmount = parseFloat(bookingData.totalPrice) || parseFloat(bookingData.total_amount) || 0;
+          let accommodationCost = 0;
+          let cleaningFee = 0;
+          let parkingCost = 0;
+          let touristTax = 0;
+          let extraServicesCost = parseFloat(bookingData.extraServicesCost) || 0; // Extra services cost is usually passed from frontend
 
-          if (accommodationCost <= 0 && totalAmount > 0) {
-            // Se manca il costo soggiorno, è il totale meno gli altri costi noti
-            accommodationCost = totalAmount - cleaningFee - parkingCost - touristTax - extraServicesCost;
-            if (accommodationCost < 0) accommodationCost = totalAmount; // Sicurezza
-          }
+          if (!totalAmount || isNaN(totalAmount) || totalAmount <= 0) {
+            console.log('⚠️ totalAmount è 0 o non valido, ricalcolo il preventivo per la prenotazione.');
+
+            const checkInDate = new Date(checkin);
+            const checkOutDate = new Date(checkout);
+            const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+
+            // 🔥 NUOVA LOGICA: Calcolo per notte
+            let calculatedAccommodationCost = 0;
+            const detailsPerNight = [];
+
+            for (let d = new Date(checkInDate); d < checkOutDate; d.setDate(d.getDate() + 1)) {
+              let pricingForNight = { ...pricing }; // Start with default pricing
+              let ruleApplied = null;
+              const currentDateUTC = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+
+              if (seasonalRules && Array.isArray(seasonalRules)) {
+                for (const rule of seasonalRules) {
+                  const ruleStartUTC = new Date(Date.UTC(new Date(rule.startDate).getUTCFullYear(), new Date(rule.startDate).getUTCMonth(), new Date(rule.startDate).getUTCDate()));
+                  const ruleEndUTC = new Date(Date.UTC(new Date(rule.endDate).getUTCFullYear(), new Date(rule.endDate).getUTCMonth(), new Date(rule.endDate).getUTCDate()));
+                  if (currentDateUTC >= ruleStartUTC && currentDateUTC <= ruleEndUTC) {
+                    ruleApplied = rule.name;
+                    if (rule.priceGroup1to2 != null) pricingForNight.priceGroup1to2 = rule.priceGroup1to2;
+                    if (rule.priceGroup3to4 != null) pricingForNight.priceGroup3to4 = rule.priceGroup3to4;
+                    if (rule.priceGroup5to6 != null) pricingForNight.priceGroup5to6 = rule.priceGroup5to6;
+                    if (rule.priceGroup7to8 != null) pricingForNight.priceGroup7to8 = rule.priceGroup7to8;
+                    break;
+                  }
+                }
+              }
+              const nightlyCost = calculateNightlyPrice(guestsNum, pricingForNight);
+              calculatedAccommodationCost += nightlyCost;
+              detailsPerNight.push({ date: d.toISOString().split('T')[0], cost: nightlyCost, rule: ruleApplied });
+            }
+            accommodationCost = calculatedAccommodationCost;
+
+            // Apply long-stay discounts
+            let discount = 0;
+            if (nights >= 28) discount = pricing.monthlyDiscount;
+            else if (nights >= 7) discount = pricing.weeklyDiscount;
+
+            const discountAmount = (accommodationCost * discount) / 100;
+            const discountedAccommodation = accommodationCost - discountAmount;
+
+            // Calculate additional costs with seasonal overrides
+            let finalPricing = { ...pricing };
+            const firstDayRuleName = detailsPerNight[0]?.rule;
+            if (firstDayRuleName) {
+              const ruleDetails = seasonalRules.find(r => r.name === firstDayRuleName);
+              if (ruleDetails) {
+                if (ruleDetails.cleaningFee != null) finalPricing.cleaningFee = ruleDetails.cleaningFee;
+                if (ruleDetails.parkingFee != null) finalPricing.parkingFee = ruleDetails.parkingFee;
+                if (ruleDetails.touristTaxAdult != null) finalPricing.touristTaxAdult = ruleDetails.touristTaxAdult;
+              }
+            }
+
+            cleaningFee = finalPricing.cleaningFee;
+            parkingCost = (parkingOption === 'private') ? (finalPricing.parkingFee * nights) : 0;
+
+            // Tourist tax calculation
+            const childrenOver12 = childrenAges.split(',').map(age => parseInt(age.trim())).filter(age => !isNaN(age) && age > 12).length;
+            const taxableGuests = adultsNum + childrenOver12;
+            touristTax = finalPricing.touristTaxAdult * taxableGuests * nights;
+
+            totalAmount = discountedAccommodation + cleaningFee + parkingCost + touristTax + extraServicesCost;
+            console.log('✅ totalAmount ricalcolato:', totalAmount);
+
+            bookingData.nights = nights; // Add nights to bookingData for email template
+          } // End of recalculation block
 
           // Log di debug per il totale
           console.log('DEBUG totalAmount calcolato:', totalAmount, 'tipo:', typeof totalAmount);
@@ -1729,64 +1813,12 @@ export default async function handler(req, res) {
           */
 
           // 📅 VALIDAZIONE SOGGIORNO MINIMO (Server-Side Enforcement)
-          // ✨ PRIMA, carica le regole stagionali, come nell'endpoint 'quote'
-          let seasonalRules = [];
-          try {
-            const seasonalRulesResult = await pool.query(
-              "SELECT value FROM system_settings WHERE key = 'seasonal_pricing_rules'"
-            );
-            if (seasonalRulesResult.rows.length > 0 && seasonalRulesResult.rows[0].value) {
-              const val = seasonalRulesResult.rows[0].value;
-              seasonalRules = typeof val === 'string' ? JSON.parse(val) : val;
-            }
-          } catch (dbError) {
-            console.warn('⚠️ Errore caricamento regole stagionali in booking:', dbError);
-          }
-
-
-          // Recupera regole dal DB per assicurarsi che non vengano bypassate
-          const pricingRulesResult = await pool.query('SELECT min_stay, min_stay_august FROM pricing_config ORDER BY id DESC LIMIT 1');
-          const rules = pricingRulesResult.rows[0] || { min_stay: 3, min_stay_august: 6 };
-
           const checkInDate = new Date(checkin);
           const checkOutDate = new Date(checkout);
           const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
 
-          // 📅 VALIDAZIONE SOGGIORNO MINIMO (Server-Side Enforcement) - LOGICA RIVISTA
-          let finalRequiredMinStay = 0;
-          const checkInYear = checkInDate.getUTCFullYear();
-          const augustStart = new Date(Date.UTC(checkInYear, 7, 1)); // August 1st
-          const septemberStart = new Date(Date.UTC(checkInYear, 8, 1)); // September 1st
-
-          for (let d = new Date(checkInDate); d < checkOutDate; d.setDate(d.getDate() + 1)) {
-            const currentDateUTC = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-            let minStayForThisDay = parseInt(rules.min_stay) || 3;
-            let seasonalRuleFound = false;
-
-            // 1. Controlla le regole stagionali (priorità massima)
-            if (seasonalRules && Array.isArray(seasonalRules)) {
-              for (const rule of seasonalRules) {
-                const ruleStartUTC = new Date(Date.UTC(new Date(rule.startDate).getFullYear(), new Date(rule.startDate).getMonth(), new Date(rule.startDate).getDate()));
-                const ruleEndUTC = new Date(Date.UTC(new Date(rule.endDate).getFullYear(), new Date(rule.endDate).getMonth(), new Date(rule.endDate).getDate()));
-
-                if (currentDateUTC >= ruleStartUTC && currentDateUTC <= ruleEndUTC) {
-                  if (rule.minStay) {
-                    minStayForThisDay = rule.minStay;
-                    seasonalRuleFound = true;
-                    break;
-                  }
-                }
-              }
-            }
-
-            // 2. Se nessuna regola stagionale, controlla la regola di Agosto
-            if (!seasonalRuleFound && (currentDateUTC >= augustStart && currentDateUTC < septemberStart)) {
-              minStayForThisDay = parseInt(rules.min_stay_august) || 6;
-            }
-
-            finalRequiredMinStay = Math.max(finalRequiredMinStay, minStayForThisDay);
-          }
-
+          // 🔥 FIX: Usa le regole stagionali caricate all'inizio della richiesta
+          const finalRequiredMinStay = await getRequiredMinStay(checkInDate, checkOutDate, pool, seasonalRules);
           // 3. Validazione finale (con bypass per admin)
           if (bookingData.platform !== 'manual' && nights < finalRequiredMinStay) {
             console.error(`❌ Tentativo di prenotazione bloccato: ${nights} notti richieste, minimo ${finalRequiredMinStay}.`);
@@ -1855,23 +1887,16 @@ export default async function handler(req, res) {
                 language: guestLanguage,
                 paymentMethod: bookingData.paymentMethod || bookingData.payment_method,
                 // 🛎️ Includi eventuali servizi extra passati dal frontend
-                extraServices: Array.isArray(bookingData.extraServices) ? bookingData.extraServices : (Array.isArray(bookingData.extra_services) ? bookingData.extra_services : []),
+                extraServices: Array.isArray(bookingData.extraServices) ? bookingData.extraServices : (Array.isArray(bookingData.extra_services) ? bookingData.extra_services : []), // Ensure this is passed
                 // 🔥 Passa il breakdown dei costi al template email
-                accommodationCost: accommodationCost,
-                cleaningFee: cleaningFee,
-                parkingCost: parkingCost,
-                touristTax: touristTax,
-                extraServicesCost: extraServicesCost,
-                nights: parseInt(bookingData.nights || bookingData.booking_data?.nights) || 0,
+                accommodationCost: accommodationCost, // Use calculated values
+                cleaningFee: cleaningFee, // Use calculated values
+                parkingCost: parkingCost, // Use calculated values
+                touristTax: touristTax, // Use calculated values
+                extraServicesCost: extraServicesCost, // Use calculated values
+                nights: nights, // Use calculated nights
                 logoUrl: 'https://www.vincantomaiori.it/logo.png',
                 siteUrl: 'https://www.vincantomaiori.it',
-                accommodationCost: parseFloat(bookingData.accommodationCost) || 0,
-                cleaningFee: parseFloat(bookingData.cleaningFee) || 0,
-                parkingCost: parseFloat(bookingData.parkingCost) || 0,
-                touristTax: parseFloat(bookingData.touristTax) || 0,
-                extraServicesCost: parseFloat(bookingData.extraServicesCost) || 0,
-                nights: parseInt(bookingData.nights) || 0
-
               });
               const emailResults = await sendEmailWithAdminCopy({
                 to: email,
@@ -3504,56 +3529,12 @@ END:VEVENT
           const monthlyResult = await pool.query('SELECT * FROM monthly_pricing_rules ORDER BY month ASC');
           const monthlyRules = monthlyResult.rows;
 
-          // 🔥 FIX: Carica le regole stagionali dalla nuova tabella dedicata
-          const seasonalRules = await getSeasonalRules(pool);
           if (result.rows.length > 0) {
             const pricing = result.rows[0];
-            return res.status(200).json({
-              success: true,
-              pricing: {
-                priceGroup1to2: parseFloat(pricing.price_group_1to2) || 75,
-                priceGroup3to4: parseFloat(pricing.price_group_3to4) || 95,
-                priceGroup5to6: parseFloat(pricing.price_group_5to6) || 115,
-                priceGroup7to8: parseFloat(pricing.price_group_7to8) || 135,
-                cleaningFee: parseFloat(pricing.cleaning_fee) || 50,
-                parkingFee: parseFloat(pricing.parking_fee) || 20,
-                touristTaxAdult: parseFloat(pricing.tourist_tax_adult) || 2.00,
-                touristTaxChild: parseFloat(pricing.tourist_tax_child) || 0,
-                weekendSurcharge: parseFloat(pricing.weekend_surcharge) || 0,
-                weeklyDiscount: parseFloat(pricing.weekly_discount) || 10,
-                monthlyDiscount: parseFloat(pricing.monthly_discount) || 15,
-                minStay: parseInt(pricing.min_stay) || 3,
-                maxStay: parseInt(pricing.max_stay) || 14,
-                maxGuests: parseInt(pricing.max_guests) || 8,
-                minStayAugust: parseInt(pricing.min_stay_august) || 6,
-                monthlyRules: monthlyRules, // Mantenuto per eventuale uso futuro
-                seasonalRules: seasonalRules // 🔥 CORRETTO: Usa le regole dalla nuova tabella
-              }
-            });
-          } else {
-            // Restituisci prezzi default se tabella vuota
-            return res.status(200).json({
-              success: true,
-              pricing: {
-                priceGroup1to2: 75,
-                priceGroup3to4: 95,
-                priceGroup5to6: 115,
-                priceGroup7to8: 135,
-                cleaningFee: 50,
-                parkingFee: 20,
-                touristTaxAdult: 2.00,
-                touristTaxChild: 0,
-                weekendSurcharge: 0,
-                weeklyDiscount: 10,
-                monthlyDiscount: 15,
-                minStay: 3,
-                maxStay: 14,
-                maxGuests: 8,
-                minStayAugust: 6,
-                monthlyRules: [], // Fallback to empty array
-                seasonalRules: [] // Fallback to empty array
-              }
-            });
+            // Use the already fetched 'pricing' object
+            pricing.monthlyRules = monthlyRules;
+            pricing.seasonalRules = seasonalRules;
+            return res.status(200).json({ success: true, pricing: pricing });
           }
         } catch (error) {
           console.error('❌ Errore recupero pricing config:', error);
@@ -3576,7 +3557,7 @@ END:VEVENT
               maxStay: 14,
               maxGuests: 8
             }
-          });
+          }); // Fallback to default pricing if DB error
         }
       } else if (req.method === 'POST') {
         try {
