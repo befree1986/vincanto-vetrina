@@ -381,23 +381,35 @@ async function migrateDatabase() {
 }
 
 /**
- * Fetches seasonal pricing rules from the database and applies a
- * workaround for Vercel preview/development environments if necessary.
+ * Fetches seasonal pricing rules from the database with detailed logging.
+ * 🔥🔥🔥 SOLUZIONE DEFINITIVA: Legge dalla tabella dedicata 'seasonal_pricing_rules'.
  */
 async function getSeasonalRules(pool) {
-  let seasonalRules = [];
   try {
-    const result = await pool.query("SELECT value FROM system_settings WHERE key = 'seasonal_pricing_rules'");
-    if (result.rows.length > 0 && result.rows[0].value) {
-      const val = result.rows[0].value;
-      // Ensure val is not null/undefined before parsing
-      seasonalRules = typeof val === 'string' ? JSON.parse(val) : (val || []);
-    }
-  } catch (e) {
-    console.warn('Could not load seasonal rules from DB', e);
-  }
+    console.log("DB_QUERY: Fetching from dedicated 'seasonal_pricing_rules' table.");
+    const result = await pool.query("SELECT * FROM seasonal_pricing_rules WHERE is_active = true ORDER BY start_date");
+    console.log("DB_RESULT: Found", result.rows.length, "active seasonal rules in dedicated table.");
 
-  return seasonalRules;
+    // Map DB fields (snake_case) to JS fields (camelCase) for consistency in the app
+    return result.rows.map(row => ({
+      id: row.id,
+      name: row.name,
+      startDate: new Date(row.start_date).toISOString().split('T')[0], // Ensure YYYY-MM-DD format
+      endDate: new Date(row.end_date).toISOString().split('T')[0],
+      minStay: row.min_stay,
+      priceGroup1to2: row.price_group_1to2 ? parseFloat(row.price_group_1to2) : undefined,
+      priceGroup3to4: row.price_group_3to4 ? parseFloat(row.price_group_3to4) : undefined,
+      priceGroup5to6: row.price_group_5to6 ? parseFloat(row.price_group_5to6) : undefined,
+      priceGroup7to8: row.price_group_7to8 ? parseFloat(row.price_group_7to8) : undefined,
+      cleaningFee: row.cleaning_fee ? parseFloat(row.cleaning_fee) : undefined,
+      parkingFee: row.parking_fee ? parseFloat(row.parking_fee) : undefined,
+      touristTaxAdult: row.tourist_tax_adult ? parseFloat(row.tourist_tax_adult) : undefined,
+      isActive: row.is_active,
+    }));
+  } catch (e) {
+    console.error("DB_ERROR: Could not load seasonal rules from dedicated table.", e);
+    return [];
+  }
 }
 
 /**
@@ -3492,15 +3504,8 @@ END:VEVENT
           const monthlyResult = await pool.query('SELECT * FROM monthly_pricing_rules ORDER BY month ASC');
           const monthlyRules = monthlyResult.rows;
 
-          // ✨ NUOVO: Carica anche le regole di prezzo stagionali
-          const seasonalRulesResult = await pool.query(
-            "SELECT value FROM system_settings WHERE key = 'seasonal_pricing_rules'"
-          );
-          let seasonalRules = [];
-          if (seasonalRulesResult.rows.length > 0 && seasonalRulesResult.rows[0].value) {
-            seasonalRules = JSON.parse(seasonalRulesResult.rows[0].value);
-          }
-
+          // 🔥 FIX: Carica le regole stagionali dalla nuova tabella dedicata
+          const seasonalRules = await getSeasonalRules(pool);
           if (result.rows.length > 0) {
             const pricing = result.rows[0];
             return res.status(200).json({

@@ -17,6 +17,7 @@ jobs:
     steps:
       - name: 🔄 Sincronizzazione Calendari Esterni
         id: sync
+        if: env.CALENDAR_SYNC_TOKEN != ''
         run: |
           echo "🚀 Avvio sincronizzazione calendari $(date '+%Y-%m-%d %H:%M:%S UTC')"
           
