@@ -594,7 +594,7 @@ export default async function handler(req, res) {
         try {
           const { id } = req.query;
           const { name, start_date, end_date, min_stay, price_group_1to2, price_group_3to4, price_group_5to6, price_group_7to8, cleaning_fee, parking_fee, tourist_tax_adult, is_active } = req.body;
-          
+
           if (!id) return res.status(400).json({ success: false, error: 'ID regola mancante' });
 
           const result = await pool.query(`
@@ -3545,8 +3545,8 @@ END:VEVENT
                 maxStay: 14,
                 maxGuests: 8,
                 minStayAugust: 6,
-                monthlyRules: [],
-                seasonalRules: [] // In caso di errore, restituisce array vuoto
+                monthlyRules: [], // Fallback to empty array
+                seasonalRules: [] // Fallback to empty array
               }
             });
           }
