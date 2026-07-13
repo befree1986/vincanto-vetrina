@@ -1614,6 +1614,34 @@ export default async function handler(req, res) {
           if (!totalAmount || isNaN(totalAmount) || totalAmount <= 0) {
             console.log('⚠️ totalAmount è 0 o non valido, ricalcolo il preventivo per la prenotazione.');
 
+            // 🔥 FIX: Fetch pricing config and seasonal rules missing from the local scope
+            let pricing = {
+              priceGroup1to2: 75, priceGroup3to4: 95, priceGroup5to6: 115, priceGroup7to8: 135,
+              cleaningFee: 50, parkingFee: 20, touristTaxAdult: 2.00, touristTaxChild: 0,
+              weeklyDiscount: 10, monthlyDiscount: 15
+            };
+            try {
+              const pricingResult = await pool.query('SELECT * FROM pricing_config ORDER BY id DESC LIMIT 1');
+              if (pricingResult.rows.length > 0) {
+                const p = pricingResult.rows[0];
+                pricing = {
+                  priceGroup1to2: parseFloat(p.price_group_1to2) || 75,
+                  priceGroup3to4: parseFloat(p.price_group_3to4) || 95,
+                  priceGroup5to6: parseFloat(p.price_group_5to6) || 115,
+                  priceGroup7to8: parseFloat(p.price_group_7to8) || 135,
+                  cleaningFee: parseFloat(p.cleaning_fee) || 50,
+                  parkingFee: parseFloat(p.parking_fee) || 20,
+                  touristTaxAdult: parseFloat(p.tourist_tax_adult) || 2.00,
+                  touristTaxChild: parseFloat(p.tourist_tax_child) || 0,
+                  weeklyDiscount: parseFloat(p.weekly_discount) || 10,
+                  monthlyDiscount: parseFloat(p.monthly_discount) || 15
+                };
+              }
+            } catch (e) {
+              console.error('Errore recupero pricing fallback:', e);
+            }
+            const seasonalRules = await getSeasonalRules(pool);
+
             const checkInDate = new Date(checkin);
             const checkOutDate = new Date(checkout);
             const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
