@@ -368,7 +368,7 @@ async function migrateDatabase() {
     // Aggiungi colonna min_stay_august se non esiste
     await pool.query(`
       ALTER TABLE pricing_config
-      ADD COLUMN IF NOT EXISTS min_stay_august INTEGER DEFAULT 6
+      ADD COLUMN IF NOT EXISTS min_stay_august INTEGER DEFAULT 3
     `);
     console.log('✅ Colonna min_stay_august verificata/aggiunta');
   } catch (error) {
@@ -442,7 +442,7 @@ async function getSeasonalRules(pool) {
 async function getRequiredMinStay(checkInDate, checkOutDate, pool, seasonalRules) {
   // 1. Get default rules
   const pricingRulesResult = await pool.query('SELECT min_stay, min_stay_august FROM pricing_config ORDER BY id DESC LIMIT 1');
-  const rules = pricingRulesResult.rows[0] || { min_stay: 3, min_stay_august: 6 };
+  const rules = pricingRulesResult.rows[0] || { min_stay: 3, min_stay_august: 3 };
   const defaultMinStay = parseInt(rules.min_stay) || 3;
   const augustMinStay = parseInt(rules.min_stay_august) || 3;
 
@@ -3620,7 +3620,7 @@ END:VEVENT
           let result;
           if (existingConfig.rows.length > 0) {
             const currentPricing = existingConfig.rows[0];
-            const currentMinStayAugust = currentPricing.min_stay_august || 6;
+            const currentMinStayAugust = currentPricing.min_stay_august || 3;
             // UPDATE configurazione esistente
             console.log('🔄 Aggiornamento configurazione prezzi esistente...');
             result = await pool.query(`
@@ -3685,7 +3685,7 @@ END:VEVENT
               pricingData.minStay || pricingData.min_stay || 3,
               pricingData.maxStay || pricingData.max_stay || 14,
               pricingData.maxGuests || pricingData.max_guests || 8,
-              pricingData.minStayAugust || pricingData.min_stay_august || 6
+              pricingData.minStayAugust || pricingData.min_stay_august || 3
             ]);
           }
 
@@ -3814,7 +3814,7 @@ END:VEVENT
               weeklyDiscount: parseFloat(p.weekly_discount) || 10,
               monthlyDiscount: parseFloat(p.monthly_discount) || 15,
               minStay: parseInt(p.min_stay) || 3,
-              minStayAugust: parseInt(p.min_stay_august) || 6
+              minStayAugust: parseInt(p.min_stay_august) || 3
             };
           } else {
             // Prezzi default se tabella vuota
