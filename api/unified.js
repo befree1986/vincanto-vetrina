@@ -441,16 +441,12 @@ async function getSeasonalRules(pool) {
  */
 async function getRequiredMinStay(checkInDate, checkOutDate, pool, seasonalRules) {
   // 1. Get default rules
-  const pricingRulesResult = await pool.query('SELECT min_stay, min_stay_august FROM pricing_config ORDER BY id DESC LIMIT 1');
-  const rules = pricingRulesResult.rows[0] || { min_stay: 3, min_stay_august: 3 };
+  const pricingRulesResult = await pool.query('SELECT min_stay FROM pricing_config ORDER BY id DESC LIMIT 1');
+  const rules = pricingRulesResult.rows[0] || { min_stay: 3 };
   const defaultMinStay = parseInt(rules.min_stay) || 3;
-  const augustMinStay = parseInt(rules.min_stay_august) || 3;
 
   // 2. Use provided seasonal rules
   let finalRequiredMinStay = defaultMinStay; // Inizia con il minimo di default
-  const checkInYear = checkInDate.getUTCFullYear();
-  const augustStart = new Date(Date.UTC(checkInYear, 7, 1));
-  const septemberStart = new Date(Date.UTC(checkInYear, 8, 1));
 
   for (let d = new Date(checkInDate); d < checkOutDate; d.setDate(d.getDate() + 1)) {
     const currentDateUTC = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
