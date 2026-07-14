@@ -1615,6 +1615,9 @@ export default async function handler(req, res) {
           if (!totalAmount || isNaN(totalAmount) || totalAmount <= 0) {
             console.log('⚠️ totalAmount è 0 o non valido, ricalcolo il preventivo per la prenotazione.');
 
+            const guestsNum = parseInt(guests);
+            const adultsNum = parseInt(adults) || guestsNum;
+
             // 🔥 FIX: Fetch pricing config and seasonal rules missing from the local scope
             let pricing = {
               priceGroup1to2: 70, priceGroup3to4: 20, priceGroup5to6: 25, priceGroup7to8: 30,
@@ -1670,7 +1673,7 @@ export default async function handler(req, res) {
                   }
                 }
               }
-              const nightlyCost = calculateNightlyPrice(guests, pricingForNight);
+              const nightlyCost = calculateNightlyPrice(guestsNum, pricingForNight);
               calculatedAccommodationCost += nightlyCost;
               detailsPerNight.push({ date: d.toISOString().split('T')[0], cost: nightlyCost, rule: ruleApplied });
             }
@@ -3870,48 +3873,12 @@ END:VEVENT
         };
 
 
-        // Recupera le regole stagionali dal database
-        let seasonalRules = [];
-        try {
-          const seasonalRulesResult = await pool.query(
-            "SELECT value FROM system_settings WHERE key = 'seasonal_pricing_rules'"
-          );
-          if (seasonalRulesResult.rows.length > 0 && seasonalRulesResult.rows[0].value) {
-            const val = seasonalRulesResult.rows[0].value;
-            seasonalRules = typeof val === 'string' ? JSON.parse(val) : val;
-          }
-        } catch (dbError) {
-          console.warn('⚠️ Errore caricamento regole stagionali in quote:', dbError);
-        }
+        // 🔥 FIX: Carica le regole stagionali corrette dalla nuova tabella
+        const seasonalRules = await getSeasonalRules(pool);
 
         // 📅 VALIDAZIONE SOGGIORNO MINIMO (Server-Side Enforcement) - LOGICA CORRETTA
-        let requiredMinStay = pricing.minStay;
-        const checkInYear = checkInDate.getUTCFullYear();
-        const augustStart = new Date(Date.UTC(checkInYear, 7, 1)); // August 1st
-        const septemberStart = new Date(Date.UTC(checkInYear, 8, 1)); // September 1st
-
-        // 1. Applica regola di base per Agosto se il periodo si sovrappone
-        if (checkInDate < septemberStart && checkOutDate > augustStart) {
-          requiredMinStay = pricing.minStayAugust;
-        }
-
-        // 2. Itera su ogni giorno della prenotazione per trovare la regola più restrittiva
-        if (seasonalRules && Array.isArray(seasonalRules)) {
-          for (let d = new Date(checkInDate); d < checkOutDate; d.setDate(d.getDate() + 1)) {
-            const currentDateUTC = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-            for (const rule of seasonalRules) {
-              const ruleStartUTC = new Date(Date.UTC(new Date(rule.startDate).getFullYear(), new Date(rule.startDate).getMonth(), new Date(rule.startDate).getDate()));
-              const ruleEndUTC = new Date(Date.UTC(new Date(rule.endDate).getFullYear(), new Date(rule.endDate).getMonth(), new Date(rule.endDate).getDate()));
-
-              if (currentDateUTC >= ruleStartUTC && currentDateUTC <= ruleEndUTC) {
-                if (rule.minStay) {
-                  // La regola più restrittiva (il numero più alto di notti) vince
-                  requiredMinStay = Math.max(requiredMinStay, rule.minStay);
-                }
-              }
-            }
-          }
-        }
+        // 🔥 FIX: Usa la funzione centralizzata per coerenza con il booking
+        const requiredMinStay = await getRequiredMinStay(checkInDate, checkOutDate, pool, seasonalRules);
 
         // 3. Validazione finale
         if (nights < requiredMinStay) {
