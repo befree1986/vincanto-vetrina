@@ -85,7 +85,7 @@ export default async function handler(req, res) {
     // 📅 VALIDAZIONE SOGGIORNO MINIMO (Sicurezza Backend)
     try {
       const pricingResult = await pool.query('SELECT min_stay, min_stay_august FROM pricing_config ORDER BY id DESC LIMIT 1');
-      const rules = pricingResult.rows[0] || { min_stay: 3, min_stay_august: 6 };
+      const rules = pricingResult.rows[0] || { min_stay: 3, min_stay_august: 3 };
       
       // 🔥 NUOVO: Carica regole stagionali dal DB
       const seasonalRulesResult = await pool.query("SELECT * FROM seasonal_pricing_rules WHERE is_active = true");
@@ -118,7 +118,7 @@ export default async function handler(req, res) {
         }
 
         if (!seasonalRuleFound && (currentDateUTC >= augustStart && currentDateUTC < septemberStart)) {
-            minStayForThisDay = parseInt(rules.min_stay_august) || 6;
+            minStayForThisDay = parseInt(rules.min_stay_august) || 3;
         }
         requiredMinStay = Math.max(requiredMinStay, minStayForThisDay);
       }

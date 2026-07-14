@@ -40,7 +40,7 @@ export const useBookingRules = () => {
       if (data.success && data.pricing) {
         setRules({
           minStay: data.pricing.minStay || 3,
-          minStayAugust: data.pricing.minStayAugust || 6,
+          minStayAugust: data.pricing.minStayAugust || 3,
           maxStay: data.pricing.maxStay || 14,
           maxGuests: data.pricing.maxGuests || 8,
           seasonalRules: data.pricing.seasonalRules || [],
@@ -53,8 +53,8 @@ export const useBookingRules = () => {
       // Fallback a regole di default in caso di errore API
       setRules({
         minStay: 3,
-        minStayAugust: 6,
-        maxStay: 14,
+        minStayAugust: 3,
+        maxStay: 28,
         maxGuests: 8,
         seasonalRules: [],
       });

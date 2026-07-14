@@ -17,12 +17,12 @@ interface PricingConfig {
 
 export const useDynamicPricing = (): PricingConfig => {
   const [pricing, setPricing] = useState<PricingConfig>({
-    priceGroup1to2: 75,
-    priceGroup3to4: 95,
-    priceGroup5to6: 115,
-    priceGroup7to8: 135,
+    priceGroup1to2: 70,
+    priceGroup3to4: 20,
+    priceGroup5to6: 25,
+    priceGroup7to8: 30,
     parkingFee: 20, // Fallback
-    cleaningFee: 50,
+    cleaningFee: 60,
     touristTaxAdult: 2, // Fallback
     minStay: 3,
     loading: true,

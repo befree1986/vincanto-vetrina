@@ -7,10 +7,10 @@ export interface PriceData {
   season: 'low' | 'medium' | 'high';
   // 🔥 NUOVO: Sistema prezzi per gruppi
   priceByGuests?: {
-    persons1to2: number;    // €75 per 1-2 persone
-    persons3to4: number;    // €95 per 3-4 persone
-    persons5to6: number;    // €115 per 5-6 persone
-    persons7to8: number;    // €135 per 7-8 persone
+    persons1to2: number;    // €70 per 1-2 persone
+    persons3to4: number;    // €20 per 3-4 persone
+    persons5to6: number;    // €25 per 5-6 persone
+    persons7to8: number;    // €30 per 7-8 persone
   };
   // 🔥 NUOVO: Configurazione completa sistema gruppi
   groupPricing?: {
@@ -71,21 +71,21 @@ export const usePricing = () => {
 
         // 🔥 NUOVO: Gestione dati dal sistema pricing-config
         const transformedData = {
-          basePrice: apiData.priceGroup1to2 || 75,
+          basePrice: apiData.priceGroup1to2 || 70,
           date: new Date().toISOString().split('T')[0],
           season: 'medium' as const,
           priceByGuests: {
-            persons1to2: apiData.priceGroup1to2 || 75,
-            persons3to4: apiData.priceGroup3to4 || 95,
-            persons5to6: apiData.priceGroup5to6 || 115,
-            persons7to8: apiData.priceGroup7to8 || 135
+            persons1to2: apiData.priceGroup1to2 || 70,
+            persons3to4: apiData.priceGroup3to4 || 20,
+            persons5to6: apiData.priceGroup5to6 || 25,
+            persons7to8: apiData.priceGroup7to8 || 30
           },
           groupPricing: {
-            priceGroup1to2: apiData.priceGroup1to2 || 75,
-            priceGroup3to4: apiData.priceGroup3to4 || 95,
-            priceGroup5to6: apiData.priceGroup5to6 || 115,
-            priceGroup7to8: apiData.priceGroup7to8 || 135,
-            cleaningFee: apiData.cleaningFee || 50,
+            priceGroup1to2: apiData.priceGroup1to2 || 70,
+            priceGroup3to4: apiData.priceGroup3to4 || 20,
+            priceGroup5to6: apiData.priceGroup5to6 || 25,
+            priceGroup7to8: apiData.priceGroup7to8 || 30,
+            cleaningFee: apiData.cleaningFee || 60,
             parkingFee: apiData.parkingFee || 20,
             touristTaxAdult: apiData.touristTaxAdult || 2.00,
             touristTaxChild: apiData.touristTaxChild || 0
@@ -106,21 +106,21 @@ export const usePricing = () => {
 
       // 🔥 NUOVO: Fallback con sistema base + aggiuntive predefinito
       setCurrentPrice({
-        basePrice: 75,
+        basePrice: 70,
         date: new Date().toISOString().split('T')[0],
         season: 'medium',
         priceByGuests: {
-          persons1to2: 150,   // €75 × 2 = €150 base
-          persons3to4: 180,   // €150 + €30 = €180
-          persons5to6: 235,   // €150 + €60 + €25 = €235
-          persons7to8: 275    // €150 + €60 + €50 + €20 = €275
+          persons1to2: 140,   // €70 × 2 = €140 base
+          persons3to4: 160,   // €140 + €20 = €160
+          persons5to6: 185,   // €140 + €20 + €25 = €185
+          persons7to8: 215    // €140 + €20 + €25 + €30 = €215
         },
         groupPricing: {
-          priceGroup1to2: 75,
-          priceGroup3to4: 30,
+          priceGroup1to2: 70,
+          priceGroup3to4: 20,
           priceGroup5to6: 25,
-          priceGroup7to8: 20,
-          cleaningFee: 50,
+          priceGroup7to8: 30,
+          cleaningFee: 60,
           parkingFee: 20,
           touristTaxAdult: 2.00,
           touristTaxChild: 0
@@ -172,7 +172,7 @@ export const usePricing = () => {
         {
           id: '1',
           date: '2024-01-01',
-          price: 75,
+          price: 70,
           season: 'Stagione standard (gruppi)',
           createdAt: new Date().toISOString()
         },

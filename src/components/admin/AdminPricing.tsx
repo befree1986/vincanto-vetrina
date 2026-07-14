@@ -62,7 +62,7 @@ const AdminPricing: React.FC<AdminPricingProps> = ({
               <NumericInput
                 id="basePrice"
                 label="Prezzo per persona (base 2 persone)"
-                value={pricingConfig.priceGroup1to2 ?? 75}
+                value={pricingConfig.priceGroup1to2 ?? 70}
                 onChange={(value) => updatePricingField('priceGroup1to2', value)}
                 min={0}
                 max={999}
@@ -91,7 +91,7 @@ const AdminPricing: React.FC<AdminPricingProps> = ({
               <NumericInput
                 id="additionalGuest3to4"
                 label="3-4 persone (costo aggiuntivo/persona)"
-                value={pricingConfig.priceGroup3to4 ?? 95}
+                value={pricingConfig.priceGroup3to4 ?? 20}
                 onChange={(value) => updatePricingField('priceGroup3to4', value)}
                 min={0}
                 max={999}
@@ -102,7 +102,7 @@ const AdminPricing: React.FC<AdminPricingProps> = ({
               <NumericInput
                 id="additionalGuest5to6"
                 label="5-6 persone (costo aggiuntivo/persona)"
-                value={pricingConfig.priceGroup5to6 ?? 115}
+                value={pricingConfig.priceGroup5to6 ?? 25}
                 onChange={(value) => updatePricingField('priceGroup5to6', value)}
                 min={0}
                 max={999}
@@ -113,7 +113,7 @@ const AdminPricing: React.FC<AdminPricingProps> = ({
               <NumericInput
                 id="additionalGuest7to8"
                 label="7-8 persone (costo aggiuntivo/persona)"
-                value={pricingConfig.priceGroup7to8 ?? 135}
+                value={pricingConfig.priceGroup7to8 ?? 30}
                 onChange={(value) => updatePricingField('priceGroup7to8', value)}
                 min={0}
                 max={999}
@@ -176,19 +176,19 @@ const AdminPricing: React.FC<AdminPricingProps> = ({
           <div className="pricing-preview">
             <div className="preview-item">
               <span className="preview-label">2 persone × 3 notti:</span>
-              <span className="preview-value">€{((pricingConfig.basePrice || pricingConfig.priceGroup1to2 || 75) * 2 * 3)} (Base: €{(pricingConfig.basePrice || pricingConfig.priceGroup1to2 || 75) * 2}/notte)</span>
+              <span className="preview-value">€{((pricingConfig.basePrice || pricingConfig.priceGroup1to2 || 70) * 2 * 3)} (Base: €{(pricingConfig.basePrice || pricingConfig.priceGroup1to2 || 70) * 2}/notte)</span>
             </div>
             <div className="preview-item">
               <span className="preview-label">4 persone × 3 notti:</span>
-              <span className="preview-value">€{(((pricingConfig.basePrice || pricingConfig.priceGroup1to2 || 75) * 2) + ((pricingConfig.additionalGuest3to4 || pricingConfig.priceGroup3to4 || 30) * 2)) * 3} (Base: €{(pricingConfig.basePrice || pricingConfig.priceGroup1to2 || 75) * 2} + Agg: €{(pricingConfig.additionalGuest3to4 || pricingConfig.priceGroup3to4 || 30) * 2})</span>
+              <span className="preview-value">€{(((pricingConfig.basePrice || pricingConfig.priceGroup1to2 || 70) * 2) + ((pricingConfig.additionalGuest3to4 || pricingConfig.priceGroup3to4 || 20) * 2)) * 3} (Base: €{(pricingConfig.basePrice || pricingConfig.priceGroup1to2 || 70) * 2} + Agg: €{(pricingConfig.additionalGuest3to4 || pricingConfig.priceGroup3to4 || 30) * 2})</span>
             </div>
             <div className="preview-item">
               <span className="preview-label">6 persone × 3 notti:</span>
-              <span className="preview-value">€{(((pricingConfig.basePrice || pricingConfig.priceGroup1to2 || 75) * 2) + ((pricingConfig.additionalGuest3to4 || pricingConfig.priceGroup3to4 || 30) * 2) + ((pricingConfig.additionalGuest5to6 || pricingConfig.priceGroup5to6 || 25) * 2)) * 3} (Base: €{(pricingConfig.basePrice || pricingConfig.priceGroup1to2 || 75) * 2} + Agg 3-4: €{(pricingConfig.additionalGuest3to4 || pricingConfig.priceGroup3to4 || 30) * 2} + Agg 5-6: €{(pricingConfig.additionalGuest5to6 || pricingConfig.priceGroup5to6 || 25) * 2})</span>
+              <span className="preview-value">€{(((pricingConfig.basePrice || pricingConfig.priceGroup1to2 || 70) * 2) + ((pricingConfig.additionalGuest3to4 || pricingConfig.priceGroup3to4 || 20) * 2) + ((pricingConfig.additionalGuest5to6 || pricingConfig.priceGroup5to6 || 25) * 2)) * 3} (Base: €{(pricingConfig.basePrice || pricingConfig.priceGroup1to2 || 70) * 2} + Agg 3-4: €{(pricingConfig.additionalGuest3to4 || pricingConfig.priceGroup3to4 || 20) * 2} + Agg 5-6: €{(pricingConfig.additionalGuest5to6 || pricingConfig.priceGroup5to6 || 25) * 2})</span>
             </div>
             <div className="preview-item">
               <span className="preview-label">8 persone × 3 notti:</span>
-              <span className="preview-value">€{(((pricingConfig.basePrice || pricingConfig.priceGroup1to2 || 75) * 2) + ((pricingConfig.additionalGuest3to4 || pricingConfig.priceGroup3to4 || 30) * 2) + ((pricingConfig.additionalGuest5to6 || pricingConfig.priceGroup5to6 || 25) * 2) + ((pricingConfig.additionalGuest7to8 || pricingConfig.priceGroup7to8 || 20) * 2)) * 3}</span>
+              <span className="preview-value">€{(((pricingConfig.basePrice || pricingConfig.priceGroup1to2 || 70) * 2) + ((pricingConfig.additionalGuest3to4 || pricingConfig.priceGroup3to4 || 20) * 2) + ((pricingConfig.additionalGuest5to6 || pricingConfig.priceGroup5to6 || 25) * 2) + ((pricingConfig.additionalGuest7to8 || pricingConfig.priceGroup7to8 || 30) * 2)) * 3}</span>
             </div>
           </div>
         </div>

@@ -135,11 +135,11 @@ async function initializeTables() {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS pricing_config (
         id SERIAL PRIMARY KEY,
-        price_group_1to2 DECIMAL(10,2) DEFAULT 75,
-        price_group_3to4 DECIMAL(10,2) DEFAULT 95,
-        price_group_5to6 DECIMAL(10,2) DEFAULT 115,
-        price_group_7to8 DECIMAL(10,2) DEFAULT 135,
-        cleaning_fee DECIMAL(10,2) DEFAULT 50,
+        price_group_1to2 DECIMAL(10,2) DEFAULT 70,
+        price_group_3to4 DECIMAL(10,2) DEFAULT 20,
+        price_group_5to6 DECIMAL(10,2) DEFAULT 25,
+        price_group_7to8 DECIMAL(10,2) DEFAULT 30,
+        cleaning_fee DECIMAL(10,2) DEFAULT 60,
         parking_fee DECIMAL(10,2) DEFAULT 20,
         tourist_tax_adult DECIMAL(10,2) DEFAULT 2.00,
         tourist_tax_child DECIMAL(10,2) DEFAULT 0,
@@ -444,7 +444,7 @@ async function getRequiredMinStay(checkInDate, checkOutDate, pool, seasonalRules
   const pricingRulesResult = await pool.query('SELECT min_stay, min_stay_august FROM pricing_config ORDER BY id DESC LIMIT 1');
   const rules = pricingRulesResult.rows[0] || { min_stay: 3, min_stay_august: 6 };
   const defaultMinStay = parseInt(rules.min_stay) || 3;
-  const augustMinStay = parseInt(rules.min_stay_august) || 6;
+  const augustMinStay = parseInt(rules.min_stay_august) || 3;
 
   // 2. Use provided seasonal rules
   let finalRequiredMinStay = defaultMinStay; // Inizia con il minimo di default
@@ -1617,8 +1617,8 @@ export default async function handler(req, res) {
 
             // 🔥 FIX: Fetch pricing config and seasonal rules missing from the local scope
             let pricing = {
-              priceGroup1to2: 75, priceGroup3to4: 95, priceGroup5to6: 115, priceGroup7to8: 135,
-              cleaningFee: 50, parkingFee: 20, touristTaxAdult: 2.00, touristTaxChild: 0,
+              priceGroup1to2: 70, priceGroup3to4: 20, priceGroup5to6: 25, priceGroup7to8: 30,
+              cleaningFee: 60, parkingFee: 20, touristTaxAdult: 2.00, touristTaxChild: 0,
               weeklyDiscount: 10, monthlyDiscount: 15
             };
             try {
@@ -1626,11 +1626,11 @@ export default async function handler(req, res) {
               if (pricingResult.rows.length > 0) {
                 const p = pricingResult.rows[0];
                 pricing = {
-                  priceGroup1to2: parseFloat(p.price_group_1to2) || 75,
-                  priceGroup3to4: parseFloat(p.price_group_3to4) || 95,
-                  priceGroup5to6: parseFloat(p.price_group_5to6) || 115,
-                  priceGroup7to8: parseFloat(p.price_group_7to8) || 135,
-                  cleaningFee: parseFloat(p.cleaning_fee) || 50,
+                  priceGroup1to2: parseFloat(p.price_group_1to2) || 70,
+                  priceGroup3to4: parseFloat(p.price_group_3to4) || 20,
+                  priceGroup5to6: parseFloat(p.price_group_5to6) || 25,
+                  priceGroup7to8: parseFloat(p.price_group_7to8) || 30,
+                  cleaningFee: parseFloat(p.cleaning_fee) || 60,
                   parkingFee: parseFloat(p.parking_fee) || 20,
                   touristTaxAdult: parseFloat(p.tourist_tax_adult) || 2.00,
                   touristTaxChild: parseFloat(p.tourist_tax_child) || 0,
@@ -1670,7 +1670,7 @@ export default async function handler(req, res) {
                   }
                 }
               }
-              const nightlyCost = calculateNightlyPrice(guestsNum, pricingForNight);
+              const nightlyCost = calculateNightlyPrice(guests, pricingForNight);
               calculatedAccommodationCost += nightlyCost;
               detailsPerNight.push({ date: d.toISOString().split('T')[0], cost: nightlyCost, rule: ruleApplied });
             }
@@ -3572,11 +3572,11 @@ END:VEVENT
           return res.status(200).json({
             success: true,
             pricing: {
-              priceGroup1to2: 75,
-              priceGroup3to4: 95,
-              priceGroup5to6: 115,
-              priceGroup7to8: 135,
-              cleaningFee: 50,
+              priceGroup1to2: 70,
+              priceGroup3to4: 20,
+              priceGroup5to6: 25,
+              priceGroup7to8: 30,
+              cleaningFee: 60,
               parkingFee: 20,
               touristTaxAdult: 2.00,
               touristTaxChild: 0,
@@ -3641,11 +3641,11 @@ END:VEVENT
               WHERE id = (SELECT id FROM pricing_config ORDER BY id DESC LIMIT 1)
               RETURNING *
             `, [
-              pricingData.priceGroup1to2 || pricingData.price_group_1to2 || 75,
-              pricingData.priceGroup3to4 || pricingData.price_group_3to4 || 95,
-              pricingData.priceGroup5to6 || pricingData.price_group_5to6 || 115,
-              pricingData.priceGroup7to8 || pricingData.price_group_7to8 || 135,
-              pricingData.cleaningFee || pricingData.cleaning_fee || 50,
+              pricingData.priceGroup1to2 || pricingData.price_group_1to2 || 70,
+              pricingData.priceGroup3to4 || pricingData.price_group_3to4 || 20,
+              pricingData.priceGroup5to6 || pricingData.price_group_5to6 || 25,
+              pricingData.priceGroup7to8 || pricingData.price_group_7to8 || 30,
+              pricingData.cleaningFee || pricingData.cleaning_fee || 60,
               pricingData.parkingFee || pricingData.parking_fee || 20,
               pricingData.touristTaxAdult || pricingData.tourist_tax_adult || 2.00,
               pricingData.touristTaxChild || pricingData.tourist_tax_child || 0,
@@ -3668,11 +3668,11 @@ END:VEVENT
               ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
               RETURNING *
             `, [
-              pricingData.priceGroup1to2 || pricingData.price_group_1to2 || 75,
-              pricingData.priceGroup3to4 || pricingData.price_group_3to4 || 95,
-              pricingData.priceGroup5to6 || pricingData.price_group_5to6 || 115,
-              pricingData.priceGroup7to8 || pricingData.price_group_7to8 || 135,
-              pricingData.cleaningFee || pricingData.cleaning_fee || 50,
+              pricingData.priceGroup1to2 || pricingData.price_group_1to2 || 70,
+              pricingData.priceGroup3to4 || pricingData.price_group_3to4 || 20,
+              pricingData.priceGroup5to6 || pricingData.price_group_5to6 || 25,
+              pricingData.priceGroup7to8 || pricingData.price_group_7to8 || 30,
+              pricingData.cleaningFee || pricingData.cleaning_fee || 60,
               pricingData.parkingFee || pricingData.parking_fee || 20,
               pricingData.touristTaxAdult || pricingData.tourist_tax_adult || 2.00,
               pricingData.touristTaxChild || pricingData.tourist_tax_child || 0,
@@ -3800,11 +3800,11 @@ END:VEVENT
           if (pricingResult.rows.length > 0) {
             const p = pricingResult.rows[0];
             pricing = {
-              priceGroup1to2: parseFloat(p.price_group_1to2) || 75,
-              priceGroup3to4: parseFloat(p.price_group_3to4) || 95,
-              priceGroup5to6: parseFloat(p.price_group_5to6) || 115,
-              priceGroup7to8: parseFloat(p.price_group_7to8) || 135,
-              cleaningFee: parseFloat(p.cleaning_fee) || 50,
+              priceGroup1to2: parseFloat(p.price_group_1to2) || 70,
+              priceGroup3to4: parseFloat(p.price_group_3to4) || 20,
+              priceGroup5to6: parseFloat(p.price_group_5to6) || 25,
+              priceGroup7to8: parseFloat(p.price_group_7to8) || 30,
+              cleaningFee: parseFloat(p.cleaning_fee) || 60,
               parkingFee: parseFloat(p.parking_fee) || 20,
               touristTaxAdult: parseFloat(p.tourist_tax_adult) || 2.00,
               touristTaxChild: parseFloat(p.tourist_tax_child) || 0,
@@ -3816,11 +3816,11 @@ END:VEVENT
           } else {
             // Prezzi default se tabella vuota
             pricing = {
-              priceGroup1to2: 75,
-              priceGroup3to4: 95,
-              priceGroup5to6: 115,
-              priceGroup7to8: 135,
-              cleaningFee: 50,
+              priceGroup1to2: 70,
+              priceGroup3to4: 20,
+              priceGroup5to6: 25,
+              priceGroup7to8: 30,
+              cleaningFee: 60,
               parkingFee: 20,
               touristTaxAdult: 2.00,
               touristTaxChild: 0,
@@ -3833,11 +3833,11 @@ END:VEVENT
         } catch (dbError) {
           console.warn('⚠️ Errore database pricing, uso default:', dbError);
           pricing = {
-            priceGroup1to2: 75,
-            priceGroup3to4: 95,
-            priceGroup5to6: 115,
-            priceGroup7to8: 135,
-            cleaningFee: 50,
+            priceGroup1to2: 70,
+            priceGroup3to4: 20,
+            priceGroup5to6: 25,
+            priceGroup7to8: 30,
+            cleaningFee: 60,
             parkingFee: 20,
             touristTaxAdult: 2.00,
             touristTaxChild: 0,
