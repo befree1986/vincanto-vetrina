@@ -30,14 +30,14 @@ export default async function handler(req, res) {
   try {
     console.log('📝 Ricevuto booking/confirm:', JSON.stringify(req.body, null, 2));
     const { payment_method, payment_status, payment_id, amount, total_amount, booking_data } = req.body;
-    
+
     // Validazione dati
     if (!payment_method || !payment_status || !booking_data || typeof booking_data !== 'object') {
       console.error('❌ Validazione fallita:', { payment_method, payment_status, booking_data });
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Dati mancanti o non validi', 
-        received: req.body 
+      return res.status(400).json({
+        success: false,
+        error: 'Dati mancanti o non validi',
+        received: req.body
       });
     }
 
@@ -55,7 +55,7 @@ export default async function handler(req, res) {
     // Parsing nome/cognome
     let firstName = 'Nome';
     let lastName = 'Cognome';
-    
+
     if (booking_data.guest_name) {
       const nameParts = booking_data.guest_name.trim().split(' ');
       firstName = nameParts[0] || 'Nome';
@@ -84,9 +84,9 @@ export default async function handler(req, res) {
 
     // 📅 VALIDAZIONE SOGGIORNO MINIMO (Sicurezza Backend)
     try {
-      const pricingResult = await pool.query('SELECT min_stay, min_stay_august FROM pricing_config ORDER BY id DESC LIMIT 1');
-      const rules = pricingResult.rows[0] || { min_stay: 3, min_stay_august: 3 };
-      
+      const pricingResult = await pool.query('SELECT min_stay FROM pricing_config ORDER BY id DESC LIMIT 1');
+      const rules = pricingResult.rows[0] || { min_stay: 3 };
+
       // 🔥 NUOVO: Carica regole stagionali dal DB
       const seasonalRulesResult = await pool.query("SELECT * FROM seasonal_pricing_rules WHERE is_active = true");
       const seasonalRules = seasonalRulesResult.rows;
@@ -94,11 +94,8 @@ export default async function handler(req, res) {
       const checkInDate = new Date(checkin);
       const checkOutDate = new Date(checkout);
       const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
-      
+
       let requiredMinStay = 0;
-      const checkInYear = checkInDate.getUTCFullYear();
-      const augustStart = new Date(Date.UTC(checkInYear, 7, 1)); // August 1st
-      const septemberStart = new Date(Date.UTC(checkInYear, 8, 1)); // September 1st
 
       for (let d = new Date(checkInDate); d < checkOutDate; d.setDate(d.getDate() + 1)) {
         const currentDateUTC = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -106,20 +103,17 @@ export default async function handler(req, res) {
         let seasonalRuleFound = false;
 
         if (seasonalRules && Array.isArray(seasonalRules)) {
-            for (const rule of seasonalRules) {
-                const ruleStartUTC = new Date(Date.UTC(new Date(rule.start_date).getUTCFullYear(), new Date(rule.start_date).getUTCMonth(), new Date(rule.start_date).getUTCDate()));
-                const ruleEndUTC = new Date(Date.UTC(new Date(rule.end_date).getUTCFullYear(), new Date(rule.end_date).getUTCMonth(), new Date(rule.end_date).getUTCDate()));
-                if (currentDateUTC >= ruleStartUTC && currentDateUTC <= ruleEndUTC && rule.min_stay) {
-                    minStayForThisDay = rule.min_stay;
-                    seasonalRuleFound = true;
-                    break;
-                }
+          for (const rule of seasonalRules) {
+            const ruleStartUTC = new Date(Date.UTC(new Date(rule.start_date).getUTCFullYear(), new Date(rule.start_date).getUTCMonth(), new Date(rule.start_date).getUTCDate()));
+            const ruleEndUTC = new Date(Date.UTC(new Date(rule.end_date).getUTCFullYear(), new Date(rule.end_date).getUTCMonth(), new Date(rule.end_date).getUTCDate()));
+            if (currentDateUTC >= ruleStartUTC && currentDateUTC <= ruleEndUTC && rule.min_stay) {
+              minStayForThisDay = rule.min_stay;
+              seasonalRuleFound = true;
+              break;
             }
+          }
         }
 
-        if (!seasonalRuleFound && (currentDateUTC >= augustStart && currentDateUTC < septemberStart)) {
-            minStayForThisDay = parseInt(rules.min_stay_august) || 3;
-        }
         requiredMinStay = Math.max(requiredMinStay, minStayForThisDay);
       }
 
@@ -135,7 +129,7 @@ export default async function handler(req, res) {
     // Determina stato prenotazione
     let bookingStatus = 'pending';
     let paymentStatusDb = 'pending';
-    
+
     if (payment_status === 'success') {
       bookingStatus = 'confirmed';
       paymentStatusDb = booking_data.payment_type === 'deposit' ? 'deposit_paid' : 'paid_full';
@@ -148,8 +142,8 @@ export default async function handler(req, res) {
     const isFullPayment = paymentStatusDb === 'paid_full';
     const depositValue = isFullPayment ? totalAmount : Math.round(totalAmount * 0.2 * 100) / 100;
 
-    console.log('✅ Dati validati:', { 
-      checkin, checkout, guests, adults, children, 
+    console.log('✅ Dati validati:', {
+      checkin, checkout, guests, adults, children,
       firstName, lastName, email, phone, totalAmount,
       bookingStatus, paymentStatusDb
     });
@@ -222,10 +216,10 @@ export default async function handler(req, res) {
           subject: `Conferma Prenotazione ${bookingId}`,
           html: emailHtml,
           templateName: 'booking_confirmation',
-          metadata: { 
-            bookingId, 
-            totalAmount, 
-            paymentMethod: payment_method, 
+          metadata: {
+            bookingId,
+            totalAmount,
+            paymentMethod: payment_method,
             language: guestLanguage,
             extraServices: Array.isArray(booking_data.extra_services) ? booking_data.extra_services : []
           }
@@ -257,10 +251,10 @@ export default async function handler(req, res) {
 
   } catch (err) {
     console.error('❌ Errore booking/confirm:', err);
-    return res.status(500).json({ 
-      success: false, 
+    return res.status(500).json({
+      success: false,
       error: 'Errore salvataggio prenotazione',
-      details: err.message 
+      details: err.message
     });
   }
 }

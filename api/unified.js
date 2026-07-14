@@ -368,7 +368,7 @@ async function migrateDatabase() {
     // Aggiungi colonna min_stay_august se non esiste
     await pool.query(`
       ALTER TABLE pricing_config
-      ADD COLUMN IF NOT EXISTS min_stay_august INTEGER DEFAULT 3
+      ADD COLUMN IF NOT EXISTS min_stay_august INTEGER DEFAULT 6
     `);
     console.log('✅ Colonna min_stay_august verificata/aggiunta');
   } catch (error) {
@@ -464,9 +464,6 @@ async function getRequiredMinStay(checkInDate, checkOutDate, pool, seasonalRules
       }
     }
 
-    if (!seasonalRuleFound && (currentDateUTC >= augustStart && currentDateUTC < septemberStart)) {
-      minStayForThisDay = augustMinStay;
-    }
     finalRequiredMinStay = Math.max(finalRequiredMinStay, minStayForThisDay);
   }
   return finalRequiredMinStay;
@@ -1584,7 +1581,7 @@ export default async function handler(req, res) {
           const adults = bookingData.adults || bData.adults || bookingData.guests || bData.guests || 1;
           const children = bookingData.children || bData.children || 0;
           const email = bookingData.customerEmail || bookingData.email || bookingData.customer_email || bData.guest_email || bData.email;
-          const phone = bookingData.customerPhone || bookingData.phone || bData.guest_phone || bData.phone;          
+          const phone = bookingData.customerPhone || bookingData.phone || bData.guest_phone || bData.phone;
           const notes = bookingData.specialRequests || bookingData.notes || '';
           const parkingOption = bookingData.parkingOption || 'none'; // Get parking option from bookingData
           const childrenAges = bookingData.childrenAges || '';
@@ -3616,7 +3613,7 @@ END:VEVENT
           let result;
           if (existingConfig.rows.length > 0) {
             const currentPricing = existingConfig.rows[0];
-            const currentMinStayAugust = currentPricing.min_stay_august || 3;
+            const currentMinStayAugust = currentPricing.min_stay_august || 6;
             // UPDATE configurazione esistente
             console.log('🔄 Aggiornamento configurazione prezzi esistente...');
             result = await pool.query(`
@@ -3681,7 +3678,7 @@ END:VEVENT
               pricingData.minStay || pricingData.min_stay || 3,
               pricingData.maxStay || pricingData.max_stay || 14,
               pricingData.maxGuests || pricingData.max_guests || 8,
-              pricingData.minStayAugust || pricingData.min_stay_august || 3
+              pricingData.minStayAugust || pricingData.min_stay_august || 6
             ]);
           }
 
@@ -3810,7 +3807,7 @@ END:VEVENT
               weeklyDiscount: parseFloat(p.weekly_discount) || 10,
               monthlyDiscount: parseFloat(p.monthly_discount) || 15,
               minStay: parseInt(p.min_stay) || 3,
-              minStayAugust: parseInt(p.min_stay_august) || 3
+              minStayAugust: parseInt(p.min_stay_august) || 6
             };
           } else {
             // Prezzi default se tabella vuota
