@@ -1573,6 +1573,7 @@ export default async function handler(req, res) {
         try {
           // Crea nuova prenotazione nel database
           const bookingData = req.body;
+          const seasonalRules = await getSeasonalRules(pool); // 🔥 FIX: Fetch global seasonal rules per getRequiredMinStay
           console.log('📝 Nuova prenotazione ricevuta:', JSON.stringify(bookingData, null, 2));
           // DEBUG: Mostra tutti i dati ricevuti
           console.log('DEBUG bookingData:', bookingData);
@@ -1640,7 +1641,7 @@ export default async function handler(req, res) {
             } catch (e) {
               console.error('Errore recupero pricing fallback:', e);
             }
-            const seasonalRules = await getSeasonalRules(pool);
+            // seasonalRules is fetched globally for the booking block
 
             const checkInDate = new Date(checkin);
             const checkOutDate = new Date(checkout);
@@ -3561,6 +3562,7 @@ END:VEVENT
             const pricing = result.rows[0];
             // Use the already fetched 'pricing' object
             pricing.monthlyRules = monthlyRules;
+            const seasonalRules = await getSeasonalRules(pool); // 🔥 FIX: Fetch seasonal rules
             pricing.seasonalRules = seasonalRules;
             return res.status(200).json({ success: true, pricing: pricing });
           }
@@ -3610,10 +3612,12 @@ END:VEVENT
           console.log('✅ Database connection OK');
 
           // Verifica se esiste già una configurazione
-          const existingConfig = await pool.query('SELECT id FROM pricing_config LIMIT 1');
+          const existingConfig = await pool.query('SELECT * FROM pricing_config ORDER BY id DESC LIMIT 1');
 
           let result;
           if (existingConfig.rows.length > 0) {
+            const currentPricing = existingConfig.rows[0];
+            const currentMinStayAugust = currentPricing.min_stay_august || 6;
             // UPDATE configurazione esistente
             console.log('🔄 Aggiornamento configurazione prezzi esistente...');
             result = await pool.query(`
@@ -3648,10 +3652,10 @@ END:VEVENT
               pricingData.weekendSurcharge || pricingData.weekend_surcharge || 0,
               pricingData.weeklyDiscount || pricingData.weekly_discount || 10,
               pricingData.monthlyDiscount || pricingData.monthly_discount || 15,
-              pricingData.minStay || pricingData.min_stay || 3,
+              pricingData.minStay || pricingData.min_stay || 2,
               pricingData.maxStay || pricingData.max_stay || 14,
               pricingData.maxGuests || pricingData.max_guests || 8,
-              pricingData.minStayAugust || pricingData.min_stay_august || 6
+              pricingData.minStayAugust || pricingData.min_stay_august || currentMinStayAugust
             ]);
           } else {
             // INSERT nuova configurazione (solo se tabella vuota)
