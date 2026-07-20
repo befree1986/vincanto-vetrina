@@ -12,6 +12,7 @@ jobs:
       AIRBNB_ICAL_URL: ${{ secrets.AIRBNB_ICAL_URL }}
       BOOKING_ICAL_URL: ${{ secrets.BOOKING_ICAL_URL }}
       HOLIDU_ICAL_URL: ${{ secrets.HOLIDU_ICAL_URL }}
+      # L'avviso su questa riga è normale: l'editor non può verificare i segreti di GitHub.
       CALENDAR_SYNC_TOKEN: ${{ secrets.CALENDAR_SYNC_TOKEN }}
     
     steps:

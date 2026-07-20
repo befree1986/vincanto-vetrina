@@ -2,30 +2,30 @@
 import { ExtraService } from '../hooks/useExtraServices';
 
 class AdminApiService {
-      // Recupera eventi da calendar_events (eventi iCal esterni)
-      async getCalendarEvents() {
-        try {
-          const data = await this.request('calendar-events');
-          return data.events || [];
-        } catch (error) {
-          console.error('Error fetching calendar events:', error);
-          return [];
-        }
-      }
-    // Sincronizza tutti i calendari (API unificata)
-    async syncAllCalendars() {
-      try {
-        const response = await fetch('/api/calendar-real-sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
-        });
-        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        return await response.json();
-      } catch (error) {
-        console.error('❌ Errore syncAllCalendars:', error);
-        throw error;
-      }
+  // Recupera eventi da calendar_events (eventi iCal esterni)
+  async getCalendarEvents() {
+    try {
+      const data = await this.request('calendar-events');
+      return data.events || [];
+    } catch (error) {
+      console.error('Error fetching calendar events:', error);
+      return [];
     }
+  }
+  // Sincronizza tutti i calendari (API unificata)
+  async syncAllCalendars() {
+    try {
+      const response = await fetch('/api/calendar-real-sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      return await response.json();
+    } catch (error) {
+      console.error('❌ Errore syncAllCalendars:', error);
+      throw error;
+    }
+  }
   private readonly baseUrl: string;
 
   constructor() {
@@ -55,19 +55,19 @@ class AdminApiService {
       // 🔄 NUOVO SISTEMA: tutti gli endpoint vanno verso API unificata
       const url = `${this.baseUrl}/unified?action=${endpoint}`;
       console.log('🌐 API Unificata Request:', url);
-      
+
       // Se abbiamo un token, lo includiamo nell'header
       const token = localStorage.getItem('vincanto_admin_token');
       const baseHeaders: Record<string, string> = {
         'Content-Type': 'application/json',
       };
-      
+
       // Merge con gli headers delle opzioni se presenti
       const mergedHeaders = {
         ...baseHeaders,
         ...(options.headers as Record<string, string> || {}),
       };
-      
+
       if (token) {
         mergedHeaders['Authorization'] = `Bearer ${token}`;
       }
@@ -207,6 +207,43 @@ class AdminApiService {
       console.error('Error deleting booking:', error);
       return { success: false, message: 'Errore eliminazione prenotazione' };
     }
+  }
+
+  // --- AZIONI RAPIDE ---
+
+  /**
+   * Conferma il pagamento di una prenotazione (acconto o saldo).
+   * @param bookingId L'ID della prenotazione.
+   * @param paymentType 'deposit' o 'full'.
+   */
+  public async confirmBookingPayment(bookingId: string | number, paymentType: 'deposit' | 'full' = 'full') {
+    const statusUpdate = {
+      status: 'confirmed',
+      payment_status: paymentType === 'full' ? 'paid_full' : 'deposit_paid'
+    };
+    return this.updateBooking(String(bookingId), statusUpdate);
+  }
+
+  /**
+   * Annulla una prenotazione.
+   * @param bookingId L'ID della prenotazione.
+   */
+  public async cancelBooking(bookingId: string | number) {
+    return this.updateBooking(String(bookingId), { status: 'cancelled' });
+  }
+
+  // --- INVIO EMAIL ---
+
+  /**
+   * Invia un'email personalizzata al cliente di una prenotazione.
+   * @param bookingId L'ID della prenotazione.
+   * @param emailData Oggetto con `subject` e `message`.
+   */
+  public async sendEmailToCustomer(bookingId: string | number, emailData: { subject: string; message: string }) {
+    return this.request('admin-send-customer-email', {
+      method: 'POST',
+      body: JSON.stringify({ ...emailData, bookingId: String(bookingId) }),
+    });
   }
 
   // Pricing Management
@@ -394,7 +431,7 @@ class AdminApiService {
   }
 
   // === CALENDAR MANAGEMENT API ===
-  
+
   // Ottieni configurazioni calendario
   async getCalendarConfigs() {
     try {
@@ -405,7 +442,7 @@ class AdminApiService {
       }
       const data = await response.json();
       console.log('📅 Calendar configs da API unificata:', data);
-      
+
       // Adatta la risposta per il formato atteso dall'admin panel
       const adaptedCalendars = (data.calendars || []).map((cal: any) => ({
         ...cal,
@@ -417,7 +454,7 @@ class AdminApiService {
         // Mantiene anche i campi originali per compatibilità
         status: cal.status || (cal.is_active ? 'connected' : 'disconnected')
       }));
-      
+
       return {
         calendars: adaptedCalendars,
         stats: {
@@ -521,7 +558,7 @@ class AdminApiService {
         futureOnly: (params.futureOnly !== false).toString(),
         ...(params.platform && { platform: params.platform })
       });
-      
+
       console.log('📅 Recupero prenotazioni da calendari esterni...');
       const response = await fetch(`${this.baseUrl}/unified?action=calendar-bookings&${queryParams}`);
       if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -541,9 +578,9 @@ class AdminApiService {
       const response = await fetch(`${this.baseUrl}/unified?action=force-calendar-sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           calendarId: calendarId || 'all',
-          force: true 
+          force: true
         })
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -632,16 +669,16 @@ class AdminApiService {
   async addCustomService(serviceData: any) {
     try {
       console.log('➕ ADMIN API: Aggiunta servizio custom:', serviceData);
-      
+
       const response = await fetch(`${this.baseUrl}/unified?action=extra-services`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(serviceData),
       });
-      
+
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const result = await response.json();
-      
+
       console.log('✅ SERVIZIO AGGIUNTO:', result);
       return result;
     } catch (error) {
@@ -654,16 +691,16 @@ class AdminApiService {
   async updateCustomService(serviceData: any) {
     try {
       console.log('🔄 ADMIN API: Aggiornamento servizio custom:', serviceData);
-      
+
       const response = await fetch(`${this.baseUrl}/unified?action=extra-services&id=${serviceData.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(serviceData),
       });
-      
+
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const result = await response.json();
-      
+
       console.log('✅ SERVIZIO AGGIORNATO:', result);
       return result;
     } catch (error) {
@@ -676,14 +713,14 @@ class AdminApiService {
   async deleteCustomService(serviceId: number) {
     try {
       console.log('🗑️ ADMIN API: Eliminazione servizio custom:', serviceId);
-      
+
       const response = await fetch(`${this.baseUrl}/unified?action=extra-services&id=${serviceId}`, {
         method: 'DELETE',
       });
-      
+
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const result = await response.json();
-      
+
       console.log('✅ SERVIZIO ELIMINATO:', result);
       return result;
     } catch (error) {
@@ -741,19 +778,19 @@ class AdminApiService {
   // --- Gestione Regole Stagionali (NUOVA TABELLA) ---
 
   public async getSeasonalRules(): Promise<{ success: boolean; rules: any[] }> {
-      return this.request('seasonal-rules', { method: 'GET' });
+    return this.request('seasonal-rules', { method: 'GET' });
   }
 
   public async createSeasonalRule(ruleData: any): Promise<{ success: boolean; rule: any }> {
-      return this.request('seasonal-rules', { method: 'POST', body: JSON.stringify(ruleData) });
+    return this.request('seasonal-rules', { method: 'POST', body: JSON.stringify(ruleData) });
   }
 
   public async updateSeasonalRule(id: number, ruleData: any): Promise<{ success: boolean; rule: any }> {
-      return this.request(`seasonal-rules&id=${id}`, { method: 'PUT', body: JSON.stringify(ruleData) });
+    return this.request(`seasonal-rules&id=${id}`, { method: 'PUT', body: JSON.stringify(ruleData) });
   }
 
   public async deleteSeasonalRule(id: number): Promise<{ success: boolean }> {
-      return this.request(`seasonal-rules&id=${id}`, { method: 'DELETE' });
+    return this.request(`seasonal-rules&id=${id}`, { method: 'DELETE' });
   }
 
 }

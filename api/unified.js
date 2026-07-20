@@ -535,6 +535,55 @@ export default async function handler(req, res) {
       action = action.split('?')[0];
     }
 
+    // ========================================
+    // ADMIN: INVIA EMAIL AL CLIENTE
+    // ========================================
+    if (action === 'admin-send-customer-email') {
+      // 🛡️ SICUREZZA: Proteggi questo endpoint verificando la sessione admin
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      if (!token || !adminSessionStore.has(token)) {
+        return res.status(403).json({ success: false, error: 'Accesso negato. Token non valido o scaduto.' });
+      }
+
+      if (req.method === 'POST') {
+        try {
+          const { bookingId, subject, message } = req.body;
+
+          if (!bookingId || !subject || !message) {
+            return res.status(400).json({ success: false, error: 'ID prenotazione, oggetto e messaggio sono obbligatori.' });
+          }
+
+          // 1. Recupera l'email del cliente dalla prenotazione
+          const bookingResult = await pool.query(
+            `SELECT email, first_name FROM bookings WHERE id = $1 OR booking_id = $2`,
+            [isNaN(Number(bookingId)) ? null : Number(bookingId), String(bookingId)]
+          );
+
+          if (bookingResult.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Prenotazione non trovata.' });
+          }
+
+          const booking = bookingResult.rows[0];
+          if (!booking.email || !booking.email.includes('@')) {
+            return res.status(400).json({ success: false, error: 'Email del cliente non valida o mancante.' });
+          }
+
+          // 2. Invia l'email
+          if (emailTransporter) {
+            const emailHtml = `<p>Gentile ${booking.first_name || 'Cliente'},</p><p>${message.replace(/\n/g, '<br>')}</p><br><p>Cordiali saluti,<br>Lo Staff di Vincanto</p>`;
+
+            await sendEmailWithAdminCopy({ to: booking.email, subject, html: emailHtml, templateName: 'custom_admin_message' });
+            return res.status(200).json({ success: true, message: 'Email inviata con successo.' });
+          } else {
+            return res.status(500).json({ success: false, error: 'Servizio email non configurato.' });
+          }
+        } catch (error) {
+          console.error('❌ Errore in admin-send-customer-email:', error);
+          return res.status(500).json({ success: false, error: 'Errore interno del server.', details: error.message });
+        }
+      }
+    }
+
     console.log('🎯 API UNIFICATA CONSOLIDATA - Action:', action, 'Method:', req.method);
 
     // ========================================
@@ -1522,6 +1571,8 @@ export default async function handler(req, res) {
             SELECT 
               id,
               booking_id,
+              first_name,
+              last_name,
               first_name || ' ' || last_name as customer_name,
               email as customer_email,
               phone,
@@ -1531,7 +1582,7 @@ export default async function handler(req, res) {
               total_amount,
               deposit_amount,
               status,
-              payment_status as payment_method,
+              payment_status,
               created_at
             FROM bookings 
             WHERE status IN ('confirmed', 'pending', 'cancelled')
@@ -1547,8 +1598,8 @@ export default async function handler(req, res) {
               phone: booking.phone || '',
               total_amount: parseFloat(booking.total_amount), // Converti stringa in numero
               deposit_amount: booking.deposit_amount ? parseFloat(booking.deposit_amount) : 0,
-              platform: booking.platform || 'direct', // Default platform
-              payment_method: booking.payment_status || 'pending',
+              platform: booking.platform || 'direct',
+              payment_method: booking.payment_status || 'pending', // Mantenuto per retrocompatibilità
               total_days: Math.max(1, Math.ceil((new Date(booking.check_out) - new Date(booking.check_in)) / (1000 * 60 * 60 * 24))),
               created_at: booking.created_at.toISOString()
             }))
