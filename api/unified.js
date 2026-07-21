@@ -16,7 +16,7 @@ import { RealCalendarSync } from './calendar-real-sync.js'; // 👈 Importa la c
 // 🚀 Configurazione JWT
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
-    console.error('⚠️ ATTENZIONE: JWT_SECRET non configurato! Il sistema di autenticazione non è sicuro.');
+  console.error('⚠️ ATTENZIONE: JWT_SECRET non configurato! Il sistema di autenticazione non è sicuro.');
 }
 
 // Database connection
@@ -538,13 +538,13 @@ export default async function handler(req, res) {
       // 🛡️ SICUREZZA: Proteggi questo endpoint verificando la sessione admin
       const token = req.headers.authorization?.replace('Bearer ', '');
       if (!token) {
-          return res.status(403).json({ success: false, error: 'Accesso negato. Token mancante.' });
+        return res.status(403).json({ success: false, error: 'Accesso negato. Token mancante.' });
       }
       try {
-          jwt.verify(token, JWT_SECRET);
-          // Se siamo qui, il token è valido. Procedi.
+        jwt.verify(token, JWT_SECRET);
+        // Se siamo qui, il token è valido. Procedi.
       } catch (error) {
-          return res.status(403).json({ success: false, error: 'Accesso negato. Token non valido o scaduto.' });
+        return res.status(403).json({ success: false, error: 'Accesso negato. Token non valido o scaduto.' });
       }
 
       if (req.method === 'POST') {
@@ -1034,16 +1034,16 @@ export default async function handler(req, res) {
 
         // 🚀 Genera il JSON Web Token invece di una sessione in memoria
         const payload = {
-            userId: user.id,
-            role: user.role,
-            email: user.email,
+          userId: user.id,
+          role: user.role,
+          email: user.email,
         };
-        const sessionToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '8h' }); // Token valido per 8 ore
+        const jwtToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '8h' }); // Token valido per 8 ore
 
         return res.status(200).json({
           success: true,
           role: user.role,
-          token: sessionToken, // Questo ora è un JWT
+          token: jwtToken, // Questo ora è un JWT
           message: 'Login completato con successo'
         });
 
@@ -1442,22 +1442,22 @@ export default async function handler(req, res) {
 
       // 🚀 Verifica il JWT invece di cercare nella sessione in memoria
       try {
-          const decoded = jwt.verify(token, JWT_SECRET);
-          // `decoded` ora contiene il payload { userId, role, email }
-          return res.status(200).json({
-              success: true,
-              role: decoded.role,
-              authenticated: true,
-              email: decoded.email
-          });
+        const decoded = jwt.verify(token, JWT_SECRET);
+        // `decoded` ora contiene il payload { userId, role, email }
+        return res.status(200).json({
+          success: true,
+          role: decoded.role,
+          authenticated: true,
+          email: decoded.email
+        });
       } catch (error) {
-          // Questo cattura token scaduti, firme non valide, etc.
-          return res.status(401).json({
-              success: false,
-              role: 'guest',
-              authenticated: false,
-              error: 'Token admin non valido o scaduto'
-          });
+        // Questo cattura token scaduti, firme non valide, etc.
+        return res.status(401).json({
+          success: false,
+          role: 'guest',
+          authenticated: false,
+          error: 'Token admin non valido o scaduto'
+        });
       }
     }
 

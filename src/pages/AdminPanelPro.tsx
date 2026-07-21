@@ -65,7 +65,6 @@ const AdminPanelPro = (): JSX.Element => {
   const [systemSettings, setSystemSettings] = useState<any[]>([]);
   const [analytics, setAnalytics] = useState<any[]>([]);
   const [showPreview, setShowPreview] = useState(true); // Stato per anteprima contenuti
-  const [notifications, setNotifications] = useState<any[]>([]);
 
   // Stati per gestione form e loading
   const [loading, setLoading] = useState(false); // Mantenuto per altre operazioni
@@ -510,6 +509,7 @@ const AdminPanelPro = (): JSX.Element => {
   };
 
   // Carica dati reali dalle API backend
+  // This is the main data loading function for the dashboard and other sections
   const loadRealApiData = async () => {
     if (!adminApiService) {
       console.warn('⚠️ AdminApiService non disponibile');
@@ -544,7 +544,7 @@ const AdminPanelPro = (): JSX.Element => {
         debugLog.log('✅ Prenotazioni calendari esterni caricate:', calendarBookingsResult);
         if (calendarBookingsResult && calendarBookingsResult.bookings) {
           setCalendarEvents(calendarBookingsResult.bookings);
-
+  
           // Log distribuzione per piattaforma
           const platformCount = calendarBookingsResult.bookings.reduce((acc: Record<string, number>, booking: any) => {
             const platform = booking.platform || 'unknown';
@@ -555,7 +555,7 @@ const AdminPanelPro = (): JSX.Element => {
           debugLog.log('📊 Distribuzione prenotazioni per piattaforma:', platformCount);
         } else {
           setCalendarEvents([]);
-        }
+        } 
       } catch (err) {
         console.error('❌ Errore prenotazioni calendari esterni:', err);
       }
@@ -1021,7 +1021,6 @@ const AdminPanelPro = (): JSX.Element => {
   */
   // === NUOVE FUNZIONI PAGAMENTI AGGIUNTE ===
 
-  /*
   const handleConfigureStripe = () => {
     const stripeConfig = prompt(`⚙️ Configurazione Stripe\n\nInserisci la tua configurazione Stripe (JSON):\n\nEsempio:\n{\n  "publicKey": "pk_live_...",\n  "secretKey": "sk_live_...",\n  "webhookSecret": "whsec_...",\n  "currency": "EUR"\n}`,
       JSON.stringify({
@@ -1066,7 +1065,7 @@ const AdminPanelPro = (): JSX.Element => {
 
     alert(`✅ Setup PayPal Completato!\n\n📧 Email: ${paypalConfig.email}\n📤 Link: ${paypalConfig.link}\n📊 Commissione: ${paypalConfig.commission}%\n💰 Valute: ${paypalConfig.currency.join(', ')}\n🔔 Webhook: ${paypalConfig.webhooks ? 'Attivi' : 'Disattivi'}\n\n✅ PayPal Business è ora completamente configurato!`);
   };
- 
+
   /*  // === ADVANCED PAYMENT HANDLERS ===
 
   const handleProcessRefund = async (paymentId: string, amount?: number) => {
@@ -1579,7 +1578,7 @@ const AdminPanelPro = (): JSX.Element => {
   // === RENDER DEBUG PRINCIPALE ===
   devLog('🎨 Rendering main admin panel...');
 
-  // === RENDER ADMIN PANEL RESPONSIVE ===
+  // Unifica bookings e calendarEvents per la tabella
   // Unifica bookings e calendarEvents per la tabella
   const unifiedBookings = [
     ...realBookings.map(b => ({
@@ -1869,8 +1868,8 @@ const AdminPanelPro = (): JSX.Element => {
                         <span className="stat-value">
                           {paymentTransactions.length > 0
                             ? Math.round(
-                              (paymentTransactions.filter(t => t.status === 'succeeded' || t.status === 'completed').length /
-                                paymentTransactions.length) * 100
+                              (paymentTransactions.filter(t => t.status === 'succeeded' || t.status === 'completed').length / paymentTransactions.length)
+                               * 100
                             )
                             : 0}%
                         </span>
@@ -1991,7 +1990,7 @@ const AdminPanelPro = (): JSX.Element => {
                                     👁️ Dettagli
                                   </button>
                                   {(transaction.status === 'succeeded' || transaction.status === 'completed') && (
-                                    <button className="admin-btn-sm admin-btn-warning" onClick={() => { alert('Funzione di rimborso in sviluppo'); }}>
+                                    <button className="admin-btn-sm admin-btn-warning" onClick={() => alert('Funzione di rimborso in sviluppo')}>
                                       💰 Rimborsa
                                     </button>
                                   )}
