@@ -246,7 +246,10 @@ class AdminApiService {
    * @param bookingId L'ID della prenotazione.
    */
   public async cancelBooking(bookingId: string | number) {
-    return this.updateBooking(String(bookingId), { status: 'cancelled' });
+    return this.request('cancel-booking', {
+      method: 'POST',
+      body: JSON.stringify({ bookingId: String(bookingId), reason: 'Cancellata da admin' }),
+    });
   }
 
   // --- INVIO EMAIL ---
