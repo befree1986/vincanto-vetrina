@@ -123,6 +123,7 @@ const BookingDetailModal: React.FC<BookingDetailModalProps> = ({ booking, onClos
                             <label>{t('booking.summary.status', 'Stato')}</label>
                             <select name="status" value={formData.status} onChange={handleInputChange} disabled={!isEditing}>
                                 <option value="pending">{t('booking.summary.statusPending', 'In attesa')}</option>
+                                <option value="draft">{t('booking.summary.statusDraft', 'Bozza')}</option>
                                 <option value="confirmed">{t('booking.summary.statusConfirmed', 'Confermata')}</option>
                                 <option value="cancelled">{t('booking.summary.statusCancelled', 'Cancellata')}</option>
                             </select>

@@ -1612,8 +1612,8 @@ export default async function handler(req, res) {
               status,
               payment_status,
               created_at
-            FROM bookings 
-            WHERE status IN ('confirmed', 'pending', 'cancelled')
+            FROM bookings
+            WHERE status IN ('confirmed', 'pending', 'cancelled', 'draft')
             ORDER BY created_at DESC
           `);
 

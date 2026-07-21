@@ -192,6 +192,7 @@ const BookingsManagement = () => {
                     <option value="pending">{t('booking.summary.statusPending', 'In attesa')}</option>
                     <option value="confirmed">{t('booking.summary.statusConfirmed', 'Confermata')}</option>
                     <option value="cancelled">{t('booking.summary.statusCancelled', 'Cancellata')}</option>
+                    <option value="draft">{t('booking.summary.statusDraft', 'Bozza')}</option>
                 </select>
                 <div className="date-filter-group">
                     <input type="date" value={dateFilter.start} onChange={(e) => setDateFilter(prev => ({ ...prev, start: e.target.value }))} className="date-input" aria-label={t('booking.checkin', 'Check-in')} />
