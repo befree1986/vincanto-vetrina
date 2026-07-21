@@ -133,6 +133,7 @@ const BookingDetailModal: React.FC<BookingDetailModalProps> = ({ booking, onClos
                                 <option value="unpaid">{t('booking.summary.statusUnpaid', 'Non pagato')}</option>
                                 <option value="deposit_paid">{t('booking.summary.statusDeposit_paid', 'Acconto pagato')}</option>
                                 <option value="paid_full">{t('booking.summary.statusPaid_full', 'Pagato')}</option>
+                                <option value="cancelled">{t('booking.summary.statusCancelled', 'Cancellata')}</option>
                             </select>
                         </div>
                     </div>

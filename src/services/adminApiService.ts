@@ -209,6 +209,23 @@ class AdminApiService {
     }
   }
 
+  // --- 2FA Management ---
+
+  async setup2FA(email: string, role: string) {
+    return this.request('admin/2fa/setup', {
+      method: 'POST',
+      body: JSON.stringify({ email, selectedRole: role }),
+    });
+  }
+
+  async verify2FA(email: string, role: string, token: string) {
+    return this.request('admin/2fa/verify', {
+      method: 'POST',
+      body: JSON.stringify({ email, selectedRole: role, token }),
+    });
+  }
+
+
   // --- AZIONI RAPIDE ---
 
   /**

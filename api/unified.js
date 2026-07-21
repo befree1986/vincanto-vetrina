@@ -750,16 +750,16 @@ export default async function handler(req, res) {
     // ========================================
     if (action === 'admin/2fa/setup') {
       try {
-        const { email } = req.body;
+        const { email, selectedRole } = req.body;
 
-        if (!email) {
-          return res.status(400).json({ success: false, error: 'Email richiesta' });
+        if (!email || !selectedRole) {
+          return res.status(400).json({ success: false, error: 'Email e ruolo sono richiesti' });
         }
 
         // Verifica che l'utente esista (in produzione controllare anche autenticazione)
         const userResult = await pool.query(
-          'SELECT id, email, two_factor_enabled FROM admin_users WHERE email = $1',
-          [email]
+          'SELECT id, email, two_factor_enabled FROM admin_users WHERE email = $1 AND role = $2',
+          [email, selectedRole]
         );
 
         if (userResult.rows.length === 0) {
@@ -804,16 +804,16 @@ export default async function handler(req, res) {
     // ========================================
     if (action === 'admin/2fa/verify') {
       try {
-        const { email, token } = req.body;
+        const { email, token, selectedRole } = req.body;
 
-        if (!email || !token) {
-          return res.status(400).json({ success: false, error: 'Email e token richiesti' });
+        if (!email || !token || !selectedRole) {
+          return res.status(400).json({ success: false, error: 'Email, token e ruolo sono richiesti' });
         }
 
         // Recupera utente e secret
         const userResult = await pool.query(
-          'SELECT id, email, two_factor_secret, two_factor_enabled FROM admin_users WHERE email = $1',
-          [email]
+          'SELECT id, email, two_factor_secret, two_factor_enabled, recovery_codes FROM admin_users WHERE email = $1 AND role = $2',
+          [email, selectedRole]
         );
 
         if (userResult.rows.length === 0) {

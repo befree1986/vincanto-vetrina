@@ -14,6 +14,17 @@ import ContentManager from '../components/admin/ContentManager';
 import { useAdminRole } from '../hooks/useAdminRole';
 import { devLog, devError, debugLog } from '../utils/debug';
 
+// Definizione del tipo per una notifica
+interface Notification {
+  id: string | number;
+  type: 'booking' | 'payment' | 'system' | 'review';
+  title: string;
+  message: string;
+  timestamp: string;
+  priority: 'high' | 'medium' | 'low';
+  read: boolean;
+}
+
 
 const AdminPanelPro = (): JSX.Element => {
   devLog('🖥️ AdminPanelPro component rendering...');
@@ -65,6 +76,7 @@ const AdminPanelPro = (): JSX.Element => {
   const [systemSettings, setSystemSettings] = useState<any[]>([]);
   const [analytics, setAnalytics] = useState<any[]>([]);
   const [showPreview, setShowPreview] = useState(true); // Stato per anteprima contenuti
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   // Stati per gestione form e loading
   const [loading, setLoading] = useState(false); // Mantenuto per altre operazioni
@@ -433,7 +445,7 @@ const AdminPanelPro = (): JSX.Element => {
     }
   };
 
-  const deleteNotification = (notificationId: number) => {
+  const deleteNotification = (notificationId: string | number) => {
     if (window.confirm(`🗑️ Eliminare la notifica #${notificationId}?`)) {
       debugLog.log(`🗑️ Eliminazione notifica ${notificationId}`);
       alert(`✅ Notifica #${notificationId} eliminata con successo!`);
@@ -579,7 +591,7 @@ const AdminPanelPro = (): JSX.Element => {
       try {
         const notificationsResult = await adminApiService.getNotifications();
         debugLog.log('✅ Notifiche caricate:', notificationsResult);
-        setNotifications(notificationsResult || []);
+        setNotifications(notificationsResult as Notification[] || []);
       } catch (err) {
         console.error('❌ Errore notifiche:', err);
       }
@@ -1880,26 +1892,14 @@ const AdminPanelPro = (): JSX.Element => {
                   <div className="admin-pricing-card">
                     <h4>⚙️ Configurazione</h4>
                     <div className="pricing-controls">
-                      <button className="admin-btn-primary" onClick={() => {
-                        const stripeKey = prompt('🔑 Inserisci Stripe Publishable Key:', 'pk_test_...');
-                        if (stripeKey) {
-                          alert(`✅ Stripe Key configurata!\n\nKey: ${stripeKey.substring(0, 20)}...\n\n💡 Salvata nelle impostazioni sistema.`);
-                        }
-                      }}>
+                      <button className="admin-btn-primary" onClick={handleConfigureStripe}>
                         🔧 Configura Stripe
                       </button>
-                      <button className="admin-btn-secondary" onClick={() => {
-                        const paypalEmail = prompt('📧 Inserisci PayPal Business Email:', 'business@vincanto.it');
-                        if (paypalEmail) {
-                          alert(`✅ PayPal configurato!\n\nEmail: ${paypalEmail}\n\n💡 Salvata nelle impostazioni sistema.`);
-                        }
-                      }}>
+                      <button className="admin-btn-secondary" onClick={handleCompletePayPalSetup}>
                         🔧 Configura PayPal
                       </button>
-                      <button className="admin-btn-secondary" onClick={() => {
-                        alert('🏦 Configurazione Bonifico Bancario\n\nIBAN: IT02 L012 3456 789012345678901\nIntestato a: Vincanto Maori\n\n💡 Tempo liquidazione: 3-5 giorni lavorativi');
-                      }}>
-                        🏦 Info Bonifico
+                      <button className="admin-btn-secondary" onClick={handleEditBankTransfer}>
+                        🏦 Modifica Bonifico
                       </button>
                     </div>
                   </div>
@@ -2794,7 +2794,7 @@ const AdminPanelPro = (): JSX.Element => {
                         </tr>
                       </thead>
                       <tbody>
-                        {notifications.map((notif) => (
+                        {notifications.map((notif: Notification) => (
                           <tr key={notif.id} className={`booking-row ${!notif.read ? 'unread' : ''}`}>
                             <td>
                               <span className={`status ${notif.type}`}>
@@ -2858,19 +2858,19 @@ const AdminPanelPro = (): JSX.Element => {
 
                   <div className="admin-stat-card">
                     <h3>Non Lette</h3>
-                    <div className="stat-value">{notifications.filter(n => !n.read).length}</div>
+                    <div className="stat-value">{notifications.filter((n: Notification) => !n.read).length}</div>
                     <small>Richiedono attenzione</small>
                   </div>
 
                   <div className="admin-stat-card">
                     <h3>Pagamenti</h3>
-                    <div className="stat-value">{notifications.filter(n => n.type === 'payment').length}</div>
+                    <div className="stat-value">{notifications.filter((n: Notification) => n.type === 'payment').length}</div>
                     <small>Notifiche pagamento</small>
                   </div>
 
                   <div className="admin-stat-card">
                     <h3>Sistema</h3>
-                    <div className="stat-value">{notifications.filter(n => n.type === 'system').length}</div>
+                    <div className="stat-value">{notifications.filter((n: Notification) => n.type === 'system').length}</div>
                     <small>Notifiche sistema</small>
                   </div>
                 </div>
