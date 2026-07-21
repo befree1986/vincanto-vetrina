@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import './AdminPanelPro.css';
 import AdminLayout from '../components/admin/AdminLayout';
 import '../styles/AdminSuperAdmin.css';
@@ -31,7 +30,6 @@ const AdminPanelPro = (): JSX.Element => {
 
   // Verifica ruolo Admin/SuperAdmin
   const { role, isLoading: roleLoading, isSuperAdmin, isAdmin } = useAdminRole();
-  const navigate = useNavigate();
 
   // Stati principali
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -51,7 +49,6 @@ const AdminPanelPro = (): JSX.Element => {
     { id: 'analytics', label: '📈 Analytics', requiresSuperAdmin: true },
     { id: 'admin-management', label: '👥 Admin', requiresSuperAdmin: true },
     { id: 'sistema', label: '⚙️ Sistema', requiresSuperAdmin: true },
-    { id: 'switch-basic', label: '📉 Vista Admin', requiresSuperAdmin: true },
   ];
 
   // Stati per prenotazioni e pagamenti (solo backend reale)
@@ -222,14 +219,6 @@ const AdminPanelPro = (): JSX.Element => {
       loadRealApiData();
     }
   }, [roleLoading, role]);
-
-  // Effetto per gestire lo switch al pannello Admin Standard
-  useEffect(() => {
-    if (activeTab === 'switch-basic') {
-      setActiveTab('dashboard');
-      navigate('/admin');
-    }
-  }, [activeTab, navigate]);
 
   // Aggiorna dinamicamente l'altezza delle chart-bar
   useEffect(() => {
