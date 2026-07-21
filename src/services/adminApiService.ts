@@ -1,6 +1,25 @@
 // AdminApiService - Collegamento alle API Backend Admin
 import { ExtraService } from '../hooks/useExtraServices';
 
+export interface Booking {
+  id: string | number;
+  booking_id: string;
+  customer_name: string;
+  check_in: string;
+  check_out: string;
+  status: string;
+  payment_status: string;
+  total_amount: number;
+  guests?: number;
+  created_at?: string;
+  first_name?: string;
+  last_name?: string;
+  customer_email?: string;
+  phone?: string;
+  internal_notes?: string;
+  deposit_amount?: number;
+}
+
 class AdminApiService {
   // Recupera eventi da calendar_events (eventi iCal esterni)
   async getCalendarEvents() {
@@ -252,6 +271,17 @@ class AdminApiService {
     });
   }
 
+  /**
+   * Invia un promemoria di pagamento.
+   * @param bookingId L'ID della prenotazione.
+   */
+  public async sendPaymentReminder(bookingId: string | number) {
+    return this.request('send-payment-reminder', {
+      method: 'POST',
+      body: JSON.stringify({ bookingId: String(bookingId) }),
+    });
+  }
+
   // --- INVIO EMAIL ---
 
   /**
@@ -264,6 +294,24 @@ class AdminApiService {
       method: 'POST',
       body: JSON.stringify({ ...emailData, bookingId: String(bookingId) }),
     });
+  }
+
+  // --- BILLING ---
+  public async createBillingPortalSession(body: { return_url: string }): Promise<{ url: string }> {
+    return this.request('admin/create-billing-portal-session', {
+        method: 'POST',
+        body: JSON.stringify(body),
+    });
+  }
+
+
+  // --- AUDIT LOG ---
+
+  /**
+   * Recupera i log delle attività degli admin.
+   */
+  public async getAuditLogs(limit: number = 100, offset: number = 0): Promise<{ logs: any[], total: number }> {
+    return this.request(`admin/audit-log&limit=${limit}&offset=${offset}`);
   }
 
   // Pricing Management

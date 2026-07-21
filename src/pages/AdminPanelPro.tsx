@@ -10,6 +10,8 @@ import BookingsManagement from '../components/admin/BookingsManagement';
 import SeasonalPricingManager from './SeasonalPricingManager';
 import GalleryManager from '../components/admin/GalleryManager';
 import ContentManager from '../components/admin/ContentManager';
+import AuditLogViewer from '../services/AuditLogViewer'; // 🆕 Importa il nuovo componente
+import PremiumSettings from '../components/admin/PremiumSettings';
 import { useAdminRole } from '../hooks/useAdminRole';
 import { devLog, devError, debugLog } from '../utils/debug';
 
@@ -49,6 +51,8 @@ const AdminPanelPro = (): JSX.Element => {
     { id: 'analytics', label: '📈 Analytics', requiresSuperAdmin: true },
     { id: 'admin-management', label: '👥 Admin', requiresSuperAdmin: true },
     { id: 'sistema', label: '⚙️ Sistema', requiresSuperAdmin: true },
+    { id: 'audit-log', label: '📜 Log Attività', requiresSuperAdmin: true }, // 🆕 Aggiungi il nuovo tab
+    { id: 'premium', label: '💎 Premium', requiresSuperAdmin: true },
   ];
 
   // Stati per prenotazioni e pagamenti (solo backend reale)
@@ -545,7 +549,7 @@ const AdminPanelPro = (): JSX.Element => {
         debugLog.log('✅ Prenotazioni calendari esterni caricate:', calendarBookingsResult);
         if (calendarBookingsResult && calendarBookingsResult.bookings) {
           setCalendarEvents(calendarBookingsResult.bookings);
-  
+
           // Log distribuzione per piattaforma
           const platformCount = calendarBookingsResult.bookings.reduce((acc: Record<string, number>, booking: any) => {
             const platform = booking.platform || 'unknown';
@@ -556,7 +560,7 @@ const AdminPanelPro = (): JSX.Element => {
           debugLog.log('📊 Distribuzione prenotazioni per piattaforma:', platformCount);
         } else {
           setCalendarEvents([]);
-        } 
+        }
       } catch (err) {
         console.error('❌ Errore prenotazioni calendari esterni:', err);
       }
@@ -1870,7 +1874,7 @@ const AdminPanelPro = (): JSX.Element => {
                           {paymentTransactions.length > 0
                             ? Math.round(
                               (paymentTransactions.filter(t => t.status === 'succeeded' || t.status === 'completed').length / paymentTransactions.length)
-                               * 100
+                              * 100
                             )
                             : 0}%
                         </span>
@@ -2428,6 +2432,13 @@ const AdminPanelPro = (): JSX.Element => {
                             >
                               🗑️ Elimina
                             </button>
+                        <button
+                          className="admin-btn-info"
+                          onClick={() => alert('Funzionalità di gestione team in sviluppo.')}
+                          disabled={loading}
+                        >
+                          👥 Gestisci Team
+                        </button>
                           </div>
                         </div>
                       </div>
@@ -2737,6 +2748,16 @@ const AdminPanelPro = (): JSX.Element => {
                 <button className="admin-btn-secondary">⚙️ Manutenzione Programmata</button>
               </div>
             </div>
+          )}
+
+          {/* 🆕 Sezione Premium */}
+          {activeTab === 'premium' && isSuperAdmin() && (
+            <PremiumSettings />
+          )}
+
+          {/* 🆕 Sezione Log Attività */}
+          {activeTab === 'audit-log' && isSuperAdmin() && (
+            <AuditLogViewer />
           )}
 
           {/* Sezione Notifiche Professionale */}

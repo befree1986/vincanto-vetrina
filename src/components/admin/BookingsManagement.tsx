@@ -1,30 +1,21 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
-import AdminApiService from '../../services/adminApiService';
+import AdminApiService, { Booking } from '../../services/adminApiService';
 import BookingDetailModal from './BookingDetailModal';
 import './BookingsManagement.css';
-
-// Definizione del tipo per una singola prenotazione
-interface Booking {
-    id: string | number;
-    booking_id: string;
-    customer_name: string;
-    check_in: string;
-    check_out: string;
-    status: string;
-    payment_status: string;
-    total_amount: number;
-    first_name?: string;
-    last_name?: string;
-    customer_email?: string;
-    phone?: string;
-    deposit_amount?: number;
-}
 
 type SortDirection = 'ascending' | 'descending';
 interface SortConfig {
     key: keyof Booking;
     direction: SortDirection;
+}
+
+export interface BookingFilter {
+    dateFilter?: {
+        type: 'check-in' | 'check-out' | 'upcoming';
+        date?: string; // YYYY-MM-DD for single day
+    };
+    statusFilter?: string;
 }
 
 const TableStatusBadge = ({ status }: { status: string }) => {
@@ -38,7 +29,12 @@ const TableStatusBadge = ({ status }: { status: string }) => {
     );
 };
 
-const BookingsManagement = () => {
+interface BookingsManagementProps {
+    initialFilter?: BookingFilter | null;
+    onFilterConsumed?: () => void;
+}
+
+const BookingsManagement: React.FC<BookingsManagementProps> = ({ initialFilter, onFilterConsumed }) => {
     const { t } = useTranslation();
     const apiService = useMemo(() => new AdminApiService(), []);
 
@@ -50,7 +46,8 @@ const BookingsManagement = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
     const [statusFilter, setStatusFilter] = useState<string>('all');
-    const [dateFilter, setDateFilter] = useState<{ start: string; end: string }>({ start: '', end: '' });
+    const [isSendingReminder, setIsSendingReminder] = useState<string | number | null>(null);
+    const [dateFilter, setDateFilter] = useState<{ start: string; end: string; type?: 'check-in' | 'check-out' }>({ start: '', end: '', type: 'check-in' });
     const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
 
     const fetchBookings = useCallback(async () => {
@@ -76,6 +73,26 @@ const BookingsManagement = () => {
         setCurrentPage(1);
     }, [searchTerm, statusFilter, dateFilter]);
 
+    useEffect(() => {
+        if (initialFilter) {
+            resetFilters(); // Pulisce i filtri precedenti
+            if (initialFilter.dateFilter) {
+                const { type, date } = initialFilter.dateFilter;
+                if ((type === 'check-in' || type === 'check-out') && date) {
+                    setDateFilter({ start: date, end: date, type: type });
+                } else if (type === 'upcoming') {
+                    setDateFilter({ start: new Date().toISOString().split('T')[0], end: '', type: 'check-in' });
+                    setStatusFilter('confirmed'); // Mostra solo le confermate future
+                }
+            }
+            if (initialFilter.statusFilter) {
+                setStatusFilter(initialFilter.statusFilter);
+            }
+            // Notifica il genitore che il filtro è stato applicato e può essere resettato
+            onFilterConsumed?.();
+        }
+    }, [initialFilter, onFilterConsumed]);
+
     const filteredBookings = useMemo(() => {
         return bookings.filter(booking => {
             // Filtro per termine di ricerca
@@ -92,12 +109,12 @@ const BookingsManagement = () => {
                 return false;
             }
 
-            // Filtro per intervallo di date (controlla se il check-in rientra nell'intervallo)
-            if (dateFilter.start && new Date(booking.check_in) < new Date(dateFilter.start)) {
-                return false;
-            }
-            if (dateFilter.end && new Date(booking.check_in) > new Date(dateFilter.end)) {
-                return false;
+            // Filtro per intervallo di date
+            if (dateFilter.type === 'check-out') {
+                if (dateFilter.start && !booking.check_out.startsWith(dateFilter.start)) return false;
+            } else { // Default to check-in
+                if (dateFilter.start && booking.check_in < dateFilter.start) return false;
+                if (dateFilter.end && booking.check_in > dateFilter.end) return false;
             }
 
             return true;
@@ -134,7 +151,7 @@ const BookingsManagement = () => {
     const resetFilters = () => {
         setSearchTerm('');
         setStatusFilter('all');
-        setDateFilter({ start: '', end: '' });
+        setDateFilter({ start: '', end: '', type: 'check-in' });
         setCurrentPage(1);
         setSortConfig(null);
     };
@@ -145,6 +162,66 @@ const BookingsManagement = () => {
             direction = 'descending';
         }
         setSortConfig({ key, direction });
+    };
+
+    const handleExportCSV = () => {
+        if (sortedBookings.length === 0) {
+            alert(t('admin.bookings.noDataToExport', 'Nessuna prenotazione da esportare.'));
+            return;
+        }
+
+        const headers = [
+            'ID Prenotazione', 'Nome Cliente', 'Email', 'Telefono',
+            'Check-in', 'Check-out', 'Ospiti', 'Stato', 'Stato Pagamento',
+            'Importo Totale', 'Data Creazione'
+        ];
+
+        const csvRows = [headers.join(',')];
+
+        sortedBookings.forEach(booking => {
+            const row = [
+                `"${booking.booking_id}"`,
+                `"${booking.customer_name.replace(/"/g, '""')}"`, // Escape double quotes
+                `"${booking.customer_email || ''}"`,
+                `"${booking.phone || ''}"`,
+                booking.check_in,
+                booking.check_out,
+                booking.guests || 1,
+                booking.status,
+                booking.payment_status,
+                booking.total_amount.toFixed(2),
+                booking.created_at ? new Date(booking.created_at).toLocaleString('it-IT') : ''
+            ].join(',');
+            csvRows.push(row);
+        });
+
+        const csvString = `\uFEFF${csvRows.join('\n')}`; // Add BOM for Excel
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        const date = new Date().toISOString().split('T')[0];
+        link.setAttribute('download', `vincanto_prenotazioni_${date}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    const handleSendReminder = async (booking: Booking) => {
+        if (!window.confirm(`Inviare un promemoria di pagamento a ${booking.customer_name}?`)) {
+            return;
+        }
+        setIsSendingReminder(booking.id);
+        try {
+            await apiService.sendPaymentReminder(booking.id);
+            alert('Promemoria inviato con successo!');
+        } catch (error) {
+            console.error('Errore invio promemoria:', error);
+            alert(`Errore durante l'invio del promemoria: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
+        } finally {
+            setIsSendingReminder(null);
+        }
     };
 
     const handleCloseModal = () => {
@@ -202,6 +279,9 @@ const BookingsManagement = () => {
                 <button onClick={resetFilters} className="reset-filters-btn">
                     {t('admin.bookings.resetFilters', 'Resetta Filtri')}
                 </button>
+                <button onClick={handleExportCSV} className="export-btn" disabled={sortedBookings.length === 0}>
+                    {t('admin.bookings.exportCSV', 'Esporta CSV')}
+                </button>
             </div>
 
             <div className="table-responsive">
@@ -251,16 +331,29 @@ const BookingsManagement = () => {
                             paginatedBookings.map((booking) => (
                                 <tr key={booking.id}>
                                     <td data-label="ID">#{booking.booking_id?.substring(0, 8)}...</td>
-                                    <td data-label="Ospite">{booking.customer_name}</td>
+                                    <td data-label="Ospite">
+                                        {booking.customer_name}
+                                        {booking.internal_notes && <span className="notes-indicator" title={t('admin.bookings.hasInternalNotes', 'Questa prenotazione ha una nota interna')}>📝</span>}
+                                    </td>
                                     <td data-label="Check-in">{new Date(booking.check_in).toLocaleDateString('it-IT')}</td>
                                     <td data-label="Check-out">{new Date(booking.check_out).toLocaleDateString('it-IT')}</td>
                                     <td data-label="Stato"><TableStatusBadge status={booking.status} /></td>
                                     <td data-label="Pagamento"><TableStatusBadge status={booking.payment_status} /></td>
                                     <td data-label="Totale">€{booking.total_amount.toFixed(2)}</td>
                                     <td data-label="Azioni">
-                                        <button onClick={() => setSelectedBooking(booking)} className="manage-btn">
-                                            {t('admin.manage', 'Gestisci')}
-                                        </button>
+                                        <div className="action-buttons-container">
+                                            <button onClick={() => setSelectedBooking(booking)} className="manage-btn">
+                                                {t('admin.manage', 'Gestisci')}
+                                            </button>
+                                            <button
+                                                onClick={() => handleSendReminder(booking)}
+                                                className="reminder-btn"
+                                                disabled={isSendingReminder === booking.id || booking.payment_status === 'paid_full' || booking.status === 'cancelled'}
+                                                title={t('admin.bookings.sendReminder', 'Invia promemoria pagamento')}
+                                            >
+                                                {isSendingReminder === booking.id ? '...' : '📧'}
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))

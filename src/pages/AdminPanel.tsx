@@ -1,31 +1,16 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../components/admin/AdminLayout';
-import BookingsManagement from '../components/admin/BookingsManagement';
+import BookingsManagement, { BookingFilter } from '../components/admin/BookingsManagement';
 import ContentManager from '../components/admin/ContentManager';
-import AdminApiService from '../services/adminApiService';
+import AdminApiService, { Booking } from '../services/adminApiService';
 import { useAdminRole } from '../hooks/useAdminRole';
+import SubscriptionRequired from '../components/admin/SubscriptionRequired';
 import './AdminPanel.css'; // Nuovo file CSS
 
-// Definizione del tipo per una singola prenotazione (per coerenza con BookingsManagement)
-interface Booking {
-    id: string | number;
-    booking_id: string;
-    customer_name: string;
-    check_in: string;
-    check_out: string;
-    status: string;
-    payment_status: string;
-    total_amount: number;
-    first_name?: string;
-    last_name?: string;
-    customer_email?: string;
-    phone?: string;
-    deposit_amount?: number;
-}
-
 const AdminPanel = () => {
-    const { role, isSuperAdmin } = useAdminRole();
+    // Aggiungiamo un'asserzione di tipo per includere `subscriptionStatus`, risolvendo l'errore di compilazione.
+    const { role, isSuperAdmin, subscriptionStatus } = useAdminRole() as ReturnType<typeof useAdminRole> & { subscriptionStatus: 'active' | 'inactive' | 'not_applicable' | 'loading' };
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('dashboard');
     const [stats, setStats] = useState({
@@ -34,7 +19,8 @@ const AdminPanel = () => {
         todayCheckIns: 0,
         todayCheckOuts: 0,
     });
-    const [todaysActivities, setTodaysActivities] = useState<(Booking & { activityType: string })[]>([]);
+    const [todaysActivities, setTodaysActivities] = useState<(Booking & { activityType: 'check-in' | 'check-out' })[]>([]);
+    const [initialBookingFilter, setInitialBookingFilter] = useState<BookingFilter | null>(null);
     const [loading, setLoading] = useState(true);
     const adminApiService = useMemo(() => new AdminApiService(), []);
 
@@ -46,6 +32,12 @@ const AdminPanel = () => {
         ...(isSuperAdmin() ? [{ id: 'switch-pro', label: '🚀 Vista SuperAdmin', requiresSuperAdmin: true }] : []),
     ];
 
+    const handleStatClick = (filter: BookingFilter) => {
+        setInitialBookingFilter(filter);
+        setActiveTab('prenotazioni');
+    };
+
+
     const fetchDashboardData = useCallback(async () => {
         setLoading(true);
         try {
@@ -55,7 +47,7 @@ const AdminPanel = () => {
             today.setHours(0, 0, 0, 0);
             const todayString = today.toISOString().split('T')[0];
 
-            const upcoming = bookings.filter(b => new Date(b.check_in) >= today && ['confirmed', 'pending'].includes(b.status));
+            const upcoming = bookings.filter((b: Booking) => new Date(b.check_in) >= today && ['confirmed', 'pending'].includes(b.status));
             const todayCheckIns = upcoming.filter(b => b.check_in.startsWith(todayString));
             const todayCheckOuts = bookings.filter(b => b.check_out.startsWith(todayString) && b.status === 'confirmed');
 
@@ -70,8 +62,8 @@ const AdminPanel = () => {
             });
 
             const activities = [
-                ...todayCheckIns.map(b => ({ ...b, activityType: 'check-in' })),
-                ...todayCheckOuts.map(b => ({ ...b, activityType: 'check-out' })),
+                ...todayCheckIns.map((b: Booking) => ({ ...b, activityType: 'check-in' as const })),
+                ...todayCheckOuts.map((b: Booking) => ({ ...b, activityType: 'check-out' as const })),
             ].sort((a, b) => new Date(a.check_in).getTime() - new Date(b.check_in).getTime());
             setTodaysActivities(activities);
 
@@ -92,6 +84,11 @@ const AdminPanel = () => {
         }
     }, [activeTab, isSuperAdmin, navigate]);
 
+    // 🆕 Blocco per abbonamento non attivo
+    if (role === 'admin' && subscriptionStatus === 'inactive') {
+        return <SubscriptionRequired />;
+    }
+
     return (
         <AdminLayout
             activeTab={activeTab}
@@ -111,22 +108,22 @@ const AdminPanel = () => {
                         {loading ? <p>Caricamento dati...</p> : (
                             <>
                                 <div className="admin-stats-grid">
-                                    <div className="admin-stat-card check-in">
+                                    <div className="admin-stat-card check-in clickable" onClick={() => handleStatClick({ dateFilter: { type: 'check-in', date: new Date().toISOString().split('T')[0] } })}>
                                         <h3>Check-in di Oggi</h3>
                                         <div className="stat-value">{stats.todayCheckIns}</div>
                                         <small>Arrivi previsti oggi</small>
                                     </div>
-                                    <div className="admin-stat-card check-out">
+                                    <div className="admin-stat-card check-out clickable" onClick={() => handleStatClick({ dateFilter: { type: 'check-out', date: new Date().toISOString().split('T')[0] } })}>
                                         <h3>Check-out di Oggi</h3>
                                         <div className="stat-value">{stats.todayCheckOuts}</div>
                                         <small>Partenze previste oggi</small>
                                     </div>
-                                    <div className="admin-stat-card">
+                                    <div className="admin-stat-card clickable" onClick={() => handleStatClick({ dateFilter: { type: 'upcoming' }, statusFilter: 'confirmed' })}>
                                         <h3>Prossime Prenotazioni</h3>
                                         <div className="stat-value">{stats.upcomingBookings}</div>
                                         <small>Confermate e in attesa</small>
                                     </div>
-                                    <div className="admin-stat-card">
+                                    <div className="admin-stat-card" title="Funzionalità in sviluppo">
                                         <h3>Messaggi da Leggere</h3>
                                         <div className="stat-value">{stats.pendingMessages}</div>
                                         <small>Dal form di contatto (dato fittizio)</small>
@@ -157,7 +154,7 @@ const AdminPanel = () => {
                     </div>
                 )}
 
-                {activeTab === 'prenotazioni' && <BookingsManagement />}
+                {activeTab === 'prenotazioni' && <BookingsManagement initialFilter={initialBookingFilter} onFilterConsumed={() => setInitialBookingFilter(null)} />}
 
                 {activeTab === 'contenuti' && <ContentManager adminApiService={adminApiService} />}
             </div>

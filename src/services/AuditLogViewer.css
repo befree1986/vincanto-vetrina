@@ -1,0 +1,39 @@
+/* src/components/admin/AuditLogViewer.css */
+.audit-log-viewer {
+    padding: 2rem;
+}
+
+.audit-log-viewer h2 {
+    margin-bottom: 1.5rem;
+}
+
+.log-action-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: capitalize;
+    color: white;
+}
+
+.log-action-badge.action-update {
+    background-color: #3b82f6; /* blue-500 */
+}
+
+.log-action-badge.action-create {
+    background-color: #22c55e; /* green-500 */
+}
+
+.log-action-badge.action-delete,
+.log-action-badge.action-cancel {
+    background-color: #ef4444; /* red-500 */
+}
+
+.audit-log-viewer pre {
+    background-color: #f3f4f6;
+    padding: 0.5rem;
+    border-radius: 4px;
+    max-height: 150px;
+    overflow-y: auto;
+    font-size: 0.8rem;
+}

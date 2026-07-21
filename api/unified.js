@@ -127,6 +127,30 @@ async function initializeTables() {
     `);
     console.log('✅ Tabella bookings inizializzata');
 
+    // 🆕 Crea tabella admin_audit_log se non esiste
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS admin_audit_log (
+        id SERIAL PRIMARY KEY,
+        admin_id INTEGER,
+        admin_email VARCHAR(200),
+        action VARCHAR(100) NOT NULL,
+        entity_type VARCHAR(100),
+        entity_id VARCHAR(255),
+        details JSONB,
+        ip_address VARCHAR(50),
+        user_agent TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    console.log('✅ Tabella admin_audit_log inizializzata');
+
+    // 🆕 Aggiungi colonna 'internal_notes' a bookings se non esiste (per installazioni esistenti)
+    try {
+      await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS internal_notes TEXT`);
+    } catch (e) {
+      console.log('Info: colonna internal_notes già presente o errore:', e.message);
+    }
+
     // 🆕 Crea tabella pricing_config se non esiste
     await pool.query(`
       CREATE TABLE IF NOT EXISTS pricing_config (
@@ -283,6 +307,8 @@ async function initializeTables() {
         password_hash TEXT NOT NULL,
         role VARCHAR(50) DEFAULT 'admin',
         two_factor_enabled BOOLEAN DEFAULT false,
+        stripe_customer_id VARCHAR(255),
+        subscription_status VARCHAR(50),
         two_factor_secret TEXT,
         recovery_codes TEXT[],
         last_login TIMESTAMP,
@@ -529,6 +555,15 @@ export default async function handler(req, res) {
     // 🛡️ FIX: Pulisci action da eventuali parametri extra malformati (es. ?t=...)
     if (action && typeof action === 'string' && action.includes('?')) {
       action = action.split('?')[0];
+    }
+
+    // JWT Admin User Identification
+    let adminUser = null;
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (token) {
+      try {
+        adminUser = jwt.verify(token, JWT_SECRET);
+      } catch (e) { /* ignora, verrà gestito dagli endpoint protetti */ }
     }
 
     // ========================================
@@ -1467,12 +1502,27 @@ export default async function handler(req, res) {
       // 🚀 Verifica il JWT invece di cercare nella sessione in memoria
       try {
         const decoded = jwt.verify(token, JWT_SECRET);
+
+        // 🆕 Premium Feature Check
+        const settingsResult = await pool.query("SELECT value FROM system_settings WHERE key = 'premium_features_enabled'");
+        const premiumEnabled = settingsResult.rows[0]?.value === 'true';
+
+        let subscriptionStatus = 'not_applicable'; // Default for superadmin or if feature is off
+
+        if (premiumEnabled && decoded.role === 'admin') {
+          const userSubResult = await pool.query("SELECT subscription_status FROM admin_users WHERE id = $1", [decoded.userId]);
+          subscriptionStatus = userSubResult.rows[0]?.subscription_status || 'inactive';
+        } else if (decoded.role === 'admin') {
+          subscriptionStatus = 'active'; // If premium is not enabled, all admins are considered active
+        }
+
         // `decoded` ora contiene il payload { userId, role, email }
         return res.status(200).json({
           success: true,
           role: decoded.role,
           authenticated: true,
-          email: decoded.email
+          email: decoded.email,
+          subscriptionStatus: subscriptionStatus
         });
       } catch (error) {
         // Questo cattura token scaduti, firme non valide, etc.
@@ -1482,6 +1532,37 @@ export default async function handler(req, res) {
           authenticated: false,
           error: 'Token admin non valido o scaduto'
         });
+      }
+    }
+
+    // ========================================
+    // ADMIN BILLING/PORTAL
+    // ========================================
+    if (action === 'admin/create-billing-portal-session') {
+      if (!adminUser) {
+        return res.status(403).json({ success: false, error: 'Autenticazione richiesta.' });
+      }
+
+      try {
+        const { return_url } = req.body;
+        const userResult = await pool.query("SELECT stripe_customer_id FROM admin_users WHERE id = $1", [adminUser.userId]);
+        const stripeCustomerId = userResult.rows[0]?.stripe_customer_id;
+
+        if (!stripeCustomerId) {
+          return res.status(400).json({ success: false, error: 'Nessun cliente di fatturazione trovato per questo utente. Contatta il SuperAdmin.' });
+        }
+
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+        const portalSession = await stripe.billingPortal.sessions.create({
+          customer: stripeCustomerId,
+          return_url: return_url || `${req.headers.origin}/admin`,
+        });
+
+        return res.status(200).json({ success: true, url: portalSession.url });
+
+      } catch (error) {
+        console.error("Errore creazione portale Stripe:", error);
+        return res.status(500).json({ success: false, error: 'Impossibile creare la sessione di fatturazione.' });
       }
     }
 
@@ -1611,6 +1692,7 @@ export default async function handler(req, res) {
               deposit_amount,
               status,
               payment_status,
+              internal_notes,
               created_at
             FROM bookings
             WHERE status IN ('confirmed', 'pending', 'cancelled', 'draft')
@@ -1623,6 +1705,7 @@ export default async function handler(req, res) {
               ...booking,
               id: String(booking.id), // 🔧 ASSICURA che ID sia sempre stringa
               guestName: booking.customer_name || 'Ospite Sconosciuto', // 🔧 MAPPING per frontend
+              internal_notes: booking.internal_notes || '',
               phone: booking.phone || '',
               total_amount: parseFloat(booking.total_amount), // Converti stringa in numero
               deposit_amount: booking.deposit_amount ? parseFloat(booking.deposit_amount) : 0,
@@ -2114,6 +2197,10 @@ export default async function handler(req, res) {
             updateFields.push(`payment_status = $${paramIndex++}`);
             updateValues.push(updates.payment_status);
           }
+          if (updates.internal_notes !== undefined) {
+            updateFields.push(`internal_notes = $${paramIndex++}`);
+            updateValues.push(updates.internal_notes);
+          }
 
           if (updateFields.length === 0) {
             return res.status(400).json({
@@ -2140,6 +2227,11 @@ export default async function handler(req, res) {
               success: false,
               error: 'Prenotazione non trovata'
             });
+          }
+
+          // ✍️ LOG AUDIT: Registra l'azione di modifica
+          if (adminUser) {
+            await logAdminAction(adminUser, 'update', 'booking', targetId || targetBookingId, { updates }, req);
           }
 
           return res.status(200).json({
@@ -2361,6 +2453,37 @@ export default async function handler(req, res) {
             success: false,
             error: 'Errore nella cancellazione del booking'
           });
+        }
+      }
+    }
+
+    // ========================================
+    // ADMIN AUDIT LOG ENDPOINT
+    // ========================================
+    if (action === 'admin/audit-log') {
+      // 🛡️ SICUREZZA: Solo SuperAdmin può accedere ai log
+      if (!adminUser || adminUser.role !== 'superadmin') {
+        return res.status(403).json({ success: false, error: 'Accesso negato. Richiesto ruolo SuperAdmin.' });
+      }
+
+      if (req.method === 'GET') {
+        try {
+          const limit = parseInt(req.query.limit) || 100;
+          const offset = parseInt(req.query.offset) || 0;
+
+          const logResult = await pool.query(
+            'SELECT * FROM admin_audit_log ORDER BY created_at DESC LIMIT $1 OFFSET $2',
+            [limit, offset]
+          );
+          const totalResult = await pool.query('SELECT COUNT(*) FROM admin_audit_log');
+
+          return res.status(200).json({
+            success: true,
+            logs: logResult.rows,
+            total: parseInt(totalResult.rows[0].count, 10)
+          });
+        } catch (error) {
+          return res.status(500).json({ success: false, error: 'Errore nel caricamento dei log di audit.' });
         }
       }
     }

@@ -1,24 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import AdminApiService from '../../services/adminApiService';
+import AdminApiService, { Booking } from '../../services/adminApiService';
 import './BookingDetailModal.css';
-
-// Definizione del tipo per una singola prenotazione (da spostare in un file di tipi condiviso)
-interface Booking {
-    id: string | number;
-    booking_id: string;
-    customer_name: string;
-    check_in: string;
-    check_out: string;
-    status: string;
-    payment_status: string;
-    total_amount: number;
-    first_name?: string;
-    last_name?: string;
-    customer_email?: string;
-    phone?: string;
-    deposit_amount?: number;
-}
 
 interface BookingDetailModalProps {
     booking: Booking;
@@ -138,6 +121,19 @@ const BookingDetailModal: React.FC<BookingDetailModalProps> = ({ booking, onClos
                             </select>
                         </div>
                     </div>
+
+                    <hr />
+
+                    <h4>Note Interne (Visibili solo agli Admin)</h4>
+                    <textarea
+                        name="internal_notes"
+                        className="internal-notes-textarea"
+                        value={formData.internal_notes || ''}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                        rows={4}
+                        placeholder="Aggiungi note private sulla prenotazione, cliente, o richieste speciali..."
+                    />
 
                     <div className="modal-footer">
                         {isEditing ? (
