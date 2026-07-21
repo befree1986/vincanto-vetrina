@@ -10,7 +10,14 @@ import { detectLanguage } from '../email/i18n.js';
 import * as TwoFactorAuth from './2fa.js';
 import bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
+import jwt from 'jsonwebtoken'; // 🚀 Aggiungi import per JWT
 import { RealCalendarSync } from './calendar-real-sync.js'; // 👈 Importa la classe di sync reale
+
+// 🚀 Configurazione JWT
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+    console.error('⚠️ ATTENZIONE: JWT_SECRET non configurato! Il sistema di autenticazione non è sicuro.');
+}
 
 // Database connection
 const pool = new Pool({
@@ -19,19 +26,8 @@ const pool = new Pool({
 });
 
 // Session store per admin login 2FA
-const adminSessionStore = new Map();
-const ADMIN_SESSION_TTL_MS = 1000 * 60 * 60 * 8; // 8 ore
-
-const cleanExpiredAdminSessions = () => {
-  const now = Date.now();
-  for (const [token, session] of adminSessionStore.entries()) {
-    if (now - session.createdAt > ADMIN_SESSION_TTL_MS) {
-      adminSessionStore.delete(token);
-    }
-  }
-};
-
-setInterval(cleanExpiredAdminSessions, 1000 * 60 * 15);
+// 🗑️ Rimuoviamo la sessione in memoria, non è adatta per ambienti serverless.
+// const adminSessionStore = new Map();
 
 // Email transporter configuration
 let emailTransporter = null;
@@ -541,8 +537,14 @@ export default async function handler(req, res) {
     if (action === 'admin-send-customer-email') {
       // 🛡️ SICUREZZA: Proteggi questo endpoint verificando la sessione admin
       const token = req.headers.authorization?.replace('Bearer ', '');
-      if (!token || !adminSessionStore.has(token)) {
-        return res.status(403).json({ success: false, error: 'Accesso negato. Token non valido o scaduto.' });
+      if (!token) {
+          return res.status(403).json({ success: false, error: 'Accesso negato. Token mancante.' });
+      }
+      try {
+          jwt.verify(token, JWT_SECRET);
+          // Se siamo qui, il token è valido. Procedi.
+      } catch (error) {
+          return res.status(403).json({ success: false, error: 'Accesso negato. Token non valido o scaduto.' });
       }
 
       if (req.method === 'POST') {
@@ -1030,19 +1032,18 @@ export default async function handler(req, res) {
           [user.id, 'login_success', req.headers['x-forwarded-for'] || req.connection.remoteAddress, req.headers['user-agent']]
         );
 
-        // Genera token di sessione (in produzione usare JWT con scadenza)
-        const sessionToken = randomBytes(32).toString('hex');
-        adminSessionStore.set(sessionToken, {
-          userId: user.id,
-          role: user.role,
-          email: user.email,
-          createdAt: Date.now()
-        });
+        // 🚀 Genera il JSON Web Token invece di una sessione in memoria
+        const payload = {
+            userId: user.id,
+            role: user.role,
+            email: user.email,
+        };
+        const sessionToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '8h' }); // Token valido per 8 ore
 
         return res.status(200).json({
           success: true,
           role: user.role,
-          token: sessionToken,
+          token: sessionToken, // Questo ora è un JWT
           message: 'Login completato con successo'
         });
 
@@ -1439,22 +1440,25 @@ export default async function handler(req, res) {
         });
       }
 
-      const session = adminSessionStore.get(token);
-      if (!session) {
-        return res.status(401).json({
-          success: false,
-          role: 'guest',
-          authenticated: false,
-          error: 'Token admin non valido o scaduto'
-        });
+      // 🚀 Verifica il JWT invece di cercare nella sessione in memoria
+      try {
+          const decoded = jwt.verify(token, JWT_SECRET);
+          // `decoded` ora contiene il payload { userId, role, email }
+          return res.status(200).json({
+              success: true,
+              role: decoded.role,
+              authenticated: true,
+              email: decoded.email
+          });
+      } catch (error) {
+          // Questo cattura token scaduti, firme non valide, etc.
+          return res.status(401).json({
+              success: false,
+              role: 'guest',
+              authenticated: false,
+              error: 'Token admin non valido o scaduto'
+          });
       }
-
-      return res.status(200).json({
-        success: true,
-        role: session.role,
-        authenticated: true,
-        email: session.email
-      });
     }
 
     // ========================================
