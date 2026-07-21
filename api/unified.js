@@ -997,26 +997,50 @@ export default async function handler(req, res) {
           return res.status(400).json({ success: false, error: 'Nessun secret TOTP trovato' });
         }
 
-        // Verifica TOTP
-        const isValid = TwoFactorAuth.verifyTOTP(token, user.two_factor_secret, true);
+        // Verifica TOTP o Codice di Recovery
+        const isTotpValid = TwoFactorAuth.verifyTOTP(token, user.two_factor_secret, true);
+        let isRecoveryValid = false;
+        let usedRecoveryIndex = -1;
 
-        if (!isValid) {
+        if (!isTotpValid) {
+          const recoveryResult = await TwoFactorAuth.verifyRecoveryCode(token, user.recovery_codes || []);
+          if (recoveryResult.valid) {
+            isRecoveryValid = true;
+            usedRecoveryIndex = recoveryResult.usedIndex;
+          }
+        }
+
+        if (!isTotpValid && !isRecoveryValid) {
           // Log fallimento
           await pool.query(
             'INSERT INTO admin_2fa_audit (user_id, action, ip_address, user_agent) VALUES ($1, $2, $3, $4)',
             [user.id, 'login_failed', req.headers['x-forwarded-for'] || req.connection.remoteAddress, req.headers['user-agent']]
           );
-          return res.status(401).json({ success: false, error: 'Codice TOTP non valido' });
+          return res.status(401).json({ success: false, error: 'Codice TOTP o di recovery non valido' });
         }
 
         // Reset rate limit su successo
         TwoFactorAuth.resetRateLimit(email);
+
+        if (isRecoveryValid) {
+          console.log(`✅ Codice di recovery usato per l'utente ${user.email}. Invalidazione in corso...`);
+        }
 
         // Se è il primo setup (two_factor_enabled è false), abilita il 2FA
         if (!user.two_factor_enabled) {
           await pool.query(
             'UPDATE admin_users SET two_factor_enabled = true, two_factor_activated_at = NOW() WHERE id = $1',
             [user.id]
+          );
+        }
+
+        // Se è stato usato un codice di recovery, invalidalo
+        if (isRecoveryValid && usedRecoveryIndex > -1) {
+          const newRecoveryHashes = [...(user.recovery_codes || [])];
+          newRecoveryHashes.splice(usedRecoveryIndex, 1); // Rimuovi il codice usato
+          await pool.query(
+            'UPDATE admin_users SET recovery_codes = $1 WHERE id = $2',
+            [newRecoveryHashes, user.id]
           );
         }
 
