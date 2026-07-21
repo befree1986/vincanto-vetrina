@@ -3,6 +3,7 @@ import './TwoFactorSetup.css';
 
 interface TwoFactorSetupProps {
   userEmail?: string;
+  userRole?: string;
   onComplete?: () => void;
 }
 
@@ -10,7 +11,7 @@ interface TwoFactorSetupProps {
  * Componente per gestire il setup dell'autenticazione a 2 fattori (TOTP)
  * Mostra QR code da scansionare e form per verifica codice
  */
-export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ userEmail = '', onComplete }) => {
+export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ userEmail = '', userRole = '', onComplete }) => {
   const [step, setStep] = useState<'initial' | 'qr' | 'verify' | 'complete'>('initial');
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [totpToken, setTotpToken] = useState<string>('');
@@ -18,6 +19,7 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ userEmail = '', 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [emailInput, setEmailInput] = useState<string>(userEmail);
+  const [roleInput, setRoleInput] = useState<string>(userRole);
 
   /**
    * Step 1: Genera il QR code chiamando /api/admin/2fa/setup
@@ -32,7 +34,7 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ userEmail = '', 
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ email: emailInput })
+        body: JSON.stringify({ email: emailInput, selectedRole: roleInput || 'admin' })
       });
 
       const data = await response.json();
@@ -55,7 +57,7 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ userEmail = '', 
    */
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (totpToken.length !== 6) {
       setError('Il codice deve essere di 6 cifre');
       return;
@@ -70,9 +72,10 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ userEmail = '', 
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ 
-          email: userEmail,
-          token: totpToken 
+        body: JSON.stringify({
+          email: emailInput,
+          token: totpToken,
+          selectedRole: roleInput || 'admin'
         })
       });
 
@@ -84,7 +87,7 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ userEmail = '', 
 
       setRecoveryCodes(data.recoveryCodes || []);
       setStep('complete');
-      
+
       // Callback opzionale
       if (onComplete) {
         setTimeout(() => onComplete(), 3000);
@@ -131,15 +134,23 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ userEmail = '', 
             Dopo aver inserito la password, dovrai inserire un codice a 6 cifre
             generato dalla tua app di autenticazione (Google Authenticator, Authy, ecc.).
           </p>
-            <div className="two-factor-setup-form two-factor-setup-form-initial">
-              <input
-                type="email"
-                placeholder="Email admin"
-                value={emailInput}
-                onChange={(e) => setEmailInput(e.target.value)}
-                className="two-factor-setup-input"
-              />
-            </div>
+          <div className="two-factor-setup-form two-factor-setup-form-initial">
+            <input
+              type="email"
+              placeholder="Email admin"
+              value={emailInput}
+              onChange={(e) => setEmailInput(e.target.value)}
+              className="two-factor-setup-input"
+            />
+            <input
+              type="text"
+              placeholder="Ruolo (admin/superadmin)"
+              value={roleInput}
+              onChange={(e) => setRoleInput(e.target.value)}
+              className="two-factor-setup-input"
+              hidden={!!userRole} // Nascondi se il ruolo è già passato come prop
+            />
+          </div>
           <div className="two-factor-setup-info">
             <h3>Cosa ti serve:</h3>
             <ul>

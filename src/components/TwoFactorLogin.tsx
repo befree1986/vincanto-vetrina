@@ -79,7 +79,7 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
       // Gestione 2FA: se il backend richiede setup, prepara QR
       setRequiresSetup(!!data.requiresSetup);
       setStep('totp');
-      
+
       if (data.requiresSetup) {
         try {
           const qrResp = await fetch('/api/unified?action=admin/2fa/setup', {
@@ -137,13 +137,13 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
       // Gestione 2FA
       setRequiresSetup(!!data.requiresSetup);
       setStep('totp');
-      
+
       if (data.requiresSetup) {
         try {
           const qrResp = await fetch('/api/unified?action=admin/2fa/setup', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, role: selectedRole })
+            body: JSON.stringify({ email, selectedRole: selectedRole })
           });
           const qrData = await qrResp.json();
           if (qrResp.ok && qrData.success) {
@@ -200,7 +200,7 @@ export const TwoFactorLogin: React.FC<TwoFactorLoginProps> = ({
       const errorMessage = err instanceof Error ? err.message : 'Errore di verifica';
       setError(errorMessage);
       if (onLoginError) onLoginError(errorMessage);
-      
+
       // Reset token input su errore
       setTotpToken('');
     } finally {
