@@ -16,6 +16,7 @@ export interface Booking {
   last_name?: string;
   customer_email?: string;
   phone?: string;
+  platform?: string;
   internal_notes?: string;
   deposit_amount?: number;
 }
@@ -282,6 +283,19 @@ class AdminApiService {
     });
   }
 
+  // --- CALENDAR ---
+  public async getCalendarViewData(): Promise<{ bookings: any[], externalEvents: any[], blockedDates: any[] }> {
+    return this.request('calendar-view-data');
+  }
+
+  public async updateExternalEventNotes(eventId: number | string, notes: string): Promise<{ success: boolean, updatedEvent: any }> {
+    return this.request('admin/update-external-event-notes', {
+      method: 'POST',
+      body: JSON.stringify({ eventId, notes }),
+    });
+  }
+
+
   // --- INVIO EMAIL ---
 
   /**
@@ -299,8 +313,8 @@ class AdminApiService {
   // --- BILLING ---
   public async createBillingPortalSession(body: { return_url: string }): Promise<{ url: string }> {
     return this.request('admin/create-billing-portal-session', {
-        method: 'POST',
-        body: JSON.stringify(body),
+      method: 'POST',
+      body: JSON.stringify(body),
     });
   }
 
@@ -313,6 +327,26 @@ class AdminApiService {
   public async getAuditLogs(limit: number = 100, offset: number = 0): Promise<{ logs: any[], total: number }> {
     return this.request(`admin/audit-log&limit=${limit}&offset=${offset}`);
   }
+
+  // --- USER MANAGEMENT ---
+
+  public async getAdminUsers(): Promise<any[]> {
+    const data = await this.request('admin/users');
+    return data.users || [];
+  }
+
+  public async createAdminUser(userData: any): Promise<{ success: boolean; user: any; error?: string }> {
+    return this.request('admin/users', { method: 'POST', body: JSON.stringify(userData) });
+  }
+
+  public async updateAdminUser(userId: number | string, userData: any): Promise<{ success: boolean; user: any; error?: string }> {
+    return this.request(`admin/users&id=${userId}`, { method: 'PUT', body: JSON.stringify(userData) });
+  }
+
+  public async deleteAdminUser(userId: number | string): Promise<{ success: boolean; message?: string; error?: string }> {
+    return this.request(`admin/users&id=${userId}`, { method: 'DELETE' });
+  }
+
 
   // Pricing Management
   async getPricingConfig() {

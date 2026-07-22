@@ -151,6 +151,13 @@ async function initializeTables() {
       console.log('Info: colonna internal_notes già presente o errore:', e.message);
     }
 
+    // 🆕 Aggiungi colonna 'internal_notes' a calendar_events se non esiste
+    try {
+      await pool.query(`ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS internal_notes TEXT`);
+    } catch (e) {
+      console.log('Info: colonna internal_notes in calendar_events già presente o errore:', e.message);
+    }
+
     // 🆕 Crea tabella pricing_config se non esiste
     await pool.query(`
       CREATE TABLE IF NOT EXISTS pricing_config (
@@ -307,6 +314,7 @@ async function initializeTables() {
         password_hash TEXT NOT NULL,
         role VARCHAR(50) DEFAULT 'admin',
         two_factor_enabled BOOLEAN DEFAULT false,
+        is_active BOOLEAN DEFAULT true,
         stripe_customer_id VARCHAR(255),
         subscription_status VARCHAR(50),
         two_factor_secret TEXT,
@@ -317,6 +325,13 @@ async function initializeTables() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    // 🆕 Aggiungi colonna 'is_active' a admin_users se non esiste
+    try {
+      await pool.query(`ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true`);
+    } catch (e) {
+      console.log('Info: colonna is_active in admin_users già presente o errore:', e.message);
+    }
 
     // Crea tabella audit per 2FA
     await pool.query(`
@@ -691,6 +706,11 @@ export default async function handler(req, res) {
             price_group_1to2, price_group_3to4, price_group_5to6, price_group_7to8,
             cleaning_fee, parking_fee, tourist_tax_adult, is_active
           ]);
+
+          // ✍️ LOG AUDIT: Crea regola stagionale
+          if (adminUser) {
+            await logAdminAction(adminUser, 'create', 'seasonal_rule', result.rows[0].id, { rule: result.rows[0] }, req);
+          }
           const newRule = result.rows[0];
           newRule.start_date = new Date(newRule.start_date).toISOString().split('T')[0];
           newRule.end_date = new Date(newRule.end_date).toISOString().split('T')[0];
@@ -726,6 +746,11 @@ export default async function handler(req, res) {
           if (result.rows.length === 0) {
             return res.status(404).json({ success: false, error: 'Regola non trovata' });
           }
+
+          // ✍️ LOG AUDIT: Aggiorna regola stagionale
+          if (adminUser) {
+            await logAdminAction(adminUser, 'update', 'seasonal_rule', id, { updates: req.body }, req);
+          }
           const updatedRule = result.rows[0];
           updatedRule.start_date = new Date(updatedRule.start_date).toISOString().split('T')[0];
           updatedRule.end_date = new Date(updatedRule.end_date).toISOString().split('T')[0];
@@ -742,6 +767,11 @@ export default async function handler(req, res) {
           if (!id) return res.status(400).json({ success: false, error: 'ID regola mancante' });
           const result = await pool.query('DELETE FROM seasonal_pricing_rules WHERE id = $1 RETURNING id', [id]);
           if (result.rowCount === 0) return res.status(404).json({ success: false, error: 'Regola non trovata' });
+
+          // ✍️ LOG AUDIT: Elimina regola stagionale
+          if (adminUser) {
+            await logAdminAction(adminUser, 'delete', 'seasonal_rule', id, { deletedId: id }, req);
+          }
           return res.status(200).json({ success: true, message: 'Regola eliminata', deletedId: id });
         } catch (error) {
           return res.status(500).json({ success: false, error: error.message });
@@ -2489,6 +2519,222 @@ export default async function handler(req, res) {
     }
 
     // ========================================
+    // ADMIN USER MANAGEMENT (SuperAdmin only)
+    // ========================================
+    if (action === 'admin/users') {
+      // 🛡️ SICUREZZA: Solo SuperAdmin può gestire utenti
+      if (!adminUser || adminUser.role !== 'superadmin') {
+        return res.status(403).json({ success: false, error: 'Accesso negato. Richiesto ruolo SuperAdmin.' });
+      }
+
+      // GET: Lista tutti gli admin (escluso il superadmin stesso per sicurezza)
+      if (req.method === 'GET') {
+        try {
+          const result = await pool.query(
+            "SELECT id, name, email, role, is_active, last_login, created_at, subscription_status FROM admin_users WHERE role != 'superadmin' ORDER BY created_at DESC"
+          );
+          return res.status(200).json({ success: true, users: result.rows });
+        } catch (error) {
+          return res.status(500).json({ success: false, error: 'Errore nel caricamento degli utenti.' });
+        }
+      }
+
+      // POST: Crea un nuovo admin
+      if (req.method === 'POST') {
+        try {
+          const { name, email, password, role, is_active } = req.body;
+          if (!name || !email || !password || !role) {
+            return res.status(400).json({ success: false, error: 'Nome, email, password e ruolo sono obbligatori.' });
+          }
+
+          const existingUser = await pool.query('SELECT id FROM admin_users WHERE email = $1', [email]);
+          if (existingUser.rows.length > 0) {
+            return res.status(409).json({ success: false, error: 'Un utente con questa email esiste già.' });
+          }
+
+          const passwordHash = await bcrypt.hash(password, 10);
+          const result = await pool.query(
+            `INSERT INTO admin_users (name, email, password_hash, role, is_active) VALUES ($1, $2, $3, $4, $5) RETURNING id, name, email, role, is_active`,
+            [name, email, passwordHash, role, is_active]
+          );
+
+          await logAdminAction(adminUser, 'create', 'admin_user', result.rows[0].id, { email, role }, req);
+
+          return res.status(201).json({ success: true, user: result.rows[0] });
+        } catch (error) {
+          return res.status(500).json({ success: false, error: 'Errore nella creazione dell\'utente.' });
+        }
+      }
+
+      // PUT: Aggiorna un admin
+      if (req.method === 'PUT') {
+        try {
+          const { id } = req.query;
+          const { name, email, role, is_active, password } = req.body;
+
+          if (!id) {
+            return res.status(400).json({ success: false, error: 'ID utente mancante.' });
+          }
+
+          const updateFields = [];
+          const updateValues = [];
+          let paramIndex = 1;
+
+          if (name) { updateFields.push(`name = $${paramIndex++}`); updateValues.push(name); }
+          if (email) { updateFields.push(`email = $${paramIndex++}`); updateValues.push(email); }
+          if (role) { updateFields.push(`role = $${paramIndex++}`); updateValues.push(role); }
+          if (is_active !== undefined) { updateFields.push(`is_active = $${paramIndex++}`); updateValues.push(is_active); }
+          if (password) {
+            const passwordHash = await bcrypt.hash(password, 10);
+            updateFields.push(`password_hash = $${paramIndex++}`);
+            updateValues.push(passwordHash);
+          }
+
+          if (updateFields.length === 0) {
+            return res.status(400).json({ success: false, error: 'Nessun campo da aggiornare.' });
+          }
+
+          updateValues.push(id);
+          const query = `UPDATE admin_users SET ${updateFields.join(', ')}, updated_at = NOW() WHERE id = $${paramIndex} RETURNING id, name, email, role, is_active`;
+
+          const result = await pool.query(query, updateValues);
+
+          if (result.rowCount === 0) {
+            return res.status(404).json({ success: false, error: 'Utente non trovato.' });
+          }
+
+          await logAdminAction(adminUser, 'update', 'admin_user', id, { updates: req.body }, req);
+
+          return res.status(200).json({ success: true, user: result.rows[0] });
+        } catch (error) {
+          if (error.code === '23505') { // unique_violation
+            return res.status(409).json({ success: false, error: 'Un utente con questa email esiste già.' });
+          }
+          return res.status(500).json({ success: false, error: 'Errore nell\'aggiornamento dell\'utente.' });
+        }
+      }
+
+      // DELETE: Elimina un admin
+      if (req.method === 'DELETE') {
+        try {
+          const { id } = req.query;
+          if (!id) {
+            return res.status(400).json({ success: false, error: 'ID utente mancante.' });
+          }
+
+          // Per sicurezza, non permettere di cancellare se stessi
+          if (String(adminUser.userId) === String(id)) {
+            return res.status(400).json({ success: false, error: 'Non puoi eliminare te stesso.' });
+          }
+
+          const result = await pool.query('DELETE FROM admin_users WHERE id = $1 RETURNING id, email', [id]);
+
+          if (result.rowCount === 0) {
+            return res.status(404).json({ success: false, error: 'Utente non trovato.' });
+          }
+
+          await logAdminAction(adminUser, 'delete', 'admin_user', id, { deletedUser: result.rows[0] }, req);
+
+          return res.status(200).json({ success: true, message: 'Utente eliminato con successo.' });
+        } catch (error) {
+          return res.status(500).json({ success: false, error: 'Errore nell\'eliminazione dell\'utente.' });
+        }
+      }
+    }
+
+    // ========================================
+    // CALENDAR VIEW DATA (UNIFIED)
+    // ========================================
+    if (action === 'calendar-view-data') {
+      // This endpoint is protected by the admin role check via JWT
+      if (!adminUser) {
+        return res.status(403).json({ success: false, error: 'Accesso negato. Autenticazione richiesta.' });
+      }
+
+      try {
+        // 1. Get direct bookings
+        const bookingsResult = await pool.query(`
+          SELECT id, booking_id, check_in, check_out, customer_name, email, phone, status, 'direct' as platform
+          FROM bookings 
+          WHERE status = 'confirmed' OR status = 'pending'
+        `);
+
+        // 2. Get external calendar events (already filtered in the view/query)
+        const eventsResult = await pool.query(`
+          SELECT id, uid, calendar_source as platform, summary, description, start_date, end_date
+          FROM calendar_events
+          WHERE start_date >= NOW() - INTERVAL '2 year'
+            AND NOT (LOWER(summary) LIKE '%canceled%' OR LOWER(summary) LIKE '%cancelled%')
+            AND NOT ((platform = 'airbnb' OR calendar_source = 'airbnb') AND (LOWER(summary) LIKE '%not available%' OR LOWER(summary) LIKE '%blocked%'))
+            AND NOT ((platform = 'holidu' OR calendar_source = 'holidu') AND (LOWER(summary) LIKE '%not available%' OR LOWER(summary) LIKE '%unavailable%'))
+        `);
+
+        // 3. Get manually blocked dates
+        const blockedDatesResult = await pool.query(`
+          SELECT id, start_date, end_date, reason, description
+          FROM blocked_dates
+        `);
+
+        return res.status(200).json({
+          success: true,
+          bookings: bookingsResult.rows,
+          externalEvents: eventsResult.rows,
+          blockedDates: blockedDatesResult.rows,
+        });
+
+      } catch (error) {
+        console.error('❌ Errore in calendar-view-data:', error);
+        return res.status(500).json({ success: false, error: 'Errore nel caricamento dei dati del calendario.' });
+      }
+    }
+
+    // ========================================
+    // CALENDAR VIEW DATA (UNIFIED)
+    // ========================================
+    if (action === 'calendar-view-data') {
+      // This endpoint is protected by the admin role check via JWT
+      if (!adminUser) {
+        return res.status(403).json({ success: false, error: 'Accesso negato. Autenticazione richiesta.' });
+      }
+
+      try {
+        // 1. Get direct bookings
+        const bookingsResult = await pool.query(`
+          SELECT id, booking_id, check_in, check_out, customer_name, email, phone, status, 'direct' as platform
+          FROM bookings 
+          WHERE status = 'confirmed' OR status = 'pending'
+        `);
+
+        // 2. Get external calendar events (already filtered in the view/query)
+        const eventsResult = await pool.query(`
+          SELECT id, uid, calendar_source as platform, summary, description, start_date, end_date, internal_notes
+          FROM calendar_events
+          WHERE start_date >= NOW() - INTERVAL '2 year'
+            AND NOT (LOWER(summary) LIKE '%canceled%' OR LOWER(summary) LIKE '%cancelled%')
+            AND NOT ((platform = 'airbnb' OR calendar_source = 'airbnb') AND (LOWER(summary) LIKE '%not available%' OR LOWER(summary) LIKE '%blocked%'))
+            AND NOT ((platform = 'holidu' OR calendar_source = 'holidu') AND (LOWER(summary) LIKE '%not available%' OR LOWER(summary) LIKE '%unavailable%'))
+        `);
+
+        // 3. Get manually blocked dates
+        const blockedDatesResult = await pool.query(`
+          SELECT id, start_date, end_date, reason, description
+          FROM blocked_dates
+        `);
+
+        return res.status(200).json({
+          success: true,
+          bookings: bookingsResult.rows,
+          externalEvents: eventsResult.rows,
+          blockedDates: blockedDatesResult.rows,
+        });
+
+      } catch (error) {
+        console.error('❌ Errore in calendar-view-data:', error);
+        return res.status(500).json({ success: false, error: 'Errore nel caricamento dei dati del calendario.' });
+      }
+    }
+
+    // ========================================
     // SEND PAYMENT REMINDER
     // ========================================
     if (action === 'send-payment-reminder') {
@@ -2559,6 +2805,41 @@ export default async function handler(req, res) {
         } catch (error) {
           console.error('❌ Errore invio promemoria:', error);
           return res.status(500).json({ success: false, error: error.message });
+        }
+      }
+    }
+
+    // ========================================
+    // UPDATE EXTERNAL EVENT NOTES
+    // ========================================
+    if (action === 'admin/update-external-event-notes') {
+      if (!adminUser) {
+        return res.status(403).json({ success: false, error: 'Autenticazione richiesta.' });
+      }
+      if (req.method === 'POST') {
+        try {
+          const { eventId, notes } = req.body;
+          if (eventId === undefined || notes === undefined) {
+            return res.status(400).json({ success: false, error: 'ID evento e note sono obbligatori.' });
+          }
+
+          const result = await pool.query(
+            `UPDATE calendar_events SET internal_notes = $1, updated_at = NOW() WHERE id = $2 RETURNING id, internal_notes`,
+            [notes, eventId]
+          );
+
+          if (result.rowCount === 0) {
+            return res.status(404).json({ success: false, error: 'Evento non trovato.' });
+          }
+
+          // Log audit
+          await logAdminAction(adminUser, 'update_notes', 'external_event', eventId, { notes: notes.substring(0, 100) + '...' }, req);
+
+          return res.status(200).json({ success: true, updatedEvent: result.rows[0] });
+
+        } catch (error) {
+          console.error('❌ Errore in update-external-event-notes:', error);
+          return res.status(500).json({ success: false, error: 'Errore durante l\'aggiornamento delle note.' });
         }
       }
     }
@@ -3884,6 +4165,11 @@ END:VEVENT
             ]);
           }
 
+          // ✍️ LOG AUDIT: Aggiorna configurazione prezzi
+          if (adminUser) {
+            await logAdminAction(adminUser, 'update', 'pricing_config', result.rows[0].id, { updates: pricingData }, req);
+          }
+
           console.log('✅ Configurazione prezzi salvata:', result.rows[0]);
 
           return res.status(200).json({
@@ -4319,6 +4605,11 @@ END:VEVENT
             sortOrder || 0
           ]);
 
+          // ✍️ LOG AUDIT: Crea servizio extra
+          if (adminUser) {
+            await logAdminAction(adminUser, 'create', 'extra_service', result.rows[0].id, { service: result.rows[0] }, req);
+          }
+
           const newService = result.rows[0];
           console.log('✅ Nuovo servizio creato:', newService);
 
@@ -4393,6 +4684,11 @@ END:VEVENT
             });
           }
 
+          // ✍️ LOG AUDIT: Aggiorna servizio extra
+          if (adminUser) {
+            await logAdminAction(adminUser, 'update', 'extra_service', id, { updates: req.body }, req);
+          }
+
           const updatedService = result.rows[0];
           console.log('✅ Servizio aggiornato:', updatedService);
 
@@ -4442,6 +4738,11 @@ END:VEVENT
               success: false,
               error: 'Servizio non trovato'
             });
+          }
+
+          // ✍️ LOG AUDIT: Elimina servizio extra
+          if (adminUser) {
+            await logAdminAction(adminUser, 'delete', 'extra_service', id, { deletedId: id }, req);
           }
 
           console.log('🗑️ Servizio eliminato:', result.rows[0]);

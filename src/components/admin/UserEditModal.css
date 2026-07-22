@@ -1,0 +1,8 @@
+.user-edit-modal .form-grid {
+    grid-template-columns: 1fr 1fr;
+}
+
+.user-edit-modal .checkbox-item {
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+}

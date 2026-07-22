@@ -15,6 +15,7 @@ const BookingDetailModal: React.FC<BookingDetailModalProps> = ({ booking, onClos
     const [formData, setFormData] = useState(booking);
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState('');
+    const isExternal = booking.payment_status === 'external';
     const apiService = new AdminApiService();
 
     useEffect(() => {
@@ -30,7 +31,11 @@ const BookingDetailModal: React.FC<BookingDetailModalProps> = ({ booking, onClos
         setIsSaving(true);
         setError('');
         try {
-            await apiService.updateBooking(String(booking.id), formData);
+            if (isExternal) {
+                await apiService.updateExternalEventNotes(booking.id, formData.internal_notes || '');
+            } else {
+                await apiService.updateBooking(String(booking.id), formData);
+            }
             onUpdate();
         } catch (err) {
             setError(t('booking.error.save', 'Errore durante il salvataggio.'));
@@ -82,29 +87,32 @@ const BookingDetailModal: React.FC<BookingDetailModalProps> = ({ booking, onClos
                 {error && <div className="modal-error">{error}</div>}
 
                 <div className="admin-form">
-                    <h4>Azioni Rapide</h4>
-                    <div className="quick-actions">
-                        <button onClick={() => handleAction('confirm')} className="btn-success" disabled={isSaving || booking.payment_status === 'paid_full'}>Conferma Pagamento</button>
-                        <button onClick={() => handleAction('cancel')} className="btn-danger" disabled={isSaving || booking.status === 'cancelled'}>Cancella Prenotazione</button>
-                        <button onClick={() => handleAction('send-email')} className="btn-primary" disabled={isSaving}>Invia Email</button>
-                    </div>
+                    {!isExternal && (
+                        <>
+                            <h4>Azioni Rapide</h4>
+                            <div className="quick-actions">
+                                <button onClick={() => handleAction('confirm')} className="btn-success" disabled={isSaving || booking.payment_status === 'paid_full'}>Conferma Pagamento</button>
+                                <button onClick={() => handleAction('cancel')} className="btn-danger" disabled={isSaving || booking.status === 'cancelled'}>Cancella Prenotazione</button>
+                                <button onClick={() => handleAction('send-email')} className="btn-primary" disabled={isSaving}>Invia Email</button>
+                            </div>
+                            <hr />
+                        </>
+                    )}
 
-                    <hr />
-
-                    <h4>Dettagli Cliente</h4>
+                    <h4>Dettagli {isExternal ? 'Evento Esterno' : 'Cliente'}</h4>
                     <div className="form-grid">
-                        <div><label>Nome</label><input name="customer_name" value={formData.customer_name} onChange={handleInputChange} disabled={!isEditing} /></div>
-                        <div><label>Email</label><input name="customer_email" type="email" value={formData.customer_email || ''} onChange={handleInputChange} disabled={!isEditing} /></div>
-                        <div><label>Telefono</label><input name="phone" value={formData.phone || ''} onChange={handleInputChange} disabled={!isEditing} /></div>
+                        <div><label>Nome / Titolo</label><input name="customer_name" value={formData.customer_name} onChange={handleInputChange} disabled={!isEditing || isExternal} /></div>
+                        <div><label>Email</label><input name="customer_email" type="email" value={formData.customer_email || ''} onChange={handleInputChange} disabled={!isEditing || isExternal} /></div>
+                        <div><label>Telefono</label><input name="phone" value={formData.phone || ''} onChange={handleInputChange} disabled={!isEditing || isExternal} /></div>
                     </div>
 
                     <h4>Dettagli Soggiorno</h4>
                     <div className="form-grid-small">
-                        <div><label>Check-in</label><input name="check_in" type="date" value={new Date(formData.check_in).toISOString().split('T')[0]} onChange={handleInputChange} disabled={!isEditing} /></div>
-                        <div><label>Check-out</label><input name="check_out" type="date" value={new Date(formData.check_out).toISOString().split('T')[0]} onChange={handleInputChange} disabled={!isEditing} /></div>
+                        <div><label>Check-in</label><input name="check_in" type="date" value={new Date(formData.check_in).toISOString().split('T')[0]} onChange={handleInputChange} disabled={!isEditing || isExternal} /></div>
+                        <div><label>Check-out</label><input name="check_out" type="date" value={new Date(formData.check_out).toISOString().split('T')[0]} onChange={handleInputChange} disabled={!isEditing || isExternal} /></div>
                         <div>
                             <label>{t('booking.summary.status', 'Stato')}</label>
-                            <select name="status" value={formData.status} onChange={handleInputChange} disabled={!isEditing}>
+                            <select name="status" value={formData.status} onChange={handleInputChange} disabled={!isEditing || isExternal}>
                                 <option value="pending">{t('booking.summary.statusPending', 'In attesa')}</option>
                                 <option value="draft">{t('booking.summary.statusDraft', 'Bozza')}</option>
                                 <option value="confirmed">{t('booking.summary.statusConfirmed', 'Confermata')}</option>
@@ -113,11 +121,12 @@ const BookingDetailModal: React.FC<BookingDetailModalProps> = ({ booking, onClos
                         </div>
                         <div>
                             <label>{t('booking.payment', 'Stato Pagamento')}</label>
-                            <select name="payment_status" value={formData.payment_status} onChange={handleInputChange} disabled={!isEditing}>
+                            <select name="payment_status" value={formData.payment_status} onChange={handleInputChange} disabled={!isEditing || isExternal}>
                                 <option value="unpaid">{t('booking.summary.statusUnpaid', 'Non pagato')}</option>
                                 <option value="deposit_paid">{t('booking.summary.statusDeposit_paid', 'Acconto pagato')}</option>
                                 <option value="paid_full">{t('booking.summary.statusPaid_full', 'Pagato')}</option>
                                 <option value="cancelled">{t('booking.summary.statusCancelled', 'Cancellata')}</option>
+                                {isExternal && <option value="external">{t('booking.summary.statusExternal', 'Esterno')}</option>}
                             </select>
                         </div>
                     </div>
@@ -132,7 +141,7 @@ const BookingDetailModal: React.FC<BookingDetailModalProps> = ({ booking, onClos
                         onChange={handleInputChange}
                         disabled={!isEditing}
                         rows={4}
-                        placeholder="Aggiungi note private sulla prenotazione, cliente, o richieste speciali..."
+                        placeholder="Aggiungi note private sulla prenotazione, cliente, o richieste speciali... (visibili solo agli admin)"
                     />
 
                     <div className="modal-footer">
