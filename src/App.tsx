@@ -18,11 +18,11 @@ import AdminSetup from './components/AdminSetup';
 import ProtectedRoute from './components/ProtectedRoute';
 import { setupIntelligentPreload, preloadOnIdle } from './utils/preloadComponents';
 import { useTranslation } from 'react-i18next';
-import { detectLangFromPath, SUPPORTED_LANGS, SupportedLang } from './i18n';
+import { detectLangFromPath, SUPPORTED_LANGS } from './i18n';
 
 // Lazy loading per componenti pesanti
 const AdminPanelPro = lazy(() => import('./pages/AdminPanelPro'));
-const AdminPanelBasic = lazy(() => import('./components/AdminPanelBasic'));
+const AdminPanel = lazy(() => import('./pages/AdminPanel'));
 const TwoFactorLogin = lazy(() => import('./components/TwoFactorLogin'));
 const TwoFactorSetup = lazy(() => import('./components/TwoFactorSetup'));
 const OAuthCallback = lazy(() => import('./pages/OAuthCallback'));
@@ -168,27 +168,20 @@ function App() {
             <Route path="/admin/login" element={
               <TwoFactorLogin
                 onLoginSuccess={(_token, role) => {
-                  if (role === 'superadmin') {
-                    navigate('/admin');
-                  } else {
-                    navigate('/admin/basic');
-                  }
+                  // 🚀 Reindirizzamento corretto basato sul ruolo
+                  const targetPath = role === 'superadmin' ? '/admin/pro' : '/admin';
+                  navigate(targetPath);
                 }}
               />
             } />
-            <Route path="/admin" element={
+            <Route path="/admin/pro" element={
               <ProtectedRoute requiredRole="superadmin">
                 <AdminPanelPro />
               </ProtectedRoute>
             } />
-            <Route path="/admin/basic" element={
+            <Route path="/admin" element={
               <ProtectedRoute requiredRole="admin">
-                <AdminPanelBasic />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/dashboard" element={
-              <ProtectedRoute requiredRole="admin">
-                <AdminPanelBasic />
+                <AdminPanel />
               </ProtectedRoute>
             } />
             <Route path="/admin/setup" element={<AdminSetup />} />

@@ -60,6 +60,31 @@ const PremiumSettings: React.FC = () => {
                         Abilita Abbonamento per Admin
                     </label>
                 </div>
+
+                <div className="admin-notice" style={{ marginTop: '20px' }}>
+                    <p><strong>Come configurare:</strong> Inserisci gli ID dei "Prezzi" (Price ID) creati nel tuo <a href="https://dashboard.stripe.com/products" target="_blank" rel="noopener noreferrer">pannello Stripe</a>. Questi ID collegano i pulsanti di abbonamento ai tuoi piani tariffari.</p>
+                </div>
+
+                <div className="config-item">
+                    <label htmlFor="monthly_price_id">ID Prezzo Mensile (Stripe)</label>
+                    <input
+                        id="monthly_price_id"
+                        type="text"
+                        placeholder="price_1..."
+                        value={settings.premium_stripe_monthly_price_id}
+                        onChange={(e) => setSettings(s => ({ ...s, premium_stripe_monthly_price_id: e.target.value }))}
+                    />
+                </div>
+                <div className="config-item">
+                    <label htmlFor="yearly_price_id">ID Prezzo Annuale (Stripe)</label>
+                    <input
+                        id="yearly_price_id"
+                        type="text"
+                        placeholder="price_1..."
+                        value={settings.premium_stripe_yearly_price_id}
+                        onChange={(e) => setSettings(s => ({ ...s, premium_stripe_yearly_price_id: e.target.value }))}
+                    />
+                </div>
                 <div className="admin-pricing-actions">
                     <button onClick={handleSave} disabled={isSaving} className="admin-btn-primary">
                         {isSaving ? 'Salvataggio...' : 'Salva Impostazioni'}
