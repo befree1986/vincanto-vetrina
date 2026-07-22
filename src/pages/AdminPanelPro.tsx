@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import './AdminPanelPro.css';
 import AdminLayout from '../components/admin/AdminLayout';
 import '../styles/AdminSuperAdmin.css';
@@ -2432,13 +2432,13 @@ const AdminPanelPro = (): JSX.Element => {
                             >
                               🗑️ Elimina
                             </button>
-                        <button
-                          className="admin-btn-info"
-                          onClick={() => alert('Funzionalità di gestione team in sviluppo.')}
-                          disabled={loading}
-                        >
-                          👥 Gestisci Team
-                        </button>
+                            <button
+                              className="admin-btn-info"
+                              onClick={() => alert('Funzionalità di gestione team in sviluppo.')}
+                              disabled={loading}
+                            >
+                              👥 Gestisci Team
+                            </button>
                           </div>
                         </div>
                       </div>
