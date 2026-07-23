@@ -39,7 +39,7 @@ const AdminPanel = () => {
         { id: 'prezzi', label: '💰 Prezzi e Servizi', requiresSuperAdmin: false },
         { id: 'gallery', label: '🖼️ Gallery', requiresSuperAdmin: false },
         { id: 'contenuti', label: '📝 Contenuti', requiresSuperAdmin: false },
-        { id: 'team', label: '👥 Team', requiresSuperAdmin: false },
+        { id: 'team', label: '👥 Team', requiresSuperAdmin: true },
         // Un superadmin che visualizza il pannello base può tornare a quello pro
         ...(isSuperAdmin() ? [{ id: 'switch-pro', label: '🚀 Vista SuperAdmin', requiresSuperAdmin: true }] : []),
     ];
@@ -242,7 +242,7 @@ const AdminPanel = () => {
 
                 {activeTab === 'contenuti' && <ContentManager adminApiService={adminApiService} />}
 
-                {activeTab === 'team' && <TeamManagement />}
+                {activeTab === 'team' && isSuperAdmin() && <TeamManagement />}
             </div>
         </AdminLayout>
     );

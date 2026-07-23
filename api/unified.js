@@ -2689,52 +2689,6 @@ export default async function handler(req, res) {
     }
 
     // ========================================
-    // CALENDAR VIEW DATA (UNIFIED)
-    // ========================================
-    if (action === 'calendar-view-data') {
-      // This endpoint is protected by the admin role check via JWT
-      if (!adminUser) {
-        return res.status(403).json({ success: false, error: 'Accesso negato. Autenticazione richiesta.' });
-      }
-
-      try {
-        // 1. Get direct bookings
-        const bookingsResult = await pool.query(`
-          SELECT id, booking_id, check_in, check_out, customer_name, email, phone, status, 'direct' as platform
-          FROM bookings 
-          WHERE status = 'confirmed' OR status = 'pending'
-        `);
-
-        // 2. Get external calendar events (already filtered in the view/query)
-        const eventsResult = await pool.query(`
-          SELECT id, uid, calendar_source as platform, summary, description, start_date, end_date, internal_notes
-          FROM calendar_events
-          WHERE start_date >= NOW() - INTERVAL '2 year'
-            AND NOT (LOWER(summary) LIKE '%canceled%' OR LOWER(summary) LIKE '%cancelled%')
-            AND NOT ((platform = 'airbnb' OR calendar_source = 'airbnb') AND (LOWER(summary) LIKE '%not available%' OR LOWER(summary) LIKE '%blocked%'))
-            AND NOT ((platform = 'holidu' OR calendar_source = 'holidu') AND (LOWER(summary) LIKE '%not available%' OR LOWER(summary) LIKE '%unavailable%'))
-        `);
-
-        // 3. Get manually blocked dates
-        const blockedDatesResult = await pool.query(`
-          SELECT id, start_date, end_date, reason, description
-          FROM blocked_dates
-        `);
-
-        return res.status(200).json({
-          success: true,
-          bookings: bookingsResult.rows,
-          externalEvents: eventsResult.rows,
-          blockedDates: blockedDatesResult.rows,
-        });
-
-      } catch (error) {
-        console.error('❌ Errore in calendar-view-data:', error);
-        return res.status(500).json({ success: false, error: 'Errore nel caricamento dei dati del calendario.' });
-      }
-    }
-
-    // ========================================
     // SEND PAYMENT REMINDER
     // ========================================
     if (action === 'send-payment-reminder') {

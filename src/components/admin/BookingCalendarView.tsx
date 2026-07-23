@@ -238,7 +238,7 @@ const BookingCalendarView: React.FC = () => {
                                             {event.email && <div>📧 {event.email}</div>}
                                             {event.phone && <div>📞 {event.phone}</div>}
                                         </td>
-                                        <td>{event.start.toLocaleDateString('it-IT')} - {event.end.toLocaleDateString('it-IT')}</td>
+                                        <td>{event.start instanceof Date && !isNaN(event.start.getTime()) ? event.start.toLocaleDateString('it-IT') : 'N/A'} - {event.end instanceof Date && !isNaN(event.end.getTime()) ? event.end.toLocaleDateString('it-IT') : 'N/A'}</td>
                                         <td><span className={`status-badge-table status-${event.status}`}>{event.status}</span></td>
                                     </tr>
                                 ))
