@@ -2679,8 +2679,8 @@ export default async function handler(req, res) {
           FROM calendar_events
           WHERE start_date >= NOW() - INTERVAL '2 year'
             AND NOT (LOWER(summary) LIKE '%canceled%' OR LOWER(summary) LIKE '%cancelled%')
-            AND NOT ((platform = 'airbnb' OR calendar_source = 'airbnb') AND (LOWER(summary) LIKE '%not available%' OR LOWER(summary) LIKE '%blocked%'))
-            AND NOT ((platform = 'holidu' OR calendar_source = 'holidu') AND (LOWER(summary) LIKE '%not available%' OR LOWER(summary) LIKE '%unavailable%'))
+            AND NOT (calendar_source = 'airbnb' AND (LOWER(summary) LIKE '%not available%' OR LOWER(summary) LIKE '%blocked%'))
+            AND NOT (calendar_source = 'holidu' AND (LOWER(summary) LIKE '%not available%' OR LOWER(summary) LIKE '%unavailable%'))
         `);
 
         // 3. Get manually blocked dates
