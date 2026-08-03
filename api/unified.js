@@ -2668,7 +2668,7 @@ export default async function handler(req, res) {
       try {
         // 1. Get direct bookings
         const bookingsResult = await pool.query(`
-          SELECT id, booking_id, check_in, check_out, customer_name, email, phone, status, 'direct' as platform
+          SELECT id, booking_id, check_in, check_out, (first_name || ' ' || last_name) as customer_name, email, phone, status, 'direct' as platform
           FROM bookings 
           WHERE status = 'confirmed' OR status = 'pending'
         `);
