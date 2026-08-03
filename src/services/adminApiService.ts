@@ -19,6 +19,8 @@ export interface Booking {
   platform?: string;
   internal_notes?: string;
   deposit_amount?: number;
+  deposit_payment_method?: string;
+  balance_payment_method?: string;
 }
 
 class AdminApiService {

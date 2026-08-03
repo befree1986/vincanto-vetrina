@@ -398,9 +398,11 @@ async function migrateDatabase() {
     // Aggiungi colonna stripe_payment_intent se non esiste
     await pool.query(`
       ALTER TABLE bookings
-      ADD COLUMN IF NOT EXISTS stripe_payment_intent VARCHAR(255)
+      ADD COLUMN IF NOT EXISTS stripe_payment_intent VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS deposit_payment_method VARCHAR(50),
+      ADD COLUMN IF NOT EXISTS balance_payment_method VARCHAR(50)
     `);
-    console.log('✅ Colonna stripe_payment_intent verificata/aggiunta');
+    console.log('✅ Colonne pagamenti (intent, metodi acconto/saldo) verificate/aggiunte');
 
     // Aggiungi colonna min_stay_august se non esiste
     await pool.query(`
@@ -2213,6 +2215,18 @@ export default async function handler(req, res) {
           if (updates.total_amount !== undefined) {
             updateFields.push(`total_amount = $${paramIndex++}`);
             updateValues.push(updates.total_amount);
+          }
+          if (updates.deposit_amount !== undefined) {
+            updateFields.push(`deposit_amount = $${paramIndex++}`);
+            updateValues.push(updates.deposit_amount);
+          }
+          if (updates.deposit_payment_method !== undefined) {
+            updateFields.push(`deposit_payment_method = $${paramIndex++}`);
+            updateValues.push(updates.deposit_payment_method);
+          }
+          if (updates.balance_payment_method !== undefined) {
+            updateFields.push(`balance_payment_method = $${paramIndex++}`);
+            updateValues.push(updates.balance_payment_method);
           }
           if (updates.notes) {
             updateFields.push(`notes = $${paramIndex++}`);

@@ -56,7 +56,7 @@ const BookingsManagement: React.FC<BookingsManagementProps> = ({ initialFilter, 
         try {
             const data = await apiService.getBookings();
             setBookings(data);
-        } catch (err: any) {
+        } catch (err: unknown) {
             setError(t('booking.error.unexpected', 'Errore nel caricamento delle prenotazioni.'));
             console.error(err);
         } finally {
@@ -122,7 +122,7 @@ const BookingsManagement: React.FC<BookingsManagementProps> = ({ initialFilter, 
     }, [bookings, searchTerm, statusFilter, dateFilter]);
 
     const sortedBookings = useMemo(() => {
-        let sortableItems = [...filteredBookings];
+        const sortableItems = [...filteredBookings];
         if (sortConfig !== null) {
             sortableItems.sort((a, b) => {
                 if (a[sortConfig.key]! < b[sortConfig.key]!) {

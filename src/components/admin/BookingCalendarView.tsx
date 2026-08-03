@@ -14,6 +14,7 @@ interface CalendarEvent {
     email?: string;
     phone?: string;
     status?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     raw: any; // Keep original object
 }
 
@@ -49,6 +50,7 @@ const BookingCalendarView: React.FC = () => {
             });
 
             // Process external events
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             data.externalEvents.forEach((e: any) => {
                 allEvents.push({
                     id: e.id || e.uid,
@@ -63,6 +65,7 @@ const BookingCalendarView: React.FC = () => {
             });
 
             // Process blocked dates
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             data.blockedDates.forEach((b: any) => {
                 allEvents.push({
                     id: b.id,
@@ -115,6 +118,7 @@ const BookingCalendarView: React.FC = () => {
         let week: { date: Date; events: CalendarEvent[] }[] = [];
 
         for (let i = 0; i < dayOffset; i++) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             week.push(null as any);
         }
 
@@ -136,6 +140,7 @@ const BookingCalendarView: React.FC = () => {
         }
 
         if (week.length > 0) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             while (week.length < 7) week.push(null as any);
             grid.push(week);
         }

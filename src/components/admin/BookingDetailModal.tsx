@@ -130,6 +130,38 @@ const BookingDetailModal: React.FC<BookingDetailModalProps> = ({ booking, onClos
                             </select>
                         </div>
                     </div>
+                    
+                    <h4>Importi e Pagamenti</h4>
+                    <div className="form-grid-small">
+                        <div>
+                            <label>Importo Totale (€)</label>
+                            <input name="total_amount" type="number" step="0.01" value={formData.total_amount || 0} onChange={handleInputChange} disabled={!isEditing || isExternal} />
+                        </div>
+                        <div>
+                            <label>Importo Acconto (€)</label>
+                            <input name="deposit_amount" type="number" step="0.01" value={formData.deposit_amount || 0} onChange={handleInputChange} disabled={!isEditing || isExternal} />
+                        </div>
+                        <div>
+                            <label>Metodo Pagamento Acconto</label>
+                            <select name="deposit_payment_method" value={formData.deposit_payment_method || ''} onChange={handleInputChange} disabled={!isEditing || isExternal}>
+                                <option value="">Seleziona...</option>
+                                <option value="card">Carta di Credito</option>
+                                <option value="paypal">PayPal</option>
+                                <option value="bank_transfer">Bonifico Bancario</option>
+                                <option value="cash">Contanti</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Metodo Pagamento Saldo</label>
+                            <select name="balance_payment_method" value={formData.balance_payment_method || ''} onChange={handleInputChange} disabled={!isEditing || isExternal}>
+                                <option value="">Seleziona...</option>
+                                <option value="card">Carta di Credito</option>
+                                <option value="paypal">PayPal</option>
+                                <option value="bank_transfer">Bonifico Bancario</option>
+                                <option value="cash">Contanti</option>
+                            </select>
+                        </div>
+                    </div>
 
                     <hr />
 
